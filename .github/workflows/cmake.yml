@@ -1,0 +1,155 @@
+name: CMake
+
+on:
+  push:
+    branches: [ master, main, gsl-cmake ]
+  pull_request:
+    branches: [ master, main ]
+  workflow_dispatch:
+
+# Cancel superseded runs on the same ref.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Configure, build and test on Linux, macOS and Windows, shared and static.
+  # ---------------------------------------------------------------------------
+  build-and-test:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: linux-gcc-shared,    os: ubuntu-latest,  cc: gcc,   cxx: g++,     shared: ON,  skip_rng: ON  }
+          - { name: linux-gcc-static,    os: ubuntu-latest,  cc: gcc,   cxx: g++,     shared: OFF, skip_rng: ON  }
+          - { name: linux-clang-shared,  os: ubuntu-latest,  cc: clang, cxx: clang++, shared: ON,  skip_rng: ON  }
+          - { name: macos-clang-shared,  os: macos-latest,   cc: clang, cxx: clang++, shared: ON,  skip_rng: ON  }
+          - { name: macos-clang-static,  os: macos-latest,   cc: clang, cxx: clang++, shared: OFF, skip_rng: ON  }
+          - { name: windows-msvc-shared, os: windows-latest, cc: cl,    cxx: cl,      shared: ON,  skip_rng: OFF }
+          - { name: windows-msvc-static, os: windows-latest, cc: cl,    cxx: cl,      shared: OFF, skip_rng: OFF }
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select compiler (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: |
+          echo "CC=${{ matrix.cc }}"   >> "$GITHUB_ENV"
+          echo "CXX=${{ matrix.cxx }}" >> "$GITHUB_ENV"
+
+      - name: Configure (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: >
+          cmake -S . -B build
+          -DCMAKE_BUILD_TYPE=Release
+          -DBUILD_SHARED_LIBS=${{ matrix.shared }}
+          -DGSL_BUILD_TOOLS=ON
+          -DGSL_BUILD_TESTS=ON
+          -DGSL_SKIP_RNG_TEST=${{ matrix.skip_rng }}
+
+      - name: Build (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: cmake --build build --parallel
+
+      - name: Test (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: ctest --test-dir build --output-on-failure
+
+      - name: Configure (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          cmake -S . -B build `
+            -DBUILD_SHARED_LIBS=${{ matrix.shared }} `
+            -DGSL_BUILD_TOOLS=ON `
+            -DGSL_BUILD_TESTS=ON
+
+      - name: Build (Windows)
+        if: runner.os == 'Windows'
+        run: cmake --build build --config Release --parallel
+
+      - name: Test (Windows)
+        if: runner.os == 'Windows'
+        run: ctest --test-dir build -C Release --output-on-failure
+
+  # ---------------------------------------------------------------------------
+  # Install, and verify a downstream project can find and link GSL.
+  # ---------------------------------------------------------------------------
+  install-and-consume:
+    name: install ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: linux-gcc,   os: ubuntu-latest  }
+          - { name: macos-clang, os: macos-latest   }
+          - { name: windows-msvc, os: windows-latest }
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: >
+          cmake -S . -B build
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/_install"
+
+      - name: Build and install (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: |
+          cmake --build build --parallel
+          cmake --install build
+
+      - name: Configure (Windows)
+        if: runner.os == 'Windows'
+        run: cmake -S . -B build "-DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/_install"
+
+      - name: Build and install (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          cmake --build build --config Release --parallel
+          cmake --install build --config Release
+
+      - name: Write consumer project
+        shell: bash
+        run: |
+          mkdir -p consumer
+          cat > consumer/main.c <<'EOF'
+          #include <stdio.h>
+          #include <gsl/gsl_version.h>
+          #include <gsl/gsl_sf_bessel.h>
+          int main(void)
+          {
+            printf("GSL %s J0(1)=%g\n", gsl_version, gsl_sf_bessel_J0(1.0));
+            return 0;
+          }
+          EOF
+          cat > consumer/CMakeLists.txt <<'EOF'
+          cmake_minimum_required(VERSION 3.22)
+          project(consumer C)
+          find_package(GSL CONFIG REQUIRED)
+          add_executable(consumer main.c)
+          target_link_libraries(consumer PRIVATE GSL::gsl GSL::gslcblas)
+          EOF
+
+      - name: Build and run consumer (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: |
+          cmake -S consumer -B consumer/build -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_PREFIX_PATH="${GITHUB_WORKSPACE}/_install"
+          cmake --build consumer/build --parallel
+          ./consumer/build/consumer
+
+      - name: Build and run consumer (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          cmake -S consumer -B consumer/build `
+            "-DCMAKE_PREFIX_PATH=${{ github.workspace }}/_install"
+          cmake --build consumer/build --config Release
+          $env:PATH = "${{ github.workspace }}/_install/bin;${{ github.workspace }}/_install/lib;$env:PATH"
+          & consumer/build/Release/consumer.exe

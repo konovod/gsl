@@ -54,3 +54,32 @@ vector/test.dat
 vector/test_static
 vector/test.txt
 test-driver
+
+# CMake build directories (out-of-source; preferred).
+build-cmake/
+build-cmake-*/
+
+# Guard against an accidental in-source CMake configure littering the root.
+/CMakeCache.txt
+/CMakeFiles/
+/cmake_install.cmake
+/CTestTestfile.cmake
+/install_manifest.txt
+/DartConfiguration.tcl
+/GSL.sln
+/ALL_BUILD.vcxproj
+/ALL_BUILD.vcxproj.filters
+/INSTALL.vcxproj
+/INSTALL.vcxproj.filters
+/ZERO_CHECK.vcxproj
+/ZERO_CHECK.vcxproj.filters
+/gsl*.vcxproj
+/gsl*.vcxproj.filters
+/gsl*.dir/
+/GSLConfig.cmake
+/GSLConfigVersion.cmake
+/include/
+
+# Data files written by the *test_static programs.
+matrix/test_static.dat
+vector/test_static.dat

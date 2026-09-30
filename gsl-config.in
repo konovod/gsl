@@ -1,8 +1,21 @@
 #! /bin/sh
 
-prefix=@prefix@
-exec_prefix=@exec_prefix@
-includedir=@includedir@
+prefix="@prefix@"
+exec_prefix="@exec_prefix@"
+includedir="@includedir@"
+libdir="@libdir@"
+
+# If the baked-in prefix is the placeholder default, or was relocated,
+# fall back to the location this script was installed in.
+case "$prefix" in
+  "" | */GSL | "/usr/local")
+    self_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+    prefix=$(CDPATH= cd -- "$self_dir/.." && pwd)
+    exec_prefix=$prefix
+    includedir=$prefix/include
+    libdir=$prefix/lib
+    ;;
+esac
 
 usage()
 {
@@ -45,7 +58,7 @@ while test $# -gt 0; do
 	;;
 
     --prefix)
-	echo $prefix
+	echo "$prefix"
 	;;
 
     --version)
@@ -58,16 +71,16 @@ while test $# -gt 0; do
 	;;
 
     --cflags)
-       	echo @GSL_CFLAGS@ 
+       	echo "-I$includedir"
        	;;
 
     --libs)
         : ${GSL_CBLAS_LIB=-lgslcblas}
-	echo @GSL_LIBS@ $GSL_CBLAS_LIB @GSL_LIBM@
+	echo "-L$libdir -lgsl $GSL_CBLAS_LIB @GSL_LIBM@"
        	;;
 
     --libs-without-cblas)
-	echo @GSL_LIBS@ @GSL_LIBM@
+	echo "-L$libdir -lgsl @GSL_LIBM@"
        	;;
     *)
 	usage
