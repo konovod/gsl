@@ -133,7 +133,7 @@ endif()
 # IEEE arithmetic interface
 #
 # The selected interface chooses which ieee-utils/fp-*.c is compiled.  MSVC
-# has no interface file; ieee-utils/env.c uses build.vc/fp-win.c instead.
+# has no interface file; ieee-utils/env.c uses cmake/msvc-compat/fp-win.c instead.
 # ---------------------------------------------------------------------------
 set(GSL_IEEE_INTERFACE "")
 if(MSVC)

@@ -87,7 +87,8 @@ Notes on the implementation
 
   * On MSVC the DLL exports are produced with WINDOWS_EXPORT_ALL_SYMBOLS;
     the gslhdrs / gsldefs header rewriting used by the Visual Studio
-    projects is not needed.  ieee-utils uses build.vc/fp-win.c on Windows.
+    projects is not needed.  ieee-utils uses cmake/msvc-compat/fp-win.c on
+    Windows (there is no upstream Windows IEEE interface file).
 
   * cmake/msvc-compat provides minimal <unistd.h> and <getopt.h> shims for
     Windows; some test sources include them unconditionally.

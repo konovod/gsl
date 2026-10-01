@@ -6,11 +6,18 @@ cmake_minimum_required(VERSION 3.22)
 # ---------------------------------------------------------------------------
 file(READ "${CMAKE_CURRENT_SOURCE_DIR}/configure.ac" GSL_CONFIGURE_AC)
 
-string(REGEX MATCH "AC_INIT\\(\\[gsl\\], *\\[([0-9.]+)\\]\\)" _gsl_ac_init "${GSL_CONFIGURE_AC}")
-if(NOT CMAKE_MATCH_1)
+# GSL marks development snapshots with a trailing '+', e.g. "2.8+".
+# Capture the numeric part for CMake's VERSION and keep the full string for
+# the generated gsl_version.h / pkg-config, matching what autoconf does.
+# Note: the full string is kept in GSL_VERSION_STRING because project(GSL ...)
+# would otherwise overwrite a variable named GSL_VERSION.
+string(REGEX MATCH "AC_INIT\\(\\[gsl\\], *\\[([0-9.]+)(\\+?)\\]\\)" _gsl_ac_init "${GSL_CONFIGURE_AC}")
+if("${_gsl_ac_init}" STREQUAL "")
   message(FATAL_ERROR "could not determine the GSL version from configure.ac")
 endif()
-set(GSL_VERSION "${CMAKE_MATCH_1}")
+set(GSL_VERSION_NUMBER "${CMAKE_MATCH_1}")
+set(GSL_VERSION_SUFFIX "${CMAKE_MATCH_2}")
+set(GSL_VERSION_STRING "${GSL_VERSION_NUMBER}${GSL_VERSION_SUFFIX}")
 
 foreach(_var GSL_CURRENT GSL_REVISION GSL_AGE CBLAS_CURRENT CBLAS_REVISION CBLAS_AGE)
   string(REGEX MATCH "${_var}=([0-9]+)" _gsl_match "${GSL_CONFIGURE_AC}")
@@ -20,7 +27,7 @@ foreach(_var GSL_CURRENT GSL_REVISION GSL_AGE CBLAS_CURRENT CBLAS_REVISION CBLAS
   set(${_var} "${CMAKE_MATCH_1}")
 endforeach()
 
-project(GSL VERSION ${GSL_VERSION} LANGUAGES C)
+project(GSL VERSION ${GSL_VERSION_NUMBER} LANGUAGES C)
 
 # Libtool version-info C:R:A maps to a shared object version (C-A).A.R
 math(EXPR GSL_SOVERSION "${GSL_CURRENT} - ${GSL_AGE}")
@@ -28,7 +35,7 @@ set(GSL_LIB_VERSION "${GSL_SOVERSION}.${GSL_AGE}.${GSL_REVISION}")
 math(EXPR GSL_CBLAS_SOVERSION "${CBLAS_CURRENT} - ${CBLAS_AGE}")
 set(GSL_CBLAS_LIB_VERSION "${GSL_CBLAS_SOVERSION}.${CBLAS_AGE}.${CBLAS_REVISION}")
 
-message(STATUS "GSL version ${GSL_VERSION}")
+message(STATUS "GSL version ${GSL_VERSION_STRING}")
 message(STATUS "  libgsl soversion      : ${GSL_SOVERSION} (${GSL_LIB_VERSION})")
 message(STATUS "  libgslcblas soversion : ${GSL_CBLAS_SOVERSION} (${GSL_CBLAS_LIB_VERSION})")
 
@@ -90,7 +97,9 @@ message(STATUS "Staged ${_gsl_num_headers} public headers in ${GSL_STAGED_INCLUD
 # ---------------------------------------------------------------------------
 # gsl_version.h
 # ---------------------------------------------------------------------------
-set(VERSION "${PROJECT_VERSION}")
+# @VERSION@ is the full upstream version string (e.g. "2.8+"), as autoconf
+# substitutes it; the numeric PROJECT_VERSION is used for CMake versioning.
+set(VERSION "${GSL_VERSION_STRING}")
 set(GSL_MAJOR_VERSION "${PROJECT_VERSION_MAJOR}")
 set(GSL_MINOR_VERSION "${PROJECT_VERSION_MINOR}")
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/gsl_version.h.in"
@@ -106,11 +115,12 @@ include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/gsl_sources.cmake")
 set(GSL_LIB_SOURCES ${GSL_SOURCES})
 set(GSL_CBLAS_LIB_SOURCES ${GSL_CBLAS_SOURCES})
 
-# MSVC has no IEEE interface file; build.vc/fp-win.c provides the Windows
-# implementation instead (this is what the Visual Studio projects do).
+# MSVC has no IEEE interface file; cmake/msvc-compat/fp-win.c provides the
+# Windows implementation instead (originally build.vc/fp-win.c).  ieee-utils/
+# env.c uses it via the _MSC_VER branch and references fp_env_string.
 if(MSVC)
   list(REMOVE_ITEM GSL_LIB_SOURCES ieee-utils/fp.c)
-  list(APPEND GSL_LIB_SOURCES build.vc/fp-win.c)
+  list(APPEND GSL_LIB_SOURCES cmake/msvc-compat/fp-win.c)
 endif()
 
 # ---------------------------------------------------------------------------
@@ -127,7 +137,7 @@ set(GSL_BUILD_INCLUDE_DIRS
   "${CMAKE_CURRENT_SOURCE_DIR}")
 
 # A few sources include <unistd.h>/<getopt.h> unconditionally; provide thin
-# shims on Windows so they compile with MSVC (matches build.vc/unistd.h).
+# shims on Windows so they compile with MSVC.
 if(WIN32)
   list(APPEND GSL_BUILD_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/cmake/msvc-compat")
 endif()
