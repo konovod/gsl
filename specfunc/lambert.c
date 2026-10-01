@@ -104,6 +104,28 @@ series_eval(double r)
 }
 
 
+/* Series for the principal branch of the Lambert W function around x = 0:
+ *
+ *   W(x) = x - x^2 + 3/2 x^3 - 8/3 x^4 + 125/24 x^5 + O(x^6)
+ *
+ * (see Fukushima, "Precise and fast computation of Lambert W-functions
+ * without transcendental function evaluations", J. Comput. Appl. Math.
+ * 244 (2013) 77-89, Table 4.)
+ */
+static double
+series_eval_W0_small(double x)
+{
+  static const double c[5] = {
+     1.0,
+    -1.0,
+     3.0/2.0,
+    -8.0/3.0,
+     125.0/24.0
+  };
+  return x*(c[0] + x*(c[1] + x*(c[2] + x*(c[3] + x*c[4]))));
+}
+
+
 /*-*-*-*-*-*-*-*-*-*-*-* Functions with Error Codes *-*-*-*-*-*-*-*-*-*-*-*/
 
 int
@@ -115,6 +137,22 @@ gsl_sf_lambert_W0_e(double x, gsl_sf_result * result)
   if(x == 0.0) {
     result->val = 0.0;
     result->err = 0.0;
+    return GSL_SUCCESS;
+  }
+  else if(fabs(x) < 1.0e-3 * GSL_DBL_EPSILON) {
+    /* For |x| smaller than 1e-3 * GSL_DBL_EPSILON the leading term x
+     * dominates: W(x) = x + O(x^2), and the O(x^2) term is below the
+     * relative precision.  This avoids the severe cancellation in the
+     * Halley iteration ('w -= t') for x very close to zero, which
+     * otherwise returns inaccurate results or zero. */
+    result->val = x;
+    result->err = GSL_DBL_EPSILON * fabs(x);
+    return GSL_SUCCESS;
+  }
+  else if(fabs(x) < 1.0e-5) {
+    /* Use the Taylor series around x = 0. */
+    result->val = series_eval_W0_small(x);
+    result->err = 2.0 * GSL_DBL_EPSILON * fabs(result->val);
     return GSL_SUCCESS;
   }
   else if(q < 0.0) {

@@ -1997,6 +1997,19 @@ int test_lambert(void)
   TEST_SF(s, gsl_sf_lambert_W0_e, (-1.0/M_E + 1.0/512.0, &r), -0.900335676696088773044678, TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_lambert_W0_e, (-1.0/M_E + 0.25, &r), -0.1349044682661213545487599, TEST_TOL0, GSL_SUCCESS);
 
+  /* small-argument cases (Savannah bug #60741): the Halley iteration
+     loses accuracy by cancellation for x very close to zero, and for
+     x below about 1e-50 it returned zero.  For |x| < 1e-3*GSL_DBL_EPSILON
+     W(x) = x to within relative precision. */
+  TEST_SF(s, gsl_sf_lambert_W0_e, (1.0e-5, &r),    9.999900001499974e-06,  TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_lambert_W0_e, (1.0e-30, &r),   1.0e-30,  TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_lambert_W0_e, (1.0e-40, &r),   1.0e-40,  TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_lambert_W0_e, (1.0e-50, &r),   1.0e-50,  TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_lambert_W0_e, (1.0e-60, &r),   1.0e-60,  TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_lambert_W0_e, (-1.0e-30, &r), -1.0e-30,  TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_lambert_W0_e, (-1.0e-50, &r), -1.0e-50,  TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_lambert_W0_e, (-1.0e-60, &r), -1.0e-60,  TEST_TOL0, GSL_SUCCESS);
+
   TEST_SF(s, gsl_sf_lambert_Wm1_e, (0.0, &r),  0.0,  TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_lambert_Wm1_e, (1.0, &r),  0.567143290409783872999969,  TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_lambert_Wm1_e, (2.0, &r),  0.852605502013725491346472,  TEST_TOL0, GSL_SUCCESS);
