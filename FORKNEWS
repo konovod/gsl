@@ -46,6 +46,7 @@ One line per change: date | tag | description | commit(s).
   2026-10-01 | [upstream] | linalg: raise the cholesky_invert Hilbert tolerance   | f84a57a0f
   2026-10-01 | [upstream] | doc: correct the gsl_sf_result_e10 scaling formula    | 066f5b747
   2026-10-01 | [upstream] | specfunc: report GSL_EDOM for sin_pi/cos_pi at inf     | 7c27b358b
+  2026-10-01 | [upstream] | specfunc: fix erfc/log_erfc/erf_Z for huge arguments  | 708791c25
   2026-10-01 | [rejected] | min: bound gsl_min_find_bracket to the initial interval | - (see below)
 
 
@@ -416,6 +417,62 @@ Files: `specfunc/sincos_pi.c`, `specfunc/test_sincos_pi.c`,
 `doc/specfunc-trig.rst`.
 
 See Savannah bug #57978.
+
+
+## [upstream] specfunc: fix erfc, log_erfc and erf_Z for very large arguments
+
+Commits: 708791c25, 6bc4d8cdd, 9daf0cf36
+
+Three separate overflows let a `NaN` reach the result of the error
+function family.  All of them need arguments far outside anything a
+user is likely to pass, but they are reachable through the library's own
+`gsl_sf_erf_Q_e` and `gsl_sf_hazard_e`, which propagate `erfc`'s value
+and error.
+
+`gsl_sf_erfc_e()` for `|x| > 1e62`: `erfc8_sum()` builds its numerator
+and denominator by Horner to degree 5 and 6, so both overflow to
+infinity and their ratio is `NaN`.  Since `erfc(x)` has already
+underflowed to zero by `x = 27.213` - where it reaches the least
+denormal, 4.9e-324 - that whole range is now taken directly, which
+makes `erfc(+-inf)` exactly 0 and 2.
+
+`gsl_sf_log_erfc_e()` for `x > 2.4e51`: `log_erfc8()` computes
+`log(erfc(x)exp(x*x)) - x*x`.  Above that the ratio underflows to zero,
+so the log gives `-inf`, and above `1e62` it is `NaN`.  Both now fall
+back to the leading term of the asymptotic expansion,
+`-x*x - log(x) - log(sqrt(pi))`, which is accurate to a few ulp there.
+Beyond `sqrt(DBL_MAX)` the `x*x` overflows as well, the answer has no
+representable form, and it is `-inf`.
+
+`gsl_sf_erf_Z_e()` at `x = +-inf`: the error term `fabs(x * val)` is
+`inf * 0`.
+
+The error estimates were unusable over the same ranges, for the same
+reasons: `x*x` overflowed in the `erfc` error term, and
+`2*eps*fabs(val)` overflowed in the `log_erfc` one.
+
+A `NaN` argument is still left to propagate, as it is everywhere else in
+`specfunc`; the two posted patches both guard with `!isnan(x)`, which
+would silently turn a `NaN` input into a plausible finite answer.
+
+Neither posted patch is taken as it stands.  `#53919` is the closer of
+the two but only patches the symptom.  `#65760` abandons
+`log_erfc8()` above `x = 100` - where it is still perfectly accurate -
+in favour of the same asymptotic formula, with an error estimate of
+exactly 0.0, and does not cover the overflow its own comment describes.
+
+The three functions were documented only as `Exceptional Return Values:
+none`, with no domain line, which is what let the two reports disagree
+about the same input.  All three are defined for all real `x`, since
+each has a finite limit at infinity (`erf` to `+-1`, `erfc` to 0 and 2,
+`log(erfc)` to `log 2` and `-inf`), and the docs now say so; this is
+`GSL_SUCCESS`, not a domain error, in contrast to `sin_pi`/`cos_pi`
+above, which have no limit at infinity.
+
+Files: `specfunc/erfc.c`, `specfunc/test_sf.c`,
+`doc/specfunc-erf.rst`.
+
+See Savannah bugs #53919 and #65760.
 
 
 ## [rejected] min: bound gsl_min_find_bracket to the initial interval
