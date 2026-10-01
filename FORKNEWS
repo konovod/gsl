@@ -53,6 +53,7 @@ One line per change: date | tag | description | commit(s).
   2026-10-01 | [rejected] | linalg: complex LU_decomp "returns incorrect results" | - (see below)
   2026-10-01 | [rejected] | specfunc: missing 0.5 factor in coulomb turning point  | 192ec9cbf
   2026-10-01 | [upstream] | cdf: no NaN from beta_cont_frac under fp contraction    | 1b1d94ee9
+  2026-10-01 | [upstream] | specfunc: Hermite function derivative at orders 0 and 1 | 5d36e1999, f4d35a67e
 
 
 ## [upstream] rng: make the random() generators produce the documented sequences
@@ -708,6 +709,59 @@ non-finite results in either build.
 Files: `cdf/beta_inc.c`, `cdf/test.c`.
 
 See Savannah bug #64613.
+
+
+## [upstream] specfunc: fix the Hermite function derivative at orders 0 and 1
+
+Commits: 5d36e1999, f4d35a67e
+
+`gsl_sf_hermite_func_der_e(m=1, n, x)` seeded its running value for
+`psi_n` with `0.0`, and the recurrence that would overwrite it only runs
+from `i = 2`.  So for `n = 0` and `n = 1` the value was read while still
+zero and the `-x psi_n` term of
+
+    psi'_n(x) = sqrt(2 n) psi_{n-1}(x) - x psi_n(x)
+
+was dropped:
+
+    m=1, n=0:  0 for every x, instead of -x psi_0(x)
+    m=1, n=1:  sqrt(2) psi_0, losing the -x psi_1 part
+
+For `n >= 2` the loop overwrites the value before it is read, so those
+orders were always correct - which is why it went unnoticed: every
+existing vector in `specfunc/test_hermite.c` uses `n = 28` or `n = 380`.
+The seed is now `psi_0` for `n = 0` and `psi_1` for `n = 1`.
+
+A second defect in the same branch: the error estimate was
+`n * epsilon * |val|`, which is **exactly zero** at `n = 0` and so claimed
+the result was exact.  That is not merely cosmetic - the test harness
+rejects any expected value that does not lie inside the reported error
+bar, so a test vector for `n = 0` could not be written at all until this
+was corrected.  It now reports at least one epsilon; `n >= 1` is
+unchanged.
+
+Checked against the elementary closed forms rather than against GSL.
+With `psi_0 = pi^(-1/4) exp(-x^2/2)`, which is what
+`gsl_sf_hermite_func_e(0,x)` returns,
+
+    psi_0'(x) = -x psi_0(x)
+    psi_1'(x) = sqrt(2) (1 - x^2) psi_0(x)
+
+Before the change `psi_0'` was 0 at every sampled `x`, and `psi_1'` was
+wrong everywhere except `x = 0` where the missing term vanishes.  After
+it both agree to 1e-16 relative, and the `n = 2` values are bit-identical
+before and after, so the change does not disturb the orders that worked.
+The test values were computed to 60 digits independently of GSL; with the
+fix reverted, `specfunc_test` reports 13 failures, all of them the new
+vectors.
+
+Not done: the report also asks for array forms of the derivative
+functions, which do not exist.  That is new API, outside the eligibility
+rule for this fork.
+
+Files: `specfunc/hermite.c`, `specfunc/test_hermite.c`.
+
+See Savannah bug #68625.
 
 
 ## [rejected] min: bound gsl_min_find_bracket to the initial interval
