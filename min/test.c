@@ -43,7 +43,7 @@ void my_error_handler (const char *reason, const char *file,
 int
 main (void)
 {
-  gsl_function F_cos, F_func1, F_func2, F_func3, F_func4;
+  gsl_function F_cos, F_func1, F_func2, F_func3, F_func4, F_parab;
   
   const gsl_min_fminimizer_type * fminimizer[4] ;
   const gsl_min_fminimizer_type ** T;
@@ -60,6 +60,7 @@ main (void)
   F_func2 = create_function (func2) ;
   F_func3 = create_function (func3) ;
   F_func4 = create_function (func4) ;
+  F_parab = create_function (f_parab) ;
 
   gsl_set_error_handler (&my_error_handler);
 
@@ -79,6 +80,14 @@ main (void)
   test_bracket("sqrt(|x|) [-1,0]",&F_func2,-1.0,0.0,15);
   test_bracket("sqrt(|x|) [-1,-0.6]",&F_func2,-1.0,-0.6,15);
   test_bracket("sqrt(|x|) [-1,1]",&F_func2,-1.0,1.0,15);
+
+  /* Regression test: the parabolic step must be taken whenever it lies
+     inside the bracket.  On a quadratic the fit is exact, so Brent should
+     reach the minimum in only a few iterations; the old lower-bound test
+     (p < q*w_lower) rejected valid parabolic steps and needed extra
+     golden-section iterations.  See bug #43496. */
+  test_f_iters (gsl_min_fminimizer_brent,
+                "(x-1)^2 [0.4 (0.7) 6]", &F_parab, 0.4, 0.7, 6.0, 1.0, 5);
 
   exit (gsl_test_summary ());
 }
@@ -142,6 +151,58 @@ test_f (const gsl_min_fminimizer_type * T,
 
   gsl_min_fminimizer_free (s);
 
+}
+
+void
+test_f_iters (const gsl_min_fminimizer_type * T, 
+              const char * description, gsl_function *f,
+              double lower_bound, double middle, double upper_bound, 
+              double correct_minimum, size_t max_iterations)
+{
+  int status;
+  size_t iterations = 0;
+  double x_lower, x_upper;
+  double m, a, b;
+  gsl_min_fminimizer * s;
+
+  x_lower = lower_bound;
+  x_upper = upper_bound;
+
+  s = gsl_min_fminimizer_alloc (T) ;
+  gsl_min_fminimizer_set (s, f, middle, x_lower, x_upper) ;
+
+  do 
+    {
+      iterations++ ;
+
+      status = gsl_min_fminimizer_iterate (s);
+
+      m = gsl_min_fminimizer_x_minimum(s);
+      a = gsl_min_fminimizer_x_lower(s);
+      b = gsl_min_fminimizer_x_upper(s);
+
+      if (status) break ;
+
+      status = gsl_min_test_interval (a, b, EPSABS, EPSREL);
+    }
+  while (status == GSL_CONTINUE && iterations < MAX_ITERATIONS);
+
+  gsl_test (status, "%s, %s (%g obs vs %g expected) ", 
+            gsl_min_fminimizer_name(s), description, 
+            gsl_min_fminimizer_x_minimum(s), correct_minimum);
+
+  if (!WITHIN_TOL (m, correct_minimum, EPSREL, EPSABS))
+    {
+      gsl_test (GSL_FAILURE, "incorrect precision (%g obs vs %g expected)", 
+                m, correct_minimum);
+    }
+
+  gsl_test (iterations > max_iterations,
+            "%s, %s: reached minimum in %d iterations (max %d)",
+            gsl_min_fminimizer_name(s), description,
+            (int) iterations, (int) max_iterations);
+
+  gsl_min_fminimizer_free (s);
 }
 
 void

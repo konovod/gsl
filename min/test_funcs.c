@@ -83,3 +83,14 @@ func4 (double x, void * p)
   return x - 30.0 / (1.0 + 1e5 * pow(x-0.8, 2.0));
 }
 
+/* f(x) = (x-1)^2 */
+/* minimum at x = 1 */
+
+double
+f_parab (double x, void * p)
+{
+  p = 0;  /* avoid warning about unused parameter */
+
+  return (x - 1.0) * (x - 1.0);
+}
+

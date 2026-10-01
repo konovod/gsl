@@ -31,6 +31,12 @@ test_f (const gsl_min_fminimizer_type * T,
         double lower_bound, double middle, double upper_bound, 
         double correct_minimum);
 
+void
+test_f_iters (const gsl_min_fminimizer_type * T, 
+              const char * description, gsl_function *f,
+              double lower_bound, double middle, double upper_bound, 
+              double correct_minimum, size_t max_iterations);
+
 int
 test_bracket (const char * description,gsl_function *f,double lower_bound, 
               double upper_bound, unsigned int max);
@@ -40,3 +46,4 @@ double func1 (double x, void * p);
 double func2 (double x, void * p);
 double func3 (double x, void * p);
 double func4 (double x, void * p);
+double f_parab (double x, void * p);

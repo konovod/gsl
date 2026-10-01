@@ -83,3 +83,6 @@ build-cmake-*/
 # Data files written by the *test_static programs.
 matrix/test_static.dat
 vector/test_static.dat
+
+# Scratch area for patch/reference files being evaluated for integration.
+/temp/

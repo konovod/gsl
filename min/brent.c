@@ -125,7 +125,15 @@ brent_iterate (void *vstate, gsl_function * f, double *x_minimum, double * f_min
       e = d;
     }
 
-  if (fabs (p) < fabs (0.5 * q * r) && p < q * w_lower && p < q * w_upper)
+  /* Take the parabolic step p/q only if the resulting trial point
+     u = z + p/q lies inside the bracket (x_left, x_right).  With q > 0
+     this is equivalent to  -q*w_lower < p < q*w_upper, since
+     w_lower = z - x_left and w_upper = x_right - z.  The original code
+     tested p < q*w_lower, which admits trial points to the left of
+     x_left and rejects some valid parabolic steps (cf. Brent, "Algorithms
+     for Minimization without Derivatives", and Forsythe/Malcolm/Moler). */
+
+  if (fabs (p) < fabs (0.5 * q * r) && p > -q * w_lower && p < q * w_upper)
     {
       double t2 = 2 * tolerance ;
 
