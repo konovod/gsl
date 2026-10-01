@@ -16,6 +16,10 @@ Error Function
    These routines compute the error function :math:`\erf(x)`,
    where
    :math:`\erf(x) = (2/\sqrt{\pi}) \int_0^x dt \exp(-t^2)`.
+
+   The function is defined for all :data:`x`, including the limits
+   :math:`\erf(\pm\infty) = \pm 1`.
+.. Domain: -infinity < x < infinity
 .. Exceptional Return Values: none
 
 Complementary Error Function
@@ -26,6 +30,13 @@ Complementary Error Function
 
    These routines compute the complementary error function 
    :math:`\erfc(x) = 1 - \erf(x) = (2/\sqrt{\pi}) \int_x^\infty \exp(-t^2)`
+
+   The function is defined for all :data:`x`, with the limits
+   :math:`\erfc(+\infty) = 0` and :math:`\erfc(-\infty) = 2`.
+   :math:`\erfc(x)` underflows to zero for :data:`x` greater than about
+   27.2, where it is smaller than the least denormal, and this is
+   reported as an exact zero rather than as a domain error.
+.. Domain: -infinity < x < infinity
 .. Exceptional Return Values: none
 
 Log Complementary Error Function
@@ -36,6 +47,14 @@ Log Complementary Error Function
 
    These routines compute the logarithm of the complementary error function
    :math:`\log(\erfc(x))`.
+
+   The function is defined for all :data:`x`, with the limits
+   :math:`\log(\erfc(-\infty)) = \log 2` and
+   :math:`\log(\erfc(+\infty)) = -\infty`.  For :data:`x` beyond
+   :math:`\sqrt{\mathrm{DBL\_MAX}}`, where the leading term
+   :math:`-x^2` of the answer can no longer be represented, the result is
+   :math:`-\infty`.
+.. Domain: -infinity < x < infinity
 .. Exceptional Return Values: none
 
 Probability functions
