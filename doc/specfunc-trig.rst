@@ -146,6 +146,36 @@ Restriction Functions
 
 .. Exceptional Return Values: GSL_ELOSS
 
+.. index::
+   single: sin_pi, sine function with argument reduction
+   single: cosine function, argument reduction
+
+.. function:: double gsl_sf_sin_pi (double x)
+              int gsl_sf_sin_pi_e (double x, gsl_sf_result * result)
+
+   These routines compute :math:`\sin(\pi x)`.
+
+   Unlike :func:`gsl_sf_sin`, these routines do the argument reduction
+   themselves, which makes them both faster and more accurate for large
+   :data:`x`: the reduction is exact for :data:`x` up to about
+   :math:`2/(\epsilon)`, where :math:`\epsilon` is the machine epsilon.
+
+   Any :data:`x` with :math:`|x| \geq 2/\epsilon` is an even integer as
+   far as a double can represent, so the result is exactly 0 there.
+.. Domain: -infinity < x < infinity
+.. Exceptional Return Values: GSL_EDOM
+
+.. function:: double gsl_sf_cos_pi (double x)
+              int gsl_sf_cos_pi_e (double x, gsl_sf_result * result)
+
+   These routines compute :math:`\cos(\pi x)`, with the same argument
+   reduction as :func:`gsl_sf_sin_pi`.
+
+   Any :data:`x` with :math:`|x| \geq 2/\epsilon` is an even integer as
+   far as a double can represent, so the result is exactly 1 there.
+.. Domain: -infinity < x < infinity
+.. Exceptional Return Values: GSL_EDOM
+
 Trigonometric Functions With Error Estimates
 --------------------------------------------
 
