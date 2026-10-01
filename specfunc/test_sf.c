@@ -2187,6 +2187,18 @@ int test_psi(void)
   TEST_SF(s, gsl_sf_psi_e, (-1.0e+5-0.5, &r), 11.512935464924395337, 4.0*TEST_TOL4, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_psi_e, (-262144.0-0.5, &r), 12.476653064769611581, 4.0*TEST_TOL4, GSL_SUCCESS);
 
+  /* psi has poles at every non-positive integer, which is the domain
+   * documented in doc/specfunc-psi.rst.  psi_x() only named 0, -1 and -2
+   * explicitly and depended on sin(M_PI*x) underflowing for the rest; it
+   * does not, so -3 and below were reported as very large finite values.
+   * See Savannah bug #58066. */
+  TEST_SF(s, gsl_sf_psi_e, ( 0.0,   &r), GSL_NAN, GSL_NAN, GSL_EDOM);
+  TEST_SF(s, gsl_sf_psi_e, (-1.0,   &r), GSL_NAN, GSL_NAN, GSL_EDOM);
+  TEST_SF(s, gsl_sf_psi_e, (-2.0,   &r), GSL_NAN, GSL_NAN, GSL_EDOM);
+  TEST_SF(s, gsl_sf_psi_e, (-3.0,   &r), GSL_NAN, GSL_NAN, GSL_EDOM);
+  TEST_SF(s, gsl_sf_psi_e, (-4.0,   &r), GSL_NAN, GSL_NAN, GSL_EDOM);
+  TEST_SF(s, gsl_sf_psi_e, (-100.0, &r), GSL_NAN, GSL_NAN, GSL_EDOM);
+
   TEST_SF(s, gsl_sf_psi_1piy_e, (0.8, &r), -0.07088340212750589223, TEST_TOL1, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_psi_1piy_e, (1.0, &r),  0.09465032062247697727, TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_psi_1piy_e, (5.0, &r),  1.6127848446157465854, TEST_TOL2, GSL_SUCCESS);
@@ -2226,6 +2238,17 @@ int test_psi(void)
   TEST_SF(s, gsl_sf_psi_1_e, (-15.5, &r), 9.8071247184113896201, TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_psi_1_e, (-50.5, &r), 9.8499971860824842274, TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_psi_1_e, (-1000.5, &r), 9.8686054001734414233, TEST_TOL0, GSL_SUCCESS);
+
+  /* Trigamma has the same poles.  The x > -5 branch of gsl_sf_psi_1_e()
+   * catches -3 and -4 through its fx == 0 test, but -5 and below went
+   * through the asymptotic branch, which divides by sin(M_PI*x)^2 and so
+   * returned a very large finite value.  See Savannah bug #58066. */
+  TEST_SF(s, gsl_sf_psi_1_e, ( 0.0,   &r), GSL_NAN, GSL_NAN, GSL_EDOM);
+  TEST_SF(s, gsl_sf_psi_1_e, (-1.0,   &r), GSL_NAN, GSL_NAN, GSL_EDOM);
+  TEST_SF(s, gsl_sf_psi_1_e, (-3.0,   &r), GSL_NAN, GSL_NAN, GSL_EDOM);
+  TEST_SF(s, gsl_sf_psi_1_e, (-5.0,   &r), GSL_NAN, GSL_NAN, GSL_EDOM);
+  TEST_SF(s, gsl_sf_psi_1_e, (-6.0,   &r), GSL_NAN, GSL_NAN, GSL_EDOM);
+  TEST_SF(s, gsl_sf_psi_1_e, (-100.0, &r), GSL_NAN, GSL_NAN, GSL_EDOM);
 
   TEST_SF(s, gsl_sf_psi_n_e, (1, 1, &r), 1.6449340668482264364,   TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_psi_n_e, (1, 2, &r), 0.64493406684822643647,  TEST_TOL0, GSL_SUCCESS);
@@ -2289,6 +2312,16 @@ int test_psi_complex(void)
             3.37919358657933066, TEST_TOL0,
            -2.36829046481731091, TEST_TOL0,
             GSL_SUCCESS);
+
+  /* On the real axis the poles are the same non-positive integers.  The
+   * reflection branch only rejected a non-finite cot(pi z), which never
+   * happens because cot rounds to a huge finite number at an integer, so
+   * z = -1, -2, ... returned a large finite value.  See Savannah bug
+   * #58066.  Only the return code is checked, since the values are
+   * unspecified on a domain error. */
+  TEST_SF_RETURN(s, gsl_sf_complex_psi_e, (-1.0, 0.0, &r1, &r2), GSL_EDOM);
+  TEST_SF_RETURN(s, gsl_sf_complex_psi_e, (-2.0, 0.0, &r1, &r2), GSL_EDOM);
+  TEST_SF_RETURN(s, gsl_sf_complex_psi_e, (-100.0, 0.0, &r1, &r2), GSL_EDOM);
 
   return s;
 }

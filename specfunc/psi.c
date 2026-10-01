@@ -372,6 +372,20 @@ static double psi_1_table[PSI_1_TABLE_NMAX+1] = {
 };
 
 
+/* The poles of psi and its derivatives are the non-positive integers.
+   The checks below used to name only 0, -1 and -2, and rely on sin(M_PI*x)
+   rounding to zero for the rest; it does not, so x = -3 and below were
+   reported as very large finite values instead of a domain error.  For
+   example sin(M_PI*(-3)) is about -3.7e-16, far above the
+   2*GSL_SQRT_DBL_MIN (~3e-154) the old guard in psi_x() compared against.
+   See Savannah bug #58066. */
+static int
+psi_pole(const double x)
+{
+  return x <= 0.0 && floor(x) == x;
+}
+
+
 /* digamma for x both positive and negative; we do both
  * cases here because of the way we use even/odd parts
  * of the function
@@ -381,7 +395,7 @@ psi_x(const double x, gsl_sf_result * result)
 {
   const double y = fabs(x);
 
-  if(x == 0.0 || x == -1.0 || x == -2.0) {
+  if(psi_pole(x)) {
     DOMAIN_ERROR(result);
   }
   else if(y >= 2.0) {
@@ -723,7 +737,7 @@ int gsl_sf_psi_1_e(const double x, gsl_sf_result * result)
 {
   /* CHECK_POINTER(result) */
 
-  if(x == 0.0 || x == -1.0 || x == -2.0) {
+  if(psi_pole(x)) {
     DOMAIN_ERROR(result);
   }
   else if(x > 0.0)
@@ -802,6 +816,17 @@ gsl_sf_complex_psi_e(
   gsl_sf_result * result_im
   )
 {
+  /* psi has poles at the non-positive real integers.  The branch below
+     rejects only the origin, and the reflection branch rejects only a
+     non-finite cot(pi z) - which is never reached, because cot rounds to a
+     huge finite number at an integer rather than overflowing.  So
+     z = -1, -2, ... returned a large finite value instead of a domain
+     error.  See Savannah bug #58066. */
+  if(y == 0.0 && x < 0.0 && floor(x) == x)
+  {
+    GSL_ERROR("singularity", GSL_EDOM);
+  }
+
   if(x >= 0.0)
   {
     gsl_complex z = gsl_complex_rect(x, y);
