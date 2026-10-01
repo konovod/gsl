@@ -19,6 +19,7 @@
 
 #include <config.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <gsl/gsl_rng.h>
 
 /* This file provides support for random() generators. There are three
@@ -39,7 +40,7 @@
   
  */
 
-static inline long int random_get (int * i, int * j, int n, long int * x);
+static inline uint32_t random_get (int * i, int * j, int n, int32_t * x);
 
 static inline unsigned long int random8_get (void *vstate);
 static inline unsigned long int random32_get (void *vstate);
@@ -71,41 +72,41 @@ static void random64_bsd_set (void *state, unsigned long int s);
 static void random128_bsd_set (void *state, unsigned long int s);
 static void random256_bsd_set (void *state, unsigned long int s);
 
-static void bsd_initialize (long int * x, int n, unsigned long int s);
-static void libc5_initialize (long int * x, int n, unsigned long int s);
-static void glibc2_initialize (long int * x, int n, unsigned long int s);
+static void bsd_initialize (int32_t * x, int n, unsigned long int s);
+static void libc5_initialize (int32_t * x, int n, unsigned long int s);
+static void glibc2_initialize (int32_t * x, int n, unsigned long int s);
 
 typedef struct
   {
-    long int x;
+    int32_t x;
   }
 random8_state_t;
 
 typedef struct
   {
     int i, j;
-    long int x[7];
+    int32_t x[7];
   }
 random32_state_t;
 
 typedef struct
   {
     int i, j;
-    long int x[15];
+    int32_t x[15];
   }
 random64_state_t;
 
 typedef struct
   {
     int i, j;
-    long int x[31];
+    int32_t x[31];
   }
 random128_state_t;
 
 typedef struct
   {
     int i, j;
-    long int x[63];
+    int32_t x[63];
   }
 random256_state_t;
 
@@ -114,34 +115,39 @@ random8_get (void *vstate)
 {
   random8_state_t *state = (random8_state_t *) vstate;
 
-  state->x = (1103515245 * state->x + 12345) & 0x7fffffffUL;
-  return state->x;
+  state->x = (int32_t) ((1103515245UL * (uint32_t) state->x + 12345UL)
+                        & 0x7fffffffUL);
+  return (unsigned long int) state->x;
 }
 
-static inline long int
-random_get (int * i, int * j, int n, long int * x)
+static inline uint32_t
+random_get (int * i, int * j, int n, int32_t * x)
 {
-  long int k ;
+  uint32_t sum ;
 
-  x[*i] += x[*j] ;
-  k = (x[*i] >> 1) & 0x7FFFFFFF ;
-  
+  /* Add the two state words modulo 2^32 (the original BSD algorithm uses
+     unsigned long ints here; adding them as unsigned avoids overflow UB and
+     gives the same result on every platform). */
+  sum = (uint32_t) x[*i] + (uint32_t) x[*j] ;
+  x[*i] = (int32_t) sum ;
+
   (*i)++ ;
   if (*i == n)
     *i = 0 ;
-  
+
   (*j)++ ;
   if (*j == n)
     *j = 0 ;
 
-  return k ;
+  /* cf. the BSD random(): return the top 31 bits of the sum. */
+  return (sum >> 1) & 0x7FFFFFFFUL ;
 }
 
 static inline unsigned long int
 random32_get (void *vstate)
 {
   random32_state_t *state = (random32_state_t *) vstate;
-  unsigned long int k = random_get (&state->i, &state->j, 7, state->x) ; 
+  uint32_t k = random_get (&state->i, &state->j, 7, state->x) ; 
   return k ;
 }
 
@@ -149,7 +155,7 @@ static inline unsigned long int
 random64_get (void *vstate)
 {
   random64_state_t *state = (random64_state_t *) vstate;
-  long int k = random_get (&state->i, &state->j, 15, state->x) ; 
+  uint32_t k = random_get (&state->i, &state->j, 15, state->x) ; 
   return k ;
 }
 
@@ -157,7 +163,7 @@ static inline unsigned long int
 random128_get (void *vstate)
 {
   random128_state_t *state = (random128_state_t *) vstate;
-  unsigned long int k = random_get (&state->i, &state->j, 31, state->x) ; 
+  uint32_t k = random_get (&state->i, &state->j, 31, state->x) ; 
   return k ;
 }
 
@@ -165,7 +171,7 @@ static inline unsigned long int
 random256_get (void *vstate)
 {
   random256_state_t *state = (random256_state_t *) vstate;
-  long int k = random_get (&state->i, &state->j, 63, state->x) ; 
+  uint32_t k = random_get (&state->i, &state->j, 63, state->x) ; 
   return k ;
 }
 
@@ -271,42 +277,42 @@ random256_bsd_set (void *vstate, unsigned long int s)
 }
 
 static void 
-bsd_initialize (long int * x, int n, unsigned long int s)
+bsd_initialize (int32_t * x, int n, unsigned long int s)
 {
   int i; 
 
   if (s == 0)
     s = 1 ;
 
-  x[0] = s;
+  x[0] = (int32_t) s;
 
   for (i = 1 ; i < n ; i++)
-    x[i] = 1103515245 * x[i-1] + 12345 ;
+    x[i] = (int32_t) (1103515245UL * (uint32_t) x[i-1] + 12345UL);
 }
 
 static void 
-libc5_initialize (long int * x, int n, unsigned long int s)
+libc5_initialize (int32_t * x, int n, unsigned long int s)
 {
   int i; 
 
   if (s == 0)
     s = 1 ;
 
-  x[0] = s;
+  x[0] = (int32_t) s;
 
   for (i = 1 ; i < n ; i++)
-    x[i] = 1103515145 * x[i-1] + 12345 ;
+    x[i] = (int32_t) (1103515145UL * (uint32_t) x[i-1] + 12345UL);
 }
 
 static void 
-glibc2_initialize (long int * x, int n, unsigned long int s)
+glibc2_initialize (int32_t * x, int n, unsigned long int s)
 {
   int i; 
 
   if (s == 0)
     s = 1 ;
 
-  x[0] = s;
+  x[0] = (int32_t) s;
 
   for (i = 1 ; i < n ; i++)
     {
@@ -321,7 +327,7 @@ glibc2_initialize (long int * x, int n, unsigned long int s)
           s = t ;
         }
 
-    x[i] = s ;
+    x[i] = (int32_t) s ;
     }
 }
 

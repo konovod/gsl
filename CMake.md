@@ -33,7 +33,6 @@ Options
   GSL_BUILD_TOOLS        ON      build gsl-randist and gsl-histogram
   GSL_BUILD_TESTS        OFF     build and register the per-module test programs
   GSL_ENABLE_RANGE_CHECK OFF     enable run-time range checking inside the library
-  GSL_SKIP_RNG_TEST      OFF     skip rng.test (see Tests below)
 
 Installing and consuming
 ------------------------
@@ -60,15 +59,6 @@ Tests
 entry and registers them with CTest.  Each test runs in its module source
 directory because several tests read and write data files there, so run
 them through CTest rather than invoking the binaries by hand.
-
-On 64-bit Unix (where `long` is 64 bits), `rng.test` reports four failures
-for the `random32/random64` BSD and libc5 generators.  Those cases compare
-against values hardcoded for a 32-bit `long`; the generators themselves are
-correct, the expected constants are ABI dependent.  This is pre-existing
-upstream behaviour, observable with the autotools build as well.  Pass
-`-DGSL_SKIP_RNG_TEST=ON` to disable that single test (the CI does this on
-Linux and macOS, while keeping it enabled on Windows where `long` is 32
-bits and all tests pass).
 
 Continuous integration
 ----------------------

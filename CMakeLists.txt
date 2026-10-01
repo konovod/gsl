@@ -45,8 +45,6 @@ option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 option(GSL_ENABLE_RANGE_CHECK "Enable run-time range checking inside the GSL library" OFF)
 option(GSL_BUILD_TOOLS "Build the gsl-randist and gsl-histogram programs" ON)
 option(GSL_BUILD_TESTS "Build the per-module test programs" OFF)
-option(GSL_SKIP_RNG_TEST
-       "Skip rng.test (its hardcoded random32/random64 BSD+libc5 values are ABI dependent)" OFF)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
@@ -222,14 +220,6 @@ function(gsl_add_test module name)
   target_link_libraries(${_target} PRIVATE gsl gslcblas)
   add_test(NAME "${module}.${name}" COMMAND ${_target}
            WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/${module}")
-
-  # rng.test hardcodes expected values for the random32/random64 BSD and libc5
-  # generators, which depend on the width of 'long'.  These expectations only
-  # hold on some ABIs, so allow the test to be skipped where they do not.
-  if(module STREQUAL "rng" AND name STREQUAL "test")
-    set_tests_properties("${module}.${name}" PROPERTIES
-      DISABLED "$<BOOL:${GSL_SKIP_RNG_TEST}>")
-  endif()
 endfunction()
 
 if(GSL_BUILD_TESTS)
