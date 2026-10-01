@@ -27,6 +27,7 @@
 #include <gsl/gsl_sf_gamma.h>
 #include <gsl/gsl_sf_coupling.h>
 #include <gsl/gsl_sf_exp.h>
+#include <gsl/gsl_sf_log.h>
 
 #include "error.h"
 
