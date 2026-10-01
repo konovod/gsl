@@ -86,7 +86,16 @@ double
 gsl_ran_poisson_pdf (const unsigned int k, const double mu)
 {
   double p;
-  double lf = gsl_sf_lnfact (k); 
+  double lf;
+
+  /* mu = 0 is a degenerate Poisson distribution: all the mass is at
+     k = 0.  Without this the term log(mu) * k is 0 * -inf = NaN for
+     k = 0. */
+
+  if (mu == 0)
+    return (k == 0) ? 1.0 : 0.0;
+
+  lf = gsl_sf_lnfact (k); 
 
   p = exp (log (mu) * k - lf - mu);
   return p;
