@@ -258,5 +258,29 @@ FUNCTION (test, all) ()
       i++;
     }
 
+  /* gsl_complex_arccosh() for a real argument must agree with
+   * gsl_complex_arccosh_real(), in particular it must return +0.0 (not
+   * -0.0) for the real part on the positive real axis (bug #47345).  The
+   * tables above cannot see this because they compare magnitudes. */
+
+  {
+    const double rx[] = { -10.0, -2.0, -1.0, 0.5, 1.0, 2.0 };
+    size_t k;
+
+    for (k = 0; k < sizeof (rx) / sizeof (rx[0]); ++k)
+      {
+        TYPE (gsl_complex) fz = gsl_complex_arccosh (gsl_complex_rect (rx[k], 0.0));
+        TYPE (gsl_complex) rz = gsl_complex_arccosh_real (rx[k]);
+        ATOMIC fx = GSL_REAL (fz), fy = GSL_IMAG (fz);
+
+        gsl_test_rel (fx, GSL_REAL (rz), tol,
+                      "gsl_complex_arccosh real part at (%g,0)", rx[k]);
+        gsl_test_rel (fy, GSL_IMAG (rz), tol,
+                      "gsl_complex_arccosh imag part at (%g,0)", rx[k]);
+        gsl_test (signbit (fx) ? 1 : 0,
+                  "gsl_complex_arccosh real part sign at (%g,0)", rx[k]);
+      }
+  }
+
   return 0;
 }

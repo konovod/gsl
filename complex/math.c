@@ -931,9 +931,19 @@ gsl_complex_arcsinh (gsl_complex a)
 gsl_complex
 gsl_complex_arccosh (gsl_complex a)
 {                               /* z = arccosh(a) */
-  gsl_complex z = gsl_complex_arccos (a);
-  z = gsl_complex_mul_imag (z, GSL_IMAG(z) > 0 ? -1.0 : 1.0);
-  return z;
+  if (GSL_IMAG (a) == 0.0)
+    {
+      /* a is real: use the real branch cut, so that the result is +0.0 on
+       * the positive real axis rather than the -0.0 that the arccos()
+       * route below would return (bug #47345). */
+      return gsl_complex_arccosh_real (GSL_REAL (a));
+    }
+  else
+    {
+      gsl_complex z = gsl_complex_arccos (a);
+      z = gsl_complex_mul_imag (z, GSL_IMAG(z) > 0 ? -1.0 : 1.0);
+      return z;
+    }
 }
 
 gsl_complex
