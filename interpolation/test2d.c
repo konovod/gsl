@@ -331,6 +331,50 @@ test_bicubic_nonlinear_nonsq()
   return status;
 }
 
+/* The _e evaluators must return GSL_EDOM *and* store a NaN in the output
+   when the point is outside the interpolation domain.  They used to call
+   GSL_ERROR() without touching the output, so the caller was left with an
+   uninitialised value (Savannah bug #60371). */
+static int
+test_domain_error()
+{
+  size_t xsize = 4, ysize = 4;
+  double xarr[] = {0.0, 1.0, 2.0, 3.0};
+  double yarr[] = {0.0, 1.0, 2.0, 3.0};
+  double zarr[] = { 0.0, 1.0, 2.0, 3.0,
+                    1.0, 2.0, 3.0, 4.0,
+                    2.0, 3.0, 4.0, 5.0,
+                    3.0, 4.0, 5.0, 6.0 };
+  gsl_interp2d * interp = gsl_interp2d_alloc(gsl_interp2d_bicubic, xsize, ysize);
+  gsl_error_handler_t * old_handler = gsl_set_error_handler_off();
+  double z;
+
+  gsl_interp2d_init(interp, xarr, yarr, zarr, xsize, ysize);
+
+  /* a sentinel value makes the pre-fix behaviour (output untouched) fail
+     deterministically rather than depending on the stack contents */
+  z = 12345.0;
+  gsl_test_int(gsl_interp2d_eval_e(interp, xarr, yarr, zarr, -1.0, 1.5,
+                                   NULL, NULL, &z), GSL_EDOM,
+               "interp2d_eval_e x out of range status");
+  gsl_test(isnan(z) ? 0 : 1, "interp2d_eval_e x out of range value");
+
+  z = 12345.0;
+  gsl_test_int(gsl_interp2d_eval_e(interp, xarr, yarr, zarr, 1.5, -1.0,
+                                   NULL, NULL, &z), GSL_EDOM,
+               "interp2d_eval_e y out of range status");
+  gsl_test(isnan(z) ? 0 : 1, "interp2d_eval_e y out of range value");
+
+  gsl_test(isnan(gsl_interp2d_eval(interp, xarr, yarr, zarr, -1.0, 1.5,
+                                   NULL, NULL)) ? 0 : 1,
+           "interp2d_eval x out of range value");
+
+  gsl_set_error_handler(old_handler);
+  gsl_interp2d_free(interp);
+
+  return 0;
+}
+
 /* runs all the tests */
 int
 test_interp2d_main(void)
@@ -342,6 +386,7 @@ test_interp2d_main(void)
   status += test_bicubic();
   status += test_bicubic_nonlinear();
   status += test_bicubic_nonlinear_nonsq();
+  status += test_domain_error();
 
   return status;
 }

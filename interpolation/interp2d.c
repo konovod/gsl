@@ -140,10 +140,12 @@ interp2d_eval(int (*evaluator)(const void *, const double xa[], const double ya[
 {
   if (x < interp->xmin || x > interp->xmax)
     {
+      *result = GSL_NAN;
       GSL_ERROR ("interpolation x value out of range", GSL_EDOM);
     }
   else if (y < interp->ymin || y > interp->ymax)
     {
+      *result = GSL_NAN;
       GSL_ERROR ("interpolation y value out of range", GSL_EDOM);
     }
 
