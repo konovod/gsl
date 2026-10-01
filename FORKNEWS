@@ -41,6 +41,10 @@ One line per change: date | tag | description | commit(s).
   2026-10-01 | [upstream] | dht: read the J matrix sequentially in gsl_dht_apply   | cd29899de
   2026-10-01 | [upstream] | specfunc: compute the 3j symbol by edge recursion      | 1b2c8ff98
   2026-10-01 | [upstream] | multimin: add a quadratic minimiser                    | 53cd0d098
+  2026-10-01 | [upstream] | bspline: declare gsl_bspline_eval_nonzero             | ef3940132
+  2026-10-01 | [upstream] | randist: degenerate mu = 0 in gsl_ran_poisson_pdf      | 4f9f4f4fc
+  2026-10-01 | [upstream] | linalg: raise the cholesky_invert Hilbert tolerance   | f84a57a0f
+  2026-10-01 | [upstream] | doc: correct the gsl_sf_result_e10 scaling formula    | 066f5b747
   2026-10-01 | [rejected] | min: bound gsl_min_find_bracket to the initial interval | - (see below)
 
 
@@ -299,6 +303,75 @@ Files: `multimin/quadratic.c`, `multimin/gsl_multimin.h`,
 `cmake/gsl_sources.cmake`.
 
 Based on the routine suggested by Jussi Lehtola in Savannah bug #32776.
+
+
+## [upstream] bspline: declare gsl_bspline_eval_nonzero
+
+Commit: ef3940132
+
+`gsl_bspline_eval_nonzero()` is defined in `bspline/old.c` and is exported
+by the library, but it had no prototype in `bspline/gsl_bspline.h`.  A
+caller therefore had to declare it by hand under C89, or provoke an
+implicit-declaration diagnostic under C99 and later.  The declaration is
+added next to `gsl_bspline_eval()`, which it parallels.
+
+Note that `gsl_bspline_deriv_eval_nonzero()` in the same file is also
+undeclared and is still undeclared; it wants its own entry.
+
+File: `bspline/gsl_bspline.h`.
+
+See Savannah bug #65868.
+
+
+## [upstream] randist: handle the degenerate mu = 0 in gsl_ran_poisson_pdf
+
+Commit: 4f9f4f4fc
+
+`gsl_ran_poisson_pdf()` evaluated `exp (log (mu) * k - lf - mu)`, so with
+`mu = 0` and `k = 0` the term `log (mu) * k` is `-inf * 0` and the result
+was `NaN`.  A Poisson distribution of rate zero is the degenerate one and
+carries all of its mass at `k = 0`, so `mu = 0` is now special cased and
+returns 1 for `k = 0` and 0 otherwise.
+
+The patch in the bug report also adds a guard to `gsl_ran_poisson()`.
+That half is not applied: the Knuth loop in the sampler already returns
+`k = 0` for `mu = 0`, so the guard would be dead code.
+
+File: `randist/poisson.c`.
+
+See Savannah bug #43326.
+
+
+## [upstream] linalg: increase the cholesky_invert Hilbert test tolerance
+
+Commit: f84a57a0f
+
+The unscaled 4x4 Hilbert matrix is nearly singular, and the residual
+accuracy of `gsl_linalg_cholesky_invert` depends on the order in which
+CBLAS accumulates `dsymm`, which in turn changes when the compiler
+auto-vectorises the loop.  The multiplier of 256 was exceeded by about
+12% on builds enabling AVX-512, and the same can happen with aarch64
+NEON.  It is raised to 512, which is what `gsl_linalg_mcholesky_invert`
+already uses for the same test; `gsl_linalg_pcholesky_invert` uses 1024.
+
+Only a test tolerance changes here, the library is unaffected.
+
+File: `linalg/test_cholesky.c`.
+
+See Savannah bug #67445.
+
+
+## [upstream] doc: correct the gsl_sf_result_e10 scaling formula
+
+Commit: 066f5b747
+
+The description of `gsl_sf_result_e10` said the result is obtained as
+`result * 10^(e10)`, but the struct has no `result` member; the value
+field is `val`.
+
+File: `doc/specfunc.rst`.
+
+See Savannah bug #66128.
 
 
 ## [rejected] min: bound gsl_min_find_bracket to the initial interval
