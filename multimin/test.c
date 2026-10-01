@@ -22,6 +22,7 @@
 #include <config.h>
 #include <stdlib.h>
 #include <gsl/gsl_test.h>
+#include <gsl/gsl_math.h>
 #include <gsl/gsl_blas.h>
 #include <gsl/gsl_multimin.h>
 #include <gsl/gsl_ieee_utils.h>
@@ -37,6 +38,9 @@ test_fdf(const char * desc, gsl_multimin_function_fdf *f,
 int
 test_f(const char * desc, gsl_multimin_function *f, initpt_function initpt,
        const gsl_multimin_fminimizer_type *T);
+
+int
+test_quadratic(void);
 
 int
 main (void)
@@ -99,8 +103,85 @@ main (void)
       }
   }
 
+  /* The quadratic minimiser is exact on a quadratic function (the
+     parabolic step along each coordinate lands on the minimum), so it
+     gets its own test rather than being run on the curved-valley test
+     functions above. */
+  test_quadratic ();
 
   exit (gsl_test_summary());
+}
+
+
+/* f(x) = sum_i (i+1) (x_i - 1)^2, minimum 0 at x_i = 1 */
+static double
+quadratic_fn (const gsl_vector * v, void * params)
+{
+  size_t i;
+  double result = 0.0;
+
+  (void) params;
+
+  for (i = 0; i < v->size; i++)
+    {
+      const double x = gsl_vector_get (v, i);
+      result += (i + 1.0) * (x - 1.0) * (x - 1.0);
+    }
+
+  return result;
+}
+
+int
+test_quadratic (void)
+{
+  const size_t n = 4;
+  const gsl_multimin_fminimizer_type *T = gsl_multimin_fminimizer_quadratic;
+  gsl_multimin_function f;
+  gsl_multimin_fminimizer *s;
+  gsl_vector *x = gsl_vector_alloc (n);
+  gsl_vector *step_size = gsl_vector_alloc (n);
+  size_t i, iter = 0;
+  int status = GSL_CONTINUE;
+  double maxerr = 0.0;
+
+  f.f = &quadratic_fn;
+  f.n = n;
+  f.params = 0;
+
+  for (i = 0; i < n; i++)
+    {
+      gsl_vector_set (x, i, 5.0 + i);
+      gsl_vector_set (step_size, i, 1.0);
+    }
+
+  s = gsl_multimin_fminimizer_alloc (T, n);
+  gsl_multimin_fminimizer_set (s, &f, x, step_size);
+
+  do
+    {
+      iter++;
+      status = gsl_multimin_fminimizer_iterate (s);
+      if (status)
+        break;
+      status = gsl_multimin_test_size (gsl_multimin_fminimizer_size (s), 1e-8);
+    }
+  while (status == GSL_CONTINUE && iter < 1000);
+
+  for (i = 0; i < n; i++)
+    {
+      const double xi = gsl_vector_get (gsl_multimin_fminimizer_x (s), i);
+      maxerr = GSL_MAX (maxerr, fabs (xi - 1.0));
+    }
+
+  gsl_test (status || maxerr > 1e-6,
+            "quadratic, n=%d: %d iter, max |x_i - 1| = %g, f(x)=%g",
+            (int) n, (int) iter, maxerr, gsl_multimin_fminimizer_minimum (s));
+
+  gsl_multimin_fminimizer_free (s);
+  gsl_vector_free (x);
+  gsl_vector_free (step_size);
+
+  return status || maxerr > 1e-6;
 }
 
 int

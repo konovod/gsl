@@ -463,6 +463,7 @@ set(GSL_SOURCES
     multimin/fminimizer.c
     multimin/simplex.c
     multimin/simplex2.c
+    multimin/quadratic.c
     multiroots/fdjac.c
     multiroots/fsolver.c
     multiroots/fdfsolver.c

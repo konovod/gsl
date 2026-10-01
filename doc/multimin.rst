@@ -491,6 +491,27 @@ at each evaluation point.
       generator so that repeated calls to :func:`gsl_multimin_fminimizer_set` for
       a given solver object will vary the orientation in a well-defined way.
 
+   .. var:: gsl_multimin_fminimizer_type * gsl_multimin_fminimizer_quadratic
+
+      This method minimizes the function by a "brute force" coordinate
+      descent using parabolic interpolation.  On each iteration, for every
+      coordinate in turn, a parabola is fitted through the current point
+      :math:`x_i` and the two points :math:`x_i \pm s_i`; if the curvature
+      is non-zero the estimated minimum of the parabola is tried as the
+      next point along that coordinate, and otherwise, or if the trial
+      point does not improve the function value, the step size
+      :math:`s_i` is halved and the fit is repeated.  The step sizes are
+      increased at the start of every iteration so that the minimizer can
+      follow a minimum that moves.
+
+      Because the parabolic fit is exact for a quadratic, this method
+      converges very quickly for functions that are nearly quadratic, but,
+      like other coordinate-descent methods, it can be slow for functions
+      with strong correlations between the coordinates.  It does not
+      require derivatives.  The characteristic size returned by
+      :func:`gsl_multimin_fminimizer_size` is the Euclidean norm of the
+      step size vector divided by the number of parameters.
+
 Examples
 ========
 
