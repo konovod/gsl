@@ -934,6 +934,46 @@ int test_erf(void)
   TEST_SF(s, gsl_sf_erf_Z_e, (1.0, &r),  0.24197072451914334980,   TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_erf_Q_e, (10.0, &r), 7.619853024160526066e-24, TEST_TOL2, GSL_SUCCESS);
 
+  /* The error function and its relatives extend continuously to infinity,
+     so those limits are part of the domain, not a domain error.  See
+     Savannah bugs #53919 and #65760: erfc8_sum() overflows to NaN above
+     |x| ~ 2.4e51 and erfc() underflows to zero above |x| = 27.213, and
+     both used to leak into the value and the error estimate. */
+
+  TEST_SF(s, gsl_sf_erfc_e, (GSL_NEGINF, &r), 2.0, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_erfc_e, (GSL_POSINF, &r), 0.0, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_erf_e, (GSL_NEGINF, &r), -1.0, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_erf_e, (GSL_POSINF, &r), 1.0, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_log_erfc_e, (GSL_NEGINF, &r), M_LN2, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_log_erfc_e, (GSL_POSINF, &r), GSL_NEGINF, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_erf_Z_e, (GSL_NEGINF, &r), 0.0, TEST_TOL0, GSL_EUNDRFLW);
+  TEST_SF(s, gsl_sf_erf_Z_e, (GSL_POSINF, &r), 0.0, TEST_TOL0, GSL_EUNDRFLW);
+
+  /* Large finite arguments, straddling both places where the computation
+     used to break: |x| > 27.213, where erfc() underflows to zero, and
+     |x| > 2.4e51, where erfc8_sum() overflows. */
+
+  TEST_SF(s, gsl_sf_erfc_e, (1e52, &r), 0.0, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_erfc_e, (-1e52, &r), 2.0, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_erf_e, (1e52, &r), 1.0, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_erf_e, (-1e52, &r), -1.0, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_log_erfc_e, (-1e52, &r), M_LN2, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_log_erfc_e, (1e52, &r), -1e104, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_log_erfc_e, (1e100, &r), -1e200, TEST_TOL0, GSL_SUCCESS);
+
+  /* Beyond sqrt(DBL_MAX) the term -x*x overflows and log(erfc(x)) has no
+     representable answer, so it is -inf. */
+
+  TEST_SF(s, gsl_sf_log_erfc_e, (1.5e154, &r), GSL_NEGINF, TEST_TOL0, GSL_SUCCESS);
+
+  /* NaN is not a domain error anywhere else in specfunc, so it is left to
+     propagate rather than being trapped. */
+
+  TEST_SF(s, gsl_sf_erfc_e, (GSL_NAN, &r), GSL_NAN, GSL_NAN, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_log_erfc_e, (GSL_NAN, &r), GSL_NAN, GSL_NAN, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_erf_e, (GSL_NAN, &r), GSL_NAN, GSL_NAN, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_erf_Z_e, (GSL_NAN, &r), GSL_NAN, GSL_NAN, GSL_SUCCESS);
+
   TEST_SF(s, gsl_sf_hazard_e, (-20.0, &r), 5.5209483621597631896e-88, TEST_TOL2, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_hazard_e, (-10.0, &r), 7.6945986267064193463e-23, TEST_TOL2, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_hazard_e, (-1.0, &r), 0.28759997093917836123, TEST_TOL0, GSL_SUCCESS);
