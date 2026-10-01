@@ -795,6 +795,29 @@ void test_fdist (void) {
   TEST (gsl_cdf_fdist_Q, (1000.0, 1.2, 1.3), 7.98794830588361109e-3, TEST_TOL6);
   TEST (gsl_cdf_fdist_Q, (10000.0, 1.2, 1.3), 1.7891371911574145e-3, TEST_TOL6);
 
+  /* Large nu2 drives the transformed continued fraction in
+   * cdf/beta_inc.c into its slow regime.  With fp contraction enabled it
+   * needed 532 iterations, just over the old limit of 512, and
+   * beta_cont_frac() returned NaN, so the whole result was NaN rather
+   * than a number.  These must stay finite whatever the compiler does
+   * with the arithmetic.  See Savannah bug #64613. */
+
+  TEST (gsl_cdf_fdist_Q, (3.786820954867802, 1, 100000),
+        0.051660470639181395, TEST_TOL6);
+  TEST (gsl_cdf_fdist_Q, (3.786820954867802, 1, 1000000),
+        0.051657952898195969, TEST_TOL6);
+  TEST (gsl_cdf_fdist_P, (3.786820954867802, 1, 100000),
+        0.94833952936081856, TEST_TOL6);
+  /* For the last three the expected values are 1 - P of the gp-pari values
+   * below, which are already in this test, so they are independent of
+   * the code under test. */
+  TEST (gsl_cdf_fdist_Q, (3.479082213465832574, 1, 4040712),
+        0.062149272362765906, TEST_TOL6);
+  TEST (gsl_cdf_fdist_Q, (3.002774644786533109, 1, 4040712),
+        0.083122126205239399, TEST_TOL6);
+  TEST (gsl_cdf_fdist_Q, (3.000854441173130827, 1, 4040712),
+        0.083220692801864171, TEST_TOL6);
+
 
   /* computed with gp-pari */
      
