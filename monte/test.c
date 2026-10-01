@@ -56,6 +56,9 @@ double f0 (double x[], size_t d, void *params);
 double f1 (double x[], size_t d, void *params);
 double f2 (double x[], size_t d, void *params);
 double f3 (double x[], size_t d, void *params);
+double fvegas_overflow (double x[], size_t d, void *params);
+
+void test_vegas_overflow (void);
 
 void my_error_handler (const char *reason, const char *file,
                        int line, int err);
@@ -382,6 +385,8 @@ main (void)
 #endif
 
       
+  test_vegas_overflow ();
+
   exit (gsl_test_summary ());
 }
 
@@ -477,4 +482,55 @@ my_error_handler (const char *reason, const char *file, int line, int err)
 {
   if (0)
     printf ("(caught [%s:%d: %s (%d)])\n", file, line, reason, err);
+}
+
+/* Regression test for Savannah bug #44612: when the per-box variance is a
+   tiny but non-zero subnormal number, 1.0/var overflows to +Inf, which
+   propagates into the VEGAS result as NaN.  This integrand (a product of
+   three Gaussians in six dimensions) produced such a variance. */
+double
+fvegas_overflow (double x[], size_t num_dim, void *params)
+{
+  double k = 0.8;
+  double lx = x[0], ly = x[1];
+  double lpx = x[2], lpy = x[3];
+  double lppx = x[4], lppy = x[5];
+  double F1 = exp (-(lppx*lppx + lppy*lppy));
+  double F2 = exp (-(gsl_pow_2(k - lpx - lppx) + gsl_pow_2(-lpy - lppy)));
+  double F3 = exp (-(gsl_pow_2(k - lx - lppx) + gsl_pow_2(-ly - lppy)));
+
+  (void) num_dim;
+  (void) params;
+
+  return F1 * F2 * F3;
+}
+
+void
+test_vegas_overflow (void)
+{
+  double res, err;
+  double min[6] = { -100, -100, -100, -100, -100, -100 };
+  double max[6] = {  100,  100,  100,  100,  100,  100 };
+  const size_t ndim = 6;
+  gsl_rng *r = gsl_rng_alloc (gsl_rng_default);
+  gsl_monte_function f;
+  gsl_monte_vegas_state *s;
+
+  f.f = &fvegas_overflow;
+  f.dim = ndim;
+  f.params = 0;
+
+  gsl_rng_set (r, 100);
+
+  s = gsl_monte_vegas_alloc (ndim);
+  gsl_monte_vegas_integrate (&f, min, max, ndim, 50000, r, s, &res, &err);
+
+  gsl_test (!gsl_finite (res), "vegas returns finite result on overflow "
+            "(result = %g)", res);
+  gsl_test (!gsl_finite (gsl_monte_vegas_chisq (s)),
+            "vegas returns finite chisq on overflow (chisq = %g)",
+            gsl_monte_vegas_chisq (s));
+
+  gsl_monte_vegas_free (s);
+  gsl_rng_free (r);
 }

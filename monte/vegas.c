@@ -277,7 +277,7 @@ gsl_monte_vegas_integrate (gsl_monte_function * f,
 
       var = tss / (calls_per_box - 1.0)  ;
 
-      if (var > 0) 
+      if (var > 0 && gsl_finite(1.0 / var))
         {
           wgt = 1.0 / var;
         }
