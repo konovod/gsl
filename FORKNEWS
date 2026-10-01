@@ -50,6 +50,9 @@ One line per change: date | tag | description | commit(s).
   2026-10-01 | [upstream] | specfunc: test vectors for complex sin/cos             | 48a49003f
   2026-10-01 | [rejected] | min: bound gsl_min_find_bracket to the initial interval | - (see below)
   2026-10-01 | [rejected] | specfunc: duplicate complex sin/cos implementations    | - (see below)
+  2026-10-01 | [rejected] | linalg: complex LU_decomp "returns incorrect results" | - (see below)
+  2026-10-01 | [rejected] | specfunc: missing 0.5 factor in coulomb turning point  | - (see below)
+  2026-10-01 | [upstream] | cdf: no NaN from beta_cont_frac under fp contraction    | 1b1d94ee9
 
 
 ## [upstream] rng: make the random() generators produce the documented sequences
@@ -526,6 +529,158 @@ correctness argument for it.
 Kept here for the record.
 
 See Savannah bug #66862.
+
+
+## [rejected] linalg: gsl_linalg_complex_LU_decomp "returns incorrect results"
+
+Not applied.  The library is correct and the report's example is a
+singular matrix.
+
+The matrix in the report is
+
+    [1 2 3]
+    [4 5 6]      det = 6.66e-16, i.e. zero
+    [7 8 9]      U diagonal = 7.0000 0.8571 0.0000
+
+The last pivot is zero, which is what a rank-deficient matrix looks
+like.  The Julia output offered as "the correct LU decomposition" is
+the pivoted matrix `PA` beside the upper factor `U`; the two matrices
+shown do not multiply back to `A`, and the zero row at the bottom is
+the giveaway.  The reporter's program also allocates
+`gsl_permutation_calloc()` and never reads it back, so the one output
+that decides the comparison was discarded.
+
+Running the report's program and splitting the packed factor into `L`
+and `U` gives
+
+    real    LU permutation: 2 0 1   signum 1
+    complex LU permutation: 2 0 1   signum 1
+    max |L*U - P*A| = 0.000e+00
+
+so the identity `PA = LU` holds exactly, and the real and complex
+paths choose the same permutation for real-valued input.  They do so
+because both go through the same BLAS convention, `gsl_blas_izamax()`
+in `linalg/luc.c:155` against `gsl_blas_idamax()` in `linalg/lu.c:152`.
+
+An LU factorisation with partial pivoting is not unique: with the
+diagonal of `L` fixed to 1 the permutation is the remaining degree of
+freedom.  Comparing raw factors from two tools that pivot differently,
+without applying the permutations, cannot be correct.
+
+This agrees with the reply already on the tracker from Christian
+Krueger.  Kept here so the report is not re-investigated.
+
+See Savannah bug #64777.
+
+
+## [rejected] specfunc: the missing 0.5 factor in the coulomb turning point
+
+Not applied.  The reported patch makes the branch worse, and the test
+suite does not catch it.
+
+The report proposes halving the `C` in `specfunc/coulomb.c:1124`:
+
+    const double C = sqrt(1.0 + 4.0*x*(x-2.0*eta));
+    const int N = ceil(lam_F - C + 0.5);
+    const double lam_0 = lam_F - GSL_MAX(N, 0);
+
+That branch is taken when `x > 2 eta`, and `coulomb_jwkb()` requires
+`lam` to lie above the turning point, which is where
+
+    rho_ghalf = sqrt(x(2 eta - x) + lam(lam+1))
+
+vanishes.  Writing `Q = x(x - 2 eta)`, that is `lam(lam+1) = Q`, so
+`lam_turn = 0.5*(sqrt(1 + 4Q) - 1)` and therefore
+`sqrt(1 + 4Q) = 2 lam_turn + 1`.
+
+The code chooses `lam_0` by rounding down, and the recurrence advances
+one lambda at a time, so `C` has to be a whole number of lambdas of
+margin.  `sqrt(1 + 4Q)` is exactly `lam_turn + 1` in those units;
+`0.5*sqrt(1 + 4Q)` is `lam_turn + 0.5`, and with that half-lambda margin
+`ceil()` rounds past the turning point and `lam_0` ends up *below* it,
+where `rho_ghalf` is imaginary and `coulomb_jwkb()` cannot be used at
+all.  Measured with `lam_F` sampled above the turning point:
+
+       Q  lam_turn | current                  | patched
+    0.25    0.2071 | lam_0= 0.5771 ok         | lam_0=-0.4229 below
+       1    0.6180 | lam_0= 0.9880 ok         | lam_0=-0.0120 below
+       6    2.0000 | lam_0= 3.3700 ok         | lam_0= 1.3700 below
+      99    9.4624 | lam_0=10.8324 ok         | lam_0= 8.8324 below
+     400   19.5062 | lam_0=20.8762 ok         | lam_0=18.8762 below
+
+The report's own claim that no existing test is affected holds: with the
+patch applied `specfunc_test` still reports zero failures.  That is the
+hazard rather than a reassurance - `specfunc/test_coulomb.c` has no
+vector with `x > 2 eta` and `lam_F` near the turning point, so the
+branch is untested exactly where the difference shows.  Applying the
+patch would have degraded `gsl_sf_coulomb_wave_FG_e` silently.
+
+That the current code is right was checked independently: in the
+`x > 2 eta` branch it satisfies the Coulomb Wronskian
+`F G' - G F' = -1` to the last bit over the sampled range, which it
+could not do if `lam_0` were misplaced.
+
+Separately, and not a bug: `specfunc/test_coulomb.c` lacks vectors
+covering `x > 2 eta` with `lam_F` near the turning point, which is why
+this branch has no protection.  Worth adding as a test, on its own.
+
+Kept here for the record.
+
+See Savannah bug #39292.
+
+
+## [upstream] cdf: stop beta_cont_frac returning NaN under fp contraction
+
+Commits: 1b1d94ee9, 98e966458
+
+`gsl_cdf_fdist_Q(3.786820954867802, 1, 100000)` returned `NaN` instead of
+`0.0516604706391814` when GSL was built with `-ffp-contract=fast`, which
+many compilers default to and which `-march=native` enables.  The
+non-contracted build was fine, so the answer changed with the compiler
+flags rather than with the platform.
+
+Three defects in `cdf/beta_inc.c`, all on the path this call takes:
+
+* `beta_cont_frac()` allowed `max_iter = 512`.  Contraction rounds the
+  continued fraction terms differently, the convergence test stalls, and
+  the iteration count for this case rises from 35 to 532 - just over the
+  limit - so the function returned `GSL_NAN`.  Raised to 4096; a normal
+  evaluation still converges in a few tens of steps, so the headroom is
+  free.
+
+* The cutoff guards assigned `GSL_NAN` to `den_term` and `num_term`, and
+  `den_term` is divided by on the following line, so the `NaN` propagated
+  into `cf` and out to the caller.  This was already latent, and is why a
+  `NaN` could survive even where the iteration count was not at fault.
+  The guards now clamp to `cutoff`, which is what `specfunc/beta_inc.c`
+  already does for the same quantity.
+
+* In `beta_inc_AXPY()` the transformed branch derives its tolerance from
+  `fabs (A + Y)`, which is exactly zero when `A == -Y` as it is for the
+  `Q` tail of the F distribution.  That zero disables the absolute
+  convergence test and leaves only the relative one, which needs far more
+  iterations when `cf` is large - `cf` is 2.2e4 for this case.  The
+  tolerance is now floored at one epsilon.
+
+The reported diagnosis was partly off: the report blames
+`gsl_sf_beta_inc()` and `specfunc/beta_inc.c`, but the library function
+returns the right answer in both builds.  The culprit is the separate
+`cdf/beta_inc.c`, which `cdf/fdist.c` includes and which reaches
+`gsl_cdf_fdist_Q()` through `beta_inc_AXPY()`.  `specfunc/beta_inc.c`
+also clamps to `cutoff` and reports `GSL_EMAXITER` rather than returning
+`NaN`, so it does not share these faults.
+
+Verified by building the library twice with `gcc -mfma`, once with
+`-ffp-contract=fast` and once with `-ffp-contract=off`.  Before the fix
+the contracted build returns `NaN` and the other
+`0.0516604706391814`; after it both return finite values agreeing to 11
+significant figures, which is what a different rounding path should give.
+A sweep of 14400 points over the F, t and beta distributions has no
+non-finite results in either build.
+
+Files: `cdf/beta_inc.c`, `cdf/test.c`.
+
+See Savannah bug #64613.
 
 
 ## [rejected] min: bound gsl_min_find_bracket to the initial interval
