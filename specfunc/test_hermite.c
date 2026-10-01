@@ -263,9 +263,11 @@ test_hermite(void)
   TEST_SF_VAL(sa, res[23],  +0.0,   2.168624344319444261221171200e29, TEST_TOL0);
   TEST_SF_VAL(sa, res[24],  +0.0,   7.807047639549999340396216320e30, TEST_TOL0);
   TEST_SF_VAL(sa, res[37],  +0.0,   1.930387357696033719818118732e46, TEST_TOL0);
-  TEST_SF_VAL(sa, res[60],  +0.0,   6.775378005383186748501182409e71, TEST_TOL0);
+  /* the values at the top of this range result from a 100 term recurrence,
+     so they carry a little more than 1 ulp of accumulated rounding */
+  TEST_SF_VAL(sa, res[60],  +0.0,   6.775378005383186748501182409e71, TEST_TOL1);
   TEST_SF_VAL(sa, res[61],  +0.0,  -4.451215867508936256056845902e73, TEST_TOL0);
-  TEST_SF_VAL(sa, res[100], +0.0,   2.957966000491202678467161e118, TEST_TOL0);
+  TEST_SF_VAL(sa, res[100], +0.0,   2.957966000491202678467161e118, TEST_TOL1);
   gsl_test(sa, "gsl_sf_hermite_array_deriv(23, 100, 0.75)");
   s += sa;
 

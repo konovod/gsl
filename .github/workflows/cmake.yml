@@ -23,13 +23,13 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { name: linux-gcc-shared,    os: ubuntu-latest,  cc: gcc,   cxx: g++,     shared: ON,  skip_rng: ON,  skip_specfunc: OFF }
-          - { name: linux-gcc-static,    os: ubuntu-latest,  cc: gcc,   cxx: g++,     shared: OFF, skip_rng: ON,  skip_specfunc: OFF }
-          - { name: linux-clang-shared,  os: ubuntu-latest,  cc: clang, cxx: clang++, shared: ON,  skip_rng: ON,  skip_specfunc: OFF }
-          - { name: macos-clang-shared,  os: macos-latest,   cc: clang, cxx: clang++, shared: ON,  skip_rng: ON,  skip_specfunc: ON  }
-          - { name: macos-clang-static,  os: macos-latest,   cc: clang, cxx: clang++, shared: OFF, skip_rng: ON,  skip_specfunc: ON  }
-          - { name: windows-msvc-shared, os: windows-latest, cc: cl,    cxx: cl,      shared: ON,  skip_rng: OFF, skip_specfunc: OFF }
-          - { name: windows-msvc-static, os: windows-latest, cc: cl,    cxx: cl,      shared: OFF, skip_rng: OFF, skip_specfunc: OFF }
+          - { name: linux-gcc-shared,    os: ubuntu-latest,  cc: gcc,   cxx: g++,     shared: ON,  skip_rng: ON  }
+          - { name: linux-gcc-static,    os: ubuntu-latest,  cc: gcc,   cxx: g++,     shared: OFF, skip_rng: ON  }
+          - { name: linux-clang-shared,  os: ubuntu-latest,  cc: clang, cxx: clang++, shared: ON,  skip_rng: ON  }
+          - { name: macos-clang-shared,  os: macos-latest,   cc: clang, cxx: clang++, shared: ON,  skip_rng: ON  }
+          - { name: macos-clang-static,  os: macos-latest,   cc: clang, cxx: clang++, shared: OFF, skip_rng: ON  }
+          - { name: windows-msvc-shared, os: windows-latest, cc: cl,    cxx: cl,      shared: ON,  skip_rng: OFF }
+          - { name: windows-msvc-static, os: windows-latest, cc: cl,    cxx: cl,      shared: OFF, skip_rng: OFF }
 
     steps:
       - uses: actions/checkout@v4
@@ -49,7 +49,6 @@ jobs:
           -DGSL_BUILD_TOOLS=ON
           -DGSL_BUILD_TESTS=ON
           -DGSL_SKIP_RNG_TEST=${{ matrix.skip_rng }}
-          -DGSL_SKIP_SPECFUNC_TEST=${{ matrix.skip_specfunc }}
 
       - name: Build (Linux/macOS)
         if: runner.os != 'Windows'
@@ -66,8 +65,7 @@ jobs:
             -DBUILD_SHARED_LIBS=${{ matrix.shared }} `
             -DGSL_BUILD_TOOLS=ON `
             -DGSL_BUILD_TESTS=ON `
-            -DGSL_SKIP_RNG_TEST=${{ matrix.skip_rng }} `
-            -DGSL_SKIP_SPECFUNC_TEST=${{ matrix.skip_specfunc }}
+            -DGSL_SKIP_RNG_TEST=${{ matrix.skip_rng }}
 
       - name: Build (Windows)
         if: runner.os == 'Windows'

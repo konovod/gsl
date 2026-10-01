@@ -34,7 +34,6 @@ Options
   GSL_BUILD_TESTS        OFF     build and register the per-module test programs
   GSL_ENABLE_RANGE_CHECK OFF     enable run-time range checking inside the library
   GSL_SKIP_RNG_TEST      OFF     skip rng.test (see Tests below)
-  GSL_SKIP_SPECFUNC_TEST OFF     skip specfunc.test (see Tests below)
 
 Installing and consuming
 ------------------------
@@ -70,16 +69,6 @@ upstream behaviour, observable with the autotools build as well.  Pass
 `-DGSL_SKIP_RNG_TEST=ON` to disable that single test (the CI does this on
 Linux and macOS, while keeping it enabled on Windows where `long` is 32
 bits and all tests pass).
-
-On platforms where `long double` gives no more precision than `double`, in
-particular macOS, `specfunc.test` reports a handful of failures for the
-Hermite, Laguerre and associated Legendre functions.  These compare
-results at TEST_TOL0, a few ULP; the computed values are correct to 14-15
-significant digits and differ only in the last digits, by a small multiple
-of the tolerance.  This too is pre-existing upstream behaviour.  Pass
-`-DGSL_SKIP_SPECFUNC_TEST=ON` to disable that single test (the CI does this
-on macOS only; the test passes on Linux and Windows, which use extended
-precision registers).
 
 Continuous integration
 ----------------------
