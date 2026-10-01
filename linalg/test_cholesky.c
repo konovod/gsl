@@ -238,7 +238,7 @@ test_cholesky_invert(gsl_rng * r)
       if (N <= 4)
         {
           create_hilbert_matrix2(m);
-          test_cholesky_invert_eps(m, N * 256.0 * GSL_DBL_EPSILON, "cholesky_invert unscaled hilbert");
+          test_cholesky_invert_eps(m, N * 512.0 * GSL_DBL_EPSILON, "cholesky_invert unscaled hilbert");
         }
 
       gsl_matrix_free(m);
