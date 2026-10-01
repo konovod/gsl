@@ -389,6 +389,35 @@ test_hermite(void)
   TEST_SF(s, gsl_sf_hermite_func_der_e, (2, 380, 0.75, &r),  30.4596785269042604519780923,   TEST_TOL2, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_hermite_func_der_e, (3, 380, 0.75, &r),  3073.4187352276349348458186556, TEST_TOL2, GSL_SUCCESS);
 
+  /* First derivative at the two smallest orders.  The m == 1 branch of
+   * gsl_sf_hermite_func_der_e() seeds its running value from a recurrence
+   * that only starts at i = 2, so for n = 0 and n = 1 it used to drop the
+   * -x psi_n term: psi_0' came out as 0 for every x, and psi_1' lost its
+   * -x psi_1 part.  Neither is covered above, where n is 28 or 380 and the
+   * recurrence does run.  See Savannah bug #68625.
+   *
+   * The expected values are exact, not fitted.  With psi_0 = pi^(-1/4)
+   * exp(-x^2/2), which is what gsl_sf_hermite_func_e(0,x) returns,
+   *
+   *     psi_0'(x) = -x psi_0(x)
+   *     psi_1'(x) = sqrt(2) (1 - x^2) psi_0(x)
+   *
+   * and these were evaluated to 60 digits, independent of GSL.  x = 1 is
+   * included because psi_1'(1) = 0 exactly, which is where the missing
+   * term was most visible. */
+  TEST_SF(s, gsl_sf_hermite_func_der_e, (1, 0, 0.3,  &r),  -0.21542223871470033830170052910,  TEST_TOL1, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hermite_func_der_e, (1, 0, 0.75, &r),  -0.42523448027077021273412950199,  TEST_TOL1, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hermite_func_der_e, (1, 0, 1.0,  &r),  -0.45558067201133253483370525690,  TEST_TOL1, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hermite_func_der_e, (1, 0, 2.0,  &r),  -0.20330757661283582304520254721,  TEST_TOL1, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hermite_func_der_e, (1, 0, 3.5,  &r),  -0.00575078160005070901001236898,  TEST_TOL1, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hermite_func_der_e, (1, 0, -0.75, &r),  0.42523448027077021273412950199,  TEST_TOL1, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hermite_func_der_e, (1, 1, 0.3,  &r),   0.92411425660221436817073205989,  TEST_TOL1, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hermite_func_der_e, (1, 1, 0.75, &r),   0.35080054869276523528509196402,  TEST_TOL1, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hermite_func_der_e, (1, 1, 1.0,  &r),   0.0,                               TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hermite_func_der_e, (1, 1, 2.0,  &r),  -0.43128049826861924167211494776,  TEST_TOL1, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hermite_func_der_e, (1, 1, 3.5,  &r),  -0.02614124999904865942948026056,  TEST_TOL1, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hermite_func_der_e, (1, 1, -0.75, &r),  0.35080054869276523528509196402,  TEST_TOL1, GSL_SUCCESS);
+
   {
     /* positive zeros of the probabilists' Hermite polynomial of order 17 */
     double He17z[8] = { 0.751842600703896170737870774614, 1.50988330779674075905491513417, 2.28101944025298889535537879396,
