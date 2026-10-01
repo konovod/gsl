@@ -26,7 +26,15 @@ static double
 beta_cont_frac (const double a, const double b, const double x,
                 const double epsabs)
 {
-  const unsigned int max_iter = 512;    /* control iterations      */
+  /* 512 is not enough once the compiler is allowed to contract
+   * multiplications and additions into fused operations: the terms round
+   * slightly differently, the convergence test stalls, and the iteration
+   * count for gsl_cdf_fdist_Q(3.786820954867802, 1, 100000) rises from 35
+   * to 532, at which point this returned GSL_NAN and the caller returned
+   * NaN instead of 0.0516604706391814.  See Savannah bug #64613.  A normal
+   * evaluation converges in a few tens of steps, so the extra headroom
+   * costs nothing. */
+  const unsigned int max_iter = 4096;   /* control iterations      */
   const double cutoff = 2.0 * GSL_DBL_MIN;      /* control the zero cutoff */
   unsigned int iter_count = 0;
   double cf;
@@ -35,8 +43,11 @@ beta_cont_frac (const double a, const double b, const double x,
   double num_term = 1.0;
   double den_term = 1.0 - (a + b) * x / (a + 1.0);
 
+  /* Clamp to the cutoff rather than poisoning the term: den_term is
+   * divided by on the next line, so a NaN here propagates into cf and out
+   * to the caller.  specfunc/beta_inc.c already does this. */
   if (fabs (den_term) < cutoff)
-    den_term = GSL_NAN;
+    den_term = cutoff;
 
   den_term = 1.0 / den_term;
   cf = den_term;
@@ -52,10 +63,10 @@ beta_cont_frac (const double a, const double b, const double x,
       num_term = 1.0 + coeff / num_term;
 
       if (fabs (den_term) < cutoff)
-        den_term = GSL_NAN;
+        den_term = cutoff;
 
       if (fabs (num_term) < cutoff)
-        num_term = GSL_NAN;
+        num_term = cutoff;
 
       den_term = 1.0 / den_term;
 
@@ -69,10 +80,10 @@ beta_cont_frac (const double a, const double b, const double x,
       num_term = 1.0 + coeff / num_term;
 
       if (fabs (den_term) < cutoff)
-        den_term = GSL_NAN;
+        den_term = cutoff;
 
       if (fabs (num_term) < cutoff)
-        num_term = GSL_NAN;
+        num_term = cutoff;
 
       den_term = 1.0 / den_term;
 
@@ -149,8 +160,23 @@ beta_inc_AXPY (const double A, const double Y,
           /* Apply continued fraction after hypergeometric transformation. */
           double epsabs =
             fabs ((A + Y) / (A * prefactor / b)) * GSL_DBL_EPSILON;
-          double cf = beta_cont_frac (b, a, 1.0 - x, epsabs);
-          double term = prefactor * cf / b;
+          double cf;
+          double term;
+
+          /* With A == -Y the A + Y above cancels exactly and epsabs
+           * becomes 0, which disables the second convergence test in
+           * beta_cont_frac() and leaves only the relative one.  That is
+           * harmless on its own - the relative test is the stronger of the
+           * two - but cf can be far larger than 1 here, and then the
+           * relative test needs many more iterations to fire.  Floor epsabs
+           * at one epsilon, which keeps the absolute test meaningful for
+           * cf of order 1 and leaves large cf to be settled by the relative
+           * test.  See Savannah bug #64613. */
+          if (epsabs < GSL_DBL_EPSILON)
+            epsabs = GSL_DBL_EPSILON;
+
+          cf = beta_cont_frac (b, a, 1.0 - x, epsabs);
+          term = prefactor * cf / b;
 
           if (A == -Y)
             {
