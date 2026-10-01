@@ -59,6 +59,7 @@ One line per change: date | tag | description | commit(s).
   2026-10-01 | [upstream] | complex: arccosh returns +0 on the positive real axis  | d6ec47d87
   2026-10-01 | [upstream] | interpolation: NaN for a point out of the 2D domain    | 2b4e2f1e5
   2026-10-01 | [upstream] | randist: parse the gsl-randist seed as unsigned long   | aebe57a5c
+  2026-10-01 | [upstream] | linalg: define the LU pivot array before use           | d73ba5300
 
 
 ## [upstream] rng: make the random() generators produce the documented sequences
@@ -937,4 +938,40 @@ is a separate argument and out of scope for this report.
 File: `gsl-randist.c`.
 
 See Savannah bug #54077.
+
+
+## [upstream] linalg: define the LU pivot array before building the permutation
+
+Commit: d73ba5300
+
+`gsl_linalg_LU_decomp()` and `gsl_linalg_complex_LU_decomp()` allocate
+`ipiv` and call `LU_decomp_L3()`, which for `N > 24` recurses on
+sub-blocks.  When a singular pivot is met in the leading sub-block the
+recursion returns immediately without writing the tail of `ipiv`, and the
+caller then reads the whole array to build the permutation.  That produced
+a permutation built from uninitialised memory, and `p->data[pivi]` could
+index outside the permutation.  `LU_decomp_L2()`, used for `N <= 24`,
+already wrote every entry even when singular, so the defect only showed on
+larger matrices.
+
+`ipiv` is now initialized to the identity immediately after allocation, in
+both functions.  `LU_decomp_L3()` recurses on views of that same buffer, so
+every entry is defined before any read; entries the factorization does not
+reach stay no-ops, which is the correct "no interchange" placeholder.  This
+is preferable to the submitted `if (!status)` guard, which also discarded
+the pivots the Level 2 path had already computed.
+
+The test uses a 128x128 diagonal matrix with a zero leading pivot.  No row
+interchange is required, so the permutation must be the identity, and the
+rank-deficient leading block drives `LU_decomp_L3()` down the early-return
+path.  With the change reverted 112 of the 128 permutation entries are
+wrong - the array is filled from recycled heap memory, which in this build
+appeared shifted by one.  A hard guarantee against the uninitialised read
+would need valgrind or MSan; the test is written so that ordinary heap
+contents are enough to catch it.
+
+Files: `linalg/lu.c`, `linalg/luc.c`, `linalg/test_lu.c`,
+`linalg/test_luc.c`.
+
+See Savannah bug #66026.
 
