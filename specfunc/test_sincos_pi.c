@@ -390,6 +390,29 @@ test_sincos_pi(void)
     exact = -exact;
   }
   
+  /* An infinite argument is not in the domain.  It used to be absorbed by
+   * the "very large argument" branches above, which reported cos_pi(inf)
+   * as exactly 1.0 with GSL_SUCCESS. */
+
+  TEST_SF(s, gsl_sf_sin_pi_e, (GSL_POSINF, &r), GSL_NAN, GSL_NAN, GSL_EDOM);
+  TEST_SF(s, gsl_sf_sin_pi_e, (GSL_NEGINF, &r), GSL_NAN, GSL_NAN, GSL_EDOM);
+  TEST_SF(s, gsl_sf_cos_pi_e, (GSL_POSINF, &r), GSL_NAN, GSL_NAN, GSL_EDOM);
+  TEST_SF(s, gsl_sf_cos_pi_e, (GSL_NEGINF, &r), GSL_NAN, GSL_NAN, GSL_EDOM);
+
+  /* Large but finite arguments are still exact even integers, and keep
+   * their documented answers. */
+
+  TEST_SF(s, gsl_sf_sin_pi_e, (1e16, &r), 0.0, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_sin_pi_e, (-1e16, &r), 0.0, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_cos_pi_e, (1e16, &r), 1.0, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_cos_pi_e, (-1e16, &r), 1.0, TEST_TOL0, GSL_SUCCESS);
+
+  /* NaN is not a domain error anywhere else in GSL, so it is left to
+   * propagate rather than being trapped here. */
+
+  TEST_SF(s, gsl_sf_sin_pi_e, (GSL_NAN, &r), GSL_NAN, GSL_NAN, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_cos_pi_e, (GSL_NAN, &r), GSL_NAN, GSL_NAN, GSL_SUCCESS);
+
   return s;
 }
 
