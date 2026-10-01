@@ -51,7 +51,7 @@ One line per change: date | tag | description | commit(s).
   2026-10-01 | [rejected] | min: bound gsl_min_find_bracket to the initial interval | - (see below)
   2026-10-01 | [rejected] | specfunc: duplicate complex sin/cos implementations    | - (see below)
   2026-10-01 | [rejected] | linalg: complex LU_decomp "returns incorrect results" | - (see below)
-  2026-10-01 | [rejected] | specfunc: missing 0.5 factor in coulomb turning point  | - (see below)
+  2026-10-01 | [rejected] | specfunc: missing 0.5 factor in coulomb turning point  | 192ec9cbf
   2026-10-01 | [upstream] | cdf: no NaN from beta_cont_frac under fp contraction    | 1b1d94ee9
 
 
@@ -575,8 +575,11 @@ See Savannah bug #64777.
 
 ## [rejected] specfunc: the missing 0.5 factor in the coulomb turning point
 
-Not applied.  The reported patch makes the branch worse, and the test
-suite does not catch it.
+Not applied.  The reported patch moves `lam_0` the wrong way, and it did
+real damage before anyone noticed: applying it changed `F` by a factor of
+two at `eta = -2, lam_F = 30, x = 20` and by 100% at `x = 35`, while the
+test suite passed unchanged.  The gap that let this through is now filled,
+see commit 192ec9cbf and the note at the end of this entry.
 
 The report proposes halving the `C` in `specfunc/coulomb.c:1124`:
 
@@ -610,19 +613,43 @@ all.  Measured with `lam_F` sampled above the turning point:
 
 The report's own claim that no existing test is affected holds: with the
 patch applied `specfunc_test` still reports zero failures.  That is the
-hazard rather than a reassurance - `specfunc/test_coulomb.c` has no
-vector with `x > 2 eta` and `lam_F` near the turning point, so the
-branch is untested exactly where the difference shows.  Applying the
-patch would have degraded `gsl_sf_coulomb_wave_FG_e` silently.
+hazard rather than a reassurance.  Applying the patch and sweeping the
+branch, 15 of 789 sampled points move by more than 1e-9 in `F`, the worst
+being:
 
-That the current code is right was checked independently: in the
-`x > 2 eta` branch it satisfies the Coulomb Wronskian
-`F G' - G F' = -1` to the last bit over the sampled range, which it
-could not do if `lam_0` were misplaced.
+        eta    lam        x           dF          dFp           dG          dGp
+        -1     30       12     1.54e-06     1.54e-06     1.54e-06     1.54e-06
+        -2     30       20            1            1     2.13e+05     4.68e+05
+        -2     30       35       1.01            1          175          758
+        -2     30       60       0.601        5.31           8.4        0.699
+        -2     30      100       0.033        4.36          4.75       0.0452
 
-Separately, and not a bug: `specfunc/test_coulomb.c` lacks vectors
-covering `x > 2 eta` with `lam_F` near the turning point, which is why
-this branch has no protection.  Worth adding as a test, on its own.
+so `F` is wrong by a factor of two or becomes entirely spurious, and `G`
+by five orders of magnitude, at points the suite never visited.  Applying
+the patch would have degraded `gsl_sf_coulomb_wave_FG_e` silently.
+
+That the current code is right was checked independently.  Two ways, and
+the first initially disagreed with the library, which turned out to be the
+fault of the reference rather than of GSL:
+
+* the Coulomb Wronskian `F G' - G F' = -1` holds to 1e-16 at every
+  sampled point, which it could not if `lam_0` were misplaced;
+* integrating `y'' = [lam(lam+1)/x^2 + 2 eta/x - 1] y` by RK4 in long
+  double from the Frobenius series, with GSL's own normalisation
+  `C_lam = 2^lam e^(-eta pi/2) |Gamma(lam+1+i eta)| / (2 lam+1)!`,
+  agrees with the library to 1e-15 at `eta = 0` and to 1e-12 or better
+  elsewhere.  Getting there required correcting the reference twice: the
+  denominator of the series recurrence, and the use of `lgamma(lam+1)`
+  where the magnitude of the *complex* gamma is required.  The reference
+  reproduces `F = sin(x)` at `eta = lam = 0` to 1e-16, which is what
+  finally established it.
+
+The test gap is now closed, in commit 192ec9cbf, so that the patch can no
+longer pass silently.  Ten vectors were added to `specfunc/test_coulomb.c`,
+six at `eta = 0` and four with negative `eta` and `lam_F` above the
+turning point.  Both controls were run: with `coulomb.c` unchanged the
+suite reports zero failures, and with the patch applied the new vector at
+`eta = -2, lam_F = 30, x = 20` fails.
 
 Kept here for the record.
 
