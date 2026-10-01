@@ -1,0 +1,114 @@
+# FORKNEWS - changes carried by this fork
+
+This file records changes made in this fork that are not (yet) part of
+upstream GNU GSL.  It is deliberately separate from `NEWS`, which is
+upstream's release log and should only be touched for changes that are
+intended to go upstream.
+
+Each entry is tagged with its intended disposition:
+
+  [upstream]   intended to be submitted or kept suitable for upstream GSL;
+               written in the style upstream would accept.
+  [fork]       specific to this fork and not intended for upstream, e.g. an
+               alternative build system or CI setup that upstream does not
+               want to maintain.
+
+A change may start as `[fork]` and be promoted to `[upstream]` later; when an
+entry is actually merged upstream, remove it from here and add it to `NEWS`
+if appropriate.
+
+Upstream branch at the time of writing: savannah/master (2.8+).
+
+
+## [upstream] rng: make the random() generators produce the documented sequences
+
+The `gsl_rng_random*_bsd`, `_libc5` and `_glibc2` generators held their
+state in `long int`, but the algorithms they implement - the BSD and libc5
+`random()` family - are defined on 32 bit words, and both the seeding
+recurrences and the state addition overflow that width.  On platforms
+where `long` is 64 bits (LP64: Linux, macOS) the values did not wrap as
+intended, so the generators produced sequences that did not match the
+reference implementation, while on 32 bit `long` platforms (LLP64:
+Windows) they did.
+
+The state is now held in `int32_t` and the arithmetic is performed in
+`uint32_t`, so the modulo 2^32 wrap is explicit and well defined and the
+result is identical on every platform.  `rng/random.c`, plus a `NEWS`
+entry on the upstream branch.
+
+Note: this changes the output of the `random32` and `random64` variants on
+64 bit platforms, where it previously did not match the documented
+BSD/libc5 sequences.  This is a corrective change but it is a change of
+generated stream, so it belongs in a release note.
+
+
+## [upstream] specfunc: relax four over-tight test tolerances
+
+Four `specfunc` assertions compared results against constants at a
+tolerance tighter than the condition number of the computation allows, and
+failed by one or two ulp on some platforms:
+
+  - `hermite_array_deriv(23, 100, 0.75)` at `res[60]` and `res[100]`:
+    values at the top of a 100 term recurrence, TEST_TOL0 -> TEST_TOL1
+  - `laguerre_n_e(1e6+1, 2.5, 2.5)`: the neighbouring n=5e6 case already
+    uses TEST_TOL6, TEST_TOL4 -> TEST_TOL6
+  - `conicalP_0_e(0.0, 100.0)`: right at the TEST_TOL0 boundary,
+    TEST_TOL0 -> TEST_TOL1
+
+The expected values are accurate and are unchanged; only the tolerances are
+widened, by one tier, to reflect accumulated rounding.  None of these
+functions uses `long double`, so this is unrelated to extended precision
+availability.
+
+Files: `specfunc/test_hermite.c`, `specfunc/test_legendre.c`,
+`specfunc/test_sf.c`.
+
+
+## [upstream] gsl-config: quote substituted paths and allow relocation
+
+The generated `gsl-config` script interpolated `@prefix@` and friends
+without quoting, so an installation prefix containing spaces (the Windows
+default, `C:/Program Files (x86)/GSL`) produced a script that fails to
+parse.  The values are now quoted, `--prefix` is printed quoted, and the
+script falls back to deriving the prefix from its own install location
+when the baked-in value is a placeholder.  This is backward compatible
+with the autotools build.
+
+File: `gsl-config.in`.
+
+
+## [fork] CMake build system
+
+An alternative build system under `CMakeLists.txt` and `cmake/`, able to
+build `libgsl` and `libgslcblas` (shared or static), the `gsl-randist` and
+`gsl-histogram` tools, and the per-module test suite, on Windows (MSVC),
+Linux and macOS.
+
+  - `cmake/ConfigureChecks.cmake`, `cmake/config.h.cmake`: generate the
+    `config.h` that the sources expect, mirroring the relevant parts of
+    `configure.ac`.
+  - `cmake/gsl_sources.cmake`, `cmake/gsl_tests.cmake`: explicit source
+    and test lists derived from the automake `*_la_SOURCES` and
+    `check_PROGRAMS` variables; `cmake/regen_sources.py` and
+    `cmake/regen_tests.py` regenerate them.
+  - Public headers are staged into the build tree and installed under
+    `include/gsl`, as autotools does with symlinks.
+  - Install rules provide headers, libraries, tools, `gsl.pc`,
+    `gsl-config` and a CMake package, so `find_package(GSL CONFIG)` works.
+  - On MSVC the DLL exports use `WINDOWS_EXPORT_ALL_SYMBOLS`, so the
+    `gslhdrs`/`gsldefs` header rewriting is not required.
+  - `cmake/msvc-compat/`: minimal `unistd.h` and `getopt.h` shims, and
+    `fp-win.c`, the Windows IEEE implementation (`ieee-utils/env.c` has no
+    upstream Windows `fp-*.c` equivalent).
+
+This is expected to stay in the fork: upstream maintains autotools.
+
+
+## [fork] GitHub Actions CI
+
+`.github/workflows/cmake.yml` configures, builds and tests on Linux (GCC
+and Clang), macOS (Clang) and Windows (MSVC), both shared and static, and
+separately checks `cmake --install` followed by a downstream
+`find_package(GSL CONFIG)` consumer on each platform.
+
+This is expected to stay in the fork, as it exercises the CMake build.

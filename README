@@ -38,6 +38,11 @@ The project homepage is http://www.gnu.org/software/gsl/
 
 See the NEWS file for recent changes to the library.
 
+This tree is a fork of GSL that adds a CMake build alongside the upstream
+autotools build.  See CMake.md for how to build with CMake, and FORKNEWS
+for the changes carried by the fork and their intended disposition
+(upstream-bound or fork-specific).
+
 The GSL Manual has been published and can be ordered from most
 bookstores. The publication details are,
 

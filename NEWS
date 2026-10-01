@@ -7,16 +7,6 @@
 
 ** bug fix in collocation matrix for order-1 interpolating B-splines
 
-** bug fix in the random/random8/random32/random64/random128/random256
-   generators (the gsl_rng_random*_bsd, _libc5 and _glibc2 families).  The
-   generator state was held in 'long int', so the results depended on the
-   width of 'long' and the documented BSD/libc5 sequences were only
-   produced on platforms where 'long' is 32 bits.  The state is now held
-   in int32_t, so these generators produce the documented sequences on all
-   platforms.  Note that this changes the output of the random32 and
-   random64 variants on 64-bit platforms, which previously did not match
-   the reference implementation.
-
 * What was new in gsl-2.8:
 
 ** apply patch for bug #63679 (F. Weimer)
