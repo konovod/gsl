@@ -165,6 +165,18 @@ main (void)
     gsl_test_rel (GSL_CONST_CGSM_RADIATION_DENSITY_CONSTANT, 1e1 * GSL_CONST_MKS_RADIATION_DENSITY_CONSTANT, 1e-15, "radiation density constant (cgsm vs mks)");
   }
 
+  /* astronomical unit and parsec (IAU 2012 redefinition) */
+
+  {
+    double au = GSL_CONST_MKSA_ASTRONOMICAL_UNIT;
+
+    gsl_test (au != 149597870700.0, "astronomical unit is 149597870700 m exactly (%g)", au);
+    gsl_test_rel (GSL_CONST_MKSA_PARSEC, 648000.0 * au / M_PI, 1e-14, "parsec = 648000 au / pi");
+    gsl_test_rel (GSL_CONST_MKSA_PARSEC, 3.0856775814913673e16, 1e-9, "parsec value");
+    gsl_test_rel (GSL_CONST_CGS_ASTRONOMICAL_UNIT, 1e2 * au, 1e-15, "astronomical unit (cgs vs mks)");
+    gsl_test_rel (GSL_CONST_CGSM_PARSEC, 1e2 * GSL_CONST_MKS_PARSEC, 1e-15, "parsec (cgsm vs mks)");
+  }
+
   /* pin representative values to their CODATA 2022 published values, so
      that an accidental change or a partial update is caught */
 

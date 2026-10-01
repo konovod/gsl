@@ -26,7 +26,7 @@
 
 (setq math-additional-units
   '(;; length
-    ( au      "149597870691. m"        "Astronomical Unit" ) ;; NASA JPL 
+    ( au      "149597870700. m"        "Astronomical Unit" ) ;; exact (IAU 2012)
     ;; mass
     ( amu     "1.66053906892e-27 kg"   "Unified atomic mass" ) ;; CODATA 2022
     ;; pressure
