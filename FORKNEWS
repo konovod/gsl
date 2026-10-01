@@ -56,6 +56,7 @@ One line per change: date | tag | description | commit(s).
   2026-10-01 | [upstream] | specfunc: Hermite function derivative at orders 0 and 1 | 5d36e1999, f4d35a67e
   2026-10-01 | [upstream] | doc: document gsl_sf_complex_psi_e                     | 345883172
   2026-10-01 | [upstream] | specfunc: reject the poles of psi and its derivatives   | d53d00109
+  2026-10-01 | [upstream] | complex: arccosh returns +0 on the positive real axis  | d6ec47d87
 
 
 ## [upstream] rng: make the random() generators produce the documented sequences
@@ -855,4 +856,33 @@ interval and rely on that), and the patch makes three `min.test` cases fail
 by collapsing the interval.  The `multifit` failures reported in the bug did
 not reproduce.  A user with a limited domain should supply a bracket that
 already contains the minimum.  Kept here for the record.
+
+
+## [upstream] complex: arccosh returns +0 on the positive real axis
+
+Commit: d6ec47d87
+
+`gsl_complex_arccosh()` was implemented as `arccos` followed by a
+multiplication by `i`, with the sign chosen from the imaginary part of the
+intermediate result.  For a real argument the intermediate is real, so
+`arccos()` returns it with a zero imaginary part and multiplying by `i`
+negates the real part: the result carried a **negative** zero real part,
+where `acosh()` and `gsl_complex_arccosh_real()` return a positive zero.
+
+The value was otherwise correct - only the sign of zero differed - but
+`gsl_complex_arccosh_real()` exists for exactly this case, and
+`gsl_complex_arccos()` already special-cases a real argument for the same
+reason, so the fix delegates `GSL_IMAG(a) == 0` to
+`gsl_complex_arccosh_real()`.
+
+The existing tables in `complex/results.h` already expected `+0` for
+`arccosh(1+0i)`, but the harness compares magnitudes and cannot see the
+sign.  The new vectors compare against `gsl_complex_arccosh_real()` and
+assert the sign of the real part.  With the change reverted the test
+reports three failures (-1, 0.5 and 1, the points whose result is real and
+zero); complex arguments are untouched.
+
+Files: `complex/math.c`, `complex/test_source.c`.
+
+See Savannah bug #47345.
 
