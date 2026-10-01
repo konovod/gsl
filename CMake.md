@@ -68,6 +68,28 @@ Clang, shared and static), macOS (Clang, shared and static) and Windows
 (MSVC, shared and static), and separately checks `cmake --install` followed
 by a downstream `find_package(GSL CONFIG)` consumer on each platform.
 
+.github/workflows/windows-dll.yml packages a Windows x64 build for people who
+just want to use GSL without installing MSVC.  It runs on pushes to the
+default branch, on version tags and on demand (deliberately not on pull
+requests, since testing is already covered by cmake.yml), and uploads
+
+    gsl-<version>-win-x64.zip
+    └── gsl-<version>-win-x64/
+        ├── include/gsl/*.h
+        ├── lib/gsl.lib, lib/gslcblas.lib    (import libraries)
+        ├── bin/gsl.dll, bin/gslcblas.dll
+        ├── bin/gsl-randist.exe, bin/gsl-histogram.exe
+        └── README.txt
+
+as a workflow artifact.  The DLLs are built with the static MSVC runtime
+(`CMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded`), so the Visual C++
+redistributable is not required; the workflow asserts this by scanning the
+import tables.  The CMake package, gsl-config and gsl.pc are left out of the
+archive, the first on request and the latter two because they bake in the
+build-time prefix and stop working once the archive is extracted elsewhere.
+The README text shipped inside the archive lives in
+.github/windows-dll-README.txt and is substituted by the workflow.
+
 Notes on the implementation
 ---------------------------
   * cmake/regen_sources.py regenerates cmake/gsl_sources.cmake from the

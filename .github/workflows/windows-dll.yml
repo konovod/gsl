@@ -1,0 +1,123 @@
+name: Windows DLL
+
+# Builds a self-contained Windows x64 binary package and publishes it as a
+# workflow artifact.  The intent is "use the latest GSL on Windows without
+# installing MSVC": the DLLs link the static MSVC runtime, so no Visual C++
+# redistributable is needed, and the archive carries the public headers and
+# import libraries so any toolchain (CMake, clang-cl, MinGW, plain cl) can
+# link against it.
+#
+# Testing is deliberately left to cmake.yml; this workflow only packages.
+on:
+  push:
+    branches: [ master, main ]
+    tags: [ "v*", "[0-9]*" ]
+  workflow_dispatch:
+
+# Cancel superseded runs on the same ref.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    name: package win-x64 DLL
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # configure.ac is the single source of truth for the version, which is
+      # also what CMakeLists.txt parses; keep the two in step.
+      - name: Determine version
+        id: ver
+        shell: pwsh
+        run: |
+          $ac = Get-Content configure.ac -Raw
+          $null = $ac -match 'AC_INIT\(\[gsl\],\s*\[([0-9.]+)(\+?)\]'
+          if (-not $Matches) { throw "could not determine the GSL version from configure.ac" }
+          $version = "$($Matches[1])$($Matches[2])".TrimEnd('+')
+          "version=$version" >> $env:GITHUB_OUTPUT
+          "short_sha=$($env:GITHUB_SHA.Substring(0, 8))" >> $env:GITHUB_OUTPUT
+
+      # MSVC ships on the hosted runner; the people downloading the artifact
+      # do not need it.  CMAKE_MSVC_RUNTIME_LIBRARY is honoured because
+      # cmake_minimum_required(3.22) already sets CMP0091 to NEW.
+      - name: Configure
+        shell: pwsh
+        run: >
+          cmake -S . -B build -A x64
+          -DBUILD_SHARED_LIBS=ON
+          -DGSL_BUILD_TOOLS=ON
+          "-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded"
+
+      - name: Build
+        shell: pwsh
+        run: cmake --build build --config Release --parallel
+
+      - name: Install to staging prefix
+        shell: pwsh
+        run: >
+          cmake --install build --config Release
+          --prefix "$env:GITHUB_WORKSPACE/_pkg/gsl-${{ steps.ver.outputs.version }}-win-x64"
+
+      # Keep the archive to what is needed to link and load the DLL by hand:
+      # headers, import libraries, the DLLs and the tools.  The CMake package
+      # is dropped on request; gsl-config and gsl.pc are dropped because they
+      # bake in the configure-time prefix and are useless once extracted
+      # somewhere else.
+      - name: Trim the staging tree
+        shell: pwsh
+        run: |
+          $root = "$env:GITHUB_WORKSPACE/_pkg/gsl-${{ steps.ver.outputs.version }}-win-x64"
+          foreach ($stale in 'lib/cmake', 'lib/pkgconfig', 'bin/gsl-config') {
+            Remove-Item -Recurse -Force -ErrorAction SilentlyContinue "$root/$stale"
+          }
+          Get-ChildItem -Recurse $root | ForEach-Object {
+            $_.FullName.Substring($root.Length + 1)
+          }
+
+      # Guard the /MT goal: import table entries are stored as plain ASCII in
+      # the file, so this needs no dumpbin and no developer prompt.
+      - name: Verify no VC++ runtime dependency
+        shell: pwsh
+        run: |
+          $root = "$env:GITHUB_WORKSPACE/_pkg/gsl-${{ steps.ver.outputs.version }}-win-x64/bin"
+          foreach ($dll in Get-ChildItem "$root/*.dll") {
+            $ascii = [Text.Encoding]::ASCII.GetString([IO.File]::ReadAllBytes($dll.FullName))
+            if ($ascii -match '(?i)(vcruntime|msvcp|msvcr|ucrtbase|api-ms-win-crt)[0-9a-z-]*\.dll') {
+              throw "$($dll.Name) still imports the VC++ runtime"
+            }
+          }
+          Write-Host "OK: no VC++ runtime imports"
+
+      # Kept as a plain text file rather than a here-string so the content is
+      # reviewable in the repository and free of YAML/PowerShell quoting.
+      - name: Write archive README
+        shell: pwsh
+        run: |
+          $root = "$env:GITHUB_WORKSPACE/_pkg/gsl-${{ steps.ver.outputs.version }}-win-x64"
+          $readme = Get-Content "$env:GITHUB_WORKSPACE/.github/windows-dll-README.txt" -Raw
+          $readme = $readme.Replace("@GSL_VERSION@", "${{ steps.ver.outputs.version }}")
+          $readme = $readme.Replace("@GSL_SHORT_SHA@", "${{ steps.ver.outputs.short_sha }}")
+          Set-Content -Path "$root/README.txt" -Value $readme -NoNewline
+
+      - name: Zip
+        shell: pwsh
+        run: |
+          $name = "gsl-${{ steps.ver.outputs.version }}-win-x64"
+          New-Item -ItemType Directory -Force _dist | Out-Null
+          Compress-Archive -Path "_pkg/$name" -DestinationPath "_dist/$name.zip" `
+            -CompressionLevel Optimal
+          Get-ChildItem "_dist/$name.zip" | Select-Object Name, Length
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gsl-${{ steps.ver.outputs.version }}-win-x64
+          path: _dist/*.zip
+          if-no-files-found: error
+          # Already a zip; re-compressing wastes runner time.
+          compression-level: 0
