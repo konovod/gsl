@@ -20,7 +20,20 @@ if appropriate.
 Upstream branch at the time of writing: savannah/master (2.8+).
 
 
+## Summary
+
+One line per change: date | tag | description | commit(s).
+
+  2026-10-01 | [upstream] | rng: random() generators produce documented sequences | a826a113a
+  2026-10-01 | [upstream] | specfunc: relax four over-tight test tolerances          | 5432a392c
+  2026-10-01 | [upstream] | gsl-config: quote paths, allow relocation               | 0a7f11297
+  2026-10-01 | [fork]     | CMake build system                                     | 0a7f11297, 332017c9d, a93188921, 9da90a6c3
+  2026-10-01 | [fork]     | GitHub Actions CI                                      | 0a7f11297, 0c015bca3, 9da90a6c3
+
+
 ## [upstream] rng: make the random() generators produce the documented sequences
+
+Commit: a826a113a
 
 The `gsl_rng_random*_bsd`, `_libc5` and `_glibc2` generators held their
 state in `long int`, but the algorithms they implement - the BSD and libc5
@@ -33,16 +46,17 @@ Windows) they did.
 
 The state is now held in `int32_t` and the arithmetic is performed in
 `uint32_t`, so the modulo 2^32 wrap is explicit and well defined and the
-result is identical on every platform.  `rng/random.c`, plus a `NEWS`
-entry on the upstream branch.
+result is identical on every platform.  File: `rng/random.c`.
 
 Note: this changes the output of the `random32` and `random64` variants on
 64 bit platforms, where it previously did not match the documented
 BSD/libc5 sequences.  This is a corrective change but it is a change of
-generated stream, so it belongs in a release note.
+generated stream, so it needs a `NEWS` entry if it goes upstream.
 
 
 ## [upstream] specfunc: relax four over-tight test tolerances
+
+Commit: 5432a392c
 
 Four `specfunc` assertions compared results against constants at a
 tolerance tighter than the condition number of the computation allows, and
@@ -66,6 +80,8 @@ Files: `specfunc/test_hermite.c`, `specfunc/test_legendre.c`,
 
 ## [upstream] gsl-config: quote substituted paths and allow relocation
 
+Commit: 0a7f11297
+
 The generated `gsl-config` script interpolated `@prefix@` and friends
 without quoting, so an installation prefix containing spaces (the Windows
 default, `C:/Program Files (x86)/GSL`) produced a script that fails to
@@ -78,6 +94,8 @@ File: `gsl-config.in`.
 
 
 ## [fork] CMake build system
+
+Commits: 0a7f11297, 332017c9d, a93188921, 9da90a6c3
 
 An alternative build system under `CMakeLists.txt` and `cmake/`, able to
 build `libgsl` and `libgslcblas` (shared or static), the `gsl-randist` and
@@ -105,6 +123,8 @@ This is expected to stay in the fork: upstream maintains autotools.
 
 
 ## [fork] GitHub Actions CI
+
+Commits: 0a7f11297, 0c015bca3, 9da90a6c3
 
 `.github/workflows/cmake.yml` configures, builds and tests on Linux (GCC
 and Clang), macOS (Clang) and Windows (MSVC), both shared and static, and
