@@ -55,7 +55,7 @@ gsl_dht_alloc (size_t size)
     GSL_ERROR_VAL("could not allocate memory for j", GSL_ENOMEM, 0);
   }
 
-  t->Jjj = (double *)malloc(size*(size+1)/2 * sizeof(double));
+  t->Jjj = (double *)malloc(size*size * sizeof(double));
 
   if(t->Jjj == 0) {
     free(t->j);
@@ -122,10 +122,11 @@ gsl_dht_init(gsl_dht * t, double nu, double xmax)
     GSL_ERROR ("nu is negative", GSL_EDOM);
   }
   else {
-    size_t n, m;
+    size_t n, m, i;
     int stat_bz = GSL_SUCCESS;
     int stat_J  = 0;
     double jN;
+    double *tmp;
 
     if(nu != t->nu) {
       /* Recalculate Bessel zeros if necessary. */
@@ -147,14 +148,42 @@ gsl_dht_init(gsl_dht * t, double nu, double xmax)
 
     /* J_nu(j[n] j[m] / j[N]) = Jjj[n(n-1)/2 + m - 1], 1 <= n,m <= size
      */
+
+    /* Compute the values into a temporary array in the compact
+     * (lower-triangular) layout, then store them in Jjj arranged so
+     * that gsl_dht_apply can read them sequentially. */
+
+    tmp = (double *)malloc(t->size*(t->size+1)/2 * sizeof(double));
+
+    if (tmp == 0) {
+      GSL_ERROR("could not allocate memory for tmp", GSL_ENOMEM);
+    }
+
     for(n=1; n<t->size+1; n++) {
       for(m=1; m<=n; m++) {
         double arg = t->j[n] * t->j[m] / jN;
         gsl_sf_result J;
         stat_J += gsl_sf_bessel_Jnu_e(nu, arg, &J);
-        t->Jjj[n*(n-1)/2 + m - 1] = J.val;
+        tmp[n*(n-1)/2 + m - 1] = J.val;
       }
     }
+
+    for(m=0; m<t->size; m++) {
+      for(i=0; i<t->size; i++) {
+        size_t m_local, n_local;
+        if(i < m) {
+          m_local = i;
+          n_local = m;
+        }
+        else {
+          m_local = m;
+          n_local = i;
+        }
+        t->Jjj[m * t->size + i] = tmp[n_local*(n_local+1)/2 + m_local];
+      }
+    }
+
+    free(tmp);
 
     if(stat_J != 0) {
       GSL_ERROR("error computing bessel function", GSL_EFAILED);
@@ -195,28 +224,15 @@ gsl_dht_apply(const gsl_dht * t, double * f_in, double * f_out)
   const double r  = t->xmax / jN;
   size_t m;
   size_t i;
+  size_t l;
+
+  l = 0;
 
   for(m=0; m<t->size; m++) {
     double sum = 0.0;
-    double Y;
-    for(i=0; i<t->size; i++) {
-      /* Need to find max and min so that we
-       * address the symmetric Jjj matrix properly.
-       * FIXME: we can presumably optimize this
-       * by just running over the elements of Jjj
-       * in a deterministic manner.
-       */
-      size_t m_local; 
-      size_t n_local;
-      if(i < m) {
-        m_local = i;
-        n_local = m;
-      }
-      else {
-        m_local = m;
-        n_local = i;
-      }
-      Y = t->Jjj[n_local*(n_local+1)/2 + m_local] / t->J2[i+1];
+    for(i=0; i<t->size; i++, l++) {
+      /* Jjj is stored so that it can be read sequentially here */
+      double Y = t->Jjj[l] / t->J2[i+1];
       sum += Y * f_in[i];
     }
     f_out[m] = sum * 2.0 * r*r;
