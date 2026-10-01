@@ -60,6 +60,9 @@ One line per change: date | tag | description | commit(s).
   2026-10-01 | [upstream] | interpolation: NaN for a point out of the 2D domain    | 2b4e2f1e5
   2026-10-01 | [upstream] | randist: parse the gsl-randist seed as unsigned long   | aebe57a5c
   2026-10-01 | [upstream] | linalg: define the LU pivot array before use           | d73ba5300
+  2026-10-01 | [rejected] | specfunc: mathieu_ce "differs from Mathematica"        | - (see below)
+  2026-10-01 | [rejected] | complex: test_c11 "fails" on ppc64 and sparc           | - (see below)
+  2026-10-01 | [rejected] | ode-initval2: shorten e5_bigt to hide FMA sensitivity  | - (see below)
 
 
 ## [upstream] rng: make the random() generators produce the documented sequences
@@ -974,4 +977,48 @@ Files: `linalg/lu.c`, `linalg/luc.c`, `linalg/test_lu.c`,
 `linalg/test_luc.c`.
 
 See Savannah bug #66026.
+
+
+## [rejected] specfunc: mathieu_ce "differs from Mathematica"
+
+Not applied.  No patch.
+
+Savannah bug #50343 asks why `gsl_sf_mathieu_ce(0, -1, 2 pi/180)` returns
+`0.9975194` where Mathematica's
+`MathieuC[MathieuCharacteristicA[0, -1], -1, 2 pi/180]` returns `1.41071`.
+The difference is confined to negative `q` and is the branch cut of the
+Mathieu characteristic values.  Wolfram's own documentation says there is
+"no general agreement on how to define the branch cuts" and that its
+implementation "simply picks a convenient sheet".  Two independent
+implementations agree with GSL: SPECFUN (via SciPy's `mathieu_cem`) and the
+Scilab Mathieu toolbox.  Nothing to change.
+
+
+## [rejected] complex: test_c11 "fails" on ppc64 and sparc
+
+Not applied.  No patch.
+
+Savannah bug #61342 reports `test_c11` failures on big-endian PowerPC and
+SPARC.  The pasted output consists of adjacent `real part = 0` and
+`imag part = 1` pairs, which is not what `gsl_complex_pow_real()` computes;
+it is the signature of the test being compiled with an option that
+mishandles the complex result, and the reporter's own follow-up points at
+the `-ffast-math`-style flags Gentoo and Fedora apply.  GSL does not
+support `-ffast-math` (Savannah bug #39171), and there is nothing
+platform-dependent in the function itself.
+
+
+## [rejected] ode-initval2: shorten e5_bigt to hide FMA sensitivity
+
+Not applied.
+
+Savannah bug #44865 is real: the `e5_bigt` problem in
+`ode-initval2/test.c` stores reference values that were generated without
+FMA, and with `-ffp-contract=fast` they are off by enough to fail.  The
+posted change shortens the integration interval from `1e11` to `1e9`, which
+makes the test pass by testing less.  That is not a fix.  The honest
+treatment is a test-quality change - recomputed reference values, or a
+tolerance that reflects the conditioning of the problem - and it is
+recorded as a separate task rather than taken from the bug.
+
 
