@@ -184,6 +184,30 @@ test_LUc_decomp(gsl_rng * r)
     gsl_matrix_complex_free(m);
   }
 
+  /* bug #66026, complex version: see test_LU_decomp() */
+  {
+    const size_t nsing = 128;
+    gsl_matrix_complex * m = gsl_matrix_complex_alloc(nsing, nsing);
+    gsl_permutation * p = gsl_permutation_alloc(nsing);
+    int signum = 0;
+    int status;
+    size_t i;
+
+    gsl_matrix_complex_set_identity(m);
+    gsl_matrix_complex_set(m, 0, 0, GSL_COMPLEX_ZERO);
+
+    status = gsl_linalg_complex_LU_decomp(m, p, &signum);
+
+    gsl_test_int(status != 0, 1, "complex_LU_decomp singular status");
+
+    for (i = 0; i < nsing; ++i)
+      gsl_test_int((int) gsl_permutation_get(p, i), (int) i,
+                   "complex_LU_decomp singular permutation[%lu]", (unsigned long) i);
+
+    gsl_matrix_complex_free(m);
+    gsl_permutation_free(p);
+  }
+
   return s;
 }
 

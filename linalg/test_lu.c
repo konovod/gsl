@@ -174,6 +174,36 @@ test_LU_decomp(gsl_rng * r)
     gsl_matrix_free(m);
   }
 
+  /* bug #66026: for a singular matrix the recursive path can return before
+   * it has written every entry of the internal pivot array.  This matrix is
+   * diagonal except that the leading pivot is zero: the factorization needs
+   * no row interchange at all, so the permutation must come out as the
+   * identity.  The rank-deficient leading block makes LU_decomp_L3() stop
+   * early, so with the old code the identity was built from uninitialised
+   * memory.  128 > CROSSOVER_LU, which forces the Level 3 path. */
+  {
+    const size_t nsing = 128;
+    gsl_matrix * m = gsl_matrix_alloc(nsing, nsing);
+    gsl_permutation * p = gsl_permutation_alloc(nsing);
+    int signum = 0;
+    int status;
+    size_t i;
+
+    gsl_matrix_set_identity(m);
+    gsl_matrix_set(m, 0, 0, 0.0);
+
+    status = gsl_linalg_LU_decomp(m, p, &signum);
+
+    gsl_test_int(status != 0, 1, "LU_decomp singular status");
+
+    for (i = 0; i < nsing; ++i)
+      gsl_test_int((int) gsl_permutation_get(p, i), (int) i,
+                   "LU_decomp singular permutation[%lu]", (unsigned long) i);
+
+    gsl_matrix_free(m);
+    gsl_permutation_free(p);
+  }
+
   return s;
 }
 

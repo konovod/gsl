@@ -79,6 +79,14 @@ gsl_linalg_complex_LU_decomp (gsl_matrix_complex * A, gsl_permutation * p, int *
       gsl_matrix_complex_view AL = gsl_matrix_complex_submatrix(A, 0, 0, M, minMN);
       size_t i;
 
+      /* Initialize ipiv to the identity.  LU_decomp_L3() returns early
+       * from its recursion when it meets a singular pivot, leaving the
+       * remaining entries unwritten; without this the permutation built
+       * below would read uninitialised memory (Savannah bug #66026).
+       * Entries the factorization does not reach stay no-ops. */
+      for (i = 0; i < minMN; ++i)
+        gsl_vector_uint_set(ipiv, i, (unsigned int) i);
+
       status = LU_decomp_L3 (&AL.matrix, ipiv);
 
       /* process remaining right matrix */
