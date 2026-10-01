@@ -47,7 +47,9 @@ One line per change: date | tag | description | commit(s).
   2026-10-01 | [upstream] | doc: correct the gsl_sf_result_e10 scaling formula    | 066f5b747
   2026-10-01 | [upstream] | specfunc: report GSL_EDOM for sin_pi/cos_pi at inf     | 7c27b358b
   2026-10-01 | [upstream] | specfunc: fix erfc/log_erfc/erf_Z for huge arguments  | 708791c25
+  2026-10-01 | [upstream] | specfunc: test vectors for complex sin/cos             | 48a49003f
   2026-10-01 | [rejected] | min: bound gsl_min_find_bracket to the initial interval | - (see below)
+  2026-10-01 | [rejected] | specfunc: duplicate complex sin/cos implementations    | - (see below)
 
 
 ## [upstream] rng: make the random() generators produce the documented sequences
@@ -478,6 +480,52 @@ Related, not done: `gsl_sf_hazard_e()` takes its `x >= 25` branch for
 `|x|` beyond `sqrt(DBL_MAX)`, where `1/(x*x)` underflows and the result is
 `+-inf` with a zero error.  Same family, same file, but neither bug
 reports it, so it is left alone here rather than widened in.
+
+
+## [rejected] specfunc: the duplicated complex sin and cos implementations
+
+Not applied.  The report is not a bug.
+
+`gsl_complex_sin()` and `gsl_complex_cos()` in `complex/math.c` and
+`gsl_sf_complex_sin_e()` and `gsl_sf_complex_cos_e()` in
+`specfunc/trig.c` compute the same closed form and differ only in how
+they obtain `cosh(y)` and `sinh(y)`: from libm in one case, from
+`0.5*(exp(y) +- 1/exp(y))` or from `sinh_series()` in the other.  For
+`|y| < 1` the specfunc side uses a series, which is the more accurate
+of the two, not less.  Both return values good to 2.3e-16 relative
+across the tested range.
+
+The submitter withdrew the substance of the report himself, writing
+that "the findings were due to rounding errors and both
+implementations ultimately rely on the identities" and "finding 3
+can be ignored".
+
+Finding 3 did not hold in any case.  It claimed
+`gsl_complex_cos(-6.2 - 5.3i)` should equal `gsl_complex_cos(6.2 -
+5.3i)` because cosine is even, but negating `-6.2 - 5.3i` gives
+`6.2 + 5.3i`, not `6.2 - 5.3i`, so the pair is not `cos(z)` and
+`cos(-z)`.  Evaluating the identity directly at those points gives a
+consistent answer, and the values quoted in the report do not match
+the identity at all, so they came from an intermediate of questionable
+accuracy rather than from a wrong implementation.
+
+What the report does leave is a gap in the tests, which is fixed
+separately in commit 48a49003f: `gsl_sf_complex_sin_e` and
+`gsl_sf_complex_cos_e` were tested at a single point, `(1.0, 5.0)`.
+The `complex` module does have 198 vectors each for `sin` and `cos`,
+but their imaginary arguments never exceed `|y| = 2`, so the
+`specfunc` branches at `specfunc/trig.c:348`, `:358` and `:368` were
+nearly all untested.
+
+The suggested refactoring - making `complex/gsl_complex_sin()` call
+`gsl_sf_complex_sin_e()` - is not done.  It would change the results
+returned by a module that has no error-estimate machinery of its own,
+and with the discrepancy attributed to rounding there is no
+correctness argument for it.
+
+Kept here for the record.
+
+See Savannah bug #66862.
 
 
 ## [rejected] min: bound gsl_min_find_bracket to the initial interval
