@@ -36,6 +36,8 @@ const unsigned int MAX_ITERATIONS = 150;
 void my_error_handler (const char *reason, const char *file,
                        int line, int err);
 
+static void test_fdf_init_combined (const gsl_root_fdfsolver_type * T);
+
 #define WITHIN_TOL(a, b, epsrel, epsabs) \
  ((fabs((a) - (b)) < (epsrel) * GSL_MIN(fabs(a), fabs(b)) + (epsabs)))
 
@@ -125,9 +127,65 @@ main (void)
   test_fdf (gsl_root_fdfsolver_steffenson,
             "(x - 1)^7 {0.9}", &FDF_func6, 0.9, 1.0);    
 
+  /* Regression test for Savannah bug #49465: the Newton and Steffenson
+     solvers should initialise using the combined f/df evaluation
+     (GSL_FN_FDF_EVAL_F_DF) rather than calling f and df separately, so
+     that a function which computes both at once is only called once. */
+  test_fdf_init_combined (gsl_root_fdfsolver_newton);
+  test_fdf_init_combined (gsl_root_fdfsolver_steffenson);
+
   /* now summarize the results */
 
   exit (gsl_test_summary ());
+}
+
+/* counters for the instrumented f/df/fdf used by test_fdf_init_combined */
+static int count_f = 0, count_df = 0, count_fdf = 0;
+
+static double
+counted_f (double x, void * p)
+{
+  count_f++;
+  return sin (x);
+}
+
+static double
+counted_df (double x, void * p)
+{
+  count_df++;
+  return cos (x);
+}
+
+static void
+counted_fdf (double x, void * p, double * y, double * yprime)
+{
+  count_fdf++;
+  *y = sin (x);
+  *yprime = cos (x);
+}
+
+static void
+test_fdf_init_combined (const gsl_root_fdfsolver_type * T)
+{
+  gsl_function_fdf FDF;
+  gsl_root_fdfsolver * s;
+  double root = 3.4;
+
+  FDF.f = &counted_f;
+  FDF.df = &counted_df;
+  FDF.fdf = &counted_fdf;
+  FDF.params = 0;
+
+  count_f = count_df = count_fdf = 0;
+
+  s = gsl_root_fdfsolver_alloc (T);
+  gsl_root_fdfsolver_set (s, &FDF, root);
+
+  gsl_test (count_fdf != 1 || count_f != 0 || count_df != 0,
+            "%s initialises with the combined fdf evaluation "
+            "(f=%d, df=%d, fdf=%d)", T->name, count_f, count_df, count_fdf);
+
+  gsl_root_fdfsolver_free (s);
 }
 
 
