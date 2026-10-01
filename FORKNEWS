@@ -474,6 +474,11 @@ Files: `specfunc/erfc.c`, `specfunc/test_sf.c`,
 
 See Savannah bugs #53919 and #65760.
 
+Related, not done: `gsl_sf_hazard_e()` takes its `x >= 25` branch for
+`|x|` beyond `sqrt(DBL_MAX)`, where `1/(x*x)` underflows and the result is
+`+-inf` with a zero error.  Same family, same file, but neither bug
+reports it, so it is left alone here rather than widened in.
+
 
 ## [rejected] min: bound gsl_min_find_bracket to the initial interval
 
