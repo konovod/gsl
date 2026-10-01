@@ -17,7 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-/* Author:  G. Jungman */
+/* Author:  G. Jungman 
+ *          A. A. Illarionov */
 
 #include <config.h>
 #include <stdlib.h>
@@ -105,9 +106,177 @@ m_selection_fails(int two_ja, int two_jb, int two_jc,
           );
 }
 
+/* Calculation of 3j-symbol is based on edge-recursion algorithm 
+ * described by Tuzun, Comp Phys Comm 112 (1998) */
+
+extern int regge3j_index_permutations_table[720];
+
+static inline
+int
+regge3j_find_ordered_params(
+    int twoj1, int twoj2, int twoj3, int twom1, int twom2, int twom3, 
+    int regge[9], int *  sign_param)
+{
+    int tmp[9] = {
+        (-twoj1 + twoj2 + twoj3)/2, (twoj1 - twoj2 + twoj3)/ 2, (twoj1 + twoj2 - twoj3)/2, 
+        (twoj1 - twom1)/2, (twoj2 - twom2)/2, (twoj3 - twom3)/2, 
+        (twoj1 + twom1)/2, (twoj2 + twom2)/2 , (twoj3 + twom3)/2
+    };
+    int j;
+    int * i = regge3j_index_permutations_table, 
+        * ie = regge3j_index_permutations_table + 720;
+
+    for (; i < ie ; i += 10) {
+        if (tmp[i[0]] > tmp[i[4]]) continue;
+        if (tmp[i[4]] > tmp[i[8]]) continue;
+        if (tmp[i[8]] > tmp[i[3]]) continue;
+        if (tmp[i[3]] > tmp[i[1]]) continue;
+        if (tmp[i[4]] > tmp[i[7]]) continue;
+        if ((tmp[i[4]] == tmp[i[7]]) && (tmp[i[5]] > tmp[i[8]])) continue;
+        
+        for(j = 0; j < 9 ; ++j)
+            regge[j] = tmp[i[j]];
+        *sign_param = i[9];
+        return 0;
+    }
+
+    return 1;
+}
+
+static inline
+int
+m1_pow(int n)
+{
+  return 1 - 2*(n&1);
+}
+
+static inline
+void
+coupling_3j_sum_e(int r[9], gsl_sf_result * result)
+{
+  gsl_sf_result pp, p;
+  double tmp;
+  int k;
+
+  gsl_sf_choose_e(r[2], r[7], &pp);
+  pp.val *= m1_pow(r[7]);
+
+  if (r[0] == 0) {
+    *result = pp;
+    return ;
+  }
+
+  tmp = ((double)(r[7] * r[5])) / (r[2] - r[7] + 1) ; 
+  p.val = pp.val * (r[8] - tmp);
+  p.err = pp.err * fabs(r[8] - tmp) + fabs(pp.val) * 
+        (abs(r[8]) + fabs(tmp)) * 2.0 * GSL_DBL_EPSILON;
+  if (r[0] == 1) {
+    *result = p;
+    return;
+  }
+
+  for (k = r[0] - 2; k >= 0; --k) {
+    tmp = (r[0] - k)*(r[4] - k);
+    double tmp1 = (-r[2]*(r[5] + 1) + (r[4] - k - 1)*(r[1] + k + 2) + 
+        (r[3] + k + 1)*(r[0] - k)) / tmp;
+    double tmp2 = (r[3] + k + 2)*(r[1] + k + 2) / tmp;
+
+    result->val = p.val * tmp1 - pp.val * tmp2;
+    result->err = p.err * tmp1 + pp.err * tmp2 + 
+        2.0 * GSL_DBL_EPSILON * (fabs(p.val * tmp1) + fabs(pp.val*tmp2));
+
+    pp = p;
+    p = *result;
+  }
+    
+  return;
+}
+
+static inline
+int
+plus_log_pochhammer_ratio_e(gsl_sf_result * result, const int a, const int b, int n)
+{
+  double r = 1.;
+  int status;
+  gsl_sf_result f;
+
+  int i;
+  for(i = n ; i > 0 ; --i) 
+    r *= ((double)(a + i - 1))/((double)(b + i - 1));   
+
+  status = gsl_sf_log_e(r, &f);
+  f.err += (n * 2) * GSL_DBL_EPSILON;
+
+  result->val += f.val;
+  result->err += f.err; // here we use the fact that all values have the same sign
+
+  return status;
+}
+
+
+static inline
+int
+coupling_3j_log_factor_e(int r[9], gsl_sf_result * result)
+{
+  int status;
+  
+  status = gsl_sf_log_e(r[0] + r[1] + r[2] + 1., result);
+  result->val *= -1;
+
+  status += plus_log_pochhammer_ratio_e(result, r[8] + 1, r[6] + r[8] + 1, r[2] - r[4]);
+  status += plus_log_pochhammer_ratio_e(result, r[5] + 1, r[7] + 1, r[6] - r[5]);
+  status += plus_log_pochhammer_ratio_e(result, r[0] + 1, r[8] + r[5] + 1, r[6] - r[5]);
+  status += plus_log_pochhammer_ratio_e(result, 1, r[1] + 1, r[0]);
+  status += plus_log_pochhammer_ratio_e(result, 1, r[3] + r[6] + 1, r[0]);
+
+  return status;
+}
+
+static inline
+void
+coupling_3j_0_0_0_abs_e(int a, int b, int c, gsl_sf_result * result)
+/* 
+ * a = (twoj1 + twoj3 - twoj2) / 2 and even
+ * b = (twoj1 + twoj2 - twoj3) / 2 and even
+ * c = (twoj2 + twoj3 - twoj1) / 2 and even
+ * a >= b >= c
+ */
+{
+  int a2 = a / 2, b2 = b / 2, c2 = c / 2;
+  int i;
+  double val = 1.;
+
+  for (i = 1 ; i <= b2 ; ++i) {
+    val *= (b2 + i) * (a2 + i) * (a2 + i);
+    val /= (a  + i) * (a + b2 + i) * i;
+  }
+  for (i = 1 ; i <= c2 ; ++i) {
+    val *= (c2 + i) * (a2 + b2 + i) * (a2 + b2 + i);
+    val /= (a + b + i) * (a + b + c2 + i) * i;
+  }
+
+  result->val = sqrt(val / (a + b + c + 1.));
+  result->err = (b2 + c2 + 1) * GSL_DBL_EPSILON * fabs(result->val);
+
+  return;
+}
+
+static inline
+void
+sort_3(int * a0, int * a1 , int * a2)
+{
+#ifndef locswap
+#define locswap(a, b) {int t = (b); (b) = (a); (a) = t;}
+  if ( *a1 > *a2 ) locswap(*a1, *a2);
+  if ( *a0 > *a1 ) locswap(*a0, *a1);
+  if ( *a1 > *a2 ) locswap(*a1, *a2);
+#undef locswap
+#endif
+}
+
+
 
 /*-*-*-*-*-*-*-*-*-*-*-* Functions with Error Codes *-*-*-*-*-*-*-*-*-*-*-*/
-
 
 int
 gsl_sf_coupling_3j_e (int two_ja, int two_jb, int two_jc,
@@ -126,72 +295,75 @@ gsl_sf_coupling_3j_e (int two_ja, int two_jb, int two_jc,
     result->err = 0.0;
     return GSL_SUCCESS;
   }
-  else if ( two_ma == 0 && two_mb == 0 && two_mc == 0
-            && ((two_ja + two_jb + two_jc) % 4 == 2) ) {
-    /* Special case for (ja jb jc; 0 0 0) = 0 when ja+jb+jc=odd */
-    result->val = 0.0;
-    result->err = 0.0;
-    return GSL_SUCCESS;
-  }
   else {
-    int jca  = (-two_ja + two_jb + two_jc) / 2,
-        jcb  = ( two_ja - two_jb + two_jc) / 2,
-        jcc  = ( two_ja + two_jb - two_jc) / 2,
-        jmma = ( two_ja - two_ma) / 2,
-        jmmb = ( two_jb - two_mb) / 2,
-        jmmc = ( two_jc - two_mc) / 2,
-        jpma = ( two_ja + two_ma) / 2,
-        jpmb = ( two_jb + two_mb) / 2,
-        jpmc = ( two_jc + two_mc) / 2,
-        jsum = ( two_ja + two_jb + two_jc) / 2,
-        kmin = locMax3 (0, jpmb - jmmc, jmma - jpmc),
-        kmax = locMin3 (jcc, jmma, jpmb),
-        k, sign = GSL_IS_ODD (kmin - jpma + jmmb) ? -1 : 1,
-        status = 0;
-    double sum_pos = 0.0, sum_neg = 0.0, sum_err = 0.0;
-    gsl_sf_result bc1, bc2, bc3, bcn1, bcn2, bcd1, bcd2, bcd3, bcd4, term, lnorm;
-
-    status += gsl_sf_lnchoose_e (two_ja, jcc , &bcn1);
-    status += gsl_sf_lnchoose_e (two_jb, jcc , &bcn2);
-    status += gsl_sf_lnchoose_e (jsum+1, jcc , &bcd1);
-    status += gsl_sf_lnchoose_e (two_ja, jmma, &bcd2);
-    status += gsl_sf_lnchoose_e (two_jb, jmmb, &bcd3);
-    status += gsl_sf_lnchoose_e (two_jc, jpmc, &bcd4);
-
-    lnorm.val = 0.5 * (bcn1.val + bcn2.val - bcd1.val - bcd2.val - bcd3.val
-                       - bcd4.val - log(two_jc + 1.0));
-    lnorm.err = 0.5 * (bcn1.err + bcn2.err + bcd1.err + bcd2.err + bcd3.err
-                       + bcd4.err + GSL_DBL_EPSILON * log(two_jc + 1.0));
-
-    for (k = kmin; k <= kmax; k++) {
-      status += gsl_sf_lnchoose_e (jcc, k, &bc1);
-      status += gsl_sf_lnchoose_e (jcb, jmma - k, &bc2);
-      status += gsl_sf_lnchoose_e (jca, jpmb - k, &bc3);
-      status += gsl_sf_exp_err_e(bc1.val + bc2.val + bc3.val + lnorm.val,
-                                 bc1.err + bc2.err + bc3.err + lnorm.err, 
-                                 &term);
-      
-      if (status != 0) {
-        OVERFLOW_ERROR (result);
-      }
-      
-      if (sign < 0) {
-        sum_neg += term.val;
+    int j_sum = (two_ja + two_jb + two_jc) / 2;
+    if ( two_ma == 0 && two_mb == 0 && two_mc == 0 ) {
+      if (j_sum % 2 != 0) { 
+        result->val = 0.0;
+        result->err = 0.0;
+        return GSL_SUCCESS;
       } else {
-        sum_pos += term.val;
+        int a = (two_ja + two_jb - two_jc) / 2, 
+            b = (two_jb + two_jc - two_ja) / 2, 
+            c = (two_jc + two_ja - two_jb) / 2;
+        sort_3(&c, &b, &a);
+        
+        coupling_3j_0_0_0_abs_e(a, b, c, result);
+        result->val *= m1_pow(j_sum/2);
+        return GSL_SUCCESS;
       }
+    } else {
+      int regge[9] = {0}, sign_param;
+        
+      regge3j_find_ordered_params(two_ja, two_jb, two_jc, two_ma, two_mb, two_mc, 
+            regge, &sign_param);
 
-      sum_err += term.err;
+      if (regge[3] == regge[6] && regge[4] == regge[7] && regge[5] == regge[8]) {
+        if (j_sum % 2 != 0) {
+          result->val = 0.;
+          result->err = 0.;
+          return GSL_SUCCESS;
+        } else {
+          coupling_3j_0_0_0_abs_e(regge[1], regge[2], regge[0], result);
+          result->val *= m1_pow(j_sum/2 + sign_param * 
+              (regge[0] + regge[1] + regge[2]));
+          return GSL_SUCCESS;
+        }
+      } else {
+        int status;
+        gsl_sf_result factor;
 
-      sign = -sign;
+        /* we have to compute factor anyway for proper error estimation */
+        status = coupling_3j_log_factor_e(regge, &factor);
+        factor.val *= 0.5;
+        factor.err *= 0.5;
+
+        coupling_3j_sum_e(regge, result);
+
+        if (result->val == 0.) {
+          result->err *= exp(factor.val);
+          return status;
+        } else {
+          double rel_err = result->err / fabs(result->val);
+
+          sign_param = GSL_SIGN(result->val) * m1_pow((regge[1] - regge[8]) + 
+              (regge[0] + regge[1] + regge[2]) * sign_param); 
+          /* now contains the sign */
+
+          status += gsl_sf_log_abs_e(result->val, result);
+          result->err += rel_err + factor.err + 2.0 * GSL_DBL_EPSILON * 
+              (fabs(result->val) + fabs(factor.val));
+          result->val += factor.val;
+
+          result->val = exp(result->val);
+          result->err *= result->val;
+
+          result->val *= sign_param;
+
+          return status;
+        }
+      }
     }
-    
-    result->val  = sum_pos - sum_neg;
-    result->err  = sum_err;
-    result->err += 2.0 * GSL_DBL_EPSILON * (sum_pos + sum_neg);
-    result->err += 2.0 * GSL_DBL_EPSILON * (kmax - kmin) * fabs(result->val);
-
-    return GSL_SUCCESS;
   }
 }
 

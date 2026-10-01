@@ -671,6 +671,7 @@ set(GSL_SOURCES
     specfunc/clausen.c
     specfunc/coulomb.c
     specfunc/coupling.c
+    specfunc/coupling3j_regge.c
     specfunc/coulomb_bound.c
     specfunc/dawson.c
     specfunc/debye.c
