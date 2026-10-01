@@ -625,6 +625,7 @@ set(GSL_SOURCES
     roots/fdfsolver.c
     rstat/rstat.c
     rstat/rquantile.c
+    rstat/wrstat.c
     siman/siman.c
     sort/sort.c
     sort/sortind.c
