@@ -2,7 +2,7 @@ name: CMake
 
 on:
   push:
-    branches: [ master, main, gsl-cmake ]
+    branches: [ master, main, cmake, gsl-cmake ]
   pull_request:
     branches: [ master, main ]
   workflow_dispatch:
