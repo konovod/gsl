@@ -58,6 +58,7 @@ One line per change: date | tag | description | commit(s).
   2026-10-01 | [upstream] | specfunc: reject the poles of psi and its derivatives   | d53d00109
   2026-10-01 | [upstream] | complex: arccosh returns +0 on the positive real axis  | d6ec47d87
   2026-10-01 | [upstream] | interpolation: NaN for a point out of the 2D domain    | 2b4e2f1e5
+  2026-10-01 | [upstream] | randist: parse the gsl-randist seed as unsigned long   | aebe57a5c
 
 
 ## [upstream] rng: make the random() generators produce the documented sequences
@@ -913,4 +914,27 @@ of the three assertions fail.
 Files: `interpolation/interp2d.c`, `interpolation/test2d.c`.
 
 See Savannah bug #60371.
+
+
+## [upstream] randist: parse the gsl-randist seed as unsigned long
+
+Commit: aebe57a5c
+
+`gsl-randist` read its seed with `atol()`, which returns `long` and
+saturates at `LONG_MAX`, while `gsl_rng_default_seed` is `unsigned long`.
+Any seed above `LONG_MAX` was therefore silently truncated to `LONG_MAX`
+on LP64 platforms, where `unsigned long` can represent it.  On this build
+(LLP64) a seed of `3000000000` came out as `2147483647`.
+
+The seed is now read with `strtoul()` at base 0, so decimal, octal and
+hexadecimal seeds are accepted exactly as before.  The accompanying
+diagnostic printed the value with `%ld` for what is an `unsigned long`;
+that is corrected to `%lu`.
+
+Not changed: `n` is still read with `atol()` into an `unsigned int`; that
+is a separate argument and out of scope for this report.
+
+File: `gsl-randist.c`.
+
+See Savannah bug #54077.
 
