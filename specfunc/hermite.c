@@ -1190,7 +1190,14 @@ gsl_sf_hermite_func_der_e(const int m, const int n, const double x, gsl_sf_resul
     {
       double hi2 = 1.0 / sqrt(M_SQRTPI);
       double hi1 = M_SQRT2 * x * hi2;
-      double hi = 0.0;
+      /* hi carries psi_n.  The recurrence below only starts at i = 2, so
+         for n = 0 and n = 1 it has to be seeded here: psi_1 for n = 1, and
+         psi_0 for n = 0.  Leaving it at 0.0 dropped the -x psi_n term from
+         the derivative formula for those two orders, so psi_0' came out as
+         0 and psi_1' lost its -x psi_1 part.  For n >= 2 the loop
+         overwrites hi before it is read.
+         See Savannah bug #68625. */
+      double hi = (n == 0) ? hi2 : hi1;
       double sum_log_scale = 0.0;
       double abshi;
       int i;
@@ -1216,7 +1223,11 @@ gsl_sf_hermite_func_der_e(const int m, const int n, const double x, gsl_sf_resul
 
       /* psi'_n(x) = sqrt(2 n) psi_{n-1} - x psi_n */
       result->val = (sqrt(2.0*n) * hi2 - x * hi) * exp(-0.5 * x * x + sum_log_scale);
-      result->err = n * GSL_DBL_EPSILON * fabs(result->val);
+      /* Not n * epsilon: at n = 0 that is exactly zero, which would claim
+         the result is exact.  Forming it always involves roundings, so
+         report at least one epsilon.  Only the n = 0 case changes.
+         See Savannah bug #68625. */
+      result->err = GSL_MAX(n, 1) * GSL_DBL_EPSILON * fabs(result->val);
 
       return GSL_SUCCESS;
     }
