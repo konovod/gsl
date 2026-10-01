@@ -54,6 +54,8 @@ One line per change: date | tag | description | commit(s).
   2026-10-01 | [rejected] | specfunc: missing 0.5 factor in coulomb turning point  | 192ec9cbf
   2026-10-01 | [upstream] | cdf: no NaN from beta_cont_frac under fp contraction    | 1b1d94ee9
   2026-10-01 | [upstream] | specfunc: Hermite function derivative at orders 0 and 1 | 5d36e1999, f4d35a67e
+  2026-10-01 | [upstream] | doc: document gsl_sf_complex_psi_e                     | 345883172
+  2026-10-01 | [upstream] | specfunc: reject the poles of psi and its derivatives   | d53d00109
 
 
 ## [upstream] rng: make the random() generators produce the documented sequences
@@ -762,6 +764,81 @@ rule for this fork.
 Files: `specfunc/hermite.c`, `specfunc/test_hermite.c`.
 
 See Savannah bug #68625.
+
+
+## [upstream] doc: document gsl_sf_complex_psi_e
+
+Commit: 345883172
+
+`gsl_sf_complex_psi_e()` has been in the library since 2.x but had no
+entry in `doc/specfunc-psi.rst`, so it did not appear in the manual at
+all.  It is now documented alongside the real digamma function.
+
+Based on the patch in Savannah bug #67689, with three corrections:
+
+* the posted signature was missing the space before the argument list
+  that the rest of the file uses;
+* `:data:`y`` had lost its leading colon, so the reference would not have
+  rendered;
+* the exceptional return values were given as `GSL_EDOM` and `GSL_ELOSS`.
+  Only `GSL_EDOM` is reachable - `psi_complex_rhp()` returns `GSL_EDOM`
+  for `z = 0` and `GSL_SUCCESS` otherwise, and the reflection branch
+  returns `GSL_EDOM` at a singularity - so `GSL_ELOSS` was dropped.
+
+Not a code change.  While checking the documented domain against the
+implementation, the domain check turned out to be incomplete: the
+functions reject only some of the poles.  That is a real bug and is fixed
+in the next entry, so the function now behaves as documented here.
+
+Files: `doc/specfunc-psi.rst`.
+
+See Savannah bug #67689.
+
+
+## [upstream] specfunc: reject the poles of psi and its derivatives
+
+Commit: d53d00109
+
+The polygamma functions have poles at every non-positive integer, which is
+the domain `doc/specfunc-psi.rst` documents, but only some of them were
+rejected:
+
+| function | rejected | returned a value at |
+|---|---|---|
+| `gsl_sf_psi_e` | 0, -1, -2 | -3 and below, about -8.6e15 |
+| `gsl_sf_psi_1_e` | 0, -1, -2, -3, -4 | -5 and below, about 2.6e31 |
+| `gsl_sf_complex_psi_e` | the origin only | z = -1, -2, ... |
+
+For the first two the remaining integers were left to a guard testing
+
+    if(fabs(sin(M_PI*x)) < 2.0*GSL_SQRT_DBL_MIN) DOMAIN_ERROR(result);
+
+which assumes `sin(M_PI*x)` underflows at an integer.  It does not:
+`sin(M_PI*(-3))` rounds to about -3.7e-16, some fifteen orders of magnitude
+above the `2*GSL_SQRT_DBL_MIN` of roughly 3e-154 it is compared against, so
+the guard never fires and the pole is reported as a very large number.  In
+`gsl_sf_complex_psi_e` the reflection branch leans on `GSL_IS_REAL()`,
+which is just `gsl_finite()`, and `cot(pi z)` at an integer likewise rounds
+to a large finite number rather than overflowing.
+
+All three now share one predicate, `psi_pole()`, testing
+`x <= 0 && floor(x) == x`.  Non-integer arguments are untouched: the
+existing vectors at -1.5, -10.5, -100.5 and -262144.5, and the complex
+points at (-1.5, 5.0) and (-20.5, -20.5), all return the same values as
+before.  With the change reverted `specfunc_test` reports 11 failures, all
+of them the new vectors.
+
+**This corrects a mistake of mine.**  The patch in Savannah bug #58066
+widened the digamma check to exactly this predicate, and I recorded it in
+the review notes as a regression, reasoning that the three named values
+were the intended set.  They are not: the set of poles is the set of
+non-positive integers, and the reporter was right.  The finding came out of
+checking the domain while writing the `gsl_sf_complex_psi_e` documentation
+above, not from the tracker.
+
+Files: `specfunc/psi.c`, `specfunc/test_sf.c`.
+
+See Savannah bug #58066.
 
 
 ## [rejected] min: bound gsl_min_find_bracket to the initial interval
