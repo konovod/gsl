@@ -57,6 +57,7 @@ One line per change: date | tag | description | commit(s).
   2026-10-01 | [upstream] | doc: document gsl_sf_complex_psi_e                     | 345883172
   2026-10-01 | [upstream] | specfunc: reject the poles of psi and its derivatives   | d53d00109
   2026-10-01 | [upstream] | complex: arccosh returns +0 on the positive real axis  | d6ec47d87
+  2026-10-01 | [upstream] | interpolation: NaN for a point out of the 2D domain    | 2b4e2f1e5
 
 
 ## [upstream] rng: make the random() generators produce the documented sequences
@@ -885,4 +886,31 @@ zero); complex arguments are untouched.
 Files: `complex/math.c`, `complex/test_source.c`.
 
 See Savannah bug #47345.
+
+
+## [upstream] interpolation: NaN for a point out of the 2D interpolation domain
+
+Commit: 2b4e2f1e5
+
+`interp2d_eval()`, the wrapper shared by every `gsl_interp2d_eval*_e()`
+function, rejected an out-of-range point with `GSL_ERROR(...)` and nothing
+else.  `GSL_ERROR` calls the error handler and returns the code; it does
+not touch the output argument.  So on a domain error
+`gsl_interp2d_eval_e()` left the caller's `z` at whatever it held, and the
+non-`_e` convenience wrappers, which declare a local `double z` and return
+it regardless of the status, returned an uninitialised value.
+
+Both boundary checks now store `GSL_NAN` in the result before returning
+`GSL_EDOM`.
+
+The regression test calls the evaluator with `x` and with `y` below the
+domain, seeding the output with a sentinel so that the old behaviour fails
+deterministically, and checks the non-`_e` wrapper as well.  The default
+error handler aborts the process on `GSL_ERROR`, so the test disables it
+around the calls and restores it afterwards.  With the change reverted two
+of the three assertions fail.
+
+Files: `interpolation/interp2d.c`, `interpolation/test2d.c`.
+
+See Savannah bug #60371.
 
