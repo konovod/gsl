@@ -12,6 +12,8 @@ Each entry is tagged with its intended disposition:
   [fork]       specific to this fork and not intended for upstream, e.g. an
                alternative build system or CI setup that upstream does not
                want to maintain.
+  [rejected]   a patch that was evaluated and deliberately not applied, kept
+               for the record with the reason.
 
 A change may start as `[fork]` and be promoted to `[upstream]` later; when an
 entry is actually merged upstream, remove it from here and add it to `NEWS`
@@ -29,6 +31,17 @@ One line per change: date | tag | description | commit(s).
   2026-10-01 | [upstream] | gsl-config: quote paths, allow relocation               | 0a7f11297
   2026-10-01 | [fork]     | CMake build system                                     | 0a7f11297, 332017c9d, a93188921, 9da90a6c3
   2026-10-01 | [fork]     | GitHub Actions CI                                      | 0a7f11297, 0c015bca3, 9da90a6c3
+
+  2026-10-01 | [upstream] | min: fix Brent parabolic-step convergence test         | c27559ec6
+  2026-10-01 | [upstream] | monte: avoid inf weight in VEGAS                       | e3cab2d02
+  2026-10-01 | [upstream] | roots: init Newton/Steffenson with the combined fdf    | 4eac6584f
+  2026-10-01 | [upstream] | specfunc: lambert_W0 accuracy for small arguments      | fb2b4e4cd
+  2026-10-01 | [upstream] | const: update physical constants to CODATA 2022        | db695c8f2
+  2026-10-01 | [upstream] | const: astronomical unit and parsec (IAU 2012)         | 3377c7fbe
+  2026-10-01 | [upstream] | dht: read the J matrix sequentially in gsl_dht_apply   | cd29899de
+  2026-10-01 | [upstream] | specfunc: compute the 3j symbol by edge recursion      | 1b2c8ff98
+  2026-10-01 | [upstream] | multimin: add a quadratic minimiser                    | 53cd0d098
+  2026-10-01 | [rejected] | min: bound gsl_min_find_bracket to the initial interval | - (see below)
 
 
 ## [upstream] rng: make the random() generators produce the documented sequences
@@ -132,3 +145,174 @@ separately checks `cmake --install` followed by a downstream
 `find_package(GSL CONFIG)` consumer on each platform.
 
 This is expected to stay in the fork, as it exercises the CMake build.
+
+
+## [upstream] min: fix the parabolic-step test in the Brent minimiser
+
+Commit: c27559ec6
+
+`brent_iterate()` takes the parabolic step `p/q` only when the trial point
+`u = z + p/q` lies inside the bracket.  With `q` made positive that is
+`-q*w_lower < p < q*w_upper`, but the code tested `p < q*w_lower`, which
+admits trial points below `x_left` and rejects many valid parabolic steps,
+forcing golden-section steps.  A transcription error from Brent's Algol 60;
+netlib `fmin`, Numerical Recipes, Forsythe et al. and Boost all have the
+corrected form.
+
+Files: `min/brent.c`, plus a regression test in `min/test.c`/`min/test_funcs.c`.
+
+See Savannah bug #43496.
+
+
+## [upstream] monte: avoid inf weight in VEGAS when the box variance is subnormal
+
+Commit: e3cab2d02
+
+`gsl_monte_vegas_integrate()` computed `wgt = 1/var` whenever `var > 0`.
+A tiny but non-zero subnormal `var` makes `1/var` overflow to `+Inf`, which
+propagates into `wtd_int_sum` and makes the result (and `chisq`) `NaN`.
+Any `var` for which `1/var` is not finite is now treated as zero.
+
+Files: `monte/vegas.c`, plus a regression test in `monte/test.c`.
+
+See Savannah bug #44612.
+
+
+## [upstream] roots: initialise Newton and Steffenson with the combined fdf call
+
+Commit: 4eac6584f
+
+Both fdfsolvers initialised with separate `GSL_FN_FDF_EVAL_F` and
+`GSL_FN_FDF_EVAL_DF` calls although their iterate step already uses the
+combined `GSL_FN_FDF_EVAL_F_DF`.  A user function that computes value and
+derivative together is now called once at setup instead of twice, and the
+initialisation path matches the iteration path.
+
+Files: `roots/newton.c`, `roots/steffenson.c`, plus a counting test in
+`roots/test.c`.
+
+See Savannah bug #49465.
+
+
+## [upstream] specfunc: improve the accuracy of lambert_W0 for small arguments
+
+Commit: fb2b4e4cd
+
+`gsl_sf_lambert_W0_e(x)` always used the Halley iteration, whose `w -= t`
+step cancels catastrophically for `x` near zero; the relative error grew as
+`x` decreased and below about `1e-50` the result collapsed to zero.  For
+`|x| < 1e-3 * GSL_DBL_EPSILON` it now returns `x`, and for `|x| < 1e-5` it
+evaluates the Taylor series (Fukushima 2013).  The relative error is now of
+order machine epsilon across the range.
+
+Files: `specfunc/lambert.c`, plus tests in `specfunc/test_sf.c`.
+
+See Savannah bug #60741.
+
+
+## [upstream] const: update the physical constants to CODATA 2022
+
+Commit: db695c8f2
+
+The recommended values dated from around 2000.  The measured constants are
+updated to CODATA 2022 and the SI-exact ones (c, h, e, k, N_A) are given
+exactly.  The cgs and cgsm headers now define the physical constants in
+terms of their mks counterparts so the four unit systems cannot drift apart,
+and derivative relations are used where they apply (hbar = h/2 pi).  Add the
+radiation density constant (4 sigma / c) and the WGS-84 / IUGG Earth radii
+(R1 = (2a+b)/3).  Tests for the identities and pinned CODATA 2022 values are
+added to `const/test.c`.
+
+Note: this changes the numerical values of the affected constants.
+
+Files: `const/gsl_const_{mksa,mks,cgs,cgsm,num}.h`, `const/test.c`,
+`const/calc-units-update.el`, `const/const.el`, `const/TODO`.
+
+See Savannah bug #60635.
+
+
+## [upstream] const: update the astronomical unit and parsec (IAU 2012)
+
+Commit: 3377c7fbe
+
+The IAU redefined the astronomical unit in 2012 as exactly 149 597 870 700 m.
+The astronomical unit is updated and the parsec follows from its definition
+(648000 au / pi); the cgs and cgsm values follow automatically because they
+now derive from the mks values.
+
+Files: `const/gsl_const_{mksa,mks}.h`, `const/test.c`,
+`const/calc-units-update.el`.
+
+See Savannah bug #37408.
+
+
+## [upstream] dht: read the J matrix sequentially in gsl_dht_apply
+
+Commit: cd29899de
+
+`gsl_dht_apply()` addressed the lower-triangular `Jjj` matrix with per-element
+index arithmetic.  The entries are now stored in the order in which they are
+consumed (`t->Jjj[m*size + i]`), built once in `gsl_dht_init()`, so the
+transform reads them sequentially.  The result is unchanged; `Jjj` grows from
+`size*(size+1)/2` to `size*size` doubles.  The original patch's error path
+returned `GSL_SUCCESS` on allocation failure and freed the handle; this
+version returns `GSL_ENOMEM` and leaves the handle to the caller.
+
+File: `dht/dht.c`.
+
+Based on the patch posted to help-gsl by Felipe Attanasio,
+<https://www.mail-archive.com/help-gsl@gnu.org/msg05473.html>.
+
+
+## [upstream] specfunc: compute the 3j symbol by edge recursion
+
+Commit: 1b2c8ff98
+
+`gsl_sf_coupling_3j_e()` evaluated the Racah formula directly with an
+alternating sum, which loses precision for large angular momenta.  It now
+uses the edge-recursion algorithm of Tuzun, Diz and Olcay-Cakir (1998), as
+implemented by A. A. Illarionov, removing the cancellation.  6j and 9j
+symbols are expressed in terms of 3j and follow automatically.  The 720-entry
+argument-permutation table is in the new file `specfunc/coupling3j_regge.c`,
+added to both build systems.
+
+Files: `specfunc/coupling.c`, `specfunc/coupling3j_regge.c`,
+`specfunc/Makefile.am`, `cmake/gsl_sources.cmake`.
+
+Based on `coupling3j.patch` from Savannah bug #39473.
+
+
+## [upstream] multimin: add a quadratic minimiser
+
+Commit: 53cd0d098
+
+New `gsl_multimin_fminimizer_quadratic`, a derivative-free minimiser for
+nearly quadratic functions.  It minimises along each coordinate in turn by
+fitting a parabola through the current point and the two points one step
+away, moving to the predicted minimum when it improves the value and halving
+the step otherwise.  The parabolic step is exact for a quadratic, so it
+converges in a few sweeps; it can be slow when the coordinates are strongly
+correlated.
+
+Files: `multimin/quadratic.c`, `multimin/gsl_multimin.h`,
+`multimin/Makefile.am`, `multimin/test.c`, `doc/multimin.rst`,
+`cmake/gsl_sources.cmake`.
+
+Based on the routine suggested by Jussi Lehtola in Savannah bug #32776.
+
+
+## [rejected] min: bound gsl_min_find_bracket to the initial interval
+
+Not applied.
+
+`bracketing.patch` (Savannah bug #45053) replaces the outward expansion in
+`gsl_min_find_bracket()` with interior golden-section points, on the grounds
+that the function may not be defined outside the supplied interval.  It was
+evaluated and rejected: `gsl_min_find_bracket()` is specified to search for a
+bracket, expanding the interval when necessary (the `min` test cases
+`cos(x) [1,2]` and `sqrt(|x|) [-1,0]` have no minimum inside the initial
+interval and rely on that), and the patch makes three `min.test` cases fail
+by collapsing the interval.  The `multifit` failures reported in the bug did
+not reproduce.  A user with a limited domain should supply a bracket that
+already contains the minimum.  Kept here for the record.
+
