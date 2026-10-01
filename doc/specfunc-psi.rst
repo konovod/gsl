@@ -37,6 +37,15 @@ Digamma Function
 .. Domain: x != 0.0, -1.0, -2.0, ...
 .. Exceptional Return Values: GSL_EDOM, GSL_ELOSS
 
+.. function:: int gsl_sf_complex_psi_e (const double x, const double y,
+              gsl_sf_result * result_re, gsl_sf_result * result_im)
+
+   This routine computes the digamma function :math:`\psi(z)` for the complex
+   argument :math:`z = x + i y`, returning the real part in
+   :data:`result_re` and the imaginary part in :data:`result_im`.
+.. Domain: z != 0.0, -1.0, -2.0, ...
+.. Exceptional Return Values: GSL_EDOM
+
 .. function:: double gsl_sf_psi_1piy (double y)
               int gsl_sf_psi_1piy_e (double y, gsl_sf_result * result)
 
