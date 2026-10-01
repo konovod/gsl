@@ -31,6 +31,7 @@
 #include <gsl/gsl_errno.h>
 #include <gsl/gsl_sf_exp.h>
 #include <gsl/gsl_sf_erf.h>
+#include <gsl/gsl_sys.h>
 
 #include "check.h"
 
@@ -283,6 +284,15 @@ int gsl_sf_erfc_e(double x, gsl_sf_result * result)
     e_val = exterm * c.val;
     e_err = exterm * (c.err + 2.0*fabs(x)*GSL_DBL_EPSILON + GSL_DBL_EPSILON);
   }
+  else if(ax > 27.213) {
+    /* erfc(x) has underflowed: erfc(27.213) is the least denormal,
+     * 4.9e-324, and the value is smaller than that for every larger x.
+     * Taking it here also avoids evaluating erfc8_sum() for large x, whose
+     * numerator and denominator both overflow to infinity above about
+     * 1e51 and would give NaN. */
+    e_val = 0.0;
+    e_err = 0.0;
+  }
   else {
     e_val = erfc8(ax);
     e_err = (x*x + 1.0) * GSL_DBL_EPSILON * fabs(e_val);
@@ -339,8 +349,30 @@ int gsl_sf_log_erfc_e(double x, gsl_sf_result * result)
   }
   */
   else if(x > 8.0) {
-    result->val = log_erfc8(x);
-    result->err = 2.0 * GSL_DBL_EPSILON * fabs(result->val);
+    double e_val = log_erfc8(x);
+
+    if(!gsl_finite(e_val)) {
+      /* erfc8_sum() has overflowed, which it does for any x above about
+       * 2.4e51, long after erfc(x) itself has underflowed: the ratio
+       * erfc(x)*exp(x*x) underflows to zero above that, giving -inf from
+       * the log, and both polynomial terms overflow to give NaN above
+       * 1e62.  Past the overflow only the leading term of the asymptotic
+       * expansion is meaningful, log(erfc(x)) = -x*x - log(x) -
+       * log(sqrt(pi)), and it is accurate there to within a few ulp. */
+      e_val = -x*x - log(x) - LogRootPi_;
+    }
+
+    result->val = e_val;
+
+    if(gsl_isinf(result->val)) {
+      /* -x*x has overflowed as well, for x beyond sqrt(DBL_MAX).  There
+       * is no representable answer and the relative error of an
+       * overflowed result carries no information. */
+      result->err = 0.0;
+    } else {
+      result->err = 2.0 * GSL_DBL_EPSILON * fabs(result->val);
+    }
+
     return GSL_SUCCESS;
   }
   else {
@@ -379,7 +411,13 @@ int gsl_sf_erf_Z_e(double x, gsl_sf_result * result)
   {
     const double ex2 = exp(-x*x/2.0);
     result->val  = ex2 / (M_SQRT2 * M_SQRTPI);
-    result->err  = fabs(x * result->val) * GSL_DBL_EPSILON;
+    if(result->val == 0.0) {
+      /* the normal has underflowed; x*val would be inf*0 = NaN for
+       * |x| > sqrt(DBL_MAX), and for x = +-inf */
+      result->err  = 0.0;
+    } else {
+      result->err  = fabs(x * result->val) * GSL_DBL_EPSILON;
+    }
     result->err += 2.0 * GSL_DBL_EPSILON * fabs(result->val);
     CHECK_UNDERFLOW(result);
     return GSL_SUCCESS;
