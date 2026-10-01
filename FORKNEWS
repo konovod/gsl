@@ -45,6 +45,7 @@ One line per change: date | tag | description | commit(s).
   2026-10-01 | [upstream] | randist: degenerate mu = 0 in gsl_ran_poisson_pdf      | 4f9f4f4fc
   2026-10-01 | [upstream] | linalg: raise the cholesky_invert Hilbert tolerance   | f84a57a0f
   2026-10-01 | [upstream] | doc: correct the gsl_sf_result_e10 scaling formula    | 066f5b747
+  2026-10-01 | [upstream] | specfunc: report GSL_EDOM for sin_pi/cos_pi at inf     | 7c27b358b
   2026-10-01 | [rejected] | min: bound gsl_min_find_bracket to the initial interval | - (see below)
 
 
@@ -372,6 +373,49 @@ field is `val`.
 File: `doc/specfunc.rst`.
 
 See Savannah bug #66128.
+
+
+## [upstream] specfunc: report GSL_EDOM for sin_pi and cos_pi at infinity
+
+Commits: 7c27b358b, f87e96143, b4a012ca9
+
+`gsl_sf_cos_pi_e()` reduced its argument with `fabs(intx) >= TWOBIG`
+before doing anything else, and infinity satisfies that test, so
+`gsl_sf_cos_pi(+-inf)` returned exactly 1.0 with `GSL_SUCCESS` - the
+answer for a large *finite* argument, silently given for an argument
+that is not in the domain.  Both functions now reject a non-finite
+argument with `DOMAIN_ERROR`, so they return `NaN` with `GSL_EDOM`, as
+the rest of `specfunc` does for an argument outside its domain.
+
+`GSL_EDOM` rather than the `GSL_ELOSS` of the posted patch: `ELOSS` is
+reserved for an in-domain argument whose answer is imprecise, and the
+patch's `val = 0.0, err = 1.0` was not even the value `cos_pi` was
+reporting.  Across `doc/*.rst`, 48 functions list `GSL_EDOM` alone and
+only three list `GSL_ELOSS` alone, all of them pure accuracy cases
+(`polar_to_rect`, `angle_restrict_symm`, `angle_restrict_pos`).
+
+NaN is deliberately left alone.  No `specfunc` function treats a NaN
+argument as a domain error - NaN propagates through the arithmetic, and
+where a convergence check exists it surfaces as `GSL_EMAXITER` instead
+(see `gsl_sf_ellint_Kcomp_e`) - so trapping it here would be unlike
+anything else in the library.
+
+`gsl_sf_sin_pi` and `gsl_sf_cos_pi` had no documentation at all, which
+is why the intended behaviour was ambiguous in the first place.  Both
+are now documented with an explicit domain and return value, including
+the exact result for arguments beyond `2/epsilon`, which are even
+integers as far as a `double` can represent.  Tests cover infinity,
+NaN, and large finite arguments.
+
+The only callers inside the library are `gsl_sf_bessel_Jnu_e` and
+`gsl_sf_bessel_Yn_e`, which propagate the status with
+`GSL_ERROR_SELECT_4`; they can only reach the new guard when the order
+`nu` is itself infinite, which was already meaningless.
+
+Files: `specfunc/sincos_pi.c`, `specfunc/test_sincos_pi.c`,
+`doc/specfunc-trig.rst`.
+
+See Savannah bug #57978.
 
 
 ## [rejected] min: bound gsl_min_find_bracket to the initial interval
