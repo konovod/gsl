@@ -1,4 +1,6 @@
 # -*- org -*-
 #+CATEGORY: const
 
-could add RADIATION_DENSITY_CONSTANT (7.56591e-16) /* J m-3 K-4 */
+RADIATION_DENSITY_CONSTANT has been added (defined as 4 sigma / c in
+gsl_const_mksa.h); remove this note if the file becomes empty.
+

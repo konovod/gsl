@@ -7,12 +7,12 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 3 of the License, or (at
  * your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
@@ -21,23 +21,30 @@
 #ifndef __GSL_CONST_CGSM__
 #define __GSL_CONST_CGSM__
 
-#define GSL_CONST_CGSM_SPEED_OF_LIGHT (2.99792458e10) /* cm / s */
-#define GSL_CONST_CGSM_GRAVITATIONAL_CONSTANT (6.673e-8) /* cm^3 / g s^2 */
-#define GSL_CONST_CGSM_PLANCKS_CONSTANT_H (6.62606896e-27) /* g cm^2 / s */
-#define GSL_CONST_CGSM_PLANCKS_CONSTANT_HBAR (1.05457162825e-27) /* g cm^2 / s */
-#define GSL_CONST_CGSM_ASTRONOMICAL_UNIT (1.49597870691e13) /* cm */
-#define GSL_CONST_CGSM_LIGHT_YEAR (9.46053620707e17) /* cm */
-#define GSL_CONST_CGSM_PARSEC (3.08567758135e18) /* cm */
-#define GSL_CONST_CGSM_GRAV_ACCEL (9.80665e2) /* cm / s^2 */
-#define GSL_CONST_CGSM_ELECTRON_VOLT (1.602176487e-12) /* g cm^2 / s^2 */
-#define GSL_CONST_CGSM_MASS_ELECTRON (9.10938188e-28) /* g */
-#define GSL_CONST_CGSM_MASS_MUON (1.88353109e-25) /* g */
-#define GSL_CONST_CGSM_MASS_PROTON (1.67262158e-24) /* g */
-#define GSL_CONST_CGSM_MASS_NEUTRON (1.67492716e-24) /* g */
-#define GSL_CONST_CGSM_RYDBERG (2.17987196968e-11) /* g cm^2 / s^2 */
-#define GSL_CONST_CGSM_BOLTZMANN (1.3806504e-16) /* g cm^2 / K s^2 */
-#define GSL_CONST_CGSM_MOLAR_GAS (8.314472e7) /* g cm^2 / K mol s^2 */
-#define GSL_CONST_CGSM_STANDARD_GAS_VOLUME (2.2710981e4) /* cm^3 / mol */
+/* The physical constants below are expressed in terms of their MKS
+ * counterparts (GSL_CONST_MKS_*, from gsl_const_mks.h) so that the
+ * different unit systems cannot drift apart when the values are
+ * updated.  The remaining constants are exact unit conversions. */
+
+#include <gsl/gsl_const_mks.h>
+
+#define GSL_CONST_CGSM_SPEED_OF_LIGHT (1e2 * GSL_CONST_MKS_SPEED_OF_LIGHT) /* cm / s */
+#define GSL_CONST_CGSM_GRAVITATIONAL_CONSTANT (1e3 * GSL_CONST_MKS_GRAVITATIONAL_CONSTANT) /* cm^3 / g s^2 */
+#define GSL_CONST_CGSM_PLANCKS_CONSTANT_H (1e7 * GSL_CONST_MKS_PLANCKS_CONSTANT_H) /* g cm^2 / s */
+#define GSL_CONST_CGSM_PLANCKS_CONSTANT_HBAR (1e7 * GSL_CONST_MKS_PLANCKS_CONSTANT_HBAR) /* g cm^2 / s */
+#define GSL_CONST_CGSM_ASTRONOMICAL_UNIT (1e2 * GSL_CONST_MKS_ASTRONOMICAL_UNIT) /* cm */
+#define GSL_CONST_CGSM_LIGHT_YEAR (1e2 * GSL_CONST_MKS_LIGHT_YEAR) /* cm */
+#define GSL_CONST_CGSM_PARSEC (1e2 * GSL_CONST_MKS_PARSEC) /* cm */
+#define GSL_CONST_CGSM_GRAV_ACCEL (1e2 * GSL_CONST_MKS_GRAV_ACCEL) /* cm / s^2 */
+#define GSL_CONST_CGSM_ELECTRON_VOLT (1e7 * GSL_CONST_MKS_ELECTRON_VOLT) /* g cm^2 / s^2 */
+#define GSL_CONST_CGSM_MASS_ELECTRON (1e3 * GSL_CONST_MKS_MASS_ELECTRON) /* g */
+#define GSL_CONST_CGSM_MASS_MUON (1e3 * GSL_CONST_MKS_MASS_MUON) /* g */
+#define GSL_CONST_CGSM_MASS_PROTON (1e3 * GSL_CONST_MKS_MASS_PROTON) /* g */
+#define GSL_CONST_CGSM_MASS_NEUTRON (1e3 * GSL_CONST_MKS_MASS_NEUTRON) /* g */
+#define GSL_CONST_CGSM_RYDBERG (1e7 * GSL_CONST_MKS_RYDBERG) /* g cm^2 / s^2 */
+#define GSL_CONST_CGSM_BOLTZMANN (1e7 * GSL_CONST_MKS_BOLTZMANN) /* g cm^2 / K s^2 */
+#define GSL_CONST_CGSM_MOLAR_GAS (1e7 * GSL_CONST_MKS_MOLAR_GAS) /* g cm^2 / K mol s^2 */
+#define GSL_CONST_CGSM_STANDARD_GAS_VOLUME (1e6 * GSL_CONST_MKS_STANDARD_GAS_VOLUME) /* cm^3 / mol */
 #define GSL_CONST_CGSM_MINUTE (6e1) /* s */
 #define GSL_CONST_CGSM_HOUR (3.6e3) /* s */
 #define GSL_CONST_CGSM_DAY (8.64e4) /* s */
@@ -76,7 +83,7 @@
 #define GSL_CONST_CGSM_UK_TON (1.0160469088e6) /* g */
 #define GSL_CONST_CGSM_TROY_OUNCE (3.1103475e1) /* g */
 #define GSL_CONST_CGSM_CARAT (2e-1) /* g */
-#define GSL_CONST_CGSM_UNIFIED_ATOMIC_MASS (1.660538782e-24) /* g */
+#define GSL_CONST_CGSM_UNIFIED_ATOMIC_MASS (1e3 * GSL_CONST_MKS_UNIFIED_ATOMIC_MASS) /* g */
 #define GSL_CONST_CGSM_GRAM_FORCE (9.80665e2) /* cm g / s^2 */
 #define GSL_CONST_CGSM_POUND_FORCE (4.44822161526e5) /* cm g / s^2 */
 #define GSL_CONST_CGSM_KILOPOUND_FORCE (4.44822161526e8) /* cm g / s^2 */
@@ -104,19 +111,25 @@
 #define GSL_CONST_CGSM_CURIE (3.7e10) /* 1 / s */
 #define GSL_CONST_CGSM_ROENTGEN (2.58e-8) /* abamp s / g */
 #define GSL_CONST_CGSM_RAD (1e2) /* cm^2 / s^2 */
-#define GSL_CONST_CGSM_SOLAR_MASS (1.98892e33) /* g */
-#define GSL_CONST_CGSM_BOHR_RADIUS (5.291772083e-9) /* cm */
+#define GSL_CONST_CGSM_SOLAR_MASS (1e3 * GSL_CONST_MKS_SOLAR_MASS) /* g */
+#define GSL_CONST_CGSM_BOHR_RADIUS (1e2 * GSL_CONST_MKS_BOHR_RADIUS) /* cm */
 #define GSL_CONST_CGSM_NEWTON (1e5) /* cm g / s^2 */
 #define GSL_CONST_CGSM_DYNE (1e0) /* cm g / s^2 */
 #define GSL_CONST_CGSM_JOULE (1e7) /* g cm^2 / s^2 */
 #define GSL_CONST_CGSM_ERG (1e0) /* g cm^2 / s^2 */
-#define GSL_CONST_CGSM_STEFAN_BOLTZMANN_CONSTANT (5.67040047374e-5) /* g / K^4 s^3 */
-#define GSL_CONST_CGSM_THOMSON_CROSS_SECTION (6.65245893699e-25) /* cm^2 */
-#define GSL_CONST_CGSM_BOHR_MAGNETON (9.27400899e-21) /* abamp cm^2 */
-#define GSL_CONST_CGSM_NUCLEAR_MAGNETON (5.05078317e-24) /* abamp cm^2 */
-#define GSL_CONST_CGSM_ELECTRON_MAGNETIC_MOMENT (9.28476362e-21) /* abamp cm^2 */
-#define GSL_CONST_CGSM_PROTON_MAGNETIC_MOMENT (1.410606633e-23) /* abamp cm^2 */
-#define GSL_CONST_CGSM_FARADAY (9.64853429775e3) /* abamp s / mol */
-#define GSL_CONST_CGSM_ELECTRON_CHARGE (1.602176487e-20) /* abamp s */
+#define GSL_CONST_CGSM_STEFAN_BOLTZMANN_CONSTANT (1e3 * GSL_CONST_MKS_STEFAN_BOLTZMANN_CONSTANT) /* g / K^4 s^3 */
+#define GSL_CONST_CGSM_THOMSON_CROSS_SECTION (1e4 * GSL_CONST_MKS_THOMSON_CROSS_SECTION) /* cm^2 */
+#define GSL_CONST_CGSM_BOHR_MAGNETON (1e3 * GSL_CONST_MKS_BOHR_MAGNETON) /* abamp cm^2 */
+#define GSL_CONST_CGSM_NUCLEAR_MAGNETON (1e3 * GSL_CONST_MKS_NUCLEAR_MAGNETON) /* abamp cm^2 */
+#define GSL_CONST_CGSM_ELECTRON_MAGNETIC_MOMENT (1e3 * GSL_CONST_MKS_ELECTRON_MAGNETIC_MOMENT) /* abamp cm^2 */
+#define GSL_CONST_CGSM_PROTON_MAGNETIC_MOMENT (1e3 * GSL_CONST_MKS_PROTON_MAGNETIC_MOMENT) /* abamp cm^2 */
+#define GSL_CONST_CGSM_FARADAY (1e-1 * GSL_CONST_MKS_FARADAY) /* abamp s / mol */
+#define GSL_CONST_CGSM_ELECTRON_CHARGE (1e-1 * GSL_CONST_MKS_ELECTRON_CHARGE) /* abamp s */
+#define GSL_CONST_CGSM_RADIATION_DENSITY_CONSTANT (1e1 * GSL_CONST_MKS_RADIATION_DENSITY_CONSTANT) /* erg / cm^3 K^4 */
+#define GSL_CONST_CGSM_EARTH_EQUATORIAL_RADIUS_A (1e2 * GSL_CONST_MKS_EARTH_EQUATORIAL_RADIUS_A) /* cm */
+#define GSL_CONST_CGSM_EARTH_POLAR_RADIUS_B (1e2 * GSL_CONST_MKS_EARTH_POLAR_RADIUS_B) /* cm */
+#define GSL_CONST_CGSM_EARTH_MEAN_RADIUS_R1 (1e2 * GSL_CONST_MKS_EARTH_MEAN_RADIUS_R1) /* cm */
+#define GSL_CONST_CGSM_EARTH_AUTHALIC_RADIUS_R2 (1e2 * GSL_CONST_MKS_EARTH_AUTHALIC_RADIUS_R2) /* cm */
+#define GSL_CONST_CGSM_EARTH_VOLUMETRIC_RADIUS_R3 (1e2 * GSL_CONST_MKS_EARTH_VOLUMETRIC_RADIUS_R3) /* cm */
 
 #endif /* __GSL_CONST_CGSM__ */

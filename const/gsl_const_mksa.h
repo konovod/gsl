@@ -7,12 +7,12 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 3 of the License, or (at
  * your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
@@ -21,23 +21,30 @@
 #ifndef __GSL_CONST_MKSA__
 #define __GSL_CONST_MKSA__
 
+/* The physical constants below are the CODATA 2022 recommended values
+ * (https://physics.nist.gov/cuu/Constants/).  The constants which are
+ * exact in the SI since the 2019 redefinition (speed of light, Planck
+ * constant, elementary charge, Boltzmann constant, Avogadro constant)
+ * are given exactly; the remaining measured constants are quoted to
+ * the precision recommended by CODATA. */
+
 #define GSL_CONST_MKSA_SPEED_OF_LIGHT (2.99792458e8) /* m / s */
-#define GSL_CONST_MKSA_GRAVITATIONAL_CONSTANT (6.673e-11) /* m^3 / kg s^2 */
-#define GSL_CONST_MKSA_PLANCKS_CONSTANT_H (6.62606896e-34) /* kg m^2 / s */
-#define GSL_CONST_MKSA_PLANCKS_CONSTANT_HBAR (1.05457162825e-34) /* kg m^2 / s */
+#define GSL_CONST_MKSA_GRAVITATIONAL_CONSTANT (6.67430e-11) /* m^3 / kg s^2 */
+#define GSL_CONST_MKSA_PLANCKS_CONSTANT_H (6.62607015e-34) /* kg m^2 / s */
+#define GSL_CONST_MKSA_PLANCKS_CONSTANT_HBAR (1.0545718176461564e-34) /* kg m^2 / s */
 #define GSL_CONST_MKSA_ASTRONOMICAL_UNIT (1.49597870691e11) /* m */
 #define GSL_CONST_MKSA_LIGHT_YEAR (9.46053620707e15) /* m */
 #define GSL_CONST_MKSA_PARSEC (3.08567758135e16) /* m */
 #define GSL_CONST_MKSA_GRAV_ACCEL (9.80665e0) /* m / s^2 */
-#define GSL_CONST_MKSA_ELECTRON_VOLT (1.602176487e-19) /* kg m^2 / s^2 */
-#define GSL_CONST_MKSA_MASS_ELECTRON (9.10938188e-31) /* kg */
-#define GSL_CONST_MKSA_MASS_MUON (1.88353109e-28) /* kg */
-#define GSL_CONST_MKSA_MASS_PROTON (1.67262158e-27) /* kg */
-#define GSL_CONST_MKSA_MASS_NEUTRON (1.67492716e-27) /* kg */
-#define GSL_CONST_MKSA_RYDBERG (2.17987196968e-18) /* kg m^2 / s^2 */
-#define GSL_CONST_MKSA_BOLTZMANN (1.3806504e-23) /* kg m^2 / K s^2 */
-#define GSL_CONST_MKSA_MOLAR_GAS (8.314472e0) /* kg m^2 / K mol s^2 */
-#define GSL_CONST_MKSA_STANDARD_GAS_VOLUME (2.2710981e-2) /* m^3 / mol */
+#define GSL_CONST_MKSA_ELECTRON_VOLT (1.602176634e-19) /* kg m^2 / s^2 */
+#define GSL_CONST_MKSA_MASS_ELECTRON (9.1093837139e-31) /* kg */
+#define GSL_CONST_MKSA_MASS_MUON (1.883531627e-28) /* kg */
+#define GSL_CONST_MKSA_MASS_PROTON (1.67262192595e-27) /* kg */
+#define GSL_CONST_MKSA_MASS_NEUTRON (1.67492750056e-27) /* kg */
+#define GSL_CONST_MKSA_RYDBERG (2.1798723611030e-18) /* kg m^2 / s^2 */
+#define GSL_CONST_MKSA_BOLTZMANN (1.380649e-23) /* kg m^2 / K s^2 */
+#define GSL_CONST_MKSA_MOLAR_GAS (8.314462618e0) /* kg m^2 / K mol s^2 */
+#define GSL_CONST_MKSA_STANDARD_GAS_VOLUME (2.2710954641e-2) /* m^3 / mol */
 #define GSL_CONST_MKSA_MINUTE (6e1) /* s */
 #define GSL_CONST_MKSA_HOUR (3.6e3) /* s */
 #define GSL_CONST_MKSA_DAY (8.64e4) /* s */
@@ -76,7 +83,7 @@
 #define GSL_CONST_MKSA_UK_TON (1.0160469088e3) /* kg */
 #define GSL_CONST_MKSA_TROY_OUNCE (3.1103475e-2) /* kg */
 #define GSL_CONST_MKSA_CARAT (2e-4) /* kg */
-#define GSL_CONST_MKSA_UNIFIED_ATOMIC_MASS (1.660538782e-27) /* kg */
+#define GSL_CONST_MKSA_UNIFIED_ATOMIC_MASS (1.66053906892e-27) /* kg */
 #define GSL_CONST_MKSA_GRAM_FORCE (9.80665e-3) /* kg m / s^2 */
 #define GSL_CONST_MKSA_POUND_FORCE (4.44822161526e0) /* kg m / s^2 */
 #define GSL_CONST_MKSA_KILOPOUND_FORCE (4.44822161526e3) /* kg m / s^2 */
@@ -105,22 +112,36 @@
 #define GSL_CONST_MKSA_ROENTGEN (2.58e-4) /* A s / kg */
 #define GSL_CONST_MKSA_RAD (1e-2) /* m^2 / s^2 */
 #define GSL_CONST_MKSA_SOLAR_MASS (1.98892e30) /* kg */
-#define GSL_CONST_MKSA_BOHR_RADIUS (5.291772083e-11) /* m */
+#define GSL_CONST_MKSA_BOHR_RADIUS (5.29177210544e-11) /* m */
 #define GSL_CONST_MKSA_NEWTON (1e0) /* kg m / s^2 */
 #define GSL_CONST_MKSA_DYNE (1e-5) /* kg m / s^2 */
 #define GSL_CONST_MKSA_JOULE (1e0) /* kg m^2 / s^2 */
 #define GSL_CONST_MKSA_ERG (1e-7) /* kg m^2 / s^2 */
-#define GSL_CONST_MKSA_STEFAN_BOLTZMANN_CONSTANT (5.67040047374e-8) /* kg / K^4 s^3 */
-#define GSL_CONST_MKSA_THOMSON_CROSS_SECTION (6.65245893699e-29) /* m^2 */
-#define GSL_CONST_MKSA_BOHR_MAGNETON (9.27400899e-24) /* A m^2 */
-#define GSL_CONST_MKSA_NUCLEAR_MAGNETON (5.05078317e-27) /* A m^2 */
-#define GSL_CONST_MKSA_ELECTRON_MAGNETIC_MOMENT (9.28476362e-24) /* A m^2 */
-#define GSL_CONST_MKSA_PROTON_MAGNETIC_MOMENT (1.410606633e-26) /* A m^2 */
-#define GSL_CONST_MKSA_FARADAY (9.64853429775e4) /* A s / mol */
-#define GSL_CONST_MKSA_ELECTRON_CHARGE (1.602176487e-19) /* A s */
-#define GSL_CONST_MKSA_VACUUM_PERMITTIVITY (8.854187817e-12) /* A^2 s^4 / kg m^3 */
-#define GSL_CONST_MKSA_VACUUM_PERMEABILITY (1.25663706144e-6) /* kg m / A^2 s^2 */
+#define GSL_CONST_MKSA_STEFAN_BOLTZMANN_CONSTANT (5.670374419e-8) /* kg / K^4 s^3 */
+#define GSL_CONST_MKSA_THOMSON_CROSS_SECTION (6.6524587051e-29) /* m^2 */
+#define GSL_CONST_MKSA_BOHR_MAGNETON (9.2740100657e-24) /* A m^2 */
+#define GSL_CONST_MKSA_NUCLEAR_MAGNETON (5.0507837393e-27) /* A m^2 */
+#define GSL_CONST_MKSA_ELECTRON_MAGNETIC_MOMENT (9.2847646917e-24) /* A m^2 */
+#define GSL_CONST_MKSA_PROTON_MAGNETIC_MOMENT (1.41060679545e-26) /* A m^2 */
+#define GSL_CONST_MKSA_FARADAY (9.6485332123e4) /* A s / mol */
+#define GSL_CONST_MKSA_ELECTRON_CHARGE (1.602176634e-19) /* A s */
+#define GSL_CONST_MKSA_VACUUM_PERMITTIVITY (8.8541878188e-12) /* A^2 s^4 / kg m^3 */
+#define GSL_CONST_MKSA_VACUUM_PERMEABILITY (1.25663706127e-6) /* kg m / A^2 s^2 */
 #define GSL_CONST_MKSA_DEBYE (3.33564095198e-30) /* A s^2 / m^2 */
 #define GSL_CONST_MKSA_GAUSS (1e-4) /* kg / A s^2 */
+
+/* radiation constant a = 4 sigma / c */
+#define GSL_CONST_MKSA_RADIATION_DENSITY_CONSTANT (4.0 * GSL_CONST_MKSA_STEFAN_BOLTZMANN_CONSTANT / GSL_CONST_MKSA_SPEED_OF_LIGHT) /* J / m^3 K^4 */
+
+/* Earth radii: equatorial and polar radii of the WGS-84 reference
+ * ellipsoid, and the IUGG mean radii computed from them: the
+ * arithmetic mean R1 = (2a + b)/3, the authalic radius R2 (sphere of
+ * equal surface area) and the volumetric radius R3 (sphere of equal
+ * volume) */
+#define GSL_CONST_MKSA_EARTH_EQUATORIAL_RADIUS_A (6378137.0) /* m */
+#define GSL_CONST_MKSA_EARTH_POLAR_RADIUS_B (6356752.3142) /* m */
+#define GSL_CONST_MKSA_EARTH_MEAN_RADIUS_R1 ((2.0 * GSL_CONST_MKSA_EARTH_EQUATORIAL_RADIUS_A + GSL_CONST_MKSA_EARTH_POLAR_RADIUS_B) / 3.0) /* m */
+#define GSL_CONST_MKSA_EARTH_AUTHALIC_RADIUS_R2 (6371007.1809) /* m */
+#define GSL_CONST_MKSA_EARTH_VOLUMETRIC_RADIUS_R3 (6371000.79) /* m */
 
 #endif /* __GSL_CONST_MKSA__ */

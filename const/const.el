@@ -144,7 +144,7 @@
          ("rd"            "RAD")
 
          ("1.98892e30 kg"       "SOLAR_MASS")
-         ("0.5291772083e-10 m"  "BOHR_RADIUS")
+         ("0.529177210544e-10 m" "BOHR_RADIUS")
 
          ("N"                     "NEWTON")
          ("1e-5 N"                "DYNE")
@@ -166,7 +166,7 @@
         ("e"             "ELECTRON_CHARGE")))
 
 (setq gsl-special-em-constants 
-      '(("8.854187817e-12 F/m" "VACUUM_PERMITTIVITY")
+      '(("8.8541878188e-12 F/m" "VACUUM_PERMITTIVITY")
         ("mu0"           "VACUUM_PERMEABILITY")
         ("(1e-21/c) C/m" "DEBYE")
         ("Gs"            "GAUSS")))
