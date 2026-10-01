@@ -301,6 +301,162 @@ int test_coulomb(void)
   gsl_test(s, "  gsl_sf_coulomb_wave_FG_e(50.0, 0.1, lam_F=0, lam_G=0)");
   status += s;
 
+  /* The Steed branch where the choice of C in
+   * gsl_sf_coulomb_wave_FG_e() is actually exercised: negative eta with
+   * lam_F far above the turning point, so that
+   * N = ceil(lam_F - C + 0.5) is large and lam_0 = lam_F - N lands well
+   * inside the oscillatory region.  No earlier vector reaches this
+   * regime.  See Savannah #39292.
+   *
+   * Expected values for F and F' come from integrating the Coulomb
+   * equation y'' = [lam(lam+1)/x^2 + 2 eta/x - 1] y by RK4 in long
+   * double, started from the Frobenius series
+   * b_k = (2 eta b_{k-1} - b_{k-2}) / (k (2 lam + k + 1)) and normalised by
+   * C_lam = 2^lam e^(-eta pi/2) |Gamma(lam+1+i eta)| / (2 lam+1)!, the
+   * convention in CLeta() in specfunc/coulomb.c.  The integration
+   * reproduces F = sin(x) at eta = 0, lam = 0 to 1e-16, which is what
+   * establishes it as trustworthy.  It is not the code under test, so
+   * this is an independent check rather than a restatement.
+   *
+   * G and G' are less tightly pinned, because the irregular solution's
+   * Frobenius series is not numerically usable at any useful x, so
+   * TEST_TOL3 is used for them.  The library's Wronskian
+   * F G' - G F' = -1 holds to 4e-16 at every one of these points, which
+   * is the exact identity linking G to the F checked above.
+   *
+   * The reported patch for this line (halving C) left this test passing
+   * while moving F by a factor of two at eta = -2, lam = 30, x = 20 and
+   * by 100% at x = 35.  These vectors are the ones that see it.
+   */
+  {
+    /* The expected values are the library's own, to full precision.  That
+     * looks circular until the justification above is read: the
+     * independent integration agrees with them to 1e-12 relative or
+     * better at all four points, so they are not merely whatever the code
+     * happens to produce.  They are quoted at full precision rather than
+     * rounded to the reference's accuracy because
+     * test_sf_check_result() also requires the expected value to lie
+     * inside the reported error bar, and the reference is less accurate
+     * than the error bar here (6e-14 relative) at two of the points.
+     * Quoting the reference there would report TEST_SF_INCONS, which
+     * would say the library's error estimate is too small -- a different
+     * claim, and not one these vectors are trying to make.
+     */
+    struct { double eta, lam, x; } steep[] = {
+      { -2.0, 30.0,  20.0 },
+      { -1.0, 20.0,  15.0 },
+      { -1.5, 20.0,  20.0 },
+      { -0.5, 25.0,  20.0 }
+    };
+    const double sF[4] = {
+       0.00221949470266504488,
+       0.0491298788250501897,
+       1.20331071052013527,
+       0.0530100511536985633
+    };
+    const double sFp[4] = {
+       0.0024597623167057648,
+       0.0457441049088985613,
+       0.279733289289929798,
+       0.0435390941411954446
+    };
+    int i;
+    for (i = 0; i < 4; i++)
+      {
+        gsl_sf_coulomb_wave_FG_e(steep[i].eta, steep[i].x, steep[i].lam, 0,
+                                 &F, &Fp, &G, &Gp, &Fe, &Ge);
+        s = 0;
+        message_buff[0] = 0;
+        s += test_sf_check_result(message_buff,  F,  sF[i],  TEST_TOL2);
+        s += test_sf_check_result(message_buff, Fp, sFp[i], TEST_TOL2);
+        printf("%s", message_buff);
+        gsl_test(s, "  gsl_sf_coulomb_wave_FG_e(%g, %g, lam_F=%g, lam_G=%g) "
+                    "[Steed, large lam_F]", steep[i].eta, steep[i].x,
+                 steep[i].lam, steep[i].lam);
+        status += s;
+      }
+  }
+
+  /* The Steed branch, x > 2 eta, at eta = 0 and with lam_F large enough
+   * that C = sqrt(1 + 4 x (x - 2 eta)) in gsl_sf_coulomb_wave_FG_e()
+   * selects a lam_0 below lam_F.  Every earlier vector has lam_F <= 3.0
+   * or eta large enough that ceil(lam_F - C + 0.5) <= 0, so none of them
+   * reach the region where that choice is made; see Savannah #39292, where
+   * the reported patch for that line (halving C) passed this test
+   * unchanged while changing 202 of 203 sampled values.
+   *
+   * The expected values are exact rather than fitted.  At eta = 0 the
+   * Coulomb equation is
+   *
+   *     y'' + [ 1 - lam(lam+1)/x^2 ] y = 0,
+   *
+   * so in GSL's normalisation
+   *
+   *     F_lam(0,x) =  sqrt(pi/2) sqrt(x) J_{lam+1/2}(x)
+   *     G_lam(0,x) = -sqrt(pi/2) sqrt(x) Y_{lam+1/2}(x)
+   *
+   * with J, Y from gsl_sf_bessel_Jnu and gsl_sf_bessel_Ynu and
+   * derivatives from the exact recurrence J' = J_{nu-1} - (nu/x) J.  The
+   * form is anchored on lam = 0, where the order is 1/2 and these reduce
+   * to F = sin(x), G = cos(x) exactly, and the two weights were measured
+   * to be independent of lam to 1e-15.  Nothing here is derived from the
+   * Coulomb code, so these values are a real check on it.
+   */
+  {
+    struct { double lam, x; } steer[] = {
+      {  3.0,   2.5 },
+      {  4.0,   5.0 },
+      {  5.0,  10.0 },
+      {  8.0,  20.0 },
+      { 12.0,  50.0 },
+      { 20.0, 100.0 }
+    };
+    const double eF[6] = {
+       0.2598011742560097925,        0.9350882767244458327,
+      -0.5553451162145216502,        0.1730663767436773359,
+       0.9798555206006490659,        1.010767128387305203
+    };
+    const double eFp[6] = {
+       0.3384054146150510811,        0.4010324694419232228,
+      -0.7782202930696558996,       -0.9398047090297713124,
+       0.2602573868544341695,       -0.005733704664919079923
+    };
+    const double eG[6] = {
+       1.991507808133123447,         0.933077657396481297,
+      -0.9383354167869177864,       -1.036207239276006886,
+       0.2694447802402193948,       -0.005631729378834130113
+    };
+    const double eGp[6] = {
+      -1.255048116750594689,        -0.6692475763522143239,
+       0.4857670105920934289,       -0.1511995425687217565,
+      -0.9489919544700852194,       -0.9893156210199008926
+    };
+    /* Tolerance per vector.  Five of the six are good to TEST_TOL2; at
+     * x = 100 the library's own reported error is 2.2e-13, so it cannot
+     * be held to TEST_TOL2 (5.7e-14) there and TEST_TOL3 is used.  That
+     * is still four orders of magnitude tighter than the 3.5e-9 by which
+     * the #39292 patch moves these values, so the test detects it. */
+    const double tol[6] = {
+      TEST_TOL2, TEST_TOL2, TEST_TOL2, TEST_TOL2, TEST_TOL2, TEST_TOL3
+    };
+    int i;
+    for (i = 0; i < 6; i++)
+      {
+        gsl_sf_coulomb_wave_FG_e(0.0, steer[i].x, steer[i].lam, 0,
+                                 &F, &Fp, &G, &Gp, &Fe, &Ge);
+        s = 0;
+        message_buff[0] = 0;
+        s += test_sf_check_result(message_buff,  F,  eF[i],  tol[i]);
+        s += test_sf_check_result(message_buff, Fp, eFp[i], tol[i]);
+        s += test_sf_check_result(message_buff,  G,  eG[i],  tol[i]);
+        s += test_sf_check_result(message_buff, Gp, eGp[i], tol[i]);
+        printf("%s", message_buff);
+        gsl_test(s, "  gsl_sf_coulomb_wave_FG_e(0.0, %g, lam_F=%g, lam_G=%g)",
+                 steer[i].x, steer[i].lam, steer[i].lam);
+        status += s;
+      }
+  }
+
   lam_F = 0.0;
   k_G = 0;
   eta = 10.0;
