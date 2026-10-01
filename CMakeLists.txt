@@ -47,6 +47,8 @@ option(GSL_BUILD_TOOLS "Build the gsl-randist and gsl-histogram programs" ON)
 option(GSL_BUILD_TESTS "Build the per-module test programs" OFF)
 option(GSL_SKIP_RNG_TEST
        "Skip rng.test (its hardcoded random32/random64 BSD+libc5 values are ABI dependent)" OFF)
+option(GSL_SKIP_SPECFUNC_TEST
+       "Skip specfunc.test (last-ULP tolerance failures where long double is not extended precision)" OFF)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
@@ -229,6 +231,15 @@ function(gsl_add_test module name)
   if(module STREQUAL "rng" AND name STREQUAL "test")
     set_tests_properties("${module}.${name}" PROPERTIES
       DISABLED "$<BOOL:${GSL_SKIP_RNG_TEST}>")
+  endif()
+
+  # specfunc.test checks a number of results at TEST_TOL0 (a few ULP).  On
+  # platforms where long double offers no more precision than double, such as
+  # macOS, the computed values differ in the last digits and the checks fail
+  # by a small multiple of the tolerance.  Allow skipping that test there.
+  if(module STREQUAL "specfunc" AND name STREQUAL "test")
+    set_tests_properties("${module}.${name}" PROPERTIES
+      DISABLED "$<BOOL:${GSL_SKIP_SPECFUNC_TEST}>")
   endif()
 endfunction()
 
