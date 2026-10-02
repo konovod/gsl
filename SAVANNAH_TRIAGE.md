@@ -5,17 +5,17 @@ Generated 2026-10-02 from the `scripts/savannah_bugs.py` sweep (`inventory.tsv`)
 Scratch index, not part of the fork's record of changes. Verdicts are curated from
 `FORKNEWS`, `SAVANNAH_REVIEW.md` and the git history; every other row is un-triaged.
 
-**219 open items: 59 reviewed/handled, 160 remaining.**
+**219 open items: 60 reviewed/handled, 159 remaining.**
 
 | status | count |
 |---|---:|
-| fixed | 42 |
+| fixed | 43 |
 | partial | 2 |
 | rejected | 13 |
 | deferred | 1 |
 | superseded | 1 |
 | not reviewed (feature-shaped) | 22 |
-| not reviewed | 138 |
+| not reviewed | 137 |
 
 Legend for the *Patch* column: the sweep's `git apply` verdict (`clean` / `partial` / `dirty`), `source` for a whole
 replacement file, `inline` for a patch pasted into the bug text, `none` for no patch.
@@ -146,7 +146,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 57978 | 2020-03-09 | bug | Accuracy problem | clean sincos_pi.c.patch | **fixed** — sin_pi/cos_pi(inf) -> EDOM (7c27b358b) | Incorrect result from cosine function with inf input |
 | 57979 | 2020-03-09 | bug | - | none | **fixed** — gsl_sf_hypot: +Inf for infinite args, NaN propagation (1a470222a) | Incorrect Result from hypot function with NaN input |
 | 58031 | 2020-03-23 | - | Accuracy problem | none | not reviewed | gsl_sf_bessel_Kn_scaled incorrectly evaluating limit |
-| 58032 | 2020-03-23 | bug | Accuracy problem | none | not reviewed | gsl_sf_hyperg_1F1 returning incorrect result for nonpositive integers |
+| 58032 | 2020-03-23 | bug | Accuracy problem | none | **fixed** — 1F1 poles at x=0 (1f2607a0b) | gsl_sf_hyperg_1F1 returning incorrect result for nonpositive integers |
 | 58060 | 2020-03-28 | bug | Accuracy problem | none | not reviewed | Dropped NaN from gsl_sf_laguerre_n |
 | 58061 | 2020-03-28 | bug | Accuracy problem | none | not reviewed | Dropped NaN from gsl_sf_hyperg_U_int |
 | 58062 | 2020-03-28 | bug | Accuracy problem | none | not reviewed | Dropped NaN from gsl_sf_hyperg1F1_int |
