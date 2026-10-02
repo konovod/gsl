@@ -51,7 +51,7 @@ One line per change: date | tag | description | commit(s).
   2026-10-01 | [rejected] | min: bound gsl_min_find_bracket to the initial interval | - (see below)
   2026-10-01 | [rejected] | specfunc: duplicate complex sin/cos implementations    | - (see below)
   2026-10-01 | [rejected] | linalg: complex LU_decomp "returns incorrect results" | - (see below)
-  2026-10-01 | [rejected] | specfunc: missing 0.5 factor in coulomb turning point  | 192ec9cbf
+  2026-10-02 | [upstream] | specfunc: Steed starting lambda at the turning point    | 90d9037a5
   2026-10-01 | [upstream] | cdf: no NaN from beta_cont_frac under fp contraction    | 1b1d94ee9
   2026-10-01 | [upstream] | specfunc: Hermite function derivative at orders 0 and 1 | 5d36e1999, f4d35a67e
   2026-10-01 | [upstream] | doc: document gsl_sf_complex_psi_e                     | 345883172
@@ -594,6 +594,12 @@ See Savannah bug #64777.
 
 ## [rejected] specfunc: the missing 0.5 factor in the coulomb turning point
 
+**SUPERSEDED - see the following entry.**  This rejection was reversed on
+2026-10-02: the posted patch is correct, the "factor of two" measurement
+below does not reproduce, and the geometry was read inverted.  The change
+is now applied as commit `90d9037a5`.  The text is kept as the record of
+the mistake.
+
 Not applied.  The reported patch moves `lam_0` the wrong way, and it did
 real damage before anyone noticed: applying it changed `F` by a factor of
 two at `eta = -2, lam_F = 30, x = 20` and by 100% at `x = 35`, while the
@@ -671,6 +677,74 @@ suite reports zero failures, and with the patch applied the new vector at
 `eta = -2, lam_F = 30, x = 20` fails.
 
 Kept here for the record.
+
+See Savannah bug #39292.
+
+
+## [upstream] specfunc: place the Steed starting lambda at the turning point
+
+Commit: 90d9037a5
+
+**This reverses the rejection above.**  That verdict rested on a
+measurement that does not reproduce and on an inverted reading of the
+geometry; the posted patch is correct.
+
+`gsl_sf_coulomb_wave_FG_e()` picks `lam_0` in the `x > 2 eta` branch with
+
+    const double C = sqrt(1.0 + 4.0*x*(x-2.0*eta));
+    const int N = ceil(lam_F - C + 0.5);
+    const double lam_0 = lam_F - GSL_MAX(N, 0);
+
+Writing `Q = x(x - 2 eta)`, the lambda turning point is the positive root
+of `lam(lam+1) = Q`,
+
+    lam_turn = (sqrt(1 + 4Q) - 1)/2,
+
+so `sqrt(1 + 4Q) = 2 lam_turn + 1`.  This branch uses
+`coulomb_CF1`/`coulomb_CF2`, not `coulomb_jwkb`, and the Steed
+normalisation needs `lam_0` at the turning point on the oscillatory side.
+The old `C` stepped `lam_0` down to about `2 lam_turn`, deep in the
+classically forbidden region; the source comment even contradicted itself
+about which side was wanted.  Since `lam_turn + 1/2 = 0.5 sqrt(1 + 4Q)`,
+the posted patch
+
+    const double C = 0.5 * sqrt(1.0 + 4.0*x*(x-2.0*eta));
+
+is exactly the choice that lands `lam_0` at the turning point.
+
+What was wrong in the rejected entry:
+
+* "halving `C` moves `F` by a factor of two at `eta = -2, lam_F = 30,
+  x = 20`" is false.  Measured on the same build, `0.5*C` moves `F`
+  there by `2.2e-15` (fracdiff `5.0e-13`) and moves `G`/`Gp` by nothing
+  detectable.  The large effects are only near the turning point
+  (`1.5e-5` at `x = 12`).
+* The `coulomb_jwkb()` argument belongs to the `x < 2 eta` branch; the
+  old table labelled the oscillatory side as the forbidden one.
+* The Wronskian negative result still holds - it cannot see the patch -
+  but it never supported the rejection.
+
+Independent verification, this time agreeing with the patched build:
+
+* An integration of `y'' = [lam(lam+1)/x^2 + 2 eta/x - 1] y` from the
+  Frobenius series `b_k = (2 eta b_{k-1} - b_{k-2})/(k(2 lam + k + 1))`
+  with `C_lam = 2^lam e^(-eta pi/2) |Gamma(lam+1+i eta)|/(2 lam+1)!`
+  reproduces the exact `eta = 0` form
+  `sqrt(pi/2) sqrt(x) J_{lam+1/2}(x)` to `4e-14`, validating the
+  reference itself.
+* At `eta = -2, lam_F = 30` it gives relative errors `3e-5` (old) vs
+  `2e-14` (fixed) at `x = 12`, `7.5e-6` vs `2e-14` at `x = 15`, and
+  `9.8e-13` vs `1.7e-14` at `x = 20`.  A Kummer-series evaluation agrees
+  at `x = 12`, and over a 13-point `(eta, lam, x)` grid the fixed code
+  agrees to `<= 3.7e-14`.
+
+Test changes: the four `steep[]` constants are refreshed to the corrected
+output (only the `eta = -2, x = 20` pair changes materially) and a fifth
+vector at `eta = -2, lam_F = 30, x = 12` is the regression guard.
+Negative control: reverting the `0.5` factor fails that vector with
+fracdiff `1.49e-5` while the other four still pass.  Suite 56/56 on MSVC.
+
+Files: `specfunc/coulomb.c`, `specfunc/test_coulomb.c`.
 
 See Savannah bug #39292.
 
@@ -1278,16 +1352,14 @@ a factor of two.  The values only move appreciably near the turning point
 (`7.5e-6` at `x = 15`, `3e-5` at `x = 12`).  At the `TEST_TOL5` now used
 these vectors cannot separate the patch from the cross-target spread.
 
-More importantly, an independent check contradicts the rejection.  An ODE
+More importantly, an independent check contradicted the rejection: an ODE
 integration of the Coulomb equation from the Frobenius series, validated
-against the exact `eta = 0` Bessel form to `4e-14`, agrees with the
-*patched* build: at `eta = -2, lam_F = 30` it gives relative errors
-`3e-5` (unpatched) vs `2e-14` (patched) at `x = 12`, and
-`7.5e-6` vs `2e-14` at `x = 15`.  A Kummer-series evaluation agrees at
-`x = 12`.  So the posted patch appears to *fix* an unpatched accuracy
-defect below the turning point, the opposite of what the `#39292` entry
-concluded.  This needs its own re-investigation; `coulomb.c` is unchanged
-here and `SAVANNAH_REVIEW.md` has the details.
+against the exact `eta = 0` Bessel form to `4e-14`, agreed with the
+*patched* build, with relative errors `3e-5` (unpatched) vs `2e-14`
+(patched) at `eta = -2, lam_F = 30, x = 12` and `7.5e-6` vs `2e-14` at
+`x = 15`.  This was followed up separately; the patch is now applied in
+commit `90d9037a5`, the `#39292` verdict is reversed, and the guard vector
+is added there.
 
 See Savannah bugs #68625 and #39292.
 
