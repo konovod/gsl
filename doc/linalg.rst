@@ -2108,12 +2108,25 @@ Householder solver for linear systems
    and :data:`b` is not modified. The matrix :data:`A` is destroyed by the
    Householder transformations.
 
+   The matrix :data:`A` need not be square. If it is :math:`M`-by-:math:`N`
+   with :math:`M \ge N`, :data:`b` must have length :math:`M` and :data:`x`
+   length :math:`N`; when :math:`M > N` the least-squares solution of the
+   overdetermined system is returned. A matrix with :math:`M < N` (fewer
+   equations than unknowns) is rejected with :macro:`GSL_EINVAL`, and a
+   :data:`b` or :data:`x` of the wrong length with :macro:`GSL_EBADLEN`.
+
 .. function:: int gsl_linalg_HH_svx (gsl_matrix * A, gsl_vector * x)
 
    This function solves the system :math:`A x = b` in-place using
    Householder transformations.  On input :data:`x` should contain the
    right-hand side :math:`b`, which is replaced by the solution on output.  The
    matrix :data:`A` is destroyed by the Householder transformations.
+
+   Because :data:`x` carries both the right-hand side and the solution,
+   this function requires a square matrix; use :func:`gsl_linalg_HH_solve`
+   for an overdetermined system. A non-square matrix is rejected with
+   :macro:`GSL_EBADLEN`, a matrix with more columns than rows with
+   :macro:`GSL_EINVAL`.
 
 .. index:: tridiagonal systems
 

@@ -78,6 +78,7 @@ int test_SV_decomp_jacobi(void);
 int test_cholesky_solve_dim(const gsl_matrix * m, const double * actual, double eps);
 int test_cholesky_solve(void);
 int test_HH_solve_dim(const gsl_matrix * m, const double * actual, double eps);
+int test_HH_solve_ls(const gsl_matrix * m, const double * b, const double * actual, double eps);
 int test_HH_solve(void);
 int test_TDS_solve_dim(unsigned long dim, double d, double od, const double * actual, double eps);
 int test_TDS_solve(void);
@@ -2563,11 +2564,10 @@ int
 test_HH_solve_dim(const gsl_matrix * m, const double * actual, double eps)
 {
   int s = 0;
-  unsigned long i, dim = m->size1;
+  unsigned long i;
+  const unsigned long dim = m->size1;
 
-  gsl_permutation * perm = gsl_permutation_alloc(dim);
   gsl_matrix * hh  = gsl_matrix_alloc(dim,dim);
-  gsl_vector * d = gsl_vector_alloc(dim);
   gsl_vector * x = gsl_vector_alloc(dim);
   gsl_matrix_memcpy(hh,m);
   for(i=0; i<dim; i++) gsl_vector_set(x, i, i+1.0);
@@ -2580,9 +2580,38 @@ test_HH_solve_dim(const gsl_matrix * m, const double * actual, double eps)
     s += foo;
   }
   gsl_vector_free(x);
-  gsl_vector_free(d);
   gsl_matrix_free(hh);
-  gsl_permutation_free(perm);
+
+  return s;
+}
+
+/* Test gsl_linalg_HH_solve on a general M x N (M >= N) system.  Unlike
+ * test_HH_solve_dim this exercises the out-of-place wrapper, whose right-hand
+ * side b is longer than the solution x when the system is overdetermined. */
+int
+test_HH_solve_ls(const gsl_matrix * m, const double * b, const double * actual, double eps)
+{
+  int s = 0;
+  unsigned long i;
+  const unsigned long M = m->size1;   /* rows    */
+  const unsigned long N = m->size2;   /* columns */
+
+  gsl_matrix * hh = gsl_matrix_alloc(M,N);
+  gsl_vector * rhs = gsl_vector_alloc(M);
+  gsl_vector * x = gsl_vector_alloc(N);
+  gsl_matrix_memcpy(hh,m);
+  for(i=0; i<M; i++) gsl_vector_set(rhs, i, b[i]);
+  s += gsl_linalg_HH_solve(hh, rhs, x);
+  for(i=0; i<N; i++) {
+    int foo = check(gsl_vector_get(x, i),actual[i],eps);
+    if( foo) {
+      printf("%3lux%3lu[%lu]: %22.18g   %22.18g\n", M, N, i, gsl_vector_get(x, i), actual[i]);
+    }
+    s += foo;
+  }
+  gsl_vector_free(x);
+  gsl_vector_free(rhs);
+  gsl_matrix_free(hh);
 
   return s;
 }
@@ -2623,6 +2652,102 @@ int test_HH_solve(void)
   f = test_HH_solve_dim(vander12, vander12_solution, 0.05);
   gsl_test(f, "  HH_solve vander(12)");
   s += f;
+
+  /* Overdetermined (M > N) systems.  gsl_linalg_HH_solve now performs a tall
+   * Householder QR and returns the least-squares solution; before Savannah
+   * #42472 this path was rejected as "underdetermined" and the row/column
+   * counts were transposed.  The reference for the polynomial fit is from
+   * Burkardt's QR_SOLVE test case 4; the other three have an exact solution
+   * by construction. */
+  {
+    const double A_fit[5][3] = {
+      { 1.0, 1.0,  1.0 },
+      { 1.0, 2.0,  4.0 },
+      { 1.0, 3.0,  9.0 },
+      { 1.0, 4.0, 16.0 },
+      { 1.0, 5.0, 25.0 }
+    };
+    const double b_fit[5]       = { 1.0, 2.3, 4.6, 3.1, 1.2 };
+    const double x_fit[3]       = { -3.02, 4.4914285714285714, -0.7285714285714285 };
+    const double x_general5[3]  = { 1.0, 2.0, 3.0 };
+    const double x_general6[4]  = { 1.0, -1.0, 2.0, -2.0 };
+    const double x_vander5[3]   = { 2.0, -1.0, 0.5 };
+    gsl_matrix * fit  = gsl_matrix_alloc(5,3);
+    gsl_matrix * gen5 = create_general_matrix(5,3);
+    gsl_matrix * gen6 = create_general_matrix(6,4);
+    gsl_matrix * vand5 = gsl_matrix_alloc(5,3);
+    double b_gen5[5], b_gen6[6], b_vand5[5];
+    unsigned long i, j;
+
+    for(i=0; i<5; i++)
+      for(j=0; j<3; j++)
+        gsl_matrix_set(fit, i, j, A_fit[i][j]);
+
+    for(i=0; i<5; i++)
+      for(j=0; j<3; j++)
+        gsl_matrix_set(vand5, i, j, pow(i+1.0, 3-j-1.0));
+
+    /* b = A x for the systems whose solution is known exactly */
+    for(i=0; i<5; i++) { double s0=0.0; for(j=0; j<3; j++) s0 += gsl_matrix_get(gen5,i,j)*x_general5[j]; b_gen5[i]=s0; }
+    for(i=0; i<6; i++) { double s0=0.0; for(j=0; j<4; j++) s0 += gsl_matrix_get(gen6,i,j)*x_general6[j]; b_gen6[i]=s0; }
+    for(i=0; i<5; i++) { double s0=0.0; for(j=0; j<3; j++) s0 += gsl_matrix_get(vand5,i,j)*x_vander5[j]; b_vand5[i]=s0; }
+
+    f = test_HH_solve_ls(fit, b_fit, x_fit, 1.0e-10);
+    gsl_test(f, "  HH_solve overdetermined 5x3 polynomial fit");
+    s += f;
+
+    f = test_HH_solve_ls(gen5, b_gen5, x_general5, 512.0 * GSL_DBL_EPSILON);
+    gsl_test(f, "  HH_solve overdetermined general(5,3)");
+    s += f;
+
+    f = test_HH_solve_ls(gen6, b_gen6, x_general6, 4096.0 * GSL_DBL_EPSILON);
+    gsl_test(f, "  HH_solve overdetermined general(6,4)");
+    s += f;
+
+    f = test_HH_solve_ls(vand5, b_vand5, x_vander5, 1024.0 * GSL_DBL_EPSILON);
+    gsl_test(f, "  HH_solve overdetermined vander(5,3)");
+    s += f;
+
+    gsl_matrix_free(fit);
+    gsl_matrix_free(gen5);
+    gsl_matrix_free(gen6);
+    gsl_matrix_free(vand5);
+  }
+
+  /* Error paths: fewer equations than unknowns (GSL_EINVAL), a mismatched
+   * right-hand side (GSL_EBADLEN), and the in-place solver on an
+   * overdetermined system, which it cannot represent. */
+  {
+    gsl_matrix * under = create_general_matrix(3,5);
+    gsl_matrix * tall  = create_general_matrix(5,3);
+    gsl_vector * b3 = gsl_vector_alloc(3);
+    gsl_vector * b5 = gsl_vector_alloc(5);
+    gsl_vector * x3 = gsl_vector_alloc(3);
+    gsl_vector * x5 = gsl_vector_alloc(5);
+    int status;
+
+    status = gsl_linalg_HH_svx(under, x5);
+    gsl_test(status != GSL_EINVAL, "  HH_svx underdetermined returns GSL_EINVAL");
+
+    status = gsl_linalg_HH_solve(under, b3, x5);
+    gsl_test(status != GSL_EINVAL, "  HH_solve underdetermined returns GSL_EINVAL");
+
+    status = gsl_linalg_HH_solve(tall, b3, x3);
+    gsl_test(status != GSL_EBADLEN, "  HH_solve short rhs returns GSL_EBADLEN");
+
+    status = gsl_linalg_HH_solve(tall, b5, x5);
+    gsl_test(status != GSL_EBADLEN, "  HH_solve long solution returns GSL_EBADLEN");
+
+    status = gsl_linalg_HH_svx(tall, x3);
+    gsl_test(status != GSL_EBADLEN, "  HH_svx overdetermined returns GSL_EBADLEN");
+
+    gsl_vector_free(b3);
+    gsl_vector_free(b5);
+    gsl_vector_free(x3);
+    gsl_vector_free(x5);
+    gsl_matrix_free(under);
+    gsl_matrix_free(tall);
+  }
 
   return s;
 }
