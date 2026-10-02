@@ -1097,14 +1097,24 @@ platform-dependent in the function itself.
 
 Not applied.
 
-Savannah bug #44865 is real: the `e5_bigt` problem in
-`ode-initval2/test.c` stores reference values that were generated without
-FMA, and with `-ffp-contract=fast` they are off by enough to fail.  The
+Savannah bug #44865 reports the `e5_bigt` comparison in
+`ode-initval2/test.c` failing when built with `-ffp-contract=fast`.  The
 posted change shortens the integration interval from `1e11` to `1e9`, which
-makes the test pass by testing less.  That is not a fix.  The honest
-treatment is a test-quality change - recomputed reference values, or a
-tolerance that reflects the conditioning of the problem - and it is
-recorded as a separate task rather than taken from the bug.
+makes the test pass by testing less.  That is not a fix.
+
+Re-investigated 2026-10-02.  The failure is platform-specific and does not
+reproduce on this fork's build hosts.  `test_extreme_problems` integrates
+the stiff E5 problem to `t = 1e11`, where every component has decayed to
+round-off (`y0 ~ 1e-49`, `y1, y2 ~ 1e-20`, `y3 ~ 1e-65`, from
+`y0(0) = 1.76e-3`), and compares `bsimp` with `msbdf` using a pure relative
+tolerance of `1e-3`; a relative comparison has no scale to work with once
+the solution reaches the noise floor.  With FMA verified active - gcc 15 on
+x86-64 with `-mfma -ffp-contract=fast` (`vfmadd` is emitted in `rhs_e5`),
+and MSVC with `/fp:fast` - the two steppers agree to about `1e-4` relative
+and all 1151 tests pass.  The reported 18-22 % disagreement needs the
+submitter's clang/PPC64 toolchain.  A test-quality fix (an absolute-aware
+comparison) remains possible but is not undertaken: the test is not fragile
+on any platform the fork builds and tests on.
 
 
 ## [upstream] specfunc: Airy error bars and the indeterminate oscillatory phase
