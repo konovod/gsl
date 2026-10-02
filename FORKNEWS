@@ -70,6 +70,7 @@ One line per change: date | tag | description | commit(s).
   2026-10-02 | [upstream] | doc: vector write example matches the read example      | 0e82d8223
   2026-10-02 | [upstream] | tests: drop dead <varargs.h> include in results.c       | e2354de55
   2026-10-02 | [upstream] | specfunc: two macOS-only last-ULP test failures           | 6eef17cf3
+  2026-10-02 | [upstream] | linalg: HH_solve/HH_svx overdetermined systems            | 1f84bed77
 
 
 ## [upstream] rng: make the random() generators produce the documented sequences
@@ -1228,6 +1229,43 @@ to double.  Neither is a defect in the library.
 Files: `specfunc/test_hermite.c`, `specfunc/test_coulomb.c`.
 
 See Savannah bugs #68625 and #39292.
+
+
+## [upstream] linalg: gsl_linalg_HH_solve / HH_svx for overdetermined systems
+
+Commit: 1f84bed77
+
+`gsl_linalg_HH_svx` tested `A->size1 > A->size2` as "underdetermined",
+which is backwards: that is the *over*-determined case.  It also aliased
+`N = size1` (rows) and `M = size2` (columns), so the Householder loops ran
+over the wrong dimension, and `HH_solve` required `A->size2 == x->size`
+and then did an unconditional `gsl_vector_memcpy (x, b)`, which overflows
+`x` when `b` is the longer `M`-vector.  The two functions therefore only
+worked for square systems; the report's 5x3 least-squares example was
+rejected as underdetermined.
+
+The square-only [Engeln-Mullges + Uhlig, Alg. 4.42] reduction is replaced
+by a tall Householder QR (the same shape as `gsl_linalg_QR_decomp`) that
+both entry points share:
+
+* `HH_solve` accepts `M >= N`, requires `b` of length `M` and `x` of
+  length `N`, and returns the least-squares solution for `M > N`; it works
+  on a private copy of `b`, which must not be modified.
+* `HH_svx` keeps the in-place contract, which can carry only an `N`-vector,
+  so it now requires a square matrix and documents that overdetermined
+  systems must use `HH_solve`.
+* `M < N` is `GSL_EINVAL`; wrong vector lengths are `GSL_EBADLEN`.
+
+The test harness had only ever built `dim x dim` data, which is why the
+transposition went unnoticed.  Added overdetermined coverage, including
+the report's polynomial-fit system against Burkardt's `QR_SOLVE` reference
+and the error paths; with the old `hh.c` `linalg_test` reports 10 failures,
+all in the new vectors.
+
+Files: `linalg/hh.c`, `linalg/test.c`, `doc/linalg.rst`,
+`doc_texinfo/linalg.texi`.
+
+See Savannah bug #42472.
 
 
 
