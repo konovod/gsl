@@ -1144,3 +1144,48 @@ reduction above `2^21`; `clausen(1e12)` now returns
 
 **Not done:** `gsl_sf_sinc_e` is fixed for large `x` as a side effect (it
 calls `gsl_sf_sin_e`); no new vector there yet.
+
+
+### `#40755` (+ `#42042`, `#37209`, `#45265`, `#52927`) - the "Group A" Bessel reports
+
+Five Bessel reports were re-examined on the current build (MSVC x64,
+Release; values reproduced through the DLL, references from mpmath at
+up to 140 digits and scipy).  They had been grouped as "probably already
+fixed by the exact-reduction / Bessel work"; only one was, and not for
+that reason.
+
+* **`#37209` - `jl_e` NaN for large `l` - already fixed upstream.**
+  Commit `441bc40ff` ("partial fix for bug #37209 + test case") is in
+  `savannah/master`, and `test_bessel.c:225` is enabled.  `jl(364,
+  36.62)` now returns the subnormal `1.1189e-318` with `GSL_SUCCESS`
+  instead of a NaN; `jl(149, 1.0)` returns `GSL_EUNDRFLW` with a finite
+  value.  The test passes.  No fork change.
+
+* **`#40755` - sporadic `Jn` NaN - fixed (a43fc0055).**  The branch test
+  `GSL_ROOT4_DBL_EPSILON * x > (n*n + 1.0)` overflowed the `int` product
+  for `n > 46340`; the wrapped negative value made the test true and
+  sent `Jn` to the large-argument asymptotic, which returned `nan` with
+  `GSL_SUCCESS`.  `Yn` had the same overflow and returned finite but
+  wrong values.  Both now compute the product in double and route to the
+  Olver asymptotic, matching scipy.  See FORKNEWS.
+
+* **`#42042` - `Jnu` NaN - fixed (e6e34279a).**  At half-integer order
+  the `x >= 2` normalization runs through the unnormalized `J_mu`; for
+  `nu = 1/2` that is `J_{-1/2}(x) = sqrt(2/(pi x)) cos(x)`, which is
+  zero at `x = 3 pi / 2`.  The backward recurrence produced exactly zero
+  and the code divided by it.  The fix uses the endpoint `mu = +1/2`
+  when `|cos| < |sin|`.  See FORKNEWS.
+
+* **`#45265` - `J0` error underestimated for `x > 4` - not
+  reproducible.**  A 128-point sweep over `[4, 1000]` gave a worst
+  `true_err / err = 0.57` (at `x = 29.5`), with the value correctly
+  rounded against mpmath.  The report is a single data point on 32 bit
+  glibc 1.16; recorded as rejected.
+
+* **`#52927` - `j2` make-check failure - not reproducible.**  The
+  reporter's mismatch was `1.3e-20` against a `2.8e-22` error bar on
+  glibc 2.12; here the same call is correct to `1.1e-22` inside the same
+  bar.  The large-`x` `j2` vectors are already disabled under `#if 0`
+  (the `#45730` block) precisely because that error estimate is not
+  portable, and `j2` calls the system `sin`/`cos`, so the fork's `trig.c`
+  reduction never reaches it.  Recorded as rejected.

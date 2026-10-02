@@ -5,17 +5,17 @@ Generated 2026-10-02 from the `scripts/savannah_bugs.py` sweep (`inventory.tsv`)
 Scratch index, not part of the fork's record of changes. Verdicts are curated from
 `FORKNEWS`, `SAVANNAH_REVIEW.md` and the git history; every other row is un-triaged.
 
-**219 open items: 53 reviewed/handled, 166 remaining.**
+**219 open items: 58 reviewed/handled, 161 remaining.**
 
 | status | count |
 |---|---:|
-| fixed | 38 |
+| fixed | 41 |
 | partial | 2 |
-| rejected | 11 |
+| rejected | 13 |
 | deferred | 1 |
 | superseded | 1 |
 | not reviewed (feature-shaped) | 22 |
-| not reviewed | 144 |
+| not reviewed | 139 |
 
 Legend for the *Patch* column: the sweep's `git apply` verdict (`clean` / `partial` / `dirty`), `source` for a whole
 replacement file, `inline` for a patch pasted into the bug text, `none` for no patch.
@@ -50,7 +50,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 36152 | 2012-04-11 | bug | Accuracy problem | source testbessel.c | **fixed** — Y family libm sin/cos (a08ef2f7f) + exact sin/cos reduction (8a46ec7cf) | Incorrect asymptotics of spherical Bessel functions |
 | 36197 | 2012-04-15 | - | Build | dirty 36197b.diff +1 | not reviewed | reserved identifier violation |
 | 36578 | 2012-06-02 | - | Documentation | none | not reviewed | inconsistency in gsl_ieee_env_setup doc/api |
-| 37209 | 2012-08-28 | bug | Accuracy problem | none | not reviewed | gsl_sf_bessel_jl_e returns NaN for large inputs without setting error code |
+| 37209 | 2012-08-28 | bug | Accuracy problem | none | **fixed** — upstream 441bc40ff (inherited); NaN gone | gsl_sf_bessel_jl_e returns NaN for large inputs without setting error code |
 | 37408 | 2012-09-20 | - | - | clean au.patch | **fixed** — const AU/parsec updated to IAU 2012 (3377c7fbe) | The astronomical unit (AU) has been re-defined |
 | 37894 | 2012-12-10 | bug | Build | clean gsl-autotools.diff | not reviewed | Shared library does not build on Cygwin |
 | 38548 | 2013-03-19 | - | Accuracy problem | none | not reviewed | Rounding issues in gsl-histogram with integer numbers |
@@ -68,12 +68,12 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 40116 | 2013-09-26 | bug | Runtime error | none | not reviewed | possible error in integration routines |
 | 40176 | 2013-10-04 | bug | Runtime error | none | not reviewed | possible error in poly test suite |
 | 40196 | 2013-10-07 | - | Documentation | none | not reviewed | Document gsl_integration_qag behavior on key out-of-range |
-| 40755 | 2013-11-30 | bug | Accuracy problem | none | not reviewed | Sporadic nan's from gsl_sf_bessel_Jn an related functions |
+| 40755 | 2013-11-30 | bug | Accuracy problem | none | **fixed** — double cast in the Jn/Yn asymptotics test (a43fc0055) | Sporadic nan's from gsl_sf_bessel_Jn an related functions |
 | 41457 | 2014-02-04 | - | Runtime error | none | not reviewed | valgrind finds errors in matrix/test.c |
 | 41527 | 2014-02-09 | bug | - | none | not reviewed | Change/add multimin functions to return error codes |
 | 41605 | 2014-02-15 | - | Documentation | none | not reviewed | gsl_histogram_pdf docs |
 | 41837 | 2014-03-11 | - | Runtime error | none | not reviewed | bugs in gsl_sf_hyperg_U |
-| 42042 | 2014-04-03 | bug | Runtime error | none | not reviewed | nan bug in bessel_Jnu |
+| 42042 | 2014-04-03 | bug | Runtime error | none | **fixed** — non-vanishing half-integer Jnu endpoint (e6e34279a) | nan bug in bessel_Jnu |
 | 42058 | 2014-04-05 | bug | - | none | not reviewed | GSL RSS Feed does not validate |
 | 42219 | 2014-04-28 | - | Runtime error | source bug_gnewton.c | not reviewed | Division by zero in "gnewton" when "f" and "fdf" differ |
 | 42220 | 2014-04-28 | - | Runtime error | source bug_hybrid.c | not reviewed | Division by zero in "hybrid*" when initial guess is root |
@@ -92,7 +92,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 45053 | 2015-05-07 | - | Runtime error | source gsl_bug.c +1 | rejected — bracketing patch collapses interval; 3 min tests fail | gsl_min_find_bracket is most likely incorrectly implemented |
 | 45099 | 2015-05-13 | bug | - | none | not reviewed | wrong formula for BFGS update in gsl_multimin? |
 | 45234 | 2015-06-02 | doc | Documentation | none | not reviewed | Mathieu function documentation hasn't been updated after switching to SF API conventions |
-| 45265 | 2015-06-06 | bug | Accuracy problem | none | not reviewed | gsl_sf_bessel_J0_e underestimates error for x>4 |
+| 45265 | 2015-06-06 | bug | Accuracy problem | none | rejected — not reproducible on MSVC x64 (true/err ≤ 0.57 over x in [4,1000]) | gsl_sf_bessel_J0_e underestimates error for x>4 |
 | 45726 | 2015-08-10 | bug | Accuracy problem | source gslbesselytest.c | **fixed** — Y family libm sin/cos (a08ef2f7f) | Incorrect results of functions bessel_y0, y1 and y2 |
 | 45746 | 2015-08-13 | bug | Accuracy problem | source gsltrigtest.c | **fixed** - exact argument reduction (8a46ec7cf, 5639c380f) | Incorrect results of trigonometric functions gsl_sf_sin and gsl_sf_cos |
 | 45782 | 2015-08-17 | feature | Accuracy problem | none | not reviewed | Feature request: Make derivative epsilon configurable |
@@ -128,7 +128,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 52351 | 2017-11-06 | - | Runtime error | none | not reviewed | akima.c array indexing |
 | 52359 | 2017-11-07 | - | Runtime error | source airy_divbyzero.c | **fixed** — Airy err divided by vanishing series (ac5f72d98) | Unexpected results in airy_Ai function |
 | 52570 | 2017-12-01 | - | Runtime error | none | **fixed** — Airy huge negative arguments (ac5f72d98) | Inaccuracy of the Airy function due to invocation of GSL's cosine function with large input parameters |
-| 52927 | 2018-01-18 | bug | Runtime error | none | not reviewed | make check fails on Bessel j2 test |
+| 52927 | 2018-01-18 | bug | Runtime error | none | rejected — not reproducible; j2 large-x tests disabled under #45730 | make check fails on Bessel j2 test |
 | 53451 | 2018-03-24 | bug | - | none | not reviewed | gsl_sf_ellint_Pcomp( k, n, mode ) returns NaN if mode < -1 |
 | 53876 | 2018-05-11 | - | Accuracy problem | none | not reviewed | gsl_sf_hyperg_2F1_renorm missing factor |
 | 53903 | 2018-05-14 | bug | Runtime error | none | not reviewed | Test failure with gsl_sf_synchrotron_1_e on x86 |
