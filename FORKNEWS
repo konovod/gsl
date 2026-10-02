@@ -69,6 +69,7 @@ One line per change: date | tag | description | commit(s).
   2026-10-02 | [upstream] | doc: mark deprecated functions deprecated in the docs   | 5df6c0079
   2026-10-02 | [upstream] | doc: vector write example matches the read example      | 0e82d8223
   2026-10-02 | [upstream] | tests: drop dead <varargs.h> include in results.c       | e2354de55
+  2026-10-02 | [upstream] | specfunc: two macOS-only last-ULP test failures           | 6eef17cf3
 
 
 ## [upstream] rng: make the random() generators produce the documented sequences
@@ -1190,6 +1191,43 @@ the dead reference without changing the compiled output.
 File: `test/results.c`.
 
 See Savannah bug #44952.
+
+
+## [upstream] specfunc: two macOS-only last-ULP test failures
+
+Commit: 6eef17cf3
+
+Both failures are in vectors added by this fork and both are the same
+class the CI already documents: arm64 macOS has no extended precision, so
+intermediates that x86-64 and MSVC keep in an 80-bit register are rounded
+to double.  Neither is a defect in the library.
+
+* `gsl_sf_hermite_func_der_e(1, 1, 1.0)`, from the `#68625` vectors, is
+  exactly zero analytically.  The check used `TEST_TOL0`, and `TEST_SF`
+  compares *relative* to the expected value, so at an exact zero there is
+  no scale: one ULP of the intermediate `psi_1(1) = 1.06` (about `1e-16`)
+  reads as a large relative error (`2.2e-16`).  On x86-64 the subtraction
+  `sqrt(2 n) psi_0 - x psi_1` cancels exactly in the x87 register; on
+  arm64 macOS the two products are rounded to double first.  Raised to
+  `TEST_TOL5`, which is still three orders of magnitude tighter than the
+  `0.29` error produced by the dropped `-x psi_1` term, so the vector
+  keeps its power.  (Verified by reverting the seeding: every `#68625`
+  vector still fails.)
+
+* The Steed vectors for `#39292` already recorded in their comment that
+  the independent reference is good to only about `6e-14` relative at
+  `eta = -2` and `eta = -1.5`, yet the loop applied `TEST_TOL2`
+  (`5.68e-14`) to all four points - a tolerance below the stated accuracy
+  of the reference.  The three Linux runs get the weights computed in
+  extended precision and stayed just inside; arm64 macOS rounds them to
+  double and lands at `1.5e-12` relative.  Use `TEST_TOL3` at those two
+  points, keeping `TEST_TOL2` at the others.  The half-`C` patch the test
+  was written for moves `F` by a factor of two and by 100% at those
+  points, so it is still detected (verified by re-applying `0.5*C`).
+
+Files: `specfunc/test_hermite.c`, `specfunc/test_coulomb.c`.
+
+See Savannah bugs #68625 and #39292.
 
 
 
