@@ -90,6 +90,8 @@ has to be tested against the built library.  See `#52321` below.
 | `#32306` | **fixed 2026-10-02** (commits e4c4ac326, 882c8361d): the integer-`c-a-b` branch of `hyperg_2F1_reflect` forms every gamma factor with `gsl_sf_lngamma_e()` and applies a single global sign, so `2F1(-1/2,3/2;1;x)` came back negated for `x >= 1/2`; integer-`d` cases with `x < 0.995` now use the Gauss series instead.  The `err = 1` for a one-signed series (`a < 0`) is fixed as well.  Also covers #54998 and the Monajemi case of #39056.  Residual: reflection at `x >= 0.995` keeps its sign/accuracy defects |
 | `#43809` | **fixed 2026-10-02** (commit 52505315d): the `a < 0, b > 0` branch reduced to Kummer and evaluated the transformed call with an unstable backward recurrence on `b`; for the reported parameters that returned `3.39e80` instead of `7.51e60`.  The direct series is now evaluated too and preferred when it reports `err / abs(val) < 1e-10`.  Regression test added. |
 | `#28267` | partly addressed by the `#43809` fix — the transition region `x ~ abs(a)^2` still loses most digits (e.g. `(-37.8, 2.01, 103.58)` at ~2%); neither the recurrence nor the series is accurate enough there, so it stays open |
+| `#39372` | **fixed 2026-10-02** (commit c1df353ae): `gsl_hypot3` divided by `max(|x|,|y|,|z|)`, so an infinite argument produced `inf/inf = NaN`; the function now returns `+Inf` for any infinite argument. The reporter's suggested `gsl_hypot(gsl_hypot(x,y),z)` was not used: `gsl_hypot` raised a range error for infinities at the time (the companion `#57979` fix) |
+| `#57979` | **fixed 2026-10-02** (commit 1a470222a): `gsl_sf_hypot(NaN, y)` returned `sqrt(2)*y` and `gsl_sf_hypot(inf, y)` reported overflow, because `GSL_MIN_DBL`/`GSL_MAX_DBL` never select a NaN; both cases now follow the C99 spec (`+Inf` / NaN, `GSL_SUCCESS`) |
 | `#37894` | already fixed upstream, inherited unchanged — commits `ae19e3e8b` (`LT_INIT([win32-dll])`, `LT_LIB_M`) and `1d002ee93` ("add cygwin patch from J.P. Flori") turn the old MinGW-only conditionals into a `*-*-cygwin* | *-*-mingw*` test that adds `-no-undefined` and `GSL_LIBADD=cblas/libgslcblas.la` to the shared libraries.  Both commits are ancestors of `savannah/master`, so the posted `gsl-autotools.diff` is fully present; no fork change is made |
 
 ## Resolved
@@ -339,6 +341,66 @@ root reason this bug was ambiguous; both are now documented with
 `.. Exceptional Return Values: GSL_EDOM`.  `gsl_sf_sin` and
 `gsl_sf_cos` are also undocumented, with empty `Exceptional Return
 Values:` lines — left alone as out of scope.
+
+
+### `#57979` + `#39372` — non-finite arguments to the two `hypot` families — two independent defects fixed
+
+The two reports were filed four months apart but name different
+functions; they are grouped here only because they share a cause pattern.
+Commit `05221394f` (2011) gave `sys/gsl_hypot` an infinity guard, but the
+same treatment was never applied to the specfunc copy or to `hypot3`.
+
+**`#57979` — `gsl_sf_hypot_e` (`specfunc/trig.c`).**  It selects
+`min`/`max` with `GSL_MIN_DBL`/`GSL_MAX_DBL`, i.e. `(a) < (b) ? (a) : (b)`
+and its `>` twin.  A NaN compares false against everything, so it is never
+selected and both aliases land on the same argument.  Measured against the
+built DLL with the default handler off:
+
+    gsl_sf_hypot_e(NaN, 1.0) -> st 0  val 1.4142135623730951  err 6.28e-16
+    gsl_sf_hypot_e(1.0, NaN) -> st 16 val inf                 err inf
+    gsl_sf_hypot_e(inf, 1.0) -> st 16 val inf                 err inf
+
+The first is the report: `min = max = 1.0` gives `sqrt(2)`.  The other two
+reach the overflow test because `inf < DBL_MAX/root_term` is false for an
+infinite `max`, so the routine reports `GSL_EOVRFLW` for a result the C99
+specification says must be `+Inf` with no error.  Fix: an infinite argument
+returns `+Inf` with `err = 0`, otherwise a NaN propagates as NaN, both at
+`GSL_SUCCESS`.  This is the same shape as the applied `#57978`
+(`sin_pi`/`cos_pi`): a non-finite argument falling into a finite-argument
+path.  No blanket `isnan` guard is added — the two checks are the specific
+exception handling the standard defines for `hypot`.
+
+**`#39372` — `gsl_hypot3` (`sys/hypot.c`).**  It forms
+`w = max(|x|,|y|,|z|)` and divides the magnitudes by it, so an infinite
+argument gives `inf/inf = NaN`:
+
+    gsl_hypot3(inf, 1, 1)   -> nan     (reported symptom)
+    gsl_hypot3(inf, NaN, NaN) -> nan   (must be +Inf)
+
+The top-level NaN propagation happened to work (`NaN/finite` is NaN), but
+only accidentally.  The reporter is the GSL maintainer; his suggested
+`gsl_hypot(gsl_hypot(x,y),z)` could not be taken as written, because
+`gsl_hypot` raised the same overflow error that `#57979` is about.  Fix:
+`gsl_hypot3` returns `+Inf` for any infinite argument, matching
+`gsl_hypot`, and otherwise propagates NaN.
+
+Independent reference: the C99 F.10.4.3 / POSIX behaviour of `hypot`
+(`+Inf` if any argument is infinite even when another is NaN; otherwise
+NaN propagates; no range error from finite inputs).  Verified by running
+the built DLL.
+
+Negative controls: reverting the `gsl_hypot3` guard makes `sys_test`
+report five failures (all new); reverting the `gsl_sf_hypot_e` guard makes
+`specfunc_test` report six (all new).  With both applied `sys_test` is
+341/341, `specfunc_test` is clean and `ctest` is 56/56 on MSVC.
+
+Documentation: the infinity rule was added to `gsl_hypot`/`gsl_hypot3`
+(`doc/math.rst`, `doc_texinfo/math.texi`) and to
+`gsl_sf_hypot`/`gsl_sf_hypot_e`, which previously had an empty
+`.. Exceptional Return Values:` line, now `none`
+(`doc/specfunc-trig.rst`, `doc_texinfo/specfunc-trig.texi`).
+
+Commits c1df353ae (#39372) and 1a470222a (#57979).
 
 
 ### `#66808` (+ `#52359`, `#52570`, `#51000`, `#58067`) — Airy functions — three separate defects fixed

@@ -61,7 +61,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 39165 | 2013-06-04 | - | Build | none | not reviewed | conditional arguments always evaluating to true |
 | 39171 | 2013-06-05 | - | Performance | none | rejected — not-a-bug: GSL does not support -ffast-math | make check errors with gcc -ffast-math (or default Intel icc) |
 | 39292 | 2013-06-19 | bug | Runtime error | inline | **fixed** — coulomb C = 0.5 sqrt(1+4Q) + guard vector (90d9037a5) | possible error in gsl_sf_coulomb_wave_FG_e |
-| 39372 | 2013-06-30 | bug | Runtime error | none | not reviewed | add check for inf/nan in gsl_hypot3 |
+| 39372 | 2013-06-30 | bug | Runtime error | none | **fixed** — gsl_hypot3 returns +Inf for any infinite argument (c1df353ae) | add check for inf/nan in gsl_hypot3 |
 | 39473 | 2013-07-12 | - | Performance | clean coupling3j.patch | **fixed** — 3j symbol by edge recursion (1b2c8ff98) | more efficient algorithm for 3j,6j,9j calculations (gsl_sf_coupling_{3j,6j,9j}_e |
 | 39713 | 2013-08-07 | - | Runtime error | source gsl-secant.c +3 | not reviewed | roots/secant.c "derivative value is not finite" for a good guess |
 | 40092 | 2013-09-23 | - | Performance | source gsl-falsepos64.c | not reviewed | false position root finding requires too many function evals |
@@ -144,7 +144,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 56843 | 2019-08-31 | - | Accuracy problem | none | not reviewed | Unit Tests in linalg eigen fail on non-x86 hardware due to slight accuracy differences |
 | 57173 | 2019-11-05 | feature | Accuracy problem | none | not reviewed | Feature request: zeta function for complex arguments |
 | 57978 | 2020-03-09 | bug | Accuracy problem | clean sincos_pi.c.patch | **fixed** — sin_pi/cos_pi(inf) -> EDOM (7c27b358b) | Incorrect result from cosine function with inf input |
-| 57979 | 2020-03-09 | bug | - | none | not reviewed | Incorrect Result from hypot function with NaN input |
+| 57979 | 2020-03-09 | bug | - | none | **fixed** — gsl_sf_hypot: +Inf for infinite args, NaN propagation (1a470222a) | Incorrect Result from hypot function with NaN input |
 | 58031 | 2020-03-23 | - | Accuracy problem | none | not reviewed | gsl_sf_bessel_Kn_scaled incorrectly evaluating limit |
 | 58032 | 2020-03-23 | bug | Accuracy problem | none | not reviewed | gsl_sf_hyperg_1F1 returning incorrect result for nonpositive integers |
 | 58060 | 2020-03-28 | bug | Accuracy problem | none | not reviewed | Dropped NaN from gsl_sf_laguerre_n |
