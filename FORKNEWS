@@ -66,6 +66,9 @@ One line per change: date | tag | description | commit(s).
   2026-10-02 | [upstream] | specfunc: Airy error bars, indeterminate phase        | ac5f72d98
   2026-10-02 | [upstream] | specfunc: Olver Bessel argument-error propagation      | 790fe1078
   2026-10-02 | [upstream] | doc: Airy accuracy and exceptional return values       | 86cb80782
+  2026-10-02 | [upstream] | doc: mark deprecated functions deprecated in the docs   | 5df6c0079
+  2026-10-02 | [upstream] | doc: vector write example matches the read example      | 0e82d8223
+  2026-10-02 | [upstream] | tests: drop dead <varargs.h> include in results.c       | e2354de55
 
 
 ## [upstream] rng: make the random() generators produce the documented sequences
@@ -1118,6 +1121,75 @@ oscillatory branch is no longer determined, and the `eps*|x|^{3/2}`
 accuracy limit for `x < 0`.
 
 File: `doc/specfunc-airy.rst`.
+
+
+## [upstream] doc: mark functions deprecated in the code as deprecated in the manual
+
+Commit: 5df6c0079
+
+Savannah #67621 observes that several functions are hidden behind
+`GSL_DISABLE_DEPRECATED` in the public headers but are not marked
+deprecated in the manuals.  The patch attached to the report touched only
+`bspline.rst` and `specfunc-hermite.rst`, and it marked the wrong Hermite
+functions; the deprecation markers here are instead derived directly from
+the `#ifndef GSL_DISABLE_DEPRECATED` blocks in the headers:
+
+* `gsl_diff_central`, `gsl_diff_backward`, `gsl_diff_forward`
+  (`gsl_deriv_central`/`_forward`/`_backward` are the replacements);
+* `gsl_interp2d_eval_e_extrap` (`gsl_interp2d_eval_extrap_e`);
+* `gsl_sf_coupling_6j_INCORRECT` and `_e`;
+* `gsl_spmatrix_add_to_dense` (`gsl_spmatrix_dense_add`);
+* the renamed `gsl_sf_hermite_phys*` and `gsl_sf_hermite_prob_der*`
+  aliases.
+
+**Deliberately not marked: `gsl_bspline_knots_greville`.**  In
+`bspline/gsl_bspline.h` it sits under the comment `/* future to be
+deprecated functions */` but is *not* inside a `GSL_DISABLE_DEPRECATED`
+block, so it is not deprecated in the code and must not be called
+deprecated in the docs.  This is why the report's patch is not applied
+verbatim.
+
+The Sphinx side uses the modern `.. deprecated::` directive; the parallel
+Texinfo manual (`doc_texinfo/`) gets the equivalent prose wherever a
+matching entry exists.
+
+Files: `doc/diff.rst`, `doc/interp.rst`, `doc/specfunc-coupling.rst`,
+`doc/specfunc-hermite.rst`, `doc/spmatrix.rst`,
+`doc_texinfo/diff.texi`, `doc_texinfo/interp.texi`,
+`doc_texinfo/specfunc-coupling.texi`.
+
+See Savannah bug #67621.
+
+
+## [upstream] doc: make the vector write example consistent with the read example
+
+Commit: 0e82d8223
+
+`doc/examples/vectorw.c` allocated and wrote a 100-element vector, while
+`vectorr.c` - which reads `test.dat` back - allocated and read only 10.
+The two are meant to be used together, so the write example now allocates
+and writes 10 elements.  The stale mirror under `doc_texinfo/examples`
+is updated identically.
+
+Files: `doc/examples/vectorw.c`, `doc_texinfo/examples/vectorw.c`.
+
+See Savannah bug #43902.
+
+
+## [upstream] tests: drop the dead `<varargs.h>` include in results.c
+
+Commit: e2354de55
+
+The `#else` branch of the `HAVE_VPRINTF` block in `test/results.c`
+includes the obsolete `<varargs.h>` when `STDC_HEADERS` is not defined.
+`STDC_HEADERS` is defined by both the autoconf and the CMake build of
+this fork (and by any conforming C89-or-later implementation), so the
+branch is unreachable.  Folding it into the `<stdarg.h>` branch removes
+the dead reference without changing the compiled output.
+
+File: `test/results.c`.
+
+See Savannah bug #44952.
 
 
 
