@@ -75,6 +75,7 @@ One line per change: date | tag | description | commit(s).
   2026-10-02 | [upstream] | complex: preserve special values in GSL_SET_COMPLEX      | 631da98f8
   2026-10-02 | [fork]     | cmake: build the C11 complex test                        | db5fcdf6d
   2026-10-02 | [upstream] | movstat: align the embedded accumulator state            | 4e4a88242
+  2026-10-02 | [upstream] | randist: regression test for gsl_ran_beta small params   | d64cc4d93
 
 
 ## [upstream] rng: make the random() generators produce the documented sequences
@@ -1533,6 +1534,45 @@ after.
 Files: `movstat/ringbuf.c`, `movstat/mmacc.c`, `movstat/qnacc.c`.
 
 See Savannah bug #59834.
+
+
+
+## [upstream] randist: regression test for gsl_ran_beta with small parameters
+
+Commit: d64cc4d93
+
+The code fix for this defect is already upstream - commit
+`05c5b5179` ("bug fix for #47646 (gsl_ran_beta)", 2016-09-15) added the
+`(a <= 1 && b <= 1)` branch to `randist/beta.c`, and this fork's copy is
+identical to `savannah/master`.  Savannah bug #47646, however, has stayed
+open because the change came without a test: the maintainer's last comment
+says the PDF integration test cannot be used, as the beta density diverges
+at 0 and 1 for these parameters.
+
+The defect: below `a = 1` a gamma variate is exactly zero a large fraction
+of the time (`gsl_ran_gamma(1e-5, 1)` returns exact zero for 198470 of
+200000 draws here), so the old `x1 / (x1 + x2)` computed `0/0` and returned
+NaN for roughly 98 % of the samples.  The upstream fix samples
+`Beta(a, a)` by rejection instead.
+
+The test adds `test_beta_small` to `randist/test.c` and checks it with the
+existing `testMoments` harness: with `a = b = 1e-5` the distribution is
+symmetric about `1/2`, so `P(X < 1/2) = P(X > 1/2) = 1/2`.  The intervals
+are `(-0.5, 0.5)` and `(0.5, 1.5)`, not `(0, 1/2)` and `(1/2, 1)`: half of
+the mass sits exactly on the atoms 0 and 1, and the strict inequalities in
+`testMoments` would discard those samples.  The two vectors are registered
+at the end of `main`, after the last test that reads the shared RNG stream,
+so no existing statistical test shifts phase.
+
+The `a = b` symmetry is the reference; it does not use GSL's own CDF.
+
+Negative control: with the `(a <= 1 && b <= 1)` branch reverted to the
+plain gamma ratio the two vectors fail - `0.00759` and `0.00783` observed
+against `0.5` expected, 2 failures.  With the fix in place `randist_test`
+reports 152/152 and the full `ctest` suite 56/56.
+
+File: `randist/test.c`.  See Savannah bug #47646.
+
 
 
 
