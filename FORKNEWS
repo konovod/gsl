@@ -82,6 +82,7 @@ One line per change: date | tag | description | commit(s).
   2026-10-02 | [upstream] | specfunc: exact argument reduction in sin/cos          | e7a66d24d
   2026-10-02 | [upstream] | specfunc: integer-d 2F1 reflection uses the series     | ac132a3c2
   2026-10-02 | [upstream] | specfunc: 2F1 series reports a meaningful error        | c1c2dc853
+  2026-10-02 | [upstream] | specfunc: direct series for 1F1 with negative a, large x | 86aa5d161
 
 
 ## [upstream] rng: make the random() generators produce the documented sequences
@@ -1829,6 +1830,37 @@ suite 56/56.
 Files: `specfunc/hyperg_2F1.c`, `specfunc/test_hyperg.c`.
 
 Savannah bug #32306.
+
+
+## [upstream] specfunc: direct series for 1F1 with negative a and large x
+
+Commit: 86aa5d161
+
+`gsl_sf_hyperg_1F1_e` sends `a < 0, b > 0` through the Kummer
+transformation to `exp(x) M(b-a,b,-x)`.  For `x > 0` the transformed
+call has a negative argument and `b < b-a`, and `hyperg_1F1_ab_pos`
+evaluates it with a backward recurrence on `b` that loses accuracy once
+`x` exceeds a few times `|a|`.  For `a = 1 - 32.950611846591684`,
+`b = 2`, `x = 242.7876` it returned `3.39e80` where the true value is
+`7.51e60`, twenty orders of magnitude too large.
+
+The direct Taylor series for `M(a,b,x)` is well conditioned for large
+positive `x`.  The function now evaluates it as well and uses it when it
+reports at least ten significant digits (`err/|val| < 1e-10`); the
+Kummer error estimate is far too pessimistic in this region to be used
+for a direct comparison of the two.  A 2400-point sweep over
+`a in [-50, -1]`, `b in [0.5, 5]`, `x in [1, 700]` rescues 345 points
+and makes none worse.
+
+Verified against mpmath (60 digits).  The regression test in
+`specfunc/test_hyperg.c` uses the reported parameters and fails on the
+pre-fix library with `3.39e80`; the specfunc suite passes.
+
+Files: `specfunc/hyperg_1F1.c`, `specfunc/test_hyperg.c`.
+
+Savannah bug #43809.  The related #28267 is the same defect in the
+transition region `x ~ |a|^2`; neither the backward recurrence nor the
+series is accurate enough there and it remains open.
 
 
 
