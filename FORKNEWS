@@ -63,6 +63,9 @@ One line per change: date | tag | description | commit(s).
   2026-10-01 | [rejected] | specfunc: mathieu_ce "differs from Mathematica"        | - (see below)
   2026-10-01 | [rejected] | complex: test_c11 "fails" on ppc64 and sparc           | - (see below)
   2026-10-01 | [rejected] | ode-initval2: shorten e5_bigt to hide FMA sensitivity  | - (see below)
+  2026-10-02 | [upstream] | specfunc: Airy error bars, indeterminate phase        | ac5f72d98
+  2026-10-02 | [upstream] | specfunc: Olver Bessel argument-error propagation      | 790fe1078
+  2026-10-02 | [upstream] | doc: Airy accuracy and exceptional return values       | 86cb80782
 
 
 ## [upstream] rng: make the random() generators produce the documented sequences
@@ -1020,5 +1023,101 @@ makes the test pass by testing less.  That is not a fix.  The honest
 treatment is a test-quality change - recomputed reference values, or a
 tolerance that reflects the conditioning of the problem - and it is
 recorded as a separate task rather than taken from the bug.
+
+
+## [upstream] specfunc: Airy error bars and the indeterminate oscillatory phase
+
+Commit: ac5f72d98
+
+Three defects in the `x < -1` branch of `specfunc/airy.c` and
+`specfunc/airy_der.c`:
+
+**1. Division by a vanishing series correction (#52359).**  The modulus
+and phase errors were formed as
+
+    mod->err   = |mod|   * (eps + |result_m.err/result_m.val|);
+    phase->err = |phase| * (eps + |result_p.err/result_p.val|);
+
+The Chebyshev corrections `result_m.val` and `result_p.val` can be exactly
+zero (for example at `x = -1.842761151977744`), so the estimate came out
+`inf`.  The formula was also dimensionally wrong away from that point:
+`mod` depends on `m = 0.3125 + rm`, not on `rm`, so the relative error of
+`m` is `rm.err/m` and the propagated error is `0.5*|mod|*rm.err/m`; the
+old form was too large by `2m/|rm|`.  Both are now computed from the full
+expressions, and the phase error is `|x*sqrt(-x)|*rp.err + eps*|phase|`.
+The last term is what makes the error bar cover the actual phase rounding.
+
+**2. Non-physical results for huge negative arguments (#52570, #51000).**
+The phase is `~(2/3)|x|^{3/2}`.  Beyond `|x| ~ 1e10` its absolute rounding
+error exceeds a radian, and beyond `1e13` `gsl_sf_cos_e` can no longer
+reduce it and returns values outside `[-1,1]`, then `inf`.  Before the fix
+`Ai/Bi(-1.14e34)` returned `-inf` and `Ai'(-5.6e102)` a value of the wrong
+sign, all with status `GSL_SUCCESS`.  When the phase error reaches a
+radian the value is now set to zero with the modulus (the amplitude for a
+derivative) as the error and `GSL_ELOSS` is returned.  This is a loss of
+precision, not a domain violation.
+
+**3. The derivative error used the value instead of the amplitude.**  In
+`airy_der.c` the propagated phase term was `fabs(result->val * p.err)`; it
+must be `fabs(a.val * p.err)`, which bounds the error where `cos`/`sin`
+vanish.
+
+**Not attempted: improving the accuracy itself (#66808).**  The relative
+error in the oscillatory region is `~eps*|x|^{3/2}`, driven by computing
+the phase in double precision.  A double-double prototype (Dekker
+two-sum/two-product, `p` split as `-0.625 + rp`, first-order phase
+correction `cos(hi) - lo*sin(hi)`) was built and measured.  It recovers
+the arithmetic rounding but bottoms out at `eps*|rp|*|x|^{3/2}`, the floor
+set by the double-precision SLATEC coefficient tables - a gain of only
+about 5-10x, not enough to reach `TEST_TOL0`.  It was therefore not
+pursued.  The regression vectors for #66808 use `TEST_TOL2` for `x < 0`
+and `TEST_TOL1` for the positive branch, which is limited to ~3e-15 by the
+asymptotic series.
+
+The new test vectors also cover the integer arguments from #66808 and the
+derivatives at the library's own zeros, with references recomputed from
+the Maclaurin series in 200-digit arithmetic.  With the fix reverted
+`specfunc_test` reports 55 failures, all in the new vectors.
+
+Files: `specfunc/airy.c`, `specfunc/airy_der.c`, `specfunc/test_airy.c`.
+
+See Savannah bugs #52359, #52570, #51000 and #66808.
+
+
+## [upstream] specfunc: propagate the Olver argument error in Bessel
+
+Commit: 790fe1078
+
+`gsl_sf_bessel_Jnu_asymp_Olver_e()` and `gsl_sf_bessel_Ynu_asymp_Olver_e()`
+evaluate the Airy functions at `arg = crnu^2*zeta`, where `zeta` and
+`crnu` are themselves computed from `x` and `nu`.  The value carries the
+Airy derivative term, but the error estimate did not propagate the
+rounding of `arg` at all, so for very large `|arg|` the reported error was
+optimistic by a factor of a few.  This was masked by the inflated Airy
+error bars; once commit `ac5f72d98` corrected them,
+`gsl_sf_bessel_Yn_e(1000, 2^32)`, `jl_e(2000, 2^20)` and
+`yl_e(2000, 2^20)` failed the harness's value-vs-error consistency check.
+
+The missing term is added using the Airy equation (`Ai'' = arg*Ai`,
+`Bi'' = arg*Bi`), which makes the first-order sensitivity of the value to
+`arg` exact.  This is a genuine under-estimate that the Airy fix exposed,
+not a new defect.
+
+File: `specfunc/bessel_olver.c`.
+
+
+## [upstream] doc: Airy accuracy and exceptional return values
+
+Commit: 86cb80782
+
+The Airy entries in `doc/specfunc-airy.rst` said only that the accuracy is
+"specified by mode" and listed no exceptional values.  They now document
+the domain, the `GSL_EUNDRFLW` / `GSL_EOVRFLW` reported by `Ai` and `Bi`
+for large positive `x`, the `GSL_ELOSS` returned when the phase of the
+oscillatory branch is no longer determined, and the `eps*|x|^{3/2}`
+accuracy limit for `x < 0`.
+
+File: `doc/specfunc-airy.rst`.
+
 
 
