@@ -5,17 +5,17 @@ Generated 2026-10-02 from the `scripts/savannah_bugs.py` sweep (`inventory.tsv`)
 Scratch index, not part of the fork's record of changes. Verdicts are curated from
 `FORKNEWS`, `SAVANNAH_REVIEW.md` and the git history; every other row is un-triaged.
 
-**219 open items: 58 reviewed/handled, 161 remaining.**
+**219 open items: 59 reviewed/handled, 160 remaining.**
 
 | status | count |
 |---|---:|
-| fixed | 41 |
+| fixed | 42 |
 | partial | 2 |
 | rejected | 13 |
 | deferred | 1 |
 | superseded | 1 |
 | not reviewed (feature-shaped) | 22 |
-| not reviewed | 139 |
+| not reviewed | 138 |
 
 Legend for the *Patch* column: the sweep's `git apply` verdict (`clean` / `partial` / `dirty`), `source` for a whole
 replacement file, `inline` for a patch pasted into the bug text, `none` for no patch.
@@ -52,7 +52,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 36578 | 2012-06-02 | - | Documentation | none | not reviewed | inconsistency in gsl_ieee_env_setup doc/api |
 | 37209 | 2012-08-28 | bug | Accuracy problem | none | **fixed** — upstream 441bc40ff (inherited); NaN gone | gsl_sf_bessel_jl_e returns NaN for large inputs without setting error code |
 | 37408 | 2012-09-20 | - | - | clean au.patch | **fixed** — const AU/parsec updated to IAU 2012 (3377c7fbe) | The astronomical unit (AU) has been re-defined |
-| 37894 | 2012-12-10 | bug | Build | clean gsl-autotools.diff | not reviewed | Shared library does not build on Cygwin |
+| 37894 | 2012-12-10 | bug | Build | clean gsl-autotools.diff | **fixed** — upstream 1d002ee93/ae19e3e8b (inherited, no fork change) | Shared library does not build on Cygwin |
 | 38548 | 2013-03-19 | - | Accuracy problem | none | not reviewed | Rounding issues in gsl-histogram with integer numbers |
 | 39056 | 2013-05-23 | bug | Runtime error | none | not reviewed | gsl_sf_hyperg_2F1_e fails for some test cases |
 | 39057 | 2013-05-23 | bug | Runtime error | none | not reviewed | gsl_cdf_chisq_Pinv fails for some values |
