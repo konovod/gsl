@@ -20,13 +20,18 @@ functions are declared in the header file @file{gsl_sf_trig.h}.
 @deftypefunx int gsl_sf_sin_e (double @var{x}, gsl_sf_result * @var{result})
 @cindex sine function, special functions
 These routines compute the sine function @math{\sin(x)}.
+
+The argument reduction is exact to the precision of a double, so the
+result is accurate to a few units in the last place for all finite
+@var{x}.
 @comment Exceptional Return Values:
 @end deftypefun
 
 @deftypefun double gsl_sf_cos (double @var{x})
 @deftypefunx int gsl_sf_cos_e (double @var{x}, gsl_sf_result * @var{result})
 @cindex cosine function, special functions
-These routines compute the cosine function @math{\cos(x)}.
+These routines compute the cosine function @math{\cos(x)}, with the same
+argument reduction as @code{gsl_sf_sin}.
 @comment Exceptional Return Values:
 @end deftypefun
 

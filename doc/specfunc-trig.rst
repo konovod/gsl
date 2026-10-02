@@ -14,6 +14,10 @@ Circular Trigonometric Functions
               int gsl_sf_sin_e (double x, gsl_sf_result * result)
 
    These routines compute the sine function :math:`\sin(x)`.
+
+   The argument reduction is exact to the precision of a double, so the
+   result is accurate to a few units in the last place for all finite
+   :data:`x`.
 .. Exceptional Return Values:
 
 .. index::
@@ -22,7 +26,8 @@ Circular Trigonometric Functions
 .. function:: double gsl_sf_cos (double x)
               int gsl_sf_cos_e (double x, gsl_sf_result * result)
 
-   These routines compute the cosine function :math:`\cos(x)`.
+   These routines compute the cosine function :math:`\cos(x)`, with the
+   same argument reduction as :func:`gsl_sf_sin`.
 .. Exceptional Return Values:
 
 .. index::
