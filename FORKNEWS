@@ -80,6 +80,8 @@ One line per change: date | tag | description | commit(s).
   2026-10-02 | [upstream] | specfunc: polygamma at negative arguments              | 5fcb0bcae
   2026-10-02 | [upstream] | specfunc: spherical Bessel Y at large arguments        | 35cebf9a7
   2026-10-02 | [upstream] | specfunc: exact argument reduction in sin/cos          | e7a66d24d
+  2026-10-02 | [upstream] | specfunc: integer-d 2F1 reflection uses the series     | ac132a3c2
+  2026-10-02 | [upstream] | specfunc: 2F1 series reports a meaningful error        | c1c2dc853
 
 
 ## [upstream] rng: make the random() generators produce the documented sequences
@@ -1764,6 +1766,69 @@ Files: `specfunc/trig.c`, `specfunc/test_sf.c`,
 `doc/specfunc-trig.rst`, `doc_texinfo/specfunc-trig.texi`.
 
 Savannah bug #45746, and the trigonometric half of bug #36152.
+
+
+## [upstream] specfunc: use the Gauss series for integer-d 2F1 reflection
+
+Commit: ac132a3c2
+
+`gsl_sf_hyperg_2F1_e` sent every case with `|a|, |b| < 10`, `|c| <= 10`
+and `x >= 0.5` to `hyperg_2F1_reflect`.  When `c-a-b` is an integer the
+integer-`d` branch of that routine is unreliable: it forms each gamma
+factor with `gsl_sf_lngamma_e()`, which returns the logarithm of the
+magnitude only, and applies a single global sign `(-1)^(c-a-b)`.  The
+signs of the remaining factors are lost, so the returned value can have
+the wrong sign.
+
+For `gsl_sf_hyperg_2F1_e(-0.5, 1.5, 1, x)` (`c-a-b = 0`) the result was
+`-0.5393526012` for every `x >= 0.5` instead of `+0.5393526012` at
+`x = 0.5`, with a reported error of `8.6e-15`: the discontinuity in the
+original report.
+
+The integer-`d` case is now evaluated with `hyperg_2F1_series` for
+`x < 0.995`, the threshold already used for all-nonnegative parameters,
+falling back to the reflection only near `x = 1`.  The change also fixes
+the same sign error for `c-a-b = 1`, for `a*b > 0` combinations such as
+`(-2.5, -0.5, 1)`, and Monajemi's `(3.5, -0.5, 5, 0.9)` from bug #39056.
+
+Verified against mpmath (40 digits): all six vectors added to
+`specfunc/test_hyperg.c` agree to a few `1e-15`.  Negative control: with
+the dispatch restored, four fail, e.g. `x = 0.5` returns
+`-0.5393526011883795 +/- 8.64e-15`.
+
+The reflection at `x >= 0.995` with integer `d` keeps its sign and
+accuracy defects; that corner is unaffected.
+
+Files: `specfunc/hyperg_2F1.c`, `specfunc/test_hyperg.c`.
+
+Savannah bug #32306 (also #54998, #39056).
+
+
+## [upstream] specfunc: meaningful error estimate from the 2F1 series
+
+Commit: c1c2dc853
+
+`hyperg_2F1_series` estimated the truncation error as
+`del_pos + del_neg`, the last positive and negative term.  `del_pos`
+starts at `1.0` and is only updated on positive terms, so for an
+all-one-signed series (any `a < 0`) it stayed `1.0` and the routine
+returned `err = 1` for a value of order one.  This is the "error
+incorrect for 0 < x < 0.5" half of the report: for
+`gsl_sf_hyperg_2F1_e(-0.5, 1.5, 1, 0.4)` the value was correct but the
+error was `1`.
+
+The stopping test now uses Pearson's three-term criterion on the
+absolute term sizes and takes the largest of the last three terms as the
+error estimate.
+
+Verified against mpmath (40 digits): the call now returns
+`0.6501574321780042 +/- 4.5e-15`; the new assertion in
+`specfunc/test_hyperg.c` fails with the old estimate restored.  Full
+suite 56/56.
+
+Files: `specfunc/hyperg_2F1.c`, `specfunc/test_hyperg.c`.
+
+Savannah bug #32306.
 
 
 
