@@ -221,7 +221,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 67621 | 2025-10-23 | - | Documentation | clean rst_deprecated.diff | **fixed** — deprecation markers from headers (5df6c0079) | Mark functions as deprecated if they are also deprecated in the code |
 | 67689 | 2025-11-10 | doc | Documentation | clean specfunc-psi.rst.patch | **fixed** — gsl_sf_complex_psi_e documented (345883172) | Incomplete documentation of digamma functions in GSL specfunc |
 | 67705 | 2025-11-15 | bug | Build | none | not reviewed | ttest failure in linalg/QR_solve_r random |
-| 67728 | 2025-11-23 | bug | Accuracy problem | source psi_dropin.c | not reviewed (feature-shaped) — skipped in first pass as feature-shaped | gsl_sf_psi_n_e yields domain error |
+| 67728 | 2025-11-23 | bug | Accuracy problem | source psi_dropin.c | **fixed** — polygamma at negative arguments (5fcb0bcae) | gsl_sf_psi_n_e yields domain error |
 | 67774 | 2025-12-05 | feature | Accuracy problem | none | not reviewed | Feature: arctan integral is also defined for negative inputs |
 | 68068 | 2026-02-19 | bug | Accuracy problem | none | not reviewed | Bug: incorrect straddling of area of convergence in quad_golden |
 | 68073 | 2026-02-20 | bug | Documentation | none | not reviewed | Bug: incorrect inline code comment on BASE FUNCTION(gsl_stats,select) |
