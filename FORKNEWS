@@ -76,6 +76,7 @@ One line per change: date | tag | description | commit(s).
   2026-10-02 | [fork]     | cmake: build the C11 complex test                        | db5fcdf6d
   2026-10-02 | [upstream] | movstat: align the embedded accumulator state            | 4e4a88242
   2026-10-02 | [upstream] | randist: regression test for gsl_ran_beta small params   | d64cc4d93
+  2026-10-02 | [upstream] | sys, specfunc: INT_MIN overflow in pow_int             | 41b1e2c00
 
 
 ## [upstream] rng: make the random() generators produce the documented sequences
@@ -1572,6 +1573,63 @@ against `0.5` expected, 2 failures.  With the fix in place `randist_test`
 reports 152/152 and the full `ctest` suite 56/56.
 
 File: `randist/test.c`.  See Savannah bug #47646.
+
+
+## [upstream] sys, specfunc: avoid signed overflow in pow_int for n = INT_MIN
+
+Commit: 41b1e2c00
+
+`gsl_pow_int()` negated its exponent in signed arithmetic when the
+exponent was negative:
+
+    if(n < 0) {
+      x = 1.0/x;
+      un = -n;
+    }
+
+For `n = INT_MIN`, `-n` overflows `int`: undefined behaviour, which a
+compiler is free to exploit.  Commit `9493ac014` (2010) converted the
+loop counter to `unsigned int` to stop the infinite loop that the
+overflow caused, but left the negation itself undefined.  Under clang
+`-O2` with LTO the undefined result is used and
+`gsl_pow_int(1.0000001, INT_MIN)` returns `1` instead of `5.4447103e-94`,
+failing the sys vector added by that same commit.  On MSVC the negation
+wraps to `2^31` and the vector passes, which is why the report is a
+clang/Linux one.
+
+`specfunc/pow_int.c` has the same negation, and `9493ac014` did not touch
+it at all:
+
+    if(n < 0) {
+      n = -n;
+      ...
+
+There the undefined negation leaves `n = INT_MIN`, and the arithmetic
+right shift in the loop keeps `n` negative, so `gsl_sf_pow_int_e()` loops
+forever for `n = INT_MIN`.
+
+Both functions now convert to `unsigned int` before negating,
+`un = -(unsigned int)n`, which is well defined and leaves the true
+magnitude `2^31`.  The specfunc loop counter is `unsigned int` as well.
+
+Tests: the sys vector `gsl_pow_int(1.0000001, INT_MIN)` (from
+`9493ac014`) already exercises the reported case.  `specfunc/test_sf.c`
+gains two vectors for `gsl_sf_pow_int_e()`: the reported magnitude,
+compared with a relaxed `1e-6` tolerance because repeated squaring
+accumulates rounding that the function's small reported error does not
+cover, and `(-1)^INT_MIN = 1` for the parity.  The direct vector is the
+one the report quotes; `pow()` was checked as the independent reference.
+
+Negative control: with the negation reverted, a driver containing the
+same two `gsl_pow_int` bodies compiled with gcc `-O2` returns `1` - the
+reporter's clang `-O2 -flto` result - and reverting the specfunc negation
+makes `test_pow_int` loop forever.  Neither reproduces on MSVC, where the
+overflow silently wraps.  Full `ctest` suite 56/56 on MSVC after the
+change.
+
+Files: `sys/pow_int.c`, `specfunc/pow_int.c`, `specfunc/test_sf.c`.
+
+See Savannah bug #68495.
 
 
 
