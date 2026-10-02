@@ -222,9 +222,32 @@ function(gsl_add_test module name)
            WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/${module}")
 endfunction()
 
+# A test compiled as C11 with <complex.h> included, so that the native
+# complex representation is exercised.  This mirrors the automake
+# `test_c11` program; MSVC has no C99 complex support and would fall back
+# to the legacy struct, so it is skipped there.
+function(gsl_add_test_c11 module name)
+  if(MSVC)
+    return()
+  endif()
+  set(_sources ${ARGN})
+  set(_target "${module}_${name}")
+  add_executable(${_target} ${_sources})
+  gsl_configure_target(${_target})
+  set_target_properties(${_target} PROPERTIES
+    C_STANDARD 11
+    C_STANDARD_REQUIRED ON)
+  target_compile_definitions(${_target} PRIVATE TEST_C11)
+  target_link_libraries(${_target} PRIVATE gsl gslcblas)
+  add_test(NAME "${module}.${name}" COMMAND ${_target}
+           WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/${module}")
+endfunction()
+
 if(GSL_BUILD_TESTS)
   enable_testing()
   include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/gsl_tests.cmake")
+  gsl_add_test_c11(complex test_c11
+      complex/test.c)
 endif()
 
 # ---------------------------------------------------------------------------
