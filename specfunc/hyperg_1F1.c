@@ -1949,13 +1949,40 @@ gsl_sf_hyperg_1F1_e(const double a, const double b, const double x,
        * Note that b > a, strictly, since we already trapped b = a.
        * Also b-(b-a)=a, and a is not a negative integer here,
        * so the generic evaluation is safe.
+       *
+       * For x > 0 the Kummer transformation is not the whole story:
+       * hyperg_1F1_ab_pos() evaluates M(b-a,b,-x) with b < b-a and
+       * x < 0 there, a region where its backward recurrence on b
+       * loses accuracy as x grows (Savannah bug #43809 and #28267).
+       * The direct series for M(a,b,x), on the other hand, becomes
+       * well conditioned for large x.  Evaluate it as well, and use it
+       * when it reports a small error estimate (at least ten
+       * significant digits); otherwise keep the Kummer result.  The
+       * Kummer error estimate is much too pessimistic in this region
+       * to be used for a direct comparison of the two results.
        */
       gsl_sf_result Kummer_1F1;
+      gsl_sf_result Kummer;
       int stat_K = hyperg_1F1_ab_pos(b-a, b, -x, &Kummer_1F1);
       int stat_e = gsl_sf_exp_mult_err_e(x, GSL_DBL_EPSILON * fabs(x),
                                             Kummer_1F1.val, Kummer_1F1.err,
-                                            result);
-      return GSL_ERROR_SELECT_2(stat_e, stat_K);
+                                            &Kummer);
+      int stat_K2 = GSL_ERROR_SELECT_2(stat_e, stat_K);
+
+      if(x > 0.0 && stat_K2 == GSL_SUCCESS && Kummer.val != 0.0) {
+        gsl_sf_result series;
+        int stat_s = gsl_sf_hyperg_1F1_series_e(a, b, x, &series);
+        if(stat_s == GSL_SUCCESS && series.val != 0.0) {
+          const double err_rat_s = fabs(series.err / series.val);
+          if(err_rat_s < 1.0e-10) {
+            *result = series;
+            return stat_s;
+          }
+        }
+      }
+
+      *result = Kummer;
+      return stat_K2;
     }
     else if (a > 0) {
       /* a > 0.0 */
