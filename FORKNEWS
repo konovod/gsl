@@ -77,6 +77,7 @@ One line per change: date | tag | description | commit(s).
   2026-10-02 | [upstream] | movstat: align the embedded accumulator state            | 4e4a88242
   2026-10-02 | [upstream] | randist: regression test for gsl_ran_beta small params   | d64cc4d93
   2026-10-02 | [upstream] | sys, specfunc: INT_MIN overflow in pow_int             | 41b1e2c00
+  2026-10-02 | [upstream] | specfunc: polygamma at negative arguments              | 5fcb0bcae
 
 
 ## [upstream] rng: make the random() generators produce the documented sequences
@@ -1630,6 +1631,69 @@ change.
 Files: `sys/pow_int.c`, `specfunc/pow_int.c`, `specfunc/test_sf.c`.
 
 See Savannah bug #68495.
+
+
+## [upstream] specfunc: polygamma at negative arguments
+
+Commit: 5fcb0bcae
+
+`gsl_sf_psi_n_e()` returned `GSL_EDOM` for every `n >= 2` with `x <= 0`
+that was not a pole.  The function is finite and smooth at those
+arguments, and the `n = 0` and `n = 1` cases (`gsl_sf_psi_e()`,
+`gsl_sf_psi_1_e()`) already accepted them, so the restriction was both
+wrong and internally inconsistent.  Reported by Paul Zimmermann; the bug
+carries a whole-file drop-in replacement (`psi_dropin.c`) rather than a
+diff.  See Savannah bug #67728.
+
+Negative `x` is now shifted onto the positive axis with the recurrence
+`psi^(n)(x+1) = psi^(n)(x) + (-1)^n n! / x^(n+1)`, applied
+`m = ceil(-x) = -floor(x)` times:
+
+    psi^(n)(x) = psi^(n)(x+m) - (-1)^n n! sum_{k=0}^{m-1} 1/(x+k)^(n+1).
+
+Because `0 < x+m <= 1` and every `x+k` is negative, the correction term
+is positive and is added directly.  The reporter's code used `size_t`
+and C99 mid-block declarations, formed `n!` directly (which overflows
+beyond `n = 170`), and did not account for cancellation; here the terms
+go through `gsl_sf_lnfact_e()` and a Kahan-compensated sum, and the
+error estimate carries `sum |term|` so the cancellation is reported
+rather than hidden.
+
+The reporter flagged two limitations.  Neither is as stated:
+
+* "sign is incorrect for n >= 5".  The `(-1)^n` sign is correct.  For
+  `n = 5, x = -1.5` the value is `+15381.648528026303809`; the
+  commented-out test in the report simply had the sign wrong (Wolfram,
+  mpmath and the recurrence agree).
+* "not recommended for even n with large |x|".  This is real, but it is
+  a loss of digits to cancellation, not a wrong result: for even `n` the
+  correction sum is much larger than the value, and the accuracy falls
+  off as `n` and `|x|` grow.  The tested vectors use tolerances from
+  `TEST_TOL1` to `TEST_TOL5` accordingly, and the reported error bar
+  grows with the cancellation.
+
+The report's headline argument is `-4503599224717311/536870912`, i.e.
+`-8388607.25 + 2^-29`; the expected `124.02510962421644344751` is
+correct for that argument (it is `4 pi^3` less a small correction from
+the `2^-29` offset).  Using `x = -8388607.25` exactly gives
+`124.02510672119928` instead.
+
+Verification: values against mpmath at 40 digits (`polygamma`).  The
+sum for the headline case has 8.4 million terms, which is why the
+summation is compensated.  `specfunc/test_sf.c` gains 17 value vectors
+(`n = 2..5`, arguments straddling the poles at -1 and -2, `|x|` up to
+10.5, and the report's argument) plus five checks that the poles and
+negative orders remain `GSL_EDOM`.  Negative control: with the change
+reverted all 17 value vectors fail with `GSL_EDOM`.  Full `ctest` suite
+56/56 on MSVC after the change.
+
+The documented domain becomes `n >= 0, x != 0, -1, -2, ...` in both
+`doc/specfunc-psi.rst` and `doc_texinfo/specfunc-psi.texi`, with a note
+on the loss of digits for even `n` and large `|x|`.
+
+Files: `specfunc/psi.c`, `specfunc/test_sf.c`, `doc/specfunc-psi.rst`,
+`doc_texinfo/specfunc-psi.texi`.
+
 
 
 
