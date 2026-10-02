@@ -295,6 +295,16 @@ int test_hyperg(void)
 
   /* Bug report from Weibin Li <weibinli@mpipks-dresden.mpg.de> */
 
+  /* Savannah bug #43809: 1F1(1-vx, 2, 2*ri/vx) with
+     vx = 32.950611846591684.  The Kummer reduction used to lose all
+     accuracy for the larger x (ri = 4000). */
+  TEST_SF(s, gsl_sf_hyperg_1F1_e, (-31.950611846591684, 2.0, 60.6969002369791873, &r), -14772039614.295877959, TEST_TOL3, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_1F1_e, (-31.950611846591684, 2.0, 242.787600947916749, &r), 7.5105570468237970099e+60, TEST_TOL2, GSL_SUCCESS);
+
+  /* Savannah bug #28267 is the same defect in the transition region
+     x ~ |a|^2.  There neither the Kummer recurrence nor the direct
+     series is accurate enough for this test to be enabled. */
+
 #ifdef FIXME
   TEST_SF(s, gsl_sf_hyperg_1F1_e, (-37.8, 2.01, 103.58, &r), -6.21927211009e17, TEST_TOL1, GSL_SUCCESS);
 #endif
@@ -636,11 +646,19 @@ TEST_SF(s, gsl_sf_hyperg_U_e, (2, -6.4, 1, &r),1.2141502795806162484648638e-02
   TEST_SF(s, gsl_sf_hyperg_2F1_e, (-0.2, 8.8, 10.0, 0.8, &r), 0.77998971427681563, TEST_TOL1, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_hyperg_2F1_e, (-0.2, 9.8, 11.0, 0.8, &r), 0.77574573497387267, TEST_TOL0, GSL_SUCCESS);
 
+  /* Test case from Hatef Monajemi <monajemi@stanford.edu> (bug #39056) */
+
+  TEST_SF(s, gsl_sf_hyperg_2F1_e, (3.5, -0.5, 5.0, 0.9, &r), 0.5923981284370653465208973272, TEST_TOL1, GSL_SUCCESS);
+
+  /* Test c-a-b integer, a and b of opposite sign
+   * (Savannah bugs #32306 and #54998) */
+
+  TEST_SF(s, gsl_sf_hyperg_2F1_e, (-0.5, 1.5, 1.0, 0.5, &r),  0.5393526011883793566679, TEST_TOL1, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_2F1_e, (-0.5, 1.5, 1.0, 0.9, &r), -0.2346215366393253645465, TEST_TOL1, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_2F1_e, (-0.25, 0.25, 1.0, 0.25, &r), 0.9833426507751652325159, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_2F1_e, (-0.25, 0.25, 1.0, 0.9, &r),  0.9205892513820927681855, TEST_TOL1, GSL_SUCCESS);
+
 #if 0 /* XXX - bug #39056 */
-  /* Test case from Hatef Monajemi <monajemi@stanford.edu> */
-
-  TEST_SF(s, gsl_sf_hyperg_2F1_e, (3.5, -0.5, 5.0, 0.9, &r), 0.5923981284370653465208973272, TEST_TOL2, GSL_SUCCESS);
-
   /* Test case from Robert L Wolpert <Wolpert@stat.duke.edu> */
 
   TEST_SF(s, gsl_sf_hyperg_2F1_e, (-1.0, -10.0, 1.0, 0.5, &r), 6.0, TEST_TOL0, GSL_SUCCESS);
