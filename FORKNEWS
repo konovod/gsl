@@ -79,6 +79,7 @@ One line per change: date | tag | description | commit(s).
   2026-10-02 | [upstream] | sys, specfunc: INT_MIN overflow in pow_int             | 41b1e2c00
   2026-10-02 | [upstream] | specfunc: polygamma at negative arguments              | 5fcb0bcae
   2026-10-02 | [upstream] | specfunc: spherical Bessel Y at large arguments        | 35cebf9a7
+  2026-10-02 | [upstream] | specfunc: exact argument reduction in sin/cos          | e7a66d24d
 
 
 ## [upstream] rng: make the random() generators produce the documented sequences
@@ -1727,6 +1728,43 @@ the asymptotics.
 Files: `specfunc/bessel_y.c`, `specfunc/test_bessel.c`.
 
 Savannah bug #36152 and bug #45726.
+
+
+## [upstream] specfunc: exact argument reduction for sine and cosine
+
+Commit: e7a66d24d
+
+`gsl_sf_sin_e` and `gsl_sf_cos_e` reduced the argument with a three-term
+representation of pi/4.  Its error in the reduced angle grows like
+`eps*|x|`, so above `|x| ~ 1e9` the accuracy degrades and beyond
+`|x| ~ 1e16` the result is meaningless while the status remains
+`GSL_SUCCESS`: `gsl_sf_cos_e(1e20)` returned `-2.86e42`.  The same
+reduction is reached through `gsl_sf_sin_err_e`, `gsl_sf_cos_err_e` and
+`gsl_sf_sinc_e`.
+
+The fdlibm Payne-Hanek reduction (`__rem_pio2_large`, tables included,
+with the Sun notice) is added and used above `|x| = 2^21`, where the fast
+path is still exact.  The reduced argument is carried as a double-double
+`y0 + y1` and folded into the existing Chebyshev series to first order, so
+the reduction is exact over the whole double range and the result is good
+to a few ulp for every finite argument.
+
+Verification: two million deterministic random doubles across the full
+exponent range, compared against the platform libm (independently checked
+against mpmath), disagree nowhere by more than `1e-13`, with a worst
+absolute error of `2.2e-16`.  Eight vectors at 1.1e12, 1e18, 1e20 and
+1e22 (mpmath, 40 digits) fail with `trig.c` reverted, e.g. `sin(1e18)`
+gives `-6.15e1` against `-9.93e-1`.  With the change the full `ctest`
+suite is 56/56.
+
+`gsl_sf_angle_restrict_*` keeps its own reduction and its documented
+`GSL_ELOSS` above `0.0625/eps`; that contract is not part of this change.
+
+Files: `specfunc/trig.c`, `specfunc/test_sf.c`,
+`doc/specfunc-trig.rst`, `doc_texinfo/specfunc-trig.texi`.
+
+Savannah bug #45746, and the trigonometric half of bug #36152.
+
 
 
 
