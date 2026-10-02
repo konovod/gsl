@@ -106,6 +106,10 @@ The following C macros offer convenient ways to manipulate complex numbers.
 
    sets :math:`z` to be :math:`3 + 4i`.
 
+   The components are assigned directly rather than by evaluating an
+   expression such as :math:`x + iy`, so signed zeros and non-finite
+   parts are preserved.
+
 .. .. macro::
 ..    GSL_SET_REAL (zp,x)
 ..    GSL_SET_IMAG (zp,y)

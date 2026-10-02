@@ -89,7 +89,6 @@ typedef const long double *  gsl_const_complex_packed_long_double_ptr ;
 
 #  define GSL_COMPLEX_P(zp)        (&(zp))
 #  define GSL_COMPLEX_EQ(z1,z2)    ((z1) == (z2))
-#  define GSL_SET_COMPLEX(zp,x,y)  (*(zp) = (x) + I * (y))
 
 #  define GSL_REAL(z)              (_Generic((z),                             \
                                      complex float       : ((float *) &(z)),  \
@@ -100,6 +99,9 @@ typedef const long double *  gsl_const_complex_packed_long_double_ptr ;
                                      complex float       : ((float *) &(z)),  \
                                      complex double      : ((double *) &(z)), \
                                      complex long double : ((long double *) &(z)))[1])
+
+#  define GSL_SET_COMPLEX(zp,x,y)  do { GSL_REAL(*(zp)) = (x);                \
+                                        GSL_IMAG(*(zp)) = (y); } while(0)
 
 #  define GSL_COMPLEX_P_REAL(zp)   GSL_REAL(*(zp))
 #  define GSL_COMPLEX_P_IMAG(zp)   GSL_IMAG(*(zp))

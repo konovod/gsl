@@ -282,5 +282,53 @@ FUNCTION (test, all) ()
       }
   }
 
+  /* GSL_SET_COMPLEX() must assign the two components directly rather
+   * than evaluate x + I*y: the complex arithmetic in that expression
+   * rounds away the sign of a zero component and computes 0*inf for a
+   * non-finite part, turning it into NaN (bug #65912).  The tables above
+   * compare magnitudes and cannot see this. */
+
+  {
+    gsl_complex z;
+    gsl_complex_float zf;
+    gsl_complex_long_double zl;
+    const long double eps = 1.0L + LDBL_EPSILON;
+
+    GSL_SET_COMPLEX (&z, -0.0, 0.0);
+    gsl_test (!signbit (GSL_REAL (z)),
+              "GSL_SET_COMPLEX real sign at (-0.0, +0.0)");
+    gsl_test (GSL_IMAG (z) != 0.0 || signbit (GSL_IMAG (z)),
+              "GSL_SET_COMPLEX imag sign at (-0.0, +0.0)");
+
+    GSL_SET_COMPLEX (&z, 0.0, -0.0);
+    gsl_test (!signbit (GSL_IMAG (z)),
+              "GSL_SET_COMPLEX imag sign at (+0.0, -0.0)");
+
+    GSL_SET_COMPLEX (&z, 0.0, GSL_POSINF);
+    gsl_test (GSL_REAL (z) != 0.0 || signbit (GSL_REAL (z)),
+              "GSL_SET_COMPLEX real part at (+0.0, +inf)");
+    gsl_test (gsl_isinf (GSL_IMAG (z)) <= 0,
+              "GSL_SET_COMPLEX imag part at (+0.0, +inf)");
+
+    GSL_SET_COMPLEX (&z, GSL_NEGINF, 1.0);
+    gsl_test (gsl_isinf (GSL_REAL (z)) >= 0 || GSL_IMAG (z) != 1.0,
+              "GSL_SET_COMPLEX at (-inf, 1.0)");
+
+    GSL_SET_COMPLEX (&z, GSL_NAN, 2.0);
+    gsl_test (!gsl_isnan (GSL_REAL (z)) || GSL_IMAG (z) != 2.0,
+              "GSL_SET_COMPLEX at (nan, 2.0)");
+
+    GSL_SET_COMPLEX (&zf, -0.0f, 0.0f);
+    gsl_test (!signbit (GSL_REAL (zf)),
+              "GSL_SET_COMPLEX float real sign at (-0.0f, +0.0f)");
+
+    GSL_SET_COMPLEX (&zl, -0.0L, 0.0L);
+    gsl_test (!signbit (GSL_REAL (zl)),
+              "GSL_SET_COMPLEX long double real sign at (-0.0L, +0.0L)");
+    GSL_SET_COMPLEX (&zl, eps, 0.0L);
+    gsl_test (GSL_REAL (zl) != eps,
+              "GSL_SET_COMPLEX long double precision at (1+eps, 0.0)");
+  }
+
   return 0;
 }

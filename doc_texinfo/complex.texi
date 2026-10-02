@@ -87,6 +87,10 @@ GSL_SET_COMPLEX(&z, 3, 4)
 
 @noindent
 sets @var{z} to be @math{3 + 4i}.
+
+The components are assigned directly rather than by evaluating an
+expression such as @math{x + iy}, so signed zeros and non-finite parts
+are preserved.
 @end defmac
 
 @defmac GSL_SET_REAL (@var{zp},@var{x})
