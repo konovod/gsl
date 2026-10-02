@@ -80,6 +80,9 @@ Polygamma Function
               int gsl_sf_psi_n_e (int n, double x, gsl_sf_result * result)
 
    These routines compute the polygamma function :math:`\psi^{(n)}(x)` for
-   :math:`n \ge 0`, :math:`x > 0`.
-.. Domain: n >= 0, x > 0.0
+   :math:`n \ge 0`, :math:`x \ne 0, -1, -2, \ldots`.
+   For negative :data:`x` the function is evaluated by a recurrence relation;
+   for even :data:`n` and large :math:`|x|` some digits may be lost to
+   cancellation.
+.. Domain: n >= 0, x != 0.0, -1.0, -2.0, ...
 .. Exceptional Return Values: GSL_EDOM

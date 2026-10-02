@@ -791,8 +791,66 @@ int gsl_sf_psi_n_e(const int n, const double x, gsl_sf_result * result)
   {
     return gsl_sf_psi_1_e(x, result);
   }
-  else if(n < 0 || x <= 0.0) {
+  else if(n < 0) {
     DOMAIN_ERROR(result);
+  }
+  else if(x <= 0.0) {
+    if(psi_pole(x)) {
+      DOMAIN_ERROR(result);
+    }
+    else {
+      /* Shift a negative argument onto the positive axis with the
+       * recurrence
+       *
+       *   psi^(n)(x+1) = psi^(n)(x) + (-1)^n n! / x^(n+1),
+       *
+       * applied m = ceil(-x) times:
+       *
+       *   psi^(n)(x) = psi^(n)(x+m) - (-1)^n n! sum_{k=0}^{m-1} 1/(x+k)^(n+1).
+       *
+       * Here 0 < x+m <= 1 and every x+k is negative, so the correction
+       * term is positive and is added directly.  For even n the sum can
+       * be much larger than the result; the error estimate below carries
+       * the magnitude of the sum so that this cancellation is reported.
+       */
+      const int m = (int) (-floor(x));
+      gsl_sf_result pos;
+      gsl_sf_result ln_nf;
+      double sum = 0.0;
+      double comp = 0.0;   /* Kahan compensation */
+      int stat_pos;
+      int stat_nf;
+      int k;
+
+      stat_nf = gsl_sf_lnfact_e((unsigned int) n, &ln_nf);
+      if(stat_nf != GSL_SUCCESS)
+        return stat_nf;
+
+      stat_pos = psi_n_xg0(n, x + m, &pos);
+      if(stat_pos != GSL_SUCCESS)
+        return stat_pos;
+
+      /* Compensated summation: m grows with |x| and can reach the
+       * millions, where a naive accumulation loses several digits even
+       * though every term is positive. */
+      for(k = 0; k < m; k++) {
+        const double term = exp(ln_nf.val - (n + 1.0) * log(fabs(x + k)));
+        const double y = term - comp;
+        const double t = sum + y;
+        comp = (t - sum) - y;
+        sum = t;
+      }
+
+      result->val  = pos.val + sum;
+      result->err  = pos.err;
+      result->err += fabs(sum) * ((n + 2.0) * GSL_DBL_EPSILON + ln_nf.err);
+      result->err += GSL_DBL_EPSILON * fabs(result->val);
+
+      if(!gsl_finite(result->val))
+        OVERFLOW_ERROR(result);
+
+      return GSL_SUCCESS;
+    }
   }
   else {
     gsl_sf_result ln_nf;

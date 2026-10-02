@@ -2276,6 +2276,39 @@ int test_psi(void)
   TEST_SF(s, gsl_sf_psi_n_e, (0, -1.5, &r), 0.70315664064524318723,  TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_psi_n_e, (1, -1.5, &r), 9.3792466449891237539,   TEST_TOL0, GSL_SUCCESS);
 
+  /* Polygamma for negative non-integer x, reached by the recurrence
+     relation.  It is accurate close to the poles; for even n the shift
+     grows with |x| and a few digits are lost to cancellation, which the
+     looser tolerances below reflect.  See Savannah bug #67728. */
+  TEST_SF(s, gsl_sf_psi_n_e, (2, -0.5, &r), -0.82879664423431999560,     TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_psi_n_e, (2, -1.5, &r), -0.23620405164172740300,     TEST_TOL3, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_psi_n_e, (2, -2.5, &r), -0.10820405164172740300,     TEST_TOL3, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_psi_n_e, (2, -0.9, &r), -1999.1179731533796324,      TEST_TOL1, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_psi_n_e, (2, -0.99, &r), -2000000.2791783674987,     TEST_TOL1, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_psi_n_e, (2, -0.999, &r), -2000000000.3916149406,    TEST_TOL1, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_psi_n_e, (2, -1.1, &r), 1998.3008325580031053,       TEST_TOL1, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_psi_n_e, (2, -1.01, &r), 1999999.4708621232382,      TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_psi_n_e, (3, -1.5, &r), 194.59427621918762242,       TEST_TOL1, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_psi_n_e, (3, -0.9, &r), 60013.657824206872352,       TEST_TOL1, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_psi_n_e, (3, -0.99, &r), 600000012.49718187537,      TEST_TOL1, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_psi_n_e, (3, -1.1, &r), 60013.837094825753993,       TEST_TOL1, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_psi_n_e, (4, -1.5, &r), -0.31375599950673136338,     TEST_TOL5, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_psi_n_e, (5, -1.5, &r), 15381.648528026303809,       TEST_TOL1, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_psi_n_e, (2, -10.5, &r), -0.0082474690506522171203,  TEST_TOL4, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_psi_n_e, (3, -10.5, &r), 194.81668560325260525,      TEST_TOL1, GSL_SUCCESS);
+
+  /* The argument from the report, -4503599224717311/536870912, i.e.
+     -8388607.25 + 1/2^29. */
+  TEST_SF(s, gsl_sf_psi_n_e, (2, -8388607.25 + 1.0/536870912.0, &r), 124.02510962421644345, TEST_TOL1, GSL_SUCCESS);
+
+  /* The poles of the polygamma functions and negative orders remain
+     domain errors. */
+  TEST_SF(s, gsl_sf_psi_n_e, (2,  0.0, &r), GSL_NAN, GSL_NAN, GSL_EDOM);
+  TEST_SF(s, gsl_sf_psi_n_e, (2, -1.0, &r), GSL_NAN, GSL_NAN, GSL_EDOM);
+  TEST_SF(s, gsl_sf_psi_n_e, (2, -2.0, &r), GSL_NAN, GSL_NAN, GSL_EDOM);
+  TEST_SF(s, gsl_sf_psi_n_e, (3, -5.0, &r), GSL_NAN, GSL_NAN, GSL_EDOM);
+  TEST_SF(s, gsl_sf_psi_n_e, (-1, 0.5, &r), GSL_NAN, GSL_NAN, GSL_EDOM);
+
   return s;
 }
 

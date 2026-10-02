@@ -84,7 +84,9 @@ general @math{x}.
 These routines compute the polygamma function @c{$\psi^{(n)}(x)$}
 @math{\psi^@{(n)@}(x)} for
 @c{$n \ge 0$}
-@math{n >= 0}, @math{x > 0}.  
-@comment Domain: n >= 0, x > 0.0
+@math{n >= 0}, @math{x != 0, -1, -2, ...}.
+For negative @var{x} the function is evaluated by a recurrence relation; for
+even @var{n} and large @math{|x|} some digits may be lost to cancellation.
+@comment Domain: n >= 0, x != 0.0, -1.0, -2.0, ...
 @comment Exceptional Return Values: GSL_EDOM
 @end deftypefun
