@@ -1249,6 +1249,17 @@ void test_gammainv (void) {
   TEST (gsl_cdf_gamma_Qinv, (9.90049833749168054e-1, 1.0, 1.0), 0.01, TEST_TOL6);
   TEST (gsl_cdf_gamma_Qinv, (9.99000499833374992e-1, 1.0, 1.0), 0.001, TEST_TOL6);
   TEST (gsl_cdf_gamma_Qinv, (1.0, 1.0, 1.0), 0.0, 0.0);
+
+  /* For a < 1 the quantile can lie many orders of magnitude below one.
+     The expected values are from scipy.special.gammaincinv, except the
+     first two, which are also confirmed with mpmath at 60 digits. */
+  TEST (gsl_cdf_gamma_Pinv, (0.5, 0.005, 1.0), 3.5083338826177955e-61, TEST_TOL6);
+  TEST (gsl_cdf_gamma_Qinv, (0.5, 0.005, 1.0), 3.5083338826177955e-61, TEST_TOL6);
+  TEST (gsl_cdf_gamma_Pinv, (0.5, 0.5, 1.0), 0.227468211559786, TEST_TOL6);
+  TEST (gsl_cdf_gamma_Pinv, (0.1, 0.5, 1.0), 0.0078953870467156108, TEST_TOL6);
+  TEST (gsl_cdf_gamma_Pinv, (0.01, 0.1, 1.0), 6.0730483624079103e-21, TEST_TOL6);
+  TEST (gsl_cdf_gamma_Qinv, (1e-6, 0.5, 1.0), 11.964063488439734, TEST_TOL6);
+  TEST (gsl_cdf_gamma_Qinv, (0.01, 0.25, 1.0), 2.4338854221970312, TEST_TOL6);
 }
 
 void test_chisqinv (void) {
@@ -1272,10 +1283,12 @@ void test_chisqinv (void) {
   TEST (gsl_cdf_chisq_Pinv, (0.05, 1263131.0), 1260517.771133388726131469059, TEST_TOL6);
   TEST (gsl_cdf_chisq_Pinv, (0.05, 2526262.0), 2522565.864973351096735720202, TEST_TOL6);
 
-#if 0 /* XXX - bug #39057 */
-  /* Test case reported by Yan Zhou <zhouyan@me.com> */
-  TEST (gsl_cdf_chisq_Pinv, (0.5, 0.01), 0.99477710813146, TEST_TOL6);
-#endif
+  /* Test case reported by Yan Zhou <zhouyan@me.com>.  The expected value
+     quoted in Savannah bug #39057, 0.99477710813146, is actually
+     gsl_cdf_chisq_P (0.5, 0.01); the inverse is the value below, computed
+     with mpmath at 60 digits. */
+  TEST (gsl_cdf_chisq_Pinv, (0.5, 0.01), 7.016667765235591e-61, TEST_TOL6);
+  TEST (gsl_cdf_chisq_Qinv, (0.5, 0.01), 7.016667765235591e-61, TEST_TOL6);
 
   TEST (gsl_cdf_chisq_Qinv, (0.0, 13.0), GSL_POSINF, TEST_TOL6);
   TEST (gsl_cdf_chisq_Qinv, (1.65902608070858809e-15, 13.0), 100.0, TEST_TOL6);
