@@ -341,6 +341,14 @@ int test_coulomb(void)
      * Quoting the reference there would report TEST_SF_INCONS, which
      * would say the library's error estimate is too small -- a different
      * claim, and not one these vectors are trying to make.
+     *
+     * The tolerance is therefore not a uniform TEST_TOL2: at eta = -2 and
+     * eta = -1.5 the reference is itself only good to about 6e-14
+     * relative, which is why they were already exempt from the error-bar
+     * check.  TEST_TOL3 (2.3e-13) is the honest bound for those two; the
+     * other two stay at TEST_TOL2.  The half-C patch this test was
+     * written for moves F by 2x at (-2, 30, 20) and by 100% at
+     * (-1.5, 20, 20), so it is still detected with room to spare.
      */
     struct { double eta, lam, x; } steep[] = {
       { -2.0, 30.0,  20.0 },
@@ -367,8 +375,8 @@ int test_coulomb(void)
                                  &F, &Fp, &G, &Gp, &Fe, &Ge);
         s = 0;
         message_buff[0] = 0;
-        s += test_sf_check_result(message_buff,  F,  sF[i],  TEST_TOL2);
-        s += test_sf_check_result(message_buff, Fp, sFp[i], TEST_TOL2);
+        s += test_sf_check_result(message_buff,  F,  sF[i],  (i == 0 || i == 2) ? TEST_TOL3 : TEST_TOL2);
+        s += test_sf_check_result(message_buff, Fp, sFp[i], (i == 0 || i == 2) ? TEST_TOL3 : TEST_TOL2);
         printf("%s", message_buff);
         gsl_test(s, "  gsl_sf_coulomb_wave_FG_e(%g, %g, lam_F=%g, lam_G=%g) "
                     "[Steed, large lam_F]", steep[i].eta, steep[i].x,
