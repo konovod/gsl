@@ -251,7 +251,50 @@ gsl_sf_ellint_RJ_e(double x, double y, double z, double p, gsl_mode_t mode, gsl_
   if(x < 0.0 || y < 0.0 || z < 0.0) {
     DOMAIN_ERROR(result);
   }
-  else if(x + y < lolim || x + z < lolim || y + z < lolim || p < lolim) {
+  else if(x + y < lolim || x + z < lolim || y + z < lolim) {
+    DOMAIN_ERROR(result);
+  }
+  else if(p < 0.0) {
+    /* The defining integral has a pole at t = -p, so for negative p it
+       is understood as a Cauchy principal value.  Evaluate it with the
+       transformation [Carlson, Numer. Math. 33 (1979) 1; DLMF 19.20.14],
+       the same one used by Boost.Math.  It requires the first three
+       arguments in ascending order, which is allowed because RJ is
+       symmetric in x, y and z. */
+
+    double xs = x;
+    double ys = y;
+    double zs = z;
+    double tmp, q, pp, f;
+    gsl_sf_result rj, rf, rc;
+    int srj, srf, src, status;
+
+    if(xs > ys) { tmp = xs; xs = ys; ys = tmp; }
+    if(ys > zs) { tmp = ys; ys = zs; zs = tmp; }
+    if(xs > ys) { tmp = xs; xs = ys; ys = tmp; }
+
+    q  = -p;
+    pp = (zs * (xs + ys + q) - xs * ys) / (zs + q);  /* 0 <= pp <= zs */
+
+    srj = gsl_sf_ellint_RJ_e(xs, ys, zs, pp, mode, &rj);
+    srf = gsl_sf_ellint_RF_e(xs, ys, zs, mode, &rf);
+    src = gsl_sf_ellint_RC_e(xs * ys + pp * q, pp * q, mode, &rc);
+    status = GSL_ERROR_SELECT_3(srj, srf, src);
+    if(status != GSL_SUCCESS) {
+      result->val = 0.0;
+      result->err = 0.0;
+      return status;
+    }
+
+    f = 3.0 * sqrt(xs * ys * zs / (xs * ys + pp * q));
+    result->val = ((pp - zs) * rj.val - 3.0 * rf.val + f * rc.val)
+                  / (zs + q);
+    result->err = (fabs(pp - zs) * rj.err + 3.0 * rf.err + fabs(f) * rc.err)
+                  / (zs + q);
+    result->err += GSL_DBL_EPSILON * fabs(result->val);
+    return GSL_SUCCESS;
+  }
+  else if(p < lolim) {
     DOMAIN_ERROR(result);
   }
   else if(locMAX4(x,y,z,p) < uplim) {
@@ -432,8 +475,8 @@ gsl_sf_ellint_P_e(double phi, double k, double n, gsl_mode_t mode, gsl_sf_result
     result->val  = sin_phi * rf.val - n/3.0*sin3_phi * rj.val;
     result->err  = GSL_DBL_EPSILON * fabs(sin_phi * rf.val);
     result->err += fabs(sin_phi * rf.err);
-    result->err += n/3.0 * GSL_DBL_EPSILON * fabs(sin3_phi*rj.val);
-    result->err += n/3.0 * fabs(sin3_phi*rj.err);
+    result->err += fabs(n/3.0) * GSL_DBL_EPSILON * fabs(sin3_phi*rj.val);
+    result->err += fabs(n/3.0) * fabs(sin3_phi*rj.err);
     if (nc == 0) {
       return GSL_ERROR_SELECT_2(rfstatus, rjstatus);
     } else {

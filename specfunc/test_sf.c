@@ -619,6 +619,20 @@ int test_ellint(void)
   TEST_SF(s,  gsl_sf_ellint_P_e, (M_PI/3.0, 0.50, 0.5, mode, &r), 0.9570574331323584890, TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s,  gsl_sf_ellint_P_e, (M_PI/3.0, 0.01, 0.5, mode, &r), 0.9228868127118118465, TEST_TOL0, GSL_SUCCESS);
 
+  /* negative characteristic: for n < -csc^2(phi) the integrand has a
+     pole in (0,phi] and the integrals are understood as Cauchy principal
+     values (Savannah bug #53451).  The reference values come from
+     Carlson's algorithm (mpmath) evaluated with the same double-precision
+     arguments; for the exact real arguments the first is 4.72112053736...
+     as returned by Wolfram Alpha.  The first vector is quoted at a looser
+     tolerance because the principal value is ill-conditioned as the pole
+     approaches the endpoint. */
+  TEST_SF(s,  gsl_sf_ellint_P_e, (1.3, 0.5, -1.1, mode, &r), 4.7211205373610818, TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s,  gsl_sf_ellint_P_e, (1.0, 0.5, -3.0, mode, &r), 0.31471122733501361, TEST_TOL1, GSL_SUCCESS);
+  TEST_SF(s,  gsl_sf_ellint_P_e, (1.3, 0.5, -0.1, mode, &r), 1.4351704933438834, TEST_TOL1, GSL_SUCCESS);
+  TEST_SF(s,  gsl_sf_ellint_Pcomp_e, (0.5, -1.1, mode, &r), -0.24084639645821404, TEST_TOL1, GSL_SUCCESS);
+  TEST_SF(s,  gsl_sf_ellint_RJ_e, (0.2, 0.5, 1.0, -0.2, mode, &r), -0.12634445461212712, TEST_TOL2, GSL_SUCCESS);
+
   TEST_SF(s,  gsl_sf_ellint_RF_e, (5.0e-11, 1.0e-10, 1.0, mode, &r), 12.36441982979439, TEST_TOL0, GSL_SUCCESS);
 
   TEST_SF(s,  gsl_sf_ellint_RF_e, (1.0, 2.0, 3.0, mode, &r), 0.7269459354689082, TEST_TOL0, GSL_SUCCESS);

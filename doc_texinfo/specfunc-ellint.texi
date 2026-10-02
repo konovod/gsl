@@ -108,6 +108,9 @@ accuracy specified by the mode variable @var{mode}.
 Note that Abramowitz & Stegun define this function in terms of the
 parameters @math{m = k^2} and @math{\sin^2(\alpha) = k^2}, with the
 change of sign @math{n \to -n}.
+
+For @math{n \le -1} the integrand has a pole in @math{(0,\pi/2]} and the
+reported value is the Cauchy principal value.
 @comment Exceptional Return Values:  GSL_EDOM
 @end deftypefun
 
@@ -139,6 +142,9 @@ to the accuracy specified by the mode variable @var{mode}.
 Note that Abramowitz & Stegun define this function in terms of the
 parameters @math{m = k^2} and @math{\sin^2(\alpha) = k^2}, with the
 change of sign @math{n \to -n}.
+
+Whenever @math{n < -\csc^2(\phi)} the integrand has a pole in
+@math{(0,\phi]} and the reported value is the Cauchy principal value.
 @comment Exceptional Return Values: GSL_EDOM
 @end deftypefun
 
@@ -193,5 +199,8 @@ to the accuracy specified by the mode variable @var{mode}.
 @deftypefunx int gsl_sf_ellint_RJ_e (double @var{x}, double @var{y}, double @var{z}, double @var{p}, gsl_mode_t @var{mode}, gsl_sf_result * @var{result})
 These routines compute the incomplete elliptic integral @math{RJ(x,y,z,p)}
 to the accuracy specified by the mode variable @var{mode}.
+
+If @math{p < 0} the integral is understood as a Cauchy principal value and
+that value is returned.
 @comment Exceptional Return Values: GSL_EDOM
 @end deftypefun

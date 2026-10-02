@@ -91,6 +91,9 @@ Legendre Form of Complete Elliptic Integrals
    Note that Abramowitz & Stegun define this function in terms of the
    parameters :math:`m = k^2` and :math:`\sin^2(\alpha) = k^2`, with the
    change of sign :math:`n \to -n`.
+
+   For :math:`n \le -1` the integrand has a pole in :math:`(0,\pi/2]` and the
+   reported value is the Cauchy principal value.
 .. Exceptional Return Values:  GSL_EDOM
 
 Legendre Form of Incomplete Elliptic Integrals
@@ -122,6 +125,9 @@ Legendre Form of Incomplete Elliptic Integrals
    Note that Abramowitz & Stegun define this function in terms of the
    parameters :math:`m = k^2` and :math:`\sin^2(\alpha) = k^2`, with the
    change of sign :math:`n \to -n`.
+
+   Whenever :math:`n < -\csc^2(\phi)` the integrand has a pole in
+   :math:`(0,\phi]` and the reported value is the Cauchy principal value.
 .. Exceptional Return Values: GSL_EDOM
 
 .. function:: double gsl_sf_ellint_D (double phi, double k, gsl_mode_t mode)
@@ -173,4 +179,7 @@ Carlson Forms
 
    These routines compute the incomplete elliptic integral :math:`RJ(x,y,z,p)`
    to the accuracy specified by the mode variable :data:`mode`.
+
+   If :math:`p < 0` the integral is understood as a Cauchy principal value and
+   that value is returned.
 .. Exceptional Return Values: GSL_EDOM
