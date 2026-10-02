@@ -131,7 +131,9 @@ application (see :ref:`portability-functions`).
 
    This function computes the value of
    :math:`\sqrt{x^2 + y^2}` in a way that avoids overflow. It provides an
-   alternative to the BSD math function :code:`hypot(x,y)`.
+   alternative to the BSD math function :code:`hypot(x,y)`. If either
+   argument is :math:`\pm\infty` the result is :math:`+\infty`, even when
+   the other argument is :data:`NaN`.
 
 .. index::
    single: euclidean distance function, hypot3
@@ -140,7 +142,10 @@ application (see :ref:`portability-functions`).
 .. function:: double gsl_hypot3 (const double x, const double y, const double z)
 
    This function computes the value of
-   :math:`\sqrt{x^2 + y^2 + z^2}` in a way that avoids overflow.
+   :math:`\sqrt{x^2 + y^2 + z^2}` in a way that avoids overflow. If any
+   argument is :math:`\pm\infty` the result is :math:`+\infty`, even when
+   another argument is :data:`NaN`; otherwise a :data:`NaN` argument
+   propagates.
 
 .. index::
    single: acosh

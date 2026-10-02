@@ -210,6 +210,44 @@ main (void)
   y_expected = 1.0e307;
   gsl_test_rel (y, y_expected, 1e-15, "gsl_hypot3(1e307, 1e-307, 1e-307)");
 
+  /* Test +-Inf, finite: any infinite argument gives +Inf */
+
+  y = gsl_hypot3 (GSL_POSINF, 1.2, 1.2);
+  y_expected = GSL_POSINF;
+  gsl_test_rel (y, y_expected, 1e-15, "gsl_hypot3(GSL_POSINF, 1.2, 1.2)");
+
+  y = gsl_hypot3 (1.2, GSL_POSINF, 1.2);
+  y_expected = GSL_POSINF;
+  gsl_test_rel (y, y_expected, 1e-15, "gsl_hypot3(1.2, GSL_POSINF, 1.2)");
+
+  y = gsl_hypot3 (1.2, 1.2, GSL_NEGINF);
+  y_expected = GSL_POSINF;
+  gsl_test_rel (y, y_expected, 1e-15, "gsl_hypot3(1.2, 1.2, GSL_NEGINF)");
+
+  /* Test +-Inf together with NaN: +Inf wins */
+
+  y = gsl_hypot3 (GSL_POSINF, GSL_NAN, GSL_NAN);
+  y_expected = GSL_POSINF;
+  gsl_test_rel (y, y_expected, 1e-15, "gsl_hypot3(GSL_POSINF, GSL_NAN, GSL_NAN)");
+
+  y = gsl_hypot3 (GSL_NAN, GSL_NEGINF, GSL_NAN);
+  y_expected = GSL_POSINF;
+  gsl_test_rel (y, y_expected, 1e-15, "gsl_hypot3(GSL_NAN, GSL_NEGINF, GSL_NAN)");
+
+  /* Test NaN, finite: NaN propagates */
+
+  y = gsl_hypot3 (GSL_NAN, 1.2, 1.2);
+  y_expected = GSL_NAN;
+  gsl_test_rel (y, y_expected, 1e-15, "gsl_hypot3(GSL_NAN, 1.2, 1.2)");
+
+  y = gsl_hypot3 (1.2, GSL_NAN, 1.2);
+  y_expected = GSL_NAN;
+  gsl_test_rel (y, y_expected, 1e-15, "gsl_hypot3(1.2, GSL_NAN, 1.2)");
+
+  y = gsl_hypot3 (GSL_NAN, GSL_NAN, GSL_NAN);
+  y_expected = GSL_NAN;
+  gsl_test_rel (y, y_expected, 1e-15, "gsl_hypot3(GSL_NAN, GSL_NAN, GSL_NAN)");
+
   /* Test for acosh */
 
   y = gsl_acosh (1.0);

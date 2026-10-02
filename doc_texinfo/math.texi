@@ -166,7 +166,9 @@ function @code{expm1(x)}.
 This function computes the value of
 @c{$\sqrt{x^2 + y^2}$}
 @math{\sqrt@{x^2 + y^2@}} in a way that avoids overflow. It provides an
-alternative to the BSD math function @code{hypot(x,y)}.
+alternative to the BSD math function @code{hypot(x,y)}. If either argument
+is @math{\pm\infty} the result is @math{+\infty}, even when the other
+argument is @code{NaN}.
 @end deftypefun
 
 @deftypefun double gsl_hypot3 (const double @var{x}, const double @var{y}, const double @var{z})
@@ -174,7 +176,9 @@ alternative to the BSD math function @code{hypot(x,y)}.
 @cindex length, computed accurately using hypot
 This function computes the value of
 @c{$\sqrt{x^2 + y^2 + z^2}$}
-@math{\sqrt@{x^2 + y^2 + z^2@}} in a way that avoids overflow.
+@math{\sqrt@{x^2 + y^2 + z^2@}} in a way that avoids overflow. If any
+argument is @math{\pm\infty} the result is @math{+\infty}, even when
+another argument is @code{NaN}; otherwise a @code{NaN} argument propagates.
 @end deftypefun
 
 @deftypefun double gsl_acosh (const double @var{x})
