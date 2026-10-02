@@ -88,6 +88,8 @@ has to be tested against the built library.  See `#52321` below.
 | `#36152` | **fixed 2026-10-02** (commits a08ef2f7f, 8a46ec7cf): the report is about the spherical Bessel family, and the *j* half was already fixed upstream (`cd2dd0519`, `bd5b94b47`).  The surviving defect was (a) the Y functions still calling `gsl_sf_sin_e`/`cos_e`, and (b) the underlying reduction in `gsl_sf_sin_e`/`cos_e` itself; both are fixed.  Also closes `#45726` and the trigonometric half of `#45746` |
 | `#68495` | **fixed 2026-10-02** (commit 41b1e2c00): the reported `-n` at `gsl_pow_int` is UB for `n = INT_MIN`; fixed as posted, and the identical negation in `gsl_sf_pow_int_e` - which `9493ac014` missed and which loops forever - is fixed with it |
 | `#32306` | **fixed 2026-10-02** (commits e4c4ac326, 882c8361d): the integer-`c-a-b` branch of `hyperg_2F1_reflect` forms every gamma factor with `gsl_sf_lngamma_e()` and applies a single global sign, so `2F1(-1/2,3/2;1;x)` came back negated for `x >= 1/2`; integer-`d` cases with `x < 0.995` now use the Gauss series instead.  The `err = 1` for a one-signed series (`a < 0`) is fixed as well.  Also covers #54998 and the Monajemi case of #39056.  Residual: reflection at `x >= 0.995` keeps its sign/accuracy defects |
+| `#43809` | **fixed 2026-10-02** (commit 52505315d): the `a < 0, b > 0` branch reduced to Kummer and evaluated the transformed call with an unstable backward recurrence on `b`; for the reported parameters that returned `3.39e80` instead of `7.51e60`.  The direct series is now evaluated too and preferred when it reports `err / abs(val) < 1e-10`.  Regression test added. |
+| `#28267` | partly addressed by the `#43809` fix — the transition region `x ~ abs(a)^2` still loses most digits (e.g. `(-37.8, 2.01, 103.58)` at ~2%); neither the recurrence nor the series is accurate enough there, so it stays open |
 
 ## Resolved
 
@@ -414,6 +416,48 @@ systems with exact solutions, and the error paths.  With the old `hh.c`
 
 Files: `linalg/hh.c`, `linalg/test.c`, `doc/linalg.rst`,
 `doc_texinfo/linalg.texi`.  Commit `1f84bed77`.
+
+
+### `#43809` (+ `#28267`) — `gsl_sf_hyperg_1F1` for negative `a`, large `x` — fixed; `#28267` still open
+
+Both reports carry only a test program as the attachment (`gsl_hyperg.c`,
+`hyperg1F1.c`), not a proposed patch.
+
+`gsl_sf_hyperg_1F1_e` routes `a < 0, b > 0` through the Kummer
+transformation `M(a,b,x) = exp(x) M(b-a,b,-x)` and evaluates the
+transformed call with `hyperg_1F1_ab_pos()`.  For `x > 0` that call has a
+negative argument and `b < b-a`, so it takes the "recurse down in b"
+branch.  Instrumenting it showed an accurate seed at `b ~ a` collapsing
+to `1.2e-25` after 32 backward steps, where the true value is `2.72e-45`;
+the recurrence is being run in the unstable direction for these
+parameters.  The alternative `a0` branch is only valid for
+`a > 0.5(b-x)`, and the large-`abs(x)` asymptotic only engages for
+`x >~ abs(a)*abs(1+a-b) ~ 1118`, so the whole range `x` in roughly
+`[66, 1600]` used the unstable branch.  For the reported parameters
+(`a = 1 - 32.950611846591684`, `b = 2`, `x = 242.7876`) GSL returned
+`3.39e80`; the true value is `7.51e60`.
+
+The direct Taylor series in the original `(a,b,x)` is well conditioned
+for large `x` here (no cancellation at the reported point), so the fork
+evaluates it as well and uses it when its own error estimate is below
+`1e-10` (at least ten significant digits).  A direct comparison of the
+two error estimates is *not* usable: the Kummer estimate is wildly
+pessimistic (correct values reported with `err/abs(val)` of order 10), so
+"smaller estimate wins" gave 711 regressions over the test grid; the
+series-only criterion gives none.
+
+Independent reference: mpmath `hyp1f1` at 60 digits.  Over a 2400-point
+grid (`a` in `[-50,-1]`, `b` in `[0.5,5]`, `x` in `[1,700]`) the fix
+rescues 345 points and makes none worse.  The regression test uses the
+bug's own parameters and fails on the pre-fix library with `3.39e80`;
+full suite 56/56.  Files: `specfunc/hyperg_1F1.c`,
+`specfunc/test_hyperg.c`.  Commit `52505315d`.
+
+`#28267` is the same defect.  Its `(-26.1, 2, 100)` vector improves from
+2.5% to `3.1e-10`, but `(-37.8, 2.01, 103.58)` stays at ~2%: in the
+transition region `x ~ abs(a)^2` the series loses too many digits and its
+estimate is too poor to be trusted, so the fix deliberately does not use
+it there.  `#28267` remains open.
 
 
 ## Rejected

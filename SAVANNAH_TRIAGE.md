@@ -5,17 +5,17 @@ Generated 2026-10-02 from the `scripts/savannah_bugs.py` sweep (`inventory.tsv`)
 Scratch index, not part of the fork's record of changes. Verdicts are curated from
 `FORKNEWS`, `SAVANNAH_REVIEW.md` and the git history; every other row is un-triaged.
 
-**219 open items: 51 reviewed/handled, 168 remaining.**
+**219 open items: 53 reviewed/handled, 166 remaining.**
 
 | status | count |
 |---|---:|
-| fixed | 37 |
-| partial | 1 |
+| fixed | 38 |
+| partial | 2 |
 | rejected | 11 |
 | deferred | 1 |
 | superseded | 1 |
 | not reviewed (feature-shaped) | 22 |
-| not reviewed | 146 |
+| not reviewed | 144 |
 
 Legend for the *Patch* column: the sweep's `git apply` verdict (`clean` / `partial` / `dirty`), `source` for a whole
 replacement file, `inline` for a patch pasted into the bug text, `none` for no patch.
@@ -31,7 +31,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 24252 | 2008-09-12 | feature | - | source gamma_tail_jpl_080908.c | not reviewed | suggestion: add gamma tail distribution |
 | 24871 | 2008-11-18 | feature | - | none | not reviewed | suggestion, add support for E_n |
 | 25320 | 2009-01-14 | - | Accuracy problem | none | not reviewed | Import fresnel, bugs on GSL Extension Fresnel |
-| 28267 | 2009-12-11 | - | Accuracy problem | source hyperg1F1.c | not reviewed | poor convergence region for gsl_sf_hyperg_1F1 |
+| 28267 | 2009-12-11 | - | Accuracy problem | source hyperg1F1.c | **partial** — same defect as #43809 (52505315d); transition region `x ~ a^2` still loses digits | poor convergence region for gsl_sf_hyperg_1F1 |
 | 29834 | 2010-05-09 | - | Runtime error | source error_cblas_v2.h | not reviewed | insufficient argument checking in blas wrapper |
 | 30324 | 2010-07-02 | - | Accuracy problem | none | not reviewed | improve range of 2F1 |
 | 30510 | 2010-07-21 | - | Runtime error | none | not reviewed | problems with hyperg_U(a,b,x) for x<0 |
@@ -84,7 +84,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 43259 | 2014-09-19 | - | - | none | not reviewed | accuracy problems in specfunc |
 | 43326 | 2014-09-29 | bug | Runtime error | clean bug43326.diff | **fixed** — poisson_pdf at mu=0 (4f9f4f4fc) | Bug in gsl_ran_poisson_pdf() for mu = 0.0 |
 | 43496 | 2014-10-29 | bug | Runtime error | none | **fixed** — Brent parabolic-step test (c27559ec6) | Possible error in brent minimizer convergence criteria |
-| 43809 | 2014-12-12 | bug | Runtime error | source gsl_hyperg.c | not reviewed | bug in gsl_sf_hyperg_1F1 |
+| 43809 | 2014-12-12 | bug | Runtime error | source gsl_hyperg.c | **fixed** — direct series for `a < 0`, large `x` (52505315d) | bug in gsl_sf_hyperg_1F1 |
 | 43902 | 2014-12-29 | - | - | clean 0001-Make-the-vector-write-example-consistent-with-the-ve.patch | **fixed** — vectorw example writes 10 elements (0e82d8223) | Make the vector write example consistent with the vector read example. |
 | 44612 | 2015-03-23 | bug | Runtime error | source gsl_vegas_bug_demo.c | **fixed** — VEGAS inf weight for subnormal variance (e3cab2d02) | Bug in vegas.c |
 | 44865 | 2015-04-17 | - | Accuracy problem | inline | rejected — patch shortens the interval; FMA failure not reproducible here | bsimp/msbdf e5_bigt in ode-initval2/test.c is FMA-sensitive |
