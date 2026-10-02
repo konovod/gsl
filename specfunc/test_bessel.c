@@ -244,6 +244,20 @@ int test_bessel(void)
   TEST_SF(s,  gsl_sf_bessel_y2_e, (100.0, &r), 0.008772511458592903927, TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s,  gsl_sf_bessel_y2_e, (4294967296.0, &r), -2.0649445123857054207e-10, TEST_SQRT_TOL0, GSL_SUCCESS);
 
+  /* bugs #36152 and #45726: the Y functions diverted the argument through
+   * gsl_sf_sin_e/gsl_sf_cos_e, which is inaccurate for large x, so the
+   * results diverged like the sine/cosine rather than decaying as 1/x.
+   * References: sqrt(pi/(2x)) Y_{l+1/2}(x) evaluated with mpmath at 40
+   * digits.
+   */
+  TEST_SF(s,  gsl_sf_bessel_y0_e, (1.0e18, &r), -1.18371990218710732612e-19, TEST_TOL1, GSL_SUCCESS);
+  TEST_SF(s,  gsl_sf_bessel_y0_e, (1.0e20, &r), -7.639704044417283004e-21,   TEST_TOL1, GSL_SUCCESS);
+  TEST_SF(s,  gsl_sf_bessel_y0_e, (1.0e22, &r), -5.23214785395138945498e-23, TEST_TOL1, GSL_SUCCESS);
+  TEST_SF(s,  gsl_sf_bessel_y1_e, (1.0e18, &r),  9.92969320740405076091e-19, TEST_TOL1, GSL_SUCCESS);
+  TEST_SF(s,  gsl_sf_bessel_y1_e, (1.0e20, &r),  6.45251285265780844198e-21, TEST_TOL1, GSL_SUCCESS);
+  TEST_SF(s,  gsl_sf_bessel_y2_e, (1.0e18, &r),  1.18371990218710735591e-19, TEST_TOL1, GSL_SUCCESS);
+  TEST_SF(s,  gsl_sf_bessel_y2_e, (1.0e20, &r),  7.6397040444172830042e-21,  TEST_TOL1, GSL_SUCCESS);
+
   TEST_SF(s,  gsl_sf_bessel_yl_e, (0,        0.01, &r), -99.995000041666528,    TEST_TOL0, GSL_SUCCESS); 
   TEST_SF(s,  gsl_sf_bessel_yl_e, (0,        1.0, &r),  -0.54030230586813972,   TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s,  gsl_sf_bessel_yl_e, (1,       10.0, &r),   0.062792826379701506,   TEST_TOL0, GSL_SUCCESS);

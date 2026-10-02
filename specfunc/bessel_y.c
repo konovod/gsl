@@ -85,12 +85,12 @@ int gsl_sf_bessel_y0_e(const double x, gsl_sf_result * result)
     OVERFLOW_ERROR(result);
   }
   else {
-    gsl_sf_result cos_result;
-    const int stat = gsl_sf_cos_e(x, &cos_result);
-    result->val  = -cos_result.val/x;
-    result->err  = fabs(cos_result.err/x);
-    result->err += 2.0 * GSL_DBL_EPSILON * fabs(result->val);
-    return stat;
+    /* bug #36152: gsl_sf_cos_e loses the argument for large x; use
+     * the system cosine, as gsl_sf_bessel_j0_e does.
+     */
+    result->val  = -cos(x)/x;
+    result->err  = 2.0 * GSL_DBL_EPSILON * fabs(result->val);
+    return GSL_SUCCESS;
   }
 }
 
@@ -119,16 +119,13 @@ int gsl_sf_bessel_y1_e(const double x, gsl_sf_result * result)
     return GSL_SUCCESS;
   }
   else {
-    gsl_sf_result cos_result;
-    gsl_sf_result sin_result;
-    const int stat_cos = gsl_sf_cos_e(x, &cos_result);
-    const int stat_sin = gsl_sf_sin_e(x, &sin_result);
-    const double cx = cos_result.val;
-    const double sx = sin_result.val;
-    result->val  = -(cx/x + sx)/x;
-    result->err  = (fabs(cos_result.err/x) + sin_result.err)/fabs(x);
-    result->err += GSL_DBL_EPSILON * (fabs(sx/x) + fabs(cx/(x*x)));
-    return GSL_ERROR_SELECT_2(stat_cos, stat_sin);
+    /* bug #36152: use the system sine/cosine for large x. */
+    const double cos_x = cos(x);
+    const double sin_x = sin(x);
+    result->val  = -(cos_x/x + sin_x)/x;
+    result->err  = 2.0 * GSL_DBL_EPSILON * (fabs(cos_x/(x*x)) + fabs(sin_x/x));
+    result->err += 2.0 * GSL_DBL_EPSILON * fabs(result->val);
+    return GSL_SUCCESS;
   }
 }
 
@@ -158,17 +155,14 @@ int gsl_sf_bessel_y2_e(const double x, gsl_sf_result * result)
     return GSL_SUCCESS;
   }
   else {
-    gsl_sf_result cos_result;
-    gsl_sf_result sin_result;
-    const int stat_cos = gsl_sf_cos_e(x, &cos_result);
-    const int stat_sin = gsl_sf_sin_e(x, &sin_result);
-    const double sx = sin_result.val;
-    const double cx = cos_result.val;
+    /* bug #36152: use the system sine/cosine for large x. */
+    const double cos_x = cos(x);
+    const double sin_x = sin(x);
     const double a  = 3.0/(x*x);
-    result->val  = (1.0 - a)/x * cx - a * sx;
-    result->err  = cos_result.err * fabs((1.0 - a)/x) + sin_result.err * fabs(a);
-    result->err += GSL_DBL_EPSILON * (fabs(cx/x) + fabs(sx/(x*x)));
-    return GSL_ERROR_SELECT_2(stat_cos, stat_sin);
+    result->val  = (1.0 - a)/x * cos_x - a * sin_x;
+    result->err  = 2.0 * GSL_DBL_EPSILON * (fabs((1.0 - a)*cos_x/x) + fabs(a*sin_x));
+    result->err += 2.0 * GSL_DBL_EPSILON * fabs(result->val);
+    return GSL_SUCCESS;
   }
 }
 
