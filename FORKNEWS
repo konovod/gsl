@@ -77,13 +77,14 @@ One line per change: date | tag | description | commit(s).
   2026-10-02 | [upstream] | movstat: align the embedded accumulator state            | 4e4a88242
   2026-10-02 | [upstream] | randist: regression test for gsl_ran_beta small params   | d64cc4d93
   2026-10-02 | [upstream] | sys, specfunc: INT_MIN overflow in pow_int             | 41b1e2c00
-  2026-10-02 | [upstream] | specfunc: polygamma at negative arguments              | 5fcb0bcae
-  2026-10-02 | [upstream] | specfunc: spherical Bessel Y at large arguments        | 35cebf9a7
-  2026-10-02 | [upstream] | specfunc: exact argument reduction in sin/cos          | e7a66d24d
-  2026-10-02 | [upstream] | specfunc: integer-d 2F1 reflection uses the series     | ac132a3c2
-  2026-10-02 | [upstream] | specfunc: 2F1 series reports a meaningful error        | c1c2dc853
-  2026-10-02 | [upstream] | specfunc: direct series for 1F1 with negative a, large x | 86aa5d161
-  2026-10-02 | [upstream] | specfunc: exact reduction in angle_restrict functions    | 0edd42642
+  2026-10-02 | [rejected] | roots: brent "wrong results under valgrind"            | - (see below)
+  2026-10-02 | [upstream] | specfunc: polygamma at negative arguments              | e9f69933a
+  2026-10-02 | [upstream] | specfunc: spherical Bessel Y at large arguments        | a08ef2f7f
+  2026-10-02 | [upstream] | specfunc: exact argument reduction in sin/cos          | 8a46ec7cf
+  2026-10-02 | [upstream] | specfunc: integer-d 2F1 reflection uses the series     | e4c4ac326
+  2026-10-02 | [upstream] | specfunc: 2F1 series reports a meaningful error        | 882c8361d
+  2026-10-02 | [upstream] | specfunc: direct series for 1F1 with negative a, large x | 52505315d
+  2026-10-02 | [upstream] | specfunc: exact reduction in angle_restrict functions    | 5639c380f
 
 
 ## [upstream] rng: make the random() generators produce the documented sequences
@@ -1582,6 +1583,42 @@ reports 152/152 and the full `ctest` suite 56/56.
 File: `randist/test.c`.  See Savannah bug #47646.
 
 
+## [rejected] roots: brent "produces wrong results under valgrind"
+
+Not applied - not reproducible.
+
+Savannah bug #58763 reports that the one dimensional Brent solver,
+`gsl_root_fsolver_brent`, exits on its first iteration with `root = 5` and
+the bracket collapsed to `[5, 5]` when the manual's example (`x^2 - 5` on
+`[0, 5]`) is run under Valgrind, while `gsl_root_fsolver_bisection` and
+`gsl_root_fsolver_falsepos` are unaffected.
+
+The reported output follows from exactly one condition: the third point of
+the Brent state, `c` and `fc`, being zero at the first iterate.  With
+`c = fc = 0` the same-sign fix-up at the top of `brent_iterate` is skipped,
+the `|fc| < |fb|` swap then sets `b = c = 5`, so `m = 0` and `fb = 0`, and
+the routine returns `root = 5` with `x_lower = x_upper = 5`.  Brent is the
+only bracketing solver whose state carries a third point -
+`bisection_state_t` and `falsepos_state_t` hold only `f_lower` and
+`f_upper` - which is why only Brent was affected.
+
+`brent_init` already writes all eight state fields, including
+`state->c = x_upper` and `state->fc = f_upper`, so that precondition
+cannot occur.  The file is identical to the GSL 2.5 and 2.6 releases and
+has not changed functionally since 1999, and a 2025 comment on the tracker
+also failed to reproduce the report with 2.6.  The reporter's binary must
+therefore have used a library whose `brent_init` did not initialise
+`c`/`fc`; the source it names does.
+
+Verified on the fork: the reporter's own `demo.c`/`demo_fn.c`, linked
+against the current shared library, prints the report's expected
+(non-Valgrind) table - first iteration `[1.0000000, 5.0000000]`
+`root 1.0000000`, convergence on iteration 6 to `2.2360634`.  `ctest -R
+roots` passes.  No source change.
+
+See Savannah bug #58763.
+
+
 ## [upstream] sys, specfunc: avoid signed overflow in pow_int for n = INT_MIN
 
 Commit: 41b1e2c00
@@ -1641,7 +1678,7 @@ See Savannah bug #68495.
 
 ## [upstream] specfunc: polygamma at negative arguments
 
-Commit: 5fcb0bcae
+Commit: e9f69933a
 
 `gsl_sf_psi_n_e()` returned `GSL_EDOM` for every `n >= 2` with `x <= 0`
 that was not a pole.  The function is finite and smooth at those
@@ -1703,7 +1740,7 @@ Files: `specfunc/psi.c`, `specfunc/test_sf.c`, `doc/specfunc-psi.rst`,
 
 ## [upstream] specfunc: spherical Bessel Y functions use the system sine/cosine
 
-Commit: 35cebf9a7
+Commit: a08ef2f7f
 
 `gsl_sf_bessel_y0_e`, `y1_e` and `y2_e` evaluated their large-x
 oscillatory branch through `gsl_sf_cos_e()` / `gsl_sf_sin_e()`.  That
@@ -1736,7 +1773,7 @@ Savannah bug #36152 and bug #45726.
 
 ## [upstream] specfunc: exact argument reduction for sine and cosine
 
-Commit: e7a66d24d
+Commit: 8a46ec7cf
 
 `gsl_sf_sin_e` and `gsl_sf_cos_e` reduced the argument with a three-term
 representation of pi/4.  Its error in the reduced angle grows like
@@ -1772,7 +1809,7 @@ Savannah bug #45746, and the trigonometric half of bug #36152.
 
 ## [upstream] specfunc: use the Gauss series for integer-d 2F1 reflection
 
-Commit: ac132a3c2
+Commit: e4c4ac326
 
 `gsl_sf_hyperg_2F1_e` sent every case with `|a|, |b| < 10`, `|c| <= 10`
 and `x >= 0.5` to `hyperg_2F1_reflect`.  When `c-a-b` is an integer the
@@ -1808,7 +1845,7 @@ Savannah bug #32306 (also #54998, #39056).
 
 ## [upstream] specfunc: meaningful error estimate from the 2F1 series
 
-Commit: c1c2dc853
+Commit: 882c8361d
 
 `hyperg_2F1_series` estimated the truncation error as
 `del_pos + del_neg`, the last positive and negative term.  `del_pos`
@@ -1835,7 +1872,7 @@ Savannah bug #32306.
 
 ## [upstream] specfunc: direct series for 1F1 with negative a and large x
 
-Commit: 86aa5d161
+Commit: 52505315d
 
 `gsl_sf_hyperg_1F1_e` sends `a < 0, b > 0` through the Kummer
 transformation to `exp(x) M(b-a,b,-x)`.  For `x > 0` the transformed
@@ -1866,12 +1903,12 @@ series is accurate enough there and it remains open.
 
 ## [upstream] specfunc: exact reduction in the angle restriction functions
 
-Commit: 0edd42642
+Commit: 5639c380f
 
 `gsl_sf_angle_restrict_symm_err_e` and `gsl_sf_angle_restrict_pos_err_e`
 reduced their argument with a three-term representation of `2 pi`.  That
 is the same construction that was replaced in `gsl_sf_sin_e`/`gsl_sf_cos_e`
-by commit `e7a66d24d`; the companion FORKNEWS entry explicitly left these
+by commit `8a46ec7cf`; the companion FORKNEWS entry explicitly left these
 two functions out of scope, and they kept the defect.  The reduced angle
 is `eps*|theta|`-accurate only up to `|theta| ~ 1e9`; above that it has no
 correct digits while the status stays `GSL_SUCCESS`:

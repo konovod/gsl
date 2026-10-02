@@ -5,17 +5,17 @@ Generated 2026-10-02 from the `scripts/savannah_bugs.py` sweep (`inventory.tsv`)
 Scratch index, not part of the fork's record of changes. Verdicts are curated from
 `FORKNEWS`, `SAVANNAH_REVIEW.md` and the git history; every other row is un-triaged.
 
-**219 open items: 50 reviewed/handled, 169 remaining.**
+**219 open items: 51 reviewed/handled, 168 remaining.**
 
 | status | count |
 |---|---:|
 | fixed | 37 |
 | partial | 1 |
-| rejected | 10 |
+| rejected | 11 |
 | deferred | 1 |
 | superseded | 1 |
 | not reviewed (feature-shaped) | 22 |
-| not reviewed | 147 |
+| not reviewed | 146 |
 
 Legend for the *Patch* column: the sweep's `git apply` verdict (`clean` / `partial` / `dirty`), `source` for a whole
 replacement file, `inline` for a patch pasted into the bug text, `none` for no patch.
@@ -47,7 +47,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 32776 | 2011-03-14 | feature | - | source quadratic.c | **fixed** — multimin quadratic minimiser (53cd0d098) | RFE: Add brute-force quadratic numerical multidimensional minimizer |
 | 34361 | 2011-09-22 | - | Runtime error | none | not reviewed | gsl_bspline_knots_greville needs inequality constrained linear least squares |
 | 35032 | 2011-12-11 | doc | Documentation | none | not reviewed | gsl_test.h lacks documentation in the reference manual |
-| 36152 | 2012-04-11 | bug | Accuracy problem | source testbessel.c | **fixed** — Y family libm sin/cos (35cebf9a7) + exact sin/cos reduction (e7a66d24d) | Incorrect asymptotics of spherical Bessel functions |
+| 36152 | 2012-04-11 | bug | Accuracy problem | source testbessel.c | **fixed** — Y family libm sin/cos (a08ef2f7f) + exact sin/cos reduction (8a46ec7cf) | Incorrect asymptotics of spherical Bessel functions |
 | 36197 | 2012-04-15 | - | Build | dirty 36197b.diff +1 | not reviewed | reserved identifier violation |
 | 36578 | 2012-06-02 | - | Documentation | none | not reviewed | inconsistency in gsl_ieee_env_setup doc/api |
 | 37209 | 2012-08-28 | bug | Accuracy problem | none | not reviewed | gsl_sf_bessel_jl_e returns NaN for large inputs without setting error code |
@@ -93,8 +93,8 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 45099 | 2015-05-13 | bug | - | none | not reviewed | wrong formula for BFGS update in gsl_multimin? |
 | 45234 | 2015-06-02 | doc | Documentation | none | not reviewed | Mathieu function documentation hasn't been updated after switching to SF API conventions |
 | 45265 | 2015-06-06 | bug | Accuracy problem | none | not reviewed | gsl_sf_bessel_J0_e underestimates error for x>4 |
-| 45726 | 2015-08-10 | bug | Accuracy problem | source gslbesselytest.c | **fixed** — Y family libm sin/cos (35cebf9a7) | Incorrect results of functions bessel_y0, y1 and y2 |
-| 45746 | 2015-08-13 | bug | Accuracy problem | source gsltrigtest.c | **fixed** - exact argument reduction (e7a66d24d, 0edd42642) | Incorrect results of trigonometric functions gsl_sf_sin and gsl_sf_cos |
+| 45726 | 2015-08-10 | bug | Accuracy problem | source gslbesselytest.c | **fixed** — Y family libm sin/cos (a08ef2f7f) | Incorrect results of functions bessel_y0, y1 and y2 |
+| 45746 | 2015-08-13 | bug | Accuracy problem | source gsltrigtest.c | **fixed** - exact argument reduction (8a46ec7cf, 5639c380f) | Incorrect results of trigonometric functions gsl_sf_sin and gsl_sf_cos |
 | 45782 | 2015-08-17 | feature | Accuracy problem | none | not reviewed | Feature request: Make derivative epsilon configurable |
 | 45797 | 2015-08-19 | - | Accuracy problem | none | not reviewed | Possible problem with LAPACK Fortran routine ZGESVD |
 | 45924 | 2015-09-11 | bug | Runtime error | none | not reviewed | Bug in the inverse beta function gsl_cdf_beta_Pinv, and suggested fix |
@@ -157,9 +157,9 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 58067 | 2020-03-28 | - | Accuracy problem | none | rejected — not-a-bug: Ai(113) genuinely underflows; documented | Missing asymptotic behavior of the airy Ai function |
 | 58068 | 2020-03-28 | - | Documentation | none | not reviewed | gsl_sf_bessel_Jnu docs lacking important domain information |
 | 58069 | 2020-03-28 | doc | Documentation | none | not reviewed | Correction to gsl_sf_gamma_inc_Q documentation |
-| 58763 | 2020-07-14 | bug | Runtime error | source demo.c +2 | not reviewed | gsl_root_fsolver_bren produces wrong results when run under valgrind |
+| 58763 | 2020-07-14 | bug | Runtime error | source demo.c +2 | rejected — not reproducible; `brent_init` already sets `c`/`fc` | gsl_root_fsolver_bren produces wrong results when run under valgrind |
 | 59759 | 2020-12-23 | bug | Runtime error | none | not reviewed | spmatrix test fails on x86_64 |
-| 59834 | 2021-01-06 | bug | Runtime error | clean mmacc.c.patch | **fixed** — movstat accumulator alignment (b705df5a4) | Misaligned memory access error in deque.c |
+| 59834 | 2021-01-06 | bug | Runtime error | clean mmacc.c.patch | **fixed** — movstat accumulator alignment (4e4a88242) | Misaligned memory access error in deque.c |
 | 59845 | 2021-01-08 | - | Performance | clean 0001-initialize-newton-steffenson-solvers-with-GSL_FN_FDF.patch | **fixed** — same fix as #49465 (4eac6584f) | Initialize newton, steffenson solvers with GSL_FN_FDF_EVAL_F_DF |
 | 59900 | 2021-01-17 | feature | - | inline | not reviewed | Add truncated normal distribution |
 | 59911 | 2021-01-20 | - | - | none | not reviewed | Problem with qagui 1D integrator |
@@ -221,7 +221,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 67621 | 2025-10-23 | - | Documentation | clean rst_deprecated.diff | **fixed** — deprecation markers from headers (5df6c0079) | Mark functions as deprecated if they are also deprecated in the code |
 | 67689 | 2025-11-10 | doc | Documentation | clean specfunc-psi.rst.patch | **fixed** — gsl_sf_complex_psi_e documented (345883172) | Incomplete documentation of digamma functions in GSL specfunc |
 | 67705 | 2025-11-15 | bug | Build | none | not reviewed | ttest failure in linalg/QR_solve_r random |
-| 67728 | 2025-11-23 | bug | Accuracy problem | source psi_dropin.c | **fixed** — polygamma at negative arguments (5fcb0bcae) | gsl_sf_psi_n_e yields domain error |
+| 67728 | 2025-11-23 | bug | Accuracy problem | source psi_dropin.c | **fixed** — polygamma at negative arguments (e9f69933a) | gsl_sf_psi_n_e yields domain error |
 | 67774 | 2025-12-05 | feature | Accuracy problem | none | not reviewed | Feature: arctan integral is also defined for negative inputs |
 | 68068 | 2026-02-19 | bug | Accuracy problem | none | not reviewed | Bug: incorrect straddling of area of convergence in quad_golden |
 | 68073 | 2026-02-20 | bug | Documentation | none | not reviewed | Bug: incorrect inline code comment on BASE FUNCTION(gsl_stats,select) |

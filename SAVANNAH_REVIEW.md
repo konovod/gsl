@@ -83,11 +83,11 @@ has to be tested against the built library.  See `#52321` below.
 | `#44952` | applied - the unreachable `<varargs.h>` branch in `test/results.c` is folded into the `<stdarg.h>` branch (commit e2354de55) |
 | `#42472` | applied with a larger fix than posted - `HH_svx`/`HH_solve` had the row/column test backwards and `HH_solve` overflowed `x` for `b` longer than `x`; both now share a tall Householder QR (commit 1f84bed77) |
 | `#65912` | **fixed 2026-10-02** (commit 631da98f8): the native branch built `x + I*y`, which loses the sign of a zero component and turns a non-finite part into `NaN`; the macro now assigns the components directly through `GSL_REAL`/`GSL_IMAG`.  Earlier verdict, for the record: rejected - both posted variants (`CMPLX`, `_Generic`+`CMPLXF/L`) are unusable |
-| `#59834` | **fixed 2026-10-02** (commit b705df5a4): the posted patch does actually align `maxque`, contrary to the earlier note; the fork instead adds an explicit `ringbuf_align()` helper and fixes the same defect in `qnacc` found while auditing |
+| `#59834` | **fixed 2026-10-02** (commit 4e4a88242): the posted patch does actually align `maxque`, contrary to the earlier note; the fork instead adds an explicit `ringbuf_align()` helper and fixes the same defect in `qnacc` found while auditing |
 | `#47646` | code fix already upstream (`05c5b5179`); this fork only adds the missing regression test (commit d64cc4d93) |
-| `#36152` | **fixed 2026-10-02** (commits 35cebf9a7, e7a66d24d): the report is about the spherical Bessel family, and the *j* half was already fixed upstream (`cd2dd0519`, `bd5b94b47`).  The surviving defect was (a) the Y functions still calling `gsl_sf_sin_e`/`cos_e`, and (b) the underlying reduction in `gsl_sf_sin_e`/`cos_e` itself; both are fixed.  Also closes `#45726` and the trigonometric half of `#45746` |
+| `#36152` | **fixed 2026-10-02** (commits a08ef2f7f, 8a46ec7cf): the report is about the spherical Bessel family, and the *j* half was already fixed upstream (`cd2dd0519`, `bd5b94b47`).  The surviving defect was (a) the Y functions still calling `gsl_sf_sin_e`/`cos_e`, and (b) the underlying reduction in `gsl_sf_sin_e`/`cos_e` itself; both are fixed.  Also closes `#45726` and the trigonometric half of `#45746` |
 | `#68495` | **fixed 2026-10-02** (commit 41b1e2c00): the reported `-n` at `gsl_pow_int` is UB for `n = INT_MIN`; fixed as posted, and the identical negation in `gsl_sf_pow_int_e` - which `9493ac014` missed and which loops forever - is fixed with it |
-| `#32306` | **fixed 2026-10-02** (commits ac132a3c2, c1c2dc853): the integer-`c-a-b` branch of `hyperg_2F1_reflect` forms every gamma factor with `gsl_sf_lngamma_e()` and applies a single global sign, so `2F1(-1/2,3/2;1;x)` came back negated for `x >= 1/2`; integer-`d` cases with `x < 0.995` now use the Gauss series instead.  The `err = 1` for a one-signed series (`a < 0`) is fixed as well.  Also covers #54998 and the Monajemi case of #39056.  Residual: reflection at `x >= 0.995` keeps its sign/accuracy defects |
+| `#32306` | **fixed 2026-10-02** (commits e4c4ac326, 882c8361d): the integer-`c-a-b` branch of `hyperg_2F1_reflect` forms every gamma factor with `gsl_sf_lngamma_e()` and applies a single global sign, so `2F1(-1/2,3/2;1;x)` came back negated for `x >= 1/2`; integer-`d` cases with `x < 0.995` now use the Gauss series instead.  The `err = 1` for a one-signed series (`a < 0`) is fixed as well.  Also covers #54998 and the Monajemi case of #39056.  Residual: reflection at `x >= 0.995` keeps its sign/accuracy defects |
 
 ## Resolved
 
@@ -803,7 +803,7 @@ reverted `specfunc_test` reports 11 failures, all new vectors.
 
 ### `#59834` — movstat accumulator alignment — applied
 
-**DONE (commit b705df5a4).**  `mmacc_init()` places `state->maxque` at
+**DONE (commit 4e4a88242).**  `mmacc_init()` places `state->maxque` at
 `state->minque + deque_size(n+1)`.  A `deque` holds a pointer, so it
 needs 8-byte alignment on the 64-bit targets; `deque_size(n+1) =
 sizeof(deque) + 4*(n+1)` is 4 modulo 8 when `n` is even, so `maxque` is
@@ -942,6 +942,27 @@ documentation change, and reordering the accumulation changes the floating
 point result.  Outside the eligibility rule for this review.
 
 
+### `#58763` — `gsl_root_fsolver_brent` "wrong results under valgrind" — not reproducible
+
+Not a defect in the current source.  The reported output (first iteration
+`root = 5`, bracket `[5, 5]`) follows from exactly one state: the Brent
+third point `c`/`fc` being zero.  The same-sign fix-up at the top of
+`brent_iterate` is then skipped, and the `|fc| < |fb|` swap collapses
+`b = c = 5`, so `m = 0`, `fb = 0` and the routine returns immediately.
+Brent is the only bracketing solver whose state carries a third point,
+which is why only brent was affected.  `brent_init` initialises all eight
+fields (`state->c = x_upper`, `state->fc = f_upper`), and `roots/brent.c`
+is identical to the 2.5 and 2.6 releases.  A 2025 tracker comment also
+failed to reproduce it with 2.6.
+
+Verified on the fork 2026-10-02: the reporter's `demo.c`/`demo_fn.c`,
+linked against the current shared library, prints the report's expected
+(non-Valgrind) table - first iteration `[1.0000000, 5.0000000]`
+`root 1.0000000`, converged on iteration 6 at `2.2360634`; `ctest -R roots`
+passes.  The library the reporter linked must have had a `brent_init` that
+omitted `c`/`fc`.  No change made.
+
+
 ## Deferred, pending a decision
 
 ### `#64549` — interpolation test cases
@@ -1040,10 +1061,10 @@ fixed upstream**, so the tracker entry looks stale:
 
 Two changes, deliberately separate, both `[upstream]`:
 
-1. **`bessel_y.c` (commit 35cebf9a7).**  Large-`x` branches use the
+1. **`bessel_y.c` (commit a08ef2f7f).**  Large-`x` branches use the
    system `sin`/`cos`, matching the *j* functions.  Fixes `#36152`'s
    spherical family and `#45726`.
-2. **`trig.c` (commit e7a66d24d).**  The root cause: `gsl_sf_sin_e`/
+2. **`trig.c` (commit 8a46ec7cf).**  The root cause: `gsl_sf_sin_e`/
    `cos_e` reduce with a three-term pi/4 and lose the angle above
    `~1e16`.  Replaced above `2^21` by the fdlibm Payne-Hanek reduction.
    Fixes `#45746` and removes the reason the Y functions ever needed a
@@ -1064,14 +1085,14 @@ doubles over the full exponent range: worst absolute error `2.2e-16`, no
 disagreement above `1e-13`.  Eight trig vectors fail with `trig.c`
 reverted.  `ctest` 56/56.
 
-**Follow-up (commit 0edd42642).**  The note above said
+**Follow-up (commit 5639c380f).**  The note above said
 `gsl_sf_angle_restrict_*` was "not done"; that turned out to be the wrong
 call.  The functions had the *same* defect — the three-term `2 pi`
 reduction — so `angle_restrict_pos_e(1e12)` was off by `8.6e-7` and every
 larger argument was worse, silently.  `gsl_sf_clausen_e` and
 `gsl_sf_polar_to_rect` both go through the angle restriction, so the
 claim that `clausen` is "unchanged" was only true because it inherited the
-error.  Commit `0edd42642` routes both functions through the same exact
+error.  Commit `5639c380f` routes both functions through the same exact
 reduction above `2^21`; `clausen(1e12)` now returns
 `-0.93720759242145504459` (true) instead of `-0.93721134493561908`.  The
 `GSL_ELOSS` cutoff is still `0.0625/eps`; only the values below it changed.
