@@ -5,16 +5,16 @@ Generated 2026-10-02 from the `scripts/savannah_bugs.py` sweep (`inventory.tsv`)
 Scratch index, not part of the fork's record of changes. Verdicts are curated from
 `FORKNEWS`, `SAVANNAH_REVIEW.md` and the git history; every other row is un-triaged.
 
-**219 open items: 48 reviewed/handled, 171 remaining.**
+**219 open items: 49 reviewed/handled, 170 remaining.**
 
 | status | count |
 |---|---:|
-| fixed | 35 |
+| fixed | 36 |
 | partial | 1 |
 | rejected | 10 |
 | deferred | 1 |
 | superseded | 1 |
-| not reviewed (feature-shaped) | 23 |
+| not reviewed (feature-shaped) | 22 |
 | not reviewed | 148 |
 
 Legend for the *Patch* column: the sweep's `git apply` verdict (`clean` / `partial` / `dirty`), `source` for a whole
@@ -108,7 +108,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 47345 | 2016-03-05 | bug | Accuracy problem | partial gsl_complex_arccosh.diff +1 | **fixed** — complex arccosh returns +0 (d6ec47d87) | arccosh(1) wrong sign |
 | 47348 | 2016-03-05 | bug | - | none | not reviewed | Use of incorrect ideom floor(x+0.5) |
 | 47402 | 2016-03-13 | - | - | none | not reviewed | Mathieu functions |
-| 47646 | 2016-04-07 | bug | Accuracy problem | partial test_beta_small.c +2 | not reviewed (feature-shaped) — skipped in first pass as feature-shaped | gsl_ran_beta returns NaN for small arguments |
+| 47646 | 2016-04-07 | bug | Accuracy problem | partial test_beta_small.c +2 | **fixed** — code fix upstream (05c5b5179); regression test added (d64cc4d93) | gsl_ran_beta returns NaN for small arguments |
 | 48702 | 2016-08-04 | - | Runtime error | none | not reviewed | gsl_sf_ellint_Kcomp stalls on GSL_NAN |
 | 48915 | 2016-08-26 | - | Runtime error | none | not reviewed | some test failures on AIX system for GSL 2.1.91 |
 | 49465 | 2016-10-28 | - | Performance | clean 0001-initialize-newton-steffenson-solvers-with-GSL_FN_FDF.patch | **fixed** — roots Newton/Steffenson fdf init (4eac6584f) | initialize newton and steffenson solvers with GSL_FN_FDF_EVAL_F_DF |
