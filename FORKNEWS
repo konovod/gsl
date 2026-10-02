@@ -78,6 +78,7 @@ One line per change: date | tag | description | commit(s).
   2026-10-02 | [upstream] | randist: regression test for gsl_ran_beta small params   | d64cc4d93
   2026-10-02 | [upstream] | sys, specfunc: INT_MIN overflow in pow_int             | 41b1e2c00
   2026-10-02 | [upstream] | specfunc: polygamma at negative arguments              | 5fcb0bcae
+  2026-10-02 | [upstream] | specfunc: spherical Bessel Y at large arguments        | 35cebf9a7
 
 
 ## [upstream] rng: make the random() generators produce the documented sequences
@@ -1693,6 +1694,40 @@ on the loss of digits for even `n` and large `|x|`.
 
 Files: `specfunc/psi.c`, `specfunc/test_sf.c`, `doc/specfunc-psi.rst`,
 `doc_texinfo/specfunc-psi.texi`.
+
+
+## [upstream] specfunc: spherical Bessel Y functions use the system sine/cosine
+
+Commit: 35cebf9a7
+
+`gsl_sf_bessel_y0_e`, `y1_e` and `y2_e` evaluated their large-x
+oscillatory branch through `gsl_sf_cos_e()` / `gsl_sf_sin_e()`.  That
+argument reduction represents pi/4 with three doubles and loses the
+reduced angle once the quotient reaches ~1e18, so it returns values
+outside [-1,1] (for example `gsl_sf_cos_e(1e20) = -2.86e42`).  The Y
+functions therefore did not decay like 1/x but grew with the garbage,
+reporting `GSL_SUCCESS` throughout: `y0(1e20)` was `+2.86e22` instead of
+`-7.64e-21`.
+
+The branch now calls the system `cos()` and `sin()` directly, exactly as
+`gsl_sf_bessel_j0_e`, `j1_e` and `j2_e` do since commits cd2dd0519 and
+bd5b94b47 for the same defect, and reports a relative error of a few
+machine epsilons instead of the 100 % error the trig functions returned.
+The small-x series branches are untouched; `gsl_sf_bessel_yl_e` and
+`yl_array` inherit the fix through their `y0`/`y1` seeds.
+
+Seven vectors for `y0_e`, `y1_e` and `y2_e` at 1e18, 1e20 and 1e22 come
+from `sqrt(pi/(2x)) Y_{l+1/2}(x)` evaluated with mpmath at 40 digits.
+Negative control: with `bessel_y.c` reverted all seven fail, e.g.
+`y0(1e18)` returns `+6.8613183520047959e-17 +/- 6.86e-17` against
+`-1.18371990218710732612e-19`; with the fix `specfunc_test` reports no
+failure.  No documentation change: the values were always meant to be
+the asymptotics.
+
+Files: `specfunc/bessel_y.c`, `specfunc/test_bessel.c`.
+
+Savannah bug #36152 and bug #45726.
+
 
 
 
