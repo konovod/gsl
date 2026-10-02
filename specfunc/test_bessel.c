@@ -655,6 +655,11 @@ int test_bessel(void)
   TEST_SF(s, gsl_sf_bessel_Jnu_e, (-3.5986707652967270442e+1, 5.5665988728905782182e-1, &r), -1.27797927382078249e+58, TEST_TOL3, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_bessel_Jnu_e, (-6.7046620273111013832, 1.059530133767196237e-1, &r), 3.8106055649273069958e+10, TEST_TOL2, GSL_SUCCESS);
   
+  /* bug #42042: at half-integer order the Steed normalization divided
+   * by a vanishing J_mu; Jnu_e(0.5, 3pi/2) returned a NaN.  Reference
+   * J_{1/2}(x) = sqrt(2/(pi x)) sin(x), mpmath at 40 digits. */
+  TEST_SF(s, gsl_sf_bessel_Jnu_e, (0.5, 1.5*M_PI, &r), -0.36755259694786135, TEST_TOL2, GSL_SUCCESS);
+
   /* Ynu */
   
   TEST_SF(s, gsl_sf_bessel_Ynu_e, (0.0001, 1.0, &r),  0.08813676933044478439,    TEST_TOL2, GSL_SUCCESS);

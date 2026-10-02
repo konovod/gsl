@@ -105,9 +105,18 @@ gsl_sf_bessel_Jnupos_e(const double nu, const double x, gsl_sf_result * result)
     return gsl_sf_bessel_Jnu_asympx_e(nu, x, result);
   }
   else {
-    /* -1/2 <= mu <= 1/2 */
-    int N = (int)(nu + 0.5);
-    double mu = nu - N;
+    /* -1/2 <= mu <= 1/2.  For half-integer nu both endpoints of this
+     * interval are admissible.  The normalization in the x >= 2 branch
+     * below is built from the unnormalized J_mu, so it fails when
+     * J_mu vanishes; J_{-1/2}(x) = sqrt(2/(pi x)) cos(x) is zero at
+     * x = (k+1/2) pi, where Jnu_e(0.5, 3pi/2) returned a NaN (Savannah
+     * bug #42042).  Use whichever endpoint has the larger |J_mu|.
+     */
+    const int N_base   = (int)(nu + 0.5);
+    const double mu_base = nu - N_base;
+    const int shift = (mu_base == -0.5 && fabs(cos(x)) < fabs(sin(x))) ? 1 : 0;
+    const int N = N_base - shift;
+    const double mu = nu - N;
 
     /* Determine the J ratio at nu.
      */
