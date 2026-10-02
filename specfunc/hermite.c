@@ -1222,12 +1222,24 @@ gsl_sf_hermite_func_der_e(const int m, const int n, const double x, gsl_sf_resul
         }
 
       /* psi'_n(x) = sqrt(2 n) psi_{n-1} - x psi_n */
-      result->val = (sqrt(2.0*n) * hi2 - x * hi) * exp(-0.5 * x * x + sum_log_scale);
-      /* Not n * epsilon: at n = 0 that is exactly zero, which would claim
-         the result is exact.  Forming it always involves roundings, so
-         report at least one epsilon.  Only the n = 0 case changes.
-         See Savannah bug #68625. */
-      result->err = GSL_MAX(n, 1) * GSL_DBL_EPSILON * fabs(result->val);
+      {
+        double pre = exp(-0.5 * x * x + sum_log_scale);
+        double a = sqrt(2.0*n) * hi2;
+        double b = x * hi;
+
+        result->val = (a - b) * pre;
+        /* Not n * epsilon: at n = 0 that is exactly zero, which would
+           claim the result is exact.  Forming it always involves
+           roundings, so report at least one epsilon.  Only the n = 0
+           case changes.  Near a zero of psi'_n the subtraction a - b
+           cancels two O(psi) terms, so the rounding of a and b, and not
+           |val|, dominates: include |a| and |b| in the estimate.  That is
+           what makes the exactly-zero psi'_1(1) report a meaningful error
+           bar on targets without extended precision.
+           See Savannah bug #68625. */
+        result->err = (GSL_MAX(n, 1) * GSL_DBL_EPSILON * fabs(a - b)
+                       + GSL_DBL_EPSILON * (fabs(a) + fabs(b))) * pre;
+      }
 
       return GSL_SUCCESS;
     }
