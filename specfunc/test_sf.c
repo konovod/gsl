@@ -387,6 +387,12 @@ int test_clausen(void)
   TEST_SF(s,  gsl_sf_clausen_e, (  2.0*M_PI + M_PI/3.0, &r), 1.0149416064096535, TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s,  gsl_sf_clausen_e, (100.0*M_PI + M_PI/3.0, &r), 1.0149416064096535, TEST_TOL0, GSL_SUCCESS);
 
+  /* clausen goes through gsl_sf_angle_restrict_pos_e, whose three-term
+   * reduction failed above ~1e9 (Savannah bug #45746).  mpmath values. */
+  TEST_SF(s,  gsl_sf_clausen_e, ( 1.0e9, &r),  0.89719513990209725973, TEST_TOL1, GSL_SUCCESS);
+  TEST_SF(s,  gsl_sf_clausen_e, ( 1.0e11, &r), 1.0064687943519732972, TEST_TOL1, GSL_SUCCESS);
+  TEST_SF(s,  gsl_sf_clausen_e, ( 1.0e12, &r), -0.93720759242145504459, TEST_TOL1, GSL_SUCCESS);
+
   return s;
 }
 
@@ -2797,24 +2803,26 @@ int test_trig(void)
   TEST_SF_THETA(s, gsl_sf_angle_restrict_pos_e, (-4.0*M_PI-8*GSL_DBL_EPSILON), 2*M_PI-8*GSL_DBL_EPSILON+4*DELTA, TEST_TOL1);
 
   TEST_SF_THETA(s, gsl_sf_angle_restrict_pos_e, (1e9), 0.5773954235013851694, TEST_TOL1);
-  TEST_SF_THETA(s, gsl_sf_angle_restrict_pos_e, (1e12), 5.625560548042800009446, TEST_SNGL);
+  TEST_SF_THETA(s, gsl_sf_angle_restrict_pos_e, (1e12), 5.6255605480428000094, TEST_TOL1);
 
   TEST_SF_THETA(s, gsl_sf_angle_restrict_pos_e, (-1e9), 5.7057898836782013075, TEST_TOL1);
-  TEST_SF_THETA(s, gsl_sf_angle_restrict_pos_e, (-1e12), 0.6576247591367864674792517289, 100*TEST_SNGL);
+  TEST_SF_THETA(s, gsl_sf_angle_restrict_pos_e, (-1e12), 0.65762475913678646748, TEST_TOL1);
 
-#ifdef EXTENDED
-  TEST_SF_THETA(s, gsl_sf_angle_restrict_pos_e, (1e15), 2.1096981170701125979, TEST_TOL1);
-  TEST_SF_THETA(s, gsl_sf_angle_restrict_pos_e, (-1e15), 4.1734871901094738790, TEST_TOL1);
-#endif
+  /* The exact reduction now runs above 2^21, so these are no longer
+   * EXTENDED-only and are accurate to a few ulp.  mpmath values.  The
+   * GSL_ELOSS cutoff at 0.0625/eps = 2.81e14 is unchanged. */
+  TEST_SF_THETA(s, gsl_sf_angle_restrict_pos_e, (1e11), 1.1908745855222386486, TEST_TOL1);
+  TEST_SF_THETA(s, gsl_sf_angle_restrict_pos_e, (-1e11), 5.0923107216573478283, TEST_TOL1);
+  TEST_SF_THETA(s, gsl_sf_angle_restrict_pos_e, (2.0e14), 0.42193962341402251958, TEST_TOL1);
 
   TEST_SF(s, gsl_sf_angle_restrict_pos_err_e, (2.0*M_PI, &r), 2*M_PI, TEST_TOL1, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_angle_restrict_pos_err_e, (-2.0*M_PI, &r), 2*DELTA, TEST_TOL1, GSL_SUCCESS);
 
   TEST_SF(s, gsl_sf_angle_restrict_pos_err_e, (1e9, &r), 0.5773954235013851694, TEST_TOL1, GSL_SUCCESS);
-  TEST_SF(s, gsl_sf_angle_restrict_pos_err_e, (1e12, &r), 5.625560548042800009446, TEST_SNGL, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_angle_restrict_pos_err_e, (1e12, &r), 5.6255605480428000094, TEST_TOL1, GSL_SUCCESS);
 
   TEST_SF(s, gsl_sf_angle_restrict_pos_err_e, (-1e9, &r), 5.7057898836782013075, TEST_TOL1, GSL_SUCCESS);
-  TEST_SF(s, gsl_sf_angle_restrict_pos_err_e, (-1e12, &r), 0.6576247591367864674792517289, 100*TEST_SNGL, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_angle_restrict_pos_err_e, (-1e12, &r), 0.65762475913678646748, TEST_TOL1, GSL_SUCCESS);
 
   TEST_SF (s, gsl_sf_angle_restrict_pos_err_e, (1e15, &r), GSL_NAN, TEST_TOL1, GSL_ELOSS);
   TEST_SF (s, gsl_sf_angle_restrict_pos_err_e, (-1e15, &r), GSL_NAN, TEST_TOL1, GSL_ELOSS);
@@ -2833,25 +2841,25 @@ int test_trig(void)
 
 
   TEST_SF_THETA(s, gsl_sf_angle_restrict_symm_e, (1e9), 0.5773954235013851694, TEST_TOL1);
-  TEST_SF_THETA(s, gsl_sf_angle_restrict_symm_e, (1e12), -0.6576247591367864674792517289, 100*TEST_SNGL);
+  TEST_SF_THETA(s, gsl_sf_angle_restrict_symm_e, (1e12), -0.65762475913678646748, TEST_TOL1);
 
   TEST_SF_THETA(s, gsl_sf_angle_restrict_symm_e, (-1e9), -0.5773954235013851694, TEST_TOL1);
-  TEST_SF_THETA(s, gsl_sf_angle_restrict_symm_e, (-1e12), 0.6576247591367864674792517289, 100*TEST_SNGL);
+  TEST_SF_THETA(s, gsl_sf_angle_restrict_symm_e, (-1e12), 0.65762475913678646748, TEST_TOL1);
 
-#ifdef EXTENDED
-  TEST_SF_THETA(s, gsl_sf_angle_restrict_symm_e, (1e15), 2.1096981170701125979, TEST_TOL1);
-  TEST_SF_THETA(s, gsl_sf_angle_restrict_symm_e, (-1e15), -2.1096981170701125979, TEST_TOL1);
-#endif
+  TEST_SF_THETA(s, gsl_sf_angle_restrict_symm_e, (1e11), 1.1908745855222386486, TEST_TOL1);
+  TEST_SF_THETA(s, gsl_sf_angle_restrict_symm_e, (-1e11), -1.1908745855222386486, TEST_TOL1);
+  TEST_SF_THETA(s, gsl_sf_angle_restrict_symm_e, (2.0e14), 0.42193962341402251958, TEST_TOL1);
+  TEST_SF_THETA(s, gsl_sf_angle_restrict_symm_e, (-2.0e14), -0.42193962341402251958, TEST_TOL1);
 
   TEST_SF (s, gsl_sf_angle_restrict_symm_err_e, (2.0*M_PI, &r), -2*DELTA, TEST_TOL1, GSL_SUCCESS);
   TEST_SF (s, gsl_sf_angle_restrict_symm_err_e, (-2.0*M_PI, &r), 2*DELTA, TEST_TOL1, GSL_SUCCESS);
 
 
   TEST_SF(s, gsl_sf_angle_restrict_symm_err_e, (1e9, &r), 0.5773954235013851694, TEST_TOL1, GSL_SUCCESS);
-  TEST_SF(s, gsl_sf_angle_restrict_symm_err_e, (1e12, &r), -0.6576247591367864674792517289, 100*TEST_SNGL, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_angle_restrict_symm_err_e, (1e12, &r), -0.65762475913678646748, TEST_TOL1, GSL_SUCCESS);
 
   TEST_SF(s, gsl_sf_angle_restrict_symm_err_e, (-1e9, &r), -0.5773954235013851694, TEST_TOL1, GSL_SUCCESS);
-  TEST_SF(s, gsl_sf_angle_restrict_symm_err_e, (-1e12, &r), 0.6576247591367864674792517289, 100*TEST_SNGL, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_angle_restrict_symm_err_e, (-1e12, &r), 0.65762475913678646748, TEST_TOL1, GSL_SUCCESS);
 
   TEST_SF (s, gsl_sf_angle_restrict_symm_err_e, (1e15, &r), GSL_NAN, TEST_TOL1, GSL_ELOSS);
   TEST_SF (s, gsl_sf_angle_restrict_symm_err_e, (-1e15, &r), GSL_NAN, TEST_TOL1, GSL_ELOSS);
@@ -2892,6 +2900,12 @@ int test_trig(void)
   gsl_test(sa, "  gsl_angle_restrict_pos_e: theta = 2^47");
   s += sa;
   */
+  theta = 140737488355328.0;   /* 2^47 */
+  gsl_sf_angle_restrict_pos_e(&theta);
+  sa = 0;
+  sa += ( test_sf_frac_diff( theta, 3.20652300406795792638 ) > TEST_TOL1 );
+  gsl_test(sa, "  gsl_angle_restrict_pos_e: theta = 2^47");
+  s += sa;
 
   theta = 5.0*M_PI + (5.5*DELTA + M_PI/2.0);
   gsl_sf_angle_restrict_symm_e(&theta);
