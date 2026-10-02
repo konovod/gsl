@@ -406,16 +406,17 @@ test_hermite(void)
    * included because psi_1'(1) = 0 exactly, which is where the missing
    * term was most visible.
    *
-   * psi_1'(1) is zero analytically, and the code gets that cancellation
-   * exactly right when the two terms stay in extended precision.  A target
-   * where they are rounded to double before the subtraction - x86-64 is
-   * not one, because of its extended-precision registers; arm64 macOS is -
-   * leaves a residual of about one ULP of psi_1(1) (~1e-16 absolute), and
-   * the relative form of TEST_TOL0 cannot express that, because it has no
-   * scale to work with at an exact zero.  TEST_TOL5 absorbed one ULP of
-   * the intermediate psi_1(1) = 1.06; it is still three orders of
-   * magnitude tighter than the 0.29 error the dropped -x psi_1 term
-   * produced, so the check keeps all of its power. */
+   * psi_1'(1) is zero analytically and the code reaches it by cancelling
+   * two O(psi) terms.  On x86-64 the subtraction happens to cancel exactly
+   * in the x87 register; arm64 macOS rounds the products to double first
+   * and is left with a residual of order 1e-17.  That residual is not a
+   * defect in the value, but it is why the m == 1 branch of
+   * gsl_sf_hermite_func_der_e() estimates its error from the size of the
+   * two terms and not just from |val|: otherwise this vector reports
+   * either err = 0 or an error bar thousands of times too small, and
+   * TEST_SF reports TEST_SF_INCONS at the exact zero.  TEST_TOL1 is
+   * comfortable for the ~1e-16 residual while remaining far tighter than
+   * the 0.29 error the dropped -x psi_1 term produced. */
   TEST_SF(s, gsl_sf_hermite_func_der_e, (1, 0, 0.3,  &r),  -0.21542223871470033830170052910,  TEST_TOL1, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_hermite_func_der_e, (1, 0, 0.75, &r),  -0.42523448027077021273412950199,  TEST_TOL1, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_hermite_func_der_e, (1, 0, 1.0,  &r),  -0.45558067201133253483370525690,  TEST_TOL1, GSL_SUCCESS);
@@ -424,7 +425,7 @@ test_hermite(void)
   TEST_SF(s, gsl_sf_hermite_func_der_e, (1, 0, -0.75, &r),  0.42523448027077021273412950199,  TEST_TOL1, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_hermite_func_der_e, (1, 1, 0.3,  &r),   0.92411425660221436817073205989,  TEST_TOL1, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_hermite_func_der_e, (1, 1, 0.75, &r),   0.35080054869276523528509196402,  TEST_TOL1, GSL_SUCCESS);
-  TEST_SF(s, gsl_sf_hermite_func_der_e, (1, 1, 1.0,  &r),   0.0,                               TEST_TOL5, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hermite_func_der_e, (1, 1, 1.0,  &r),   0.0,                               TEST_TOL1, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_hermite_func_der_e, (1, 1, 2.0,  &r),  -0.43128049826861924167211494776,  TEST_TOL1, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_hermite_func_der_e, (1, 1, 3.5,  &r),  -0.02614124999904865942948026056,  TEST_TOL1, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_hermite_func_der_e, (1, 1, -0.75, &r),  0.35080054869276523528509196402,  TEST_TOL1, GSL_SUCCESS);
