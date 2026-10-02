@@ -64,8 +64,12 @@ mmacc_size(const size_t n)
   size_t size = 0;
 
   size += sizeof(mmacc_state_t);
-  size += ringbuf_size(n);          /* rbuf */
-  size += 2 * deque_size(n + 1);    /* minque/maxque */
+  size = ringbuf_align(size);       /* rbuf */
+  size += ringbuf_size(n);
+  size = ringbuf_align(size);       /* minque */
+  size += deque_size(n + 1);
+  size = ringbuf_align(size);       /* maxque */
+  size += deque_size(n + 1);
 
   return size;
 }
@@ -74,14 +78,22 @@ static int
 mmacc_init(const size_t n, void * vstate)
 {
   mmacc_state_t * state = (mmacc_state_t *) vstate;
+  size_t offset;
 
   state->n = n;
   state->k = 0;
   state->xprev = 0.0;
 
-  state->rbuf = (ringbuf *) ((unsigned char *) vstate + sizeof(mmacc_state_t));
-  state->minque = (deque *) ((unsigned char *) state->rbuf + ringbuf_size(n));
-  state->maxque = (deque *) ((unsigned char *) state->minque + deque_size(n + 1));
+  offset = ringbuf_align(sizeof(mmacc_state_t));
+  state->rbuf = (ringbuf *) ((unsigned char *) vstate + offset);
+
+  offset += ringbuf_size(n);
+  offset = ringbuf_align(offset);
+  state->minque = (deque *) ((unsigned char *) vstate + offset);
+
+  offset += deque_size(n + 1);
+  offset = ringbuf_align(offset);
+  state->maxque = (deque *) ((unsigned char *) vstate + offset);
 
   ringbuf_init(n, state->rbuf);
   deque_init(n + 1, state->minque);

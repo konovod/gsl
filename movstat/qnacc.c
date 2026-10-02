@@ -49,6 +49,7 @@ qnacc_size(const size_t n)
   size += n * sizeof(qnacc_type_t);     /* window */
   size += 3 * n * sizeof(qnacc_type_t); /* work */
   size += 5 * n * sizeof(int);          /* work_int */
+  size = ringbuf_align(size);           /* rbuf */
   size += ringbuf_size(n);
 
   return size;
@@ -58,11 +59,20 @@ static int
 qnacc_init(const size_t n, void * vstate)
 {
   qnacc_state_t * state = (qnacc_state_t *) vstate;
+  size_t offset;
 
-  state->window = (qnacc_type_t *) ((unsigned char *) vstate + sizeof(qnacc_state_t));
-  state->work = (qnacc_type_t *) ((unsigned char *) state->window + n * sizeof(qnacc_type_t));
-  state->work_int = (int *) ((unsigned char *) state->work + 3 * n * sizeof(qnacc_type_t));
-  state->rbuf = (ringbuf *) ((unsigned char *) state->work_int + 5 * n * sizeof(int));
+  offset = ringbuf_align(sizeof(qnacc_state_t));
+  state->window = (qnacc_type_t *) ((unsigned char *) vstate + offset);
+
+  offset += n * sizeof(qnacc_type_t);
+  state->work = (qnacc_type_t *) ((unsigned char *) vstate + offset);
+
+  offset += 3 * n * sizeof(qnacc_type_t);
+  state->work_int = (int *) ((unsigned char *) vstate + offset);
+
+  offset += 5 * n * sizeof(int);
+  offset = ringbuf_align(offset);
+  state->rbuf = (ringbuf *) ((unsigned char *) vstate + offset);
 
   ringbuf_init(n, state->rbuf);
 

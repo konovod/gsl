@@ -32,7 +32,22 @@ typedef struct
   int size;       /* total elements allocated */
 } ringbuf;
 
+/*
+ * The accumulator state packs a ring buffer and (in mmacc) deques into a
+ * single caller provided block.  Every one of these objects holds a
+ * pointer, and the ring buffer is followed by an array of doubles, so an
+ * object must start on a suitably aligned boundary.  C89 has no alignof,
+ * but in a struct with a leading char the following member is placed at
+ * an offset equal to that member's alignment.  The union of ringbuf and
+ * double gives the largest alignment required by any of these objects.
+ * (Savannah bug #59834)
+ */
+typedef union  { ringbuf r; double d; } ringbuf_align_union_t;
+typedef struct { char c; ringbuf_align_union_t u; } ringbuf_align_probe_t;
+#define RINGBUF_ALIGN (sizeof(ringbuf_align_probe_t) - sizeof(ringbuf_align_union_t))
+
 static size_t ringbuf_size(const size_t n);
+static size_t ringbuf_align(const size_t offset);
 static int ringbuf_empty(ringbuf * d);
 static int ringbuf_is_empty(const ringbuf * d);
 static int ringbuf_is_full(const ringbuf * d);
@@ -43,6 +58,13 @@ static ringbuf_type_t ringbuf_peek_front(const ringbuf * d);
 static ringbuf_type_t ringbuf_peek_back(const ringbuf * d);
 static size_t ringbuf_copy(double * dest, const ringbuf * b);
 static int ringbuf_n(const ringbuf * b);
+
+static size_t
+ringbuf_align(const size_t offset)
+{
+  const size_t rem = offset % RINGBUF_ALIGN;
+  return (rem == 0) ? offset : offset + (RINGBUF_ALIGN - rem);
+}
 
 static size_t
 ringbuf_size(const size_t n)
