@@ -79,7 +79,7 @@ int gsl_sf_bessel_Jn_e(int n, double x, gsl_sf_result * result)
       result->err += GSL_DBL_EPSILON * fabs(result->val);
       return status;
     }
-    else if(GSL_ROOT4_DBL_EPSILON * x > (n*n+1.0)) {
+    else if(GSL_ROOT4_DBL_EPSILON * x > ((double)n * n + 1.0)) {
       int status = gsl_sf_bessel_Jnu_asympx_e((double)n, x, result);
       result->val *= sign;
       return status;

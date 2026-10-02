@@ -55,6 +55,15 @@ int test_bessel(void)
   TEST_SF(s, gsl_sf_bessel_Jn_e, (2, 900.0, &r), -0.019974345269680646400, TEST_TOL4, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_bessel_Jn_e, (2, 15000.0, &r), -0.0020455820181216382666, TEST_TOL4, GSL_SUCCESS);
 
+  /* bug #40755: the asymptotics test overflowed n*n for n > 46340, so
+   * J_n took the wrong branch and returned a NaN.  References from
+   * scipy.special jv (see the matching Y_n vectors below for yv). */
+  TEST_SF(s, gsl_sf_bessel_Jn_e, (46341, 51471.451912555509, &r), 0.0029879880674376206, TEST_TOL5, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_bessel_Jn_e, (46342, 51471.451912555509, &r), 0.0046117307781768993, TEST_TOL5, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_bessel_Jn_e, (46343, 51471.451912555509, &r), 0.0053162978923197903, TEST_TOL5, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_bessel_Jn_e, (46344, 51471.451912555509, &r), 0.0049614669486774702, TEST_TOL5, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_bessel_Jn_e, (46345, 51471.451912555509, &r), 0.0036181391878692009, TEST_TOL5, GSL_SUCCESS);
+
 #ifdef TEST_LARGE
   TEST_SF(s, gsl_sf_bessel_Jn_e, (0, 1.0e+10, &r), 2.1755917502468917269e-06, TEST_SQRT_TOL0, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_bessel_Jn_e, (1, 1.0e+10, &r), -7.676508175684157103e-06, TEST_TOL4, GSL_SUCCESS);
@@ -84,6 +93,14 @@ int test_bessel(void)
   TEST_SF(s, gsl_sf_bessel_Yn_e, (1000, 4294967296.0, &r), 3.656551321485397501e-06, 2.0e-05, GSL_SUCCESS);
 
   TEST_SF(s, gsl_sf_bessel_Yn_e, (2, 15000.0, &r), -0.006185217273358617849, TEST_TOL4, GSL_SUCCESS);
+
+  /* bug #40755: same overflow; Y_n returned finite but wrong values.
+   * References from scipy.special yv. */
+  TEST_SF(s, gsl_sf_bessel_Yn_e, (46341, 51471.451912555509, &r),  0.0044148266106047145,  TEST_TOL5, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_bessel_Yn_e, (46342, 51471.451912555509, &r),  0.0026745711167268683,  TEST_TOL5, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_bessel_Yn_e, (46343, 51471.451912555509, &r),  0.00040124016371053371, TEST_TOL5, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_bessel_Yn_e, (46344, 51471.451912555509, &r), -0.0019520473791650626,  TEST_TOL5, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_bessel_Yn_e, (46345, 51471.451912555509, &r), -0.003916419175705484,   TEST_TOL5, GSL_SUCCESS);
 
   TEST_SF(s, gsl_sf_bessel_I0_scaled_e, (1e-10, &r),   0.99999999990000000001,   TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_bessel_I0_scaled_e, (0.1, &r),     0.90710092578230109640,   TEST_TOL0, GSL_SUCCESS);
