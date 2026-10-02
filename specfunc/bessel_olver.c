@@ -897,8 +897,14 @@ int gsl_sf_bessel_Jnu_asymp_Olver_e(double nu, double x, gsl_sf_result * result)
 
     result->val  = pre * (ai.val*asum/crnu + aip.val*bsum/(nu*crnu*crnu));
     result->err  = pre * (ai.err * fabs(asum/crnu));
+    result->err += pre * (aip.err * fabs(bsum/(nu*crnu*crnu)));
     result->err += pre * fabs(ai.val) * asum_err / crnu;
     result->err += pre * fabs(ai.val * asum) / (crnu*nu11);
+    /* arg = crnu^2 * zeta is itself computed from x and nu with a relative
+     * error of a few eps; propagate it through the value using the Airy
+     * equation Ai'' = arg*Ai. */
+    result->err += pre * fabs(aip.val*asum/crnu + arg*ai.val*bsum/(nu*crnu*crnu))
+                        * 8.0 * GSL_DBL_EPSILON * fabs(arg);
     result->err += 8.0 * GSL_DBL_EPSILON * fabs(result->val);
 
     return GSL_ERROR_SELECT_2(stat_a, stat_ap);
@@ -973,8 +979,14 @@ int gsl_sf_bessel_Ynu_asymp_Olver_e(double nu, double x, gsl_sf_result * result)
 
     result->val  = -pre * (bi.val*asum/crnu + bip.val*bsum/(nu*crnu*crnu));
     result->err  =  pre * (bi.err * fabs(asum/crnu));
+    result->err +=  pre * (bip.err * fabs(bsum/(nu*crnu*crnu)));
     result->err +=  pre * fabs(bi.val) * asum_err / crnu;
     result->err +=  pre * fabs(bi.val*asum) / (crnu*nu11);
+    /* arg = crnu^2 * zeta is itself computed from x and nu with a relative
+     * error of a few eps; propagate it through the value using the Airy
+     * equation Bi'' = arg*Bi. */
+    result->err +=  pre * fabs(bip.val*asum/crnu + arg*bi.val*bsum/(nu*crnu*crnu))
+                        * 8.0 * GSL_DBL_EPSILON * fabs(arg);
     result->err +=  8.0 * GSL_DBL_EPSILON * fabs(result->val);
 
     return GSL_ERROR_SELECT_2(stat_b, stat_d);
