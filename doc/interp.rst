@@ -461,6 +461,13 @@ internal ordering.
    is outside the range of :data:`ya`, the error code
    :macro:`GSL_EDOM` is returned.
 
+.. deprecated::
+
+.. function:: int gsl_interp2d_eval_e_extrap (const gsl_interp2d * interp, const double xa[], const double ya[], const double za[], const double x, const double y, gsl_interp_accel * xacc, gsl_interp_accel * yacc, double * z)
+
+   This function is deprecated and will be removed in a future release.
+   Use :func:`gsl_interp2d_eval_extrap_e` instead.
+
 .. function:: double gsl_interp2d_eval_extrap (const gsl_interp2d * interp, const double xa[], const double ya[], const double za[], const double x, const double y, gsl_interp_accel * xacc, gsl_interp_accel * yacc)
               int gsl_interp2d_eval_extrap_e (const gsl_interp2d * interp, const double xa[], const double ya[], const double za[], const double x, const double y, gsl_interp_accel * xacc, gsl_interp_accel * yacc, double * z)
 

@@ -70,6 +70,16 @@ section are declared in the header file :file:`gsl_sf_coupling.h`.
    :data:`two_ja`/2, :math:`ma` = :data:`two_ma`/2, etc.
 .. Exceptional Return Values: GSL_EDOM, GSL_EOVRFLW
 
+.. deprecated::
+
+.. function:: double gsl_sf_coupling_6j_INCORRECT (int two_ja, int two_jb, int two_jc, int two_jd, int two_je, int two_jf)
+              int gsl_sf_coupling_6j_INCORRECT_e (int two_ja, int two_jb, int two_jc, int two_jd, int two_je, int two_jf, gsl_sf_result * result)
+
+   These routines are deprecated and will be removed in a future release.
+   They compute a permuted (incorrect) Wigner 6-j symbol and are retained
+   only for backwards compatibility.  Use :func:`gsl_sf_coupling_6j` or
+   :func:`gsl_sf_coupling_6j_e` instead.
+
 9-j Symbols
 -----------
 

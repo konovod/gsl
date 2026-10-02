@@ -76,6 +76,13 @@ where the arguments are given in half-integer units, @math{ja} =
 @comment Exceptional Return Values: GSL_EDOM, GSL_EOVRFLW
 @end deftypefun
 
+@deftypefun double gsl_sf_coupling_6j_INCORRECT (int @var{two_ja}, int @var{two_jb}, int @var{two_jc}, int @var{two_jd}, int @var{two_je}, int @var{two_jf})
+@deftypefunx int gsl_sf_coupling_6j_INCORRECT_e (int @var{two_ja}, int @var{two_jb}, int @var{two_jc}, int @var{two_jd}, int @var{two_je}, int @var{two_jf}, gsl_sf_result * @var{result})
+These functions are now deprecated and will be removed in a future
+release.  They compute a permuted (incorrect) Wigner 6-j symbol; see
+@code{gsl_sf_coupling_6j} and @code{gsl_sf_coupling_6j_e}.
+@end deftypefun
+
 
 @node 9-j Symbols
 @subsection 9-j Symbols

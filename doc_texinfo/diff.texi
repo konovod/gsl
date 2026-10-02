@@ -67,6 +67,21 @@ This function is equivalent to calling @code{gsl_deriv_forward} with a
 negative step-size.
 @end deftypefun
 
+@deftypefun int gsl_diff_central (const gsl_function * @var{f}, double @var{x}, double * @var{result}, double * @var{abserr})
+This function is now deprecated and will be removed in a future
+release; see @code{gsl_deriv_central}.
+@end deftypefun
+
+@deftypefun int gsl_diff_backward (const gsl_function * @var{f}, double @var{x}, double * @var{result}, double * @var{abserr})
+This function is now deprecated and will be removed in a future
+release; see @code{gsl_deriv_backward}.
+@end deftypefun
+
+@deftypefun int gsl_diff_forward (const gsl_function * @var{f}, double @var{x}, double * @var{result}, double * @var{abserr})
+This function is now deprecated and will be removed in a future
+release; see @code{gsl_deriv_forward}.
+@end deftypefun
+
 @node Numerical Differentiation Examples
 @section Examples
 

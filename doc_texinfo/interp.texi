@@ -508,6 +508,11 @@ is outside the range of @var{ya}, the error code
 @code{GSL_EDOM} is returned.
 @end deftypefun
 
+@deftypefun int gsl_interp2d_eval_e_extrap (const gsl_interp2d * @var{interp}, const double @var{xa}[], const double @var{ya}[], const double @var{za}[], const double @var{x}, const double @var{y}, gsl_interp_accel * @var{xacc}, gsl_interp_accel * @var{yacc}, double * @var{z})
+This function is now deprecated and will be removed in a future
+release; see @code{gsl_interp2d_eval_extrap_e}.
+@end deftypefun
+
 @deftypefun double gsl_interp2d_eval_extrap (const gsl_interp2d * @var{interp}, const double @var{xa}[], const double @var{ya}[], const double @var{za}[], const double @var{x}, const double @var{y}, gsl_interp_accel * @var{xacc}, gsl_interp_accel * @var{yacc})
 @deftypefunx int gsl_interp2d_eval_extrap_e (const gsl_interp2d * @var{interp}, const double @var{xa}[], const double @var{ya}[], const double @var{za}[], const double @var{x}, const double @var{y}, gsl_interp_accel * @var{xacc}, gsl_interp_accel * @var{yacc}, double * @var{z})
 These functions return the interpolated value of @var{z} for a given
