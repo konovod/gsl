@@ -5,17 +5,17 @@ Generated 2026-10-02 from the `scripts/savannah_bugs.py` sweep (`inventory.tsv`)
 Scratch index, not part of the fork's record of changes. Verdicts are curated from
 `FORKNEWS`, `SAVANNAH_REVIEW.md` and the git history; every other row is un-triaged.
 
-**219 open items: 49 reviewed/handled, 170 remaining.**
+**219 open items: 50 reviewed/handled, 169 remaining.**
 
 | status | count |
 |---|---:|
-| fixed | 36 |
+| fixed | 37 |
 | partial | 1 |
 | rejected | 10 |
 | deferred | 1 |
 | superseded | 1 |
 | not reviewed (feature-shaped) | 22 |
-| not reviewed | 148 |
+| not reviewed | 147 |
 
 Legend for the *Patch* column: the sweep's `git apply` verdict (`clean` / `partial` / `dirty`), `source` for a whole
 replacement file, `inline` for a patch pasted into the bug text, `none` for no patch.
@@ -233,7 +233,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 68398 | 2026-05-26 | feature | - | none | not reviewed | Feature: use GSL native gsl_ldexp in eta fuction for integer argument |
 | 68415 | 2026-06-02 | bug | - | none | not reviewed | Bug: inconsistency in variance error handling in statictics module |
 | 68479 | 2026-06-25 | bug | Accuracy problem | none | not reviewed | Bug: gsl_ran_binomial is not accurate |
-| 68495 | 2026-07-03 | bug | Build | inline | not reviewed | Undefined behavior in gsl_pow_int: signed int overflow |
+| 68495 | 2026-07-03 | bug | Build | inline | **fixed** — pow_int INT_MIN overflow (41b1e2c00) | Undefined behavior in gsl_pow_int: signed int overflow |
 | 68518 | 2026-07-13 | - | Build | none | not reviewed | Remove stale construct in configure.ac |
 | 68549 | 2026-07-23 | - | - | none | not reviewed | Breaking change: match argument list among distribution functions |
 | 68592 | 2026-08-03 | doc | Documentation | none | not reviewed | Documentation: missing Binary search tree documentation from index |
