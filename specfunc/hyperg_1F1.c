@@ -1792,6 +1792,16 @@ gsl_sf_hyperg_1F1_int_e(const int a, const int b, const double x, gsl_sf_result 
   /* CHECK_POINTER(result) */
 
   if(x == 0.0) {
+    /* 1F1(a,b,0) = 1, except at the poles of the function: b = 0,
+     * or b a negative integer with a < b or a > 0.  The terminating
+     * cases a = b and a = 0 are defined.  Classify the parameters
+     * exactly as the x != 0 branches below do, so that the value
+     * reported at x = 0 agrees with the limit along x.
+     * See Savannah bug #58032.
+     */
+    if(a != b && (b == 0 || (b < 0 && (a < b || a > 0)))) {
+      DOMAIN_ERROR(result);
+    }
     result->val = 1.0;
     result->err = 0.0;
     return GSL_SUCCESS;
@@ -1852,17 +1862,24 @@ gsl_sf_hyperg_1F1_e(const double a, const double b, const double x,
   const int a_integer   = ( fabs(a-rinta) < _1F1_INT_THRESHOLD && rinta > INT_MIN && rinta < INT_MAX );
   const int b_integer   = ( fabs(b-rintb) < _1F1_INT_THRESHOLD && rintb > INT_MIN && rintb < INT_MAX );
   const int bma_integer = ( fabs(bma-rintbma) < _1F1_INT_THRESHOLD && rintbma > INT_MIN && rintbma < INT_MAX );
-  const int b_neg_integer   = ( b < -0.1 && b_integer );
-  const int a_neg_integer   = ( a < -0.1 && a_integer );
-  const int bma_neg_integer = ( bma < -0.1 &&  bma_integer );
+  const int b_neg_integer    = ( b < -0.1 && b_integer );
+  const int a_neg_integer    = ( a < -0.1 && a_integer );
+  const int a_nonpos_integer = ( a <= 0.0 && a_integer );
+  const int bma_neg_integer  = ( bma < -0.1 &&  bma_integer );
 
   /* CHECK_POINTER(result) */
 
   if(x == 0.0) {
-    /* Testing for this before testing a and b
-     * is somewhat arbitrary. The result is that
-     * we have 1F1(a,0,0) = 1.
+    /* 1F1(a,b,0) = 1, except at the poles of the function, where b is
+     * a nonpositive integer and the numerator does not cancel the
+     * singularity.  Classify the parameters exactly as the x != 0
+     * branches below do, so that the value reported at x = 0 agrees
+     * with the limit along x.  See Savannah bug #58032.
      */
+    if(b == 0.0
+       || (b_neg_integer && !(a_nonpos_integer && a >= b))) {
+      DOMAIN_ERROR(result);
+    }
     result->val = 1.0;
     result->err = 0.0;
     return GSL_SUCCESS;

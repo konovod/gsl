@@ -125,6 +125,24 @@ int test_hyperg(void)
   TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (-100, -200, -10.0, &r),  0.0063278543908877674, TEST_TOL1, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (-100, -200, -100.0, &r),  4.34111795007336552e-25, TEST_TOL2, GSL_SUCCESS);
 
+  /* b a nonpositive integer: the function has a pole, and the value
+   * at x = 0 must be rejected like the value at x != 0, rather than
+   * returned as 1.  See Savannah bug #58032. */
+  TEST_SF_RETURN(s, gsl_sf_hyperg_1F1_int_e, (2, 0, 0.0, &r), GSL_EDOM);
+  TEST_SF_RETURN(s, gsl_sf_hyperg_1F1_int_e, (2, -1, 0.0, &r), GSL_EDOM);
+  TEST_SF_RETURN(s, gsl_sf_hyperg_1F1_int_e, (-3, -1, 0.0, &r), GSL_EDOM);
+  TEST_SF_RETURN(s, gsl_sf_hyperg_1F1_e, (2.0, 0.0, 0.0, &r), GSL_EDOM);
+  TEST_SF_RETURN(s, gsl_sf_hyperg_1F1_e, (2.0, -1.0, 0.0, &r), GSL_EDOM);
+  TEST_SF_RETURN(s, gsl_sf_hyperg_1F1_e, (-3.0, -1.0, 0.0, &r), GSL_EDOM);
+  TEST_SF_RETURN(s, gsl_sf_hyperg_1F1_e, (-1.5, -2.0, 0.0, &r), GSL_EDOM);
+  TEST_SF_RETURN(s, gsl_sf_hyperg_1F1_e, (0.0, 0.0, 0.0, &r), GSL_EDOM);
+
+  /* The terminating cases remain defined at x = 0. */
+  TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (-1, -3, 0.0, &r), 1.0, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (0, -5, 0.0, &r), 1.0, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_1F1_e, (-1.0, -3.0, 0.0, &r), 1.0, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_1F1_e, (0.0, -5.0, 0.0, &r), 1.0, TEST_TOL0, GSL_SUCCESS);
+
 
   /* 1F1 */
 

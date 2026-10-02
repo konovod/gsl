@@ -21,6 +21,12 @@ These routines compute the hypergeometric function @c{${}_0F_1(c,x)$}
 These routines compute the confluent hypergeometric function
 @c{${}_1F_1(m,n,x) = M(m,n,x)$}
 @math{1F1(m,n,x) = M(m,n,x)} for integer parameters @var{m}, @var{n}.
+
+The function is undefined when @var{n} is zero or a negative integer,
+and these routines return a domain error in that case.  The exception is
+when the series terminates before the denominator vanishes, i.e. when
+@var{m} is a nonpositive integer with @math{m >= n}; the value is then
+finite, and in particular @math{M(m,n,0) = 1}.
 @comment exceptions: 
 @end deftypefun
 
@@ -29,6 +35,13 @@ These routines compute the confluent hypergeometric function
 These routines compute the confluent hypergeometric function
 @c{${}_1F_1(a,b,x) = M(a,b,x)$}
 @math{1F1(a,b,x) = M(a,b,x)} for general parameters @var{a}, @var{b}.
+
+As with the integer-parameter form, the function is undefined when
+@var{b} is zero or a negative integer, and these routines return a domain
+error in that case.  When the series terminates before the denominator
+vanishes, i.e. when @var{a} is a nonpositive integer with
+@math{a >= b}, the value is finite, and in particular
+@math{M(a,b,0) = 1}.
 @comment exceptions:
 @end deftypefun
 

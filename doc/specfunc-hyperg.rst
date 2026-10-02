@@ -39,6 +39,13 @@ Hypergeometric functions are described in Abramowitz & Stegun, Chapters
       .. math:: 1F1(m,n,x) = M(m,n,x)
 
    for integer parameters :data:`m`, :data:`n`.
+
+   The function is undefined when :data:`n` is zero or a negative
+   integer, and these routines return a domain error in that case.  The
+   exception is when the series terminates before the denominator
+   vanishes, i.e. when :data:`m` is a nonpositive integer with
+   :math:`m \ge n`; the value is then finite, and in particular
+   :math:`M(m,n,0) = 1`.
 .. exceptions: 
 
 .. function:: double gsl_sf_hyperg_1F1 (double a, double b, double x)
@@ -55,6 +62,13 @@ Hypergeometric functions are described in Abramowitz & Stegun, Chapters
       .. math:: 1F1(a,b,x) = M(a,b,x)
 
    for general parameters :data:`a`, :data:`b`.
+
+   As with the integer-parameter form, the function is undefined when
+   :data:`b` is zero or a negative integer, and these routines return a
+   domain error in that case.  When the series terminates before the
+   denominator vanishes, i.e. when :data:`a` is a nonpositive integer
+   with :math:`a \ge b`, the value is finite, and in particular
+   :math:`M(a,b,0) = 1`.
 .. exceptions:
 
 .. function:: double gsl_sf_hyperg_U_int (int m, int n, double x)
