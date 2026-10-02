@@ -70,6 +70,7 @@ One line per change: date | tag | description | commit(s).
   2026-10-02 | [upstream] | doc: vector write example matches the read example      | 0e82d8223
   2026-10-02 | [upstream] | tests: drop dead <varargs.h> include in results.c       | e2354de55
   2026-10-02 | [upstream] | specfunc: two macOS-only last-ULP test failures           | 6eef17cf3
+  2026-10-02 | [upstream] | specfunc: Hermite derivative error estimate; vectors      | 491f38efa, a71516e66
   2026-10-02 | [upstream] | linalg: HH_solve/HH_svx overdetermined systems            | 1f84bed77
 
 
@@ -1198,10 +1199,16 @@ See Savannah bug #44952.
 
 Commit: 6eef17cf3
 
-Both failures are in vectors added by this fork and both are the same
-class the CI already documents: arm64 macOS has no extended precision, so
-intermediates that x86-64 and MSVC keep in an 80-bit register are rounded
-to double.  Neither is a defect in the library.
+Both failures are in vectors added by this fork and both are in the
+region where arm64 macOS, having no extended precision, rounds
+intermediates that x86-64 and MSVC keep in an 80-bit register.
+
+**Superseded by commits 491f38efa and a71516e66; this commit did not fix
+either failure.**  Both were `TEST_SF_INCONS` failures, and the tolerance
+argument below does not control that check.  The Hermite case is an
+error-estimate defect in the library; the Steed tolerance chosen here
+(`TEST_TOL3`, `4.55e-13`) is also still below the `1.5e-12` cross-target
+spread at `eta = -2`.  See the follow-up entry.
 
 * `gsl_sf_hermite_func_der_e(1, 1, 1.0)`, from the `#68625` vectors, is
   exactly zero analytically.  The check used `TEST_TOL0`, and `TEST_SF`
@@ -1227,6 +1234,60 @@ to double.  Neither is a defect in the library.
   points, so it is still detected (verified by re-applying `0.5*C`).
 
 Files: `specfunc/test_hermite.c`, `specfunc/test_coulomb.c`.
+
+See Savannah bugs #68625 and #39292.
+
+
+## [upstream] specfunc: correct the two macOS-only test vectors
+
+Commits: 491f38efa, a71516e66
+
+Follow-up to 6eef17cf3, which loosened two tolerances but left the CI
+failing on arm64 macOS.  Both failures were `TEST_SF_INCONS`, which the
+tolerance does not control.
+
+* `gsl_sf_hermite_func_der_e(1, 1, 1.0)` is exactly zero, and the `m == 1`
+  branch estimated the error from `|result|` alone.  At a zero of `psi'_n`
+  the result is a cancellation of two O(psi) terms, so the true error is
+  `O(eps |psi|)` while the reported error was either zero (x86-64, where
+  the subtraction happens to cancel exactly) or `eps |result|` (~1e-33 on
+  arm64).  The estimate now adds `|sqrt(2 n) psi_{n-1}| + |x psi_n|`
+  (commit 491f38efa).  This is strictly larger than the old estimate, so
+  no other test can regress; the vector now passes at `TEST_TOL1`.
+
+* The four Steed vectors compare against the library's own x86-64 output,
+  and the Steed branch's reported error there (~8e-14 relative) is smaller
+  than the arm64/x86 spread (~1.5e-12 fracdiff at `eta = -2`), so the
+  error-bar consistency check cannot hold on both targets.  The loop now
+  checks the values only (`test_sf_check_val`), with `TEST_TOL5` at the two
+  sensitive points (commit a71516e66).
+
+Observed failures before the fix (macOS CI): `TEST_SF_INCONS` on
+`gsl_sf_hermite_func_der_e(1, 1, 1.0)` and on both `F` and `Fp` at
+`eta = -2, lam_F = 30, x = 20`.
+
+Negative control: with the `#68625` seeding bug temporarily restored, all
+twelve `#68625` vectors fail.  The arm64 outcome is argued from the CI
+numbers, not reproduced locally; MSVC is 56/56.
+
+**`#39292` negative control does not reproduce.**  The claim in the
+`#39292` entry that re-applying `0.5*C` "moves `F` by a factor of two" at
+`eta = -2, lam_F = 30, x = 20` is false: measured against the unpatched
+build, the patch moves `F` there by `2.2e-15` (fracdiff `5.0e-13`), not by
+a factor of two.  The values only move appreciably near the turning point
+(`7.5e-6` at `x = 15`, `3e-5` at `x = 12`).  At the `TEST_TOL5` now used
+these vectors cannot separate the patch from the cross-target spread.
+
+More importantly, an independent check contradicts the rejection.  An ODE
+integration of the Coulomb equation from the Frobenius series, validated
+against the exact `eta = 0` Bessel form to `4e-14`, agrees with the
+*patched* build: at `eta = -2, lam_F = 30` it gives relative errors
+`3e-5` (unpatched) vs `2e-14` (patched) at `x = 12`, and
+`7.5e-6` vs `2e-14` at `x = 15`.  A Kummer-series evaluation agrees at
+`x = 12`.  So the posted patch appears to *fix* an unpatched accuracy
+defect below the turning point, the opposite of what the `#39292` entry
+concluded.  This needs its own re-investigation; `coulomb.c` is unchanged
+here and `SAVANNAH_REVIEW.md` has the details.
 
 See Savannah bugs #68625 and #39292.
 
