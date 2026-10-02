@@ -1064,8 +1064,18 @@ doubles over the full exponent range: worst absolute error `2.2e-16`, no
 disagreement above `1e-13`.  Eight trig vectors fail with `trig.c`
 reverted.  `ctest` 56/56.
 
-**Not done:** `gsl_sf_angle_restrict_*` keeps its documented `GSL_ELOSS`
-above `0.0625/eps` and its own reduction; `gsl_sf_clausen_e` already
-returns `GSL_ELOSS` past that point, so it is unchanged.  `gsl_sf_sinc_e`
-is fixed for large `x` as a side effect (it calls `gsl_sf_sin_e`); no new
-vector there yet.
+**Follow-up (commit 0edd42642).**  The note above said
+`gsl_sf_angle_restrict_*` was "not done"; that turned out to be the wrong
+call.  The functions had the *same* defect — the three-term `2 pi`
+reduction — so `angle_restrict_pos_e(1e12)` was off by `8.6e-7` and every
+larger argument was worse, silently.  `gsl_sf_clausen_e` and
+`gsl_sf_polar_to_rect` both go through the angle restriction, so the
+claim that `clausen` is "unchanged" was only true because it inherited the
+error.  Commit `0edd42642` routes both functions through the same exact
+reduction above `2^21`; `clausen(1e12)` now returns
+`-0.93720759242145504459` (true) instead of `-0.93721134493561908`.  The
+`GSL_ELOSS` cutoff is still `0.0625/eps`; only the values below it changed.
+18 vectors fail with `trig.c` reverted.
+
+**Not done:** `gsl_sf_sinc_e` is fixed for large `x` as a side effect (it
+calls `gsl_sf_sin_e`); no new vector there yet.

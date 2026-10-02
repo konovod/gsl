@@ -94,7 +94,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 45234 | 2015-06-02 | doc | Documentation | none | not reviewed | Mathieu function documentation hasn't been updated after switching to SF API conventions |
 | 45265 | 2015-06-06 | bug | Accuracy problem | none | not reviewed | gsl_sf_bessel_J0_e underestimates error for x>4 |
 | 45726 | 2015-08-10 | bug | Accuracy problem | source gslbesselytest.c | **fixed** — Y family libm sin/cos (35cebf9a7) | Incorrect results of functions bessel_y0, y1 and y2 |
-| 45746 | 2015-08-13 | bug | Accuracy problem | source gsltrigtest.c | **fixed** — exact sin/cos argument reduction (e7a66d24d) | Incorrect results of trigonometric functions gsl_sf_sin and gsl_sf_cos |
+| 45746 | 2015-08-13 | bug | Accuracy problem | source gsltrigtest.c | **fixed** - exact argument reduction (e7a66d24d, 0edd42642) | Incorrect results of trigonometric functions gsl_sf_sin and gsl_sf_cos |
 | 45782 | 2015-08-17 | feature | Accuracy problem | none | not reviewed | Feature request: Make derivative epsilon configurable |
 | 45797 | 2015-08-19 | - | Accuracy problem | none | not reviewed | Possible problem with LAPACK Fortran routine ZGESVD |
 | 45924 | 2015-09-11 | bug | Runtime error | none | not reviewed | Bug in the inverse beta function gsl_cdf_beta_Pinv, and suggested fix |
