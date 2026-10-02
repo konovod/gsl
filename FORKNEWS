@@ -89,6 +89,8 @@ One line per change: date | tag | description | commit(s).
   2026-10-02 | [upstream] | specfunc: half-integer Jnu normalization NaN             | e6e34279a
   2026-10-02 | [rejected] | specfunc: bessel J0 error estimate for x > 4             | - (see below)
   2026-10-02 | [rejected] | specfunc: bessel j2 large-x make check failure           | - (see below)
+  2026-10-02 | [upstream] | sys: check for inf/nan in gsl_hypot3                     | c1df353ae
+  2026-10-02 | [upstream] | specfunc: non-finite arguments in gsl_sf_hypot_e         | 1a470222a
 
 
 ## [upstream] rng: make the random() generators produce the documented sequences
@@ -2049,7 +2051,83 @@ Savannah bug #52927.
 
 
 
+## [upstream] sys: check for inf/nan in gsl_hypot3
 
+Commit: c1df353ae
+
+`gsl_hypot3(x, y, z)` forms `w = max(|x|, |y|, |z|)` and divides the
+magnitudes by it.  With an infinite argument the ratio `inf/inf`
+evaluates to NaN, so `gsl_hypot3(inf, 1, 1)` and
+`gsl_hypot3(inf, NaN, NaN)` both returned NaN instead of the `+Inf`
+required by the C99 specification for `hypot`.  The reporter (the GSL
+maintainer) suggested implementing the function as
+`gsl_hypot(gsl_hypot(x, y), z)`, which would inherit the exception
+handling already in `gsl_hypot`; that cannot be taken as written because
+`gsl_hypot` reported an overflow for infinite arguments at the time
+(the subject of the companion fix below), so the check is carried out
+explicitly here instead.
+
+`gsl_hypot3` now returns `+Inf` as soon as any argument is `+-Inf`,
+even when another is NaN, matching `gsl_hypot`; a NaN with no infinite
+argument still propagates.  The magnitudes `xabs`, `yabs`, `zabs` are
+hoisted above the guard so the guard runs first.
+
+Tests: six vectors are added to `sys/test.c` for the three infinite
+positions, for infinity together with NaN, and for NaN with finite
+arguments.  Negative control: with the guard reverted `sys_test` reports
+five failures, all in the new vectors (the plain-NaN vectors passed by
+accident before, since `max` falls through to a finite argument and
+`NaN/finite` is NaN).  With the guard applied `sys_test` is 341/341 and
+`ctest` is 56/56 on MSVC.
+
+Documentation: the infinity rule is added to `gsl_hypot` and
+`gsl_hypot3` in `doc/math.rst` and `doc_texinfo/math.texi`.
+
+Files: `sys/hypot.c`, `sys/test.c`, `doc/math.rst`,
+`doc_texinfo/math.texi`.
+
+Savannah bug #39372.
+
+
+## [upstream] specfunc: propagate non-finite arguments in gsl_sf_hypot_e
+
+Commit: 1a470222a
+
+`gsl_sf_hypot_e` computes `min/max` with `GSL_MIN_DBL`/`GSL_MAX_DBL`,
+which compare with `<` and `>`.  A NaN compares false against
+everything, so it is never selected and both aliases land on the same
+argument.  Measured on the built library before the fix:
+
+    gsl_sf_hypot(NaN, 1.0) -> val 1.4142135623730951, err 6.28e-16, SUCCESS
+    gsl_sf_hypot(1.0, NaN) -> val inf, err inf, GSL_EOVRFLW
+    gsl_sf_hypot(inf, 1.0) -> val inf, err inf, GSL_EOVRFLW
+
+The first is the reported case: `min = max = 1.0` gives `sqrt(2)`.  The
+other two reach the overflow test because `inf < DBL_MAX/root_term` is
+false for an infinite `max`.  The C99 specification requires `hypot` to
+return `+Inf` for an infinite argument and NaN for a NaN argument, and
+never to raise a range error for a finite result.
+
+Both cases are now handled at the top of the function: any infinite
+argument returns `+Inf` with `err = 0`, otherwise a NaN argument
+propagates as NaN, both with status `GSL_SUCCESS`.  No `isnan` guard is
+added to the arithmetic itself - the two checks are the domain-specific
+exception handling the standard defines for `hypot`, not a general NaN
+trap, and they run only for the two non-finite arguments.
+
+Tests: six vectors are added to `test_trig()` in `specfunc/test_sf.c`.
+Negative control: with the guard reverted `specfunc_test` reports six
+failures, all in the new vectors; with it applied the suite passes and
+`ctest` is 56/56 on MSVC.
+
+Documentation: `.. Exceptional Return Values: none` and the non-finite
+rule are added to `gsl_sf_hypot`/`gsl_sf_hypot_e` in
+`doc/specfunc-trig.rst` and `doc_texinfo/specfunc-trig.texi`.
+
+Files: `specfunc/trig.c`, `specfunc/test_sf.c`, `doc/specfunc-trig.rst`,
+`doc_texinfo/specfunc-trig.texi`.
+
+Savannah bug #57979.
 
 
 
