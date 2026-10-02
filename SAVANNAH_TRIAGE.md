@@ -5,17 +5,17 @@ Generated 2026-10-02 from the `scripts/savannah_bugs.py` sweep (`inventory.tsv`)
 Scratch index, not part of the fork's record of changes. Verdicts are curated from
 `FORKNEWS`, `SAVANNAH_REVIEW.md` and the git history; every other row is un-triaged.
 
-**219 open items: 60 reviewed/handled, 159 remaining.**
+**219 open items: 61 reviewed/handled, 158 remaining.**
 
 | status | count |
 |---|---:|
-| fixed | 43 |
+| fixed | 44 |
 | partial | 2 |
 | rejected | 13 |
 | deferred | 1 |
 | superseded | 1 |
 | not reviewed (feature-shaped) | 22 |
-| not reviewed | 137 |
+| not reviewed | 136 |
 
 Legend for the *Patch* column: the sweep's `git apply` verdict (`clean` / `partial` / `dirty`), `source` for a whole
 replacement file, `inline` for a patch pasted into the bug text, `none` for no patch.
@@ -55,7 +55,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 37894 | 2012-12-10 | bug | Build | clean gsl-autotools.diff | **fixed** — upstream 1d002ee93/ae19e3e8b (inherited, no fork change) | Shared library does not build on Cygwin |
 | 38548 | 2013-03-19 | - | Accuracy problem | none | not reviewed | Rounding issues in gsl-histogram with integer numbers |
 | 39056 | 2013-05-23 | bug | Runtime error | none | not reviewed | gsl_sf_hyperg_2F1_e fails for some test cases |
-| 39057 | 2013-05-23 | bug | Runtime error | none | not reviewed | gsl_cdf_chisq_Pinv fails for some values |
+| 39057 | 2013-05-23 | bug | Runtime error | none | **fixed** — gamma inverse reworked (9befdae95); report's expected value was the forward CDF | gsl_cdf_chisq_Pinv fails for some values |
 | 39120 | 2013-05-29 | - | Build | none | not reviewed | Possible removal of some files |
 | 39152 | 2013-06-03 | - | Accuracy problem | none | not reviewed | make check errors with Intel icc 13.0.1 |
 | 39165 | 2013-06-04 | - | Build | none | not reviewed | conditional arguments always evaluating to true |

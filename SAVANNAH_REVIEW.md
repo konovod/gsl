@@ -94,6 +94,7 @@ has to be tested against the built library.  See `#52321` below.
 | `#57979` | **fixed 2026-10-02** (commit 1a470222a): `gsl_sf_hypot(NaN, y)` returned `sqrt(2)*y` and `gsl_sf_hypot(inf, y)` reported overflow, because `GSL_MIN_DBL`/`GSL_MAX_DBL` never select a NaN; both cases now follow the C99 spec (`+Inf` / NaN, `GSL_SUCCESS`) |
 | `#37894` | already fixed upstream, inherited unchanged — commits `ae19e3e8b` (`LT_INIT([win32-dll])`, `LT_LIB_M`) and `1d002ee93` ("add cygwin patch from J.P. Flori") turn the old MinGW-only conditionals into a `*-*-cygwin* | *-*-mingw*` test that adds `-no-undefined` and `GSL_LIBADD=cblas/libgslcblas.la` to the shared libraries.  Both commits are ancestors of `savannah/master`, so the posted `gsl-autotools.diff` is fully present; no fork change is made |
 | `#58032` | **fixed 2026-10-02** (commit 1f2607a0b): `gsl_sf_hyperg_1F1_e`/`_int_e` tested `x == 0` before any parameter check and returned 1, so the pole at `b = 0, -1, -2, ...` was reported as `1F1(a,b,0) = 1`.  The branch now classifies the parameters as the `x != 0` branches do and returns `GSL_EDOM` there, while terminating cases (`a` a nonpositive integer with `a >= b`) stay at 1.  Manual updated in both trees.  No patch was posted to the tracker, so this is a from-scratch reproduction |
+| `#39057` | **fixed 2026-10-02** (commit 9befdae95): the reported call is real but its expected value, `0.99477710813146`, is `gsl_cdf_chisq_P(0.5, 0.01)`, not the inverse.  The gamma inverse's branch heuristic is only valid for `a >= 1`; with `a = 0.005` the fixed-step iteration cannot reach `3.51e-61`, and `gsl_cdf_gamma_Qinv` returned wrong values silently.  The solver is reworked around a bracketed Pegasus iteration on `log x`, and both entry points delegate to the smaller tail.  No patch was posted |
 
 ## Resolved
 
@@ -522,6 +523,44 @@ full suite 56/56.  Files: `specfunc/hyperg_1F1.c`,
 transition region `x ~ abs(a)^2` the series loses too many digits and its
 estimate is too poor to be trusted, so the fix deliberately does not use
 it there.  `#28267` remains open.
+
+
+### `#39057` - `gsl_cdf_chisq_Pinv` "fails for some values" - fixed, but the report's expected value is wrong
+
+The call is real: `gsl_cdf_chisq_Pinv (0.5, 0.01)` aborts with "inverse
+failed to converge".  The report's expected value,
+`0.99477710813146`, is not the inverse at all - it is
+`gsl_cdf_chisq_P (0.5, 0.01)`, the forward CDF at `x = 0.5`.  The
+inverse is `7.016667765235591e-61` (scipy 1.15 and mpmath at 60 digits
+agree).  The test carried this wrong constant and had been disabled.
+
+The cause is that the initial-approximation branching in
+`gsl_cdf_gamma_Pinv` is only valid for shape `a >= 1`.  For the reported
+`a = 0.005` it starts at `x0 = a` and the damped fixed-step iteration
+halves `x` on each step; the true median is `3.51e-61`, about 200 steps
+away, so it fails at the 32-step limit.  `gsl_cdf_gamma_Qinv` has the
+same defect, and no convergence check, so it emitted wrong values
+silently: for `a = 0.65` it returned `246.7` where the root is `500`.
+The generated `test_auto` vector
+`gsl_cdf_chisq_Qinv (5.8402405187288964e-219, 1.3)` expected `1000` and
+got `493.4`, and now passes.
+
+The solver is reworked as a bracketed Pegasus (regula falsi) iteration
+on `t = log(x)`; the signed residual is monotone in `t` with limits
+`-target` and `1 - target`, so a bracket always exists in the
+representable range.  Both entry points delegate to whichever tail is
+no larger than one half, and the forward incomplete gamma is evaluated
+through the status-returning routines, with the complementary
+continued fraction where the large-x expansion of `Q` would raise.
+
+The fix was checked against `scipy.special.gammaincinv` over shapes
+`1e-3 .. 1e6` and a wide range of tail probabilities.  Remaining
+differences are only subnormal roots (unrepresentable, returned as `0`)
+and points where GSL's forward `gamma_Q` is itself inaccurate (for
+`a = 0.001`, `Q = 1e-12`, the forward value is off by about `3e-4`).
+Negative control: with `cdf/gammainv.c` reverted, the new `cdf/test.c`
+vectors abort at `gammainv.c:111`.  Full suite 56/56.  Files:
+`cdf/gammainv.c`, `cdf/test.c`.  Commit `9befdae95`.
 
 
 ## Rejected
