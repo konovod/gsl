@@ -91,6 +91,7 @@ One line per change: date | tag | description | commit(s).
   2026-10-02 | [rejected] | specfunc: bessel j2 large-x make check failure           | - (see below)
   2026-10-02 | [upstream] | sys: check for inf/nan in gsl_hypot3                     | c1df353ae
   2026-10-02 | [upstream] | specfunc: non-finite arguments in gsl_sf_hypot_e         | 1a470222a
+  2026-10-02 | [upstream] | specfunc: reject the poles of 1F1 at x = 0               | 1f2607a0b
 
 
 ## [upstream] rng: make the random() generators produce the documented sequences
@@ -2128,6 +2129,46 @@ Files: `specfunc/trig.c`, `specfunc/test_sf.c`, `doc/specfunc-trig.rst`,
 `doc_texinfo/specfunc-trig.texi`.
 
 Savannah bug #57979.
+
+
+## [upstream] specfunc: reject the poles of 1F1 at x = 0
+
+Commit: 1f2607a0b
+
+`gsl_sf_hyperg_1F1_e()` and `gsl_sf_hyperg_1F1_int_e()` handled
+`x == 0` before any parameter check and returned 1, so a pole was
+reported as `1F1(a,b,0) = 1`:
+
+    gsl_sf_hyperg_1F1(2, 0, 0)      -> 1
+    gsl_sf_hyperg_1F1(2, 0, 1)      -> domain error
+    gsl_sf_hyperg_1F1_int(2, 0, 0)  -> 1
+    gsl_sf_hyperg_1F1(-3, -1, 0)    -> 1
+
+The confluent hypergeometric function has a pole whenever `b` is zero
+or a negative integer, except when the series terminates before the
+denominator vanishes, i.e. when `a` is a nonpositive integer with
+`a >= b`, in which case the value is finite.  The `x == 0` branch now
+applies the classification the `x != 0` branches already used:
+`GSL_EDOM` for `b == 0`, or for `b` a negative integer that `a` cannot
+cancel (`a` not a nonpositive integer, or `a < b`).  The terminating
+cases keep their value of 1, and `gsl_sf_hyperg_1F1(0, 0, 0)` becomes a
+domain error to agree with `gsl_sf_hyperg_1F1(0, 0, x != 0)`.  The
+integer form tests `a == b` first, so `gsl_sf_hyperg_1F1_int(0, 0, 0)`
+remains 1, matching `gsl_sf_hyperg_1F1_int(0, 0, x != 0) = exp(x)`.
+
+Negative control: with `specfunc/hyperg_1F1.c` reverted, the eight new
+`TEST_SF_RETURN` vectors in `specfunc/test_hyperg.c` all fail with
+"unexpected return code: 0"; with the fix the `specfunc` suite and the
+full `ctest` are 56/56 on MSVC.
+
+Documentation: both `specfunc-hyperg` entries in `doc/specfunc-hyperg.rst`
+and `doc_texinfo/specfunc-hyperg.texi` now state the domain and the
+terminating exception.
+
+Files: `specfunc/hyperg_1F1.c`, `specfunc/test_hyperg.c`,
+`doc/specfunc-hyperg.rst`, `doc_texinfo/specfunc-hyperg.texi`.
+
+Savannah bug #58032.
 
 
 
