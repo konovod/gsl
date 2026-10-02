@@ -629,7 +629,21 @@ gsl_sf_hypot_e(const double x, const double y, gsl_sf_result * result)
 {
   /* CHECK_POINTER(result) */
 
-  if(x == 0.0 && y == 0.0) {
+  /* As for gsl_hypot, an infinite argument gives +Inf even if the other
+     argument is NaN; a NaN argument with no infinite argument propagates.
+     The magnitude branch below would otherwise divide by, or evaluate
+     sqrt of, the NaN and report an overflow instead. */
+  if(gsl_isinf(x) || gsl_isinf(y)) {
+    result->val = GSL_POSINF;
+    result->err = 0.0;
+    return GSL_SUCCESS;
+  }
+  else if(gsl_isnan(x) || gsl_isnan(y)) {
+    result->val = GSL_NAN;
+    result->err = GSL_NAN;
+    return GSL_SUCCESS;
+  }
+  else if(x == 0.0 && y == 0.0) {
     result->val = 0.0;
     result->err = 0.0;
     return GSL_SUCCESS;

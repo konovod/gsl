@@ -2763,6 +2763,19 @@ int test_trig(void)
   TEST_SF(s,  gsl_sf_lncosh_e, (-1000.0, &r), 999.30685281944005469, TEST_TOL0, GSL_SUCCESS);
 
 
+  /* gsl_sf_hypot_e: the magnitude branch divided by max(|x|,|y|), so an
+     infinite argument or a NaN first argument fell into the wrong path.
+     hypot(NaN, 1) returned sqrt(2) and hypot(+-inf, y) reported an
+     overflow, where the C99 specification requires NaN and +Inf
+     respectively and no range error.  Savannah bug #57979. */
+
+  TEST_SF(s, gsl_sf_hypot_e, (GSL_NAN, 1.0, &r), GSL_NAN, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hypot_e, (1.0, GSL_NAN, &r), GSL_NAN, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hypot_e, (GSL_POSINF, 1.0, &r), GSL_POSINF, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hypot_e, (GSL_NEGINF, 1.0, &r), GSL_POSINF, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hypot_e, (1.0, GSL_POSINF, &r), GSL_POSINF, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hypot_e, (1.0, GSL_NEGINF, &r), GSL_POSINF, TEST_TOL0, GSL_SUCCESS);
+
   TEST_SF_2(s, gsl_sf_polar_to_rect, (10.0, M_PI/6.0, &r1, &r2),
             (10.0 * sqrt(3) / 2.0), TEST_TOL0,
             (10.0 * 0.5), TEST_TOL0,

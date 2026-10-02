@@ -39,8 +39,10 @@ argument reduction as @code{gsl_sf_sin}.
 @deftypefunx int gsl_sf_hypot_e (double @var{x}, double @var{y}, gsl_sf_result * @var{result})
 @cindex hypot function, special functions
 These routines compute the hypotenuse function @c{$\sqrt{x^2 + y^2}$}
-@math{\sqrt@{x^2 + y^2@}} avoiding overflow and underflow.
-@comment Exceptional Return Values:
+@math{\sqrt@{x^2 + y^2@}} avoiding overflow and underflow. If either
+argument is @math{\pm\infty} the result is @math{+\infty}, even when the
+other argument is @code{NaN}; otherwise a @code{NaN} argument propagates.
+@comment Exceptional Return Values: none
 @end deftypefun
 
 @deftypefun double gsl_sf_sinc (double @var{x})

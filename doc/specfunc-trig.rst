@@ -37,8 +37,10 @@ Circular Trigonometric Functions
               int gsl_sf_hypot_e (double x, double y, gsl_sf_result * result)
 
    These routines compute the hypotenuse function :math:`\sqrt{x^2 + y^2}`
-   avoiding overflow and underflow.
-.. Exceptional Return Values:
+   avoiding overflow and underflow. If either argument is
+   :math:`\pm\infty` the result is :math:`+\infty`, even when the other
+   argument is :data:`NaN`; otherwise a :data:`NaN` argument propagates.
+.. Exceptional Return Values: none
 
 .. index::
    single: complex sinc function, special functions
