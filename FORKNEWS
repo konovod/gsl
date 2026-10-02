@@ -92,6 +92,7 @@ One line per change: date | tag | description | commit(s).
   2026-10-02 | [upstream] | sys: check for inf/nan in gsl_hypot3                     | c1df353ae
   2026-10-02 | [upstream] | specfunc: non-finite arguments in gsl_sf_hypot_e         | 1a470222a
   2026-10-02 | [upstream] | specfunc: reject the poles of 1F1 at x = 0               | 1f2607a0b
+  2026-10-02 | [upstream] | cdf: robust gamma quantile solver for shape a < 1      | 9befdae95
 
 
 ## [upstream] rng: make the random() generators produce the documented sequences
@@ -2169,6 +2170,55 @@ Files: `specfunc/hyperg_1F1.c`, `specfunc/test_hyperg.c`,
 `doc/specfunc-hyperg.rst`, `doc_texinfo/specfunc-hyperg.texi`.
 
 Savannah bug #58032.
+
+
+## [upstream] cdf: make the gamma quantile solver robust
+
+Commit: 9befdae95
+
+`gsl_cdf_chisq_Pinv (0.5, 0.01)` aborted with "inverse failed to
+converge".  The call reduces to `gsl_cdf_gamma_Pinv (0.5, 0.005, 2)`,
+whose initial-approximation branching is only valid for shape `a >= 1`.
+For `a = 0.005` it started at `x0 = a = 0.005`, and the damped
+fixed-step iteration moved `x` by roughly halving on every step, so
+after the 32 allowed iterations it was still at `2.8e-11` while the
+true median is `3.51e-61`.
+
+The expected value quoted in the report, `0.99477710813146`, is not the
+inverse at all: it is `gsl_cdf_chisq_P (0.5, 0.01)`, the forward CDF at
+`x = 0.5`.  The inverse is `7.016667765235591e-61` (mpmath, 60 digits).
+
+`gsl_cdf_gamma_Qinv` has the same defect and, unlike `_Pinv`, no
+convergence check, so it returned a silently wrong value: with
+`a = 0.65`, `gsl_cdf_gamma_Qinv (5.8402405187288964e-219, 0.65, 1.0)`
+gave `246.7` instead of `500` (chisq `493.4` against an expected
+`1000`).  That vector is present in the generated `test_auto` tests and
+now passes.
+
+The fixed-step iteration is replaced by a bracketed Pegasus (regula
+falsi) solver on `t = log(x)`.  The signed residual is monotone in `t`
+with limits `-target` and `1 - target`, so a bracket always exists in
+the representable range; the initial estimate uses the small-x and
+Gaussian approximations and the bracket is closed by geometric
+expansion.  The two entry points now delegate to whichever tail is no
+larger than one half, so the inverted function is evaluated where it is
+relatively accurate.  The forward incomplete gamma is called through
+the status-returning routines; where the large-x expansion of `Q` would
+raise a GSL error (it does so even from the status entry point), the
+complementary continued fraction for `P` is used instead.
+
+Verified against an independent sweep of `scipy.special.gammaincinv`
+over shapes `1e-3 .. 1e6` and many tail probabilities.  After the fix
+the only differences are roots below the normal range (unrepresentable,
+now reported as `0`) and points where GSL's own forward `gamma_Q` is
+inaccurate (for `a = 0.001`, `Q = 1e-12`, GSL's forward value is off by
+about `3e-4`, so no inverse can do better).  Negative control: with
+`cdf/gammainv.c` reverted, the new `cdf/test.c` vectors abort the `cdf`
+suite at `gammainv.c:111`.  Full `ctest` is 56/56 on MSVC.
+
+Files: `cdf/gammainv.c`, `cdf/test.c`.
+
+Savannah bug #39057.
 
 
 
