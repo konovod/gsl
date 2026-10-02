@@ -658,6 +658,15 @@ TEST_SF(s, gsl_sf_hyperg_U_e, (2, -6.4, 1, &r),1.2141502795806162484648638e-02
   TEST_SF(s, gsl_sf_hyperg_2F1_e, (-0.25, 0.25, 1.0, 0.25, &r), 0.9833426507751652325159, TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_hyperg_2F1_e, (-0.25, 0.25, 1.0, 0.9, &r),  0.9205892513820927681855, TEST_TOL1, GSL_SUCCESS);
 
+  /* The alternating Gauss series must report a meaningful error, not
+   * the 1.0 produced by the old del_pos bookkeeping (bug #32306). */
+  {
+    gsl_sf_result er;
+    int stat = gsl_sf_hyperg_2F1_e(-0.5, 1.5, 1.0, 0.4, &er);
+    gsl_test(stat != GSL_SUCCESS, "gsl_sf_hyperg_2F1_e (-0.5,1.5,1,0.4) status");
+    gsl_test(!(er.err < 1e-6), "gsl_sf_hyperg_2F1_e (-0.5,1.5,1,0.4) error estimate (err=%g)", er.err);
+  }
+
 #if 0 /* XXX - bug #39056 */
   /* Test case from Robert L Wolpert <Wolpert@stat.duke.edu> */
 
