@@ -74,6 +74,7 @@ One line per change: date | tag | description | commit(s).
   2026-10-02 | [upstream] | linalg: HH_solve/HH_svx overdetermined systems            | 1f84bed77
   2026-10-02 | [upstream] | complex: preserve special values in GSL_SET_COMPLEX      | 631da98f8
   2026-10-02 | [fork]     | cmake: build the C11 complex test                        | db5fcdf6d
+  2026-10-02 | [upstream] | movstat: align the embedded accumulator state            | 4e4a88242
 
 
 ## [upstream] rng: make the random() generators produce the documented sequences
@@ -1474,6 +1475,64 @@ has no C99 complex support.  The generated test list is untouched.
 
 This is fork-only infrastructure; upstream maintains the automake
 `test_c11`.
+
+
+## [upstream] movstat: align the embedded accumulator state
+
+Commit: 4e4a88242
+
+The moving-window accumulators keep their state in a single block that
+the caller provides, and derive the address of each object in it by
+adding the previous object's byte size.  Two of those objects - the
+min/max accumulator's deques and every accumulator's ring buffer - hold
+a pointer, so they require pointer alignment (8 bytes on the 64-bit
+targets).  The offsets are not always multiples of that:
+
+  * `mmacc`: `state->maxque = state->minque + deque_size(n + 1)` and
+    `deque_size(n+1) = sizeof(deque) + 4*(n+1)`, which is 4 modulo 8
+    when the window size n is even;
+  * `qnacc`: `state->rbuf` follows a `5*n` int array, so its offset is
+    `sizeof(state) + 52*n`, which is 4 modulo 8 when n is odd.
+
+This is undefined behaviour.  Clang's alignment sanitizer reports it as
+
+    movstat/deque.c:58: runtime error: member access within misaligned
+    address 0x... for type 'deque', which requires 8 byte alignment
+
+and the equivalent `ringbuf.c:61` diagnostic for the Q_n case.  This is
+Savannah bug #59834; the bug report covers the deque case (hit through
+`gsl_filter_rmedian`, which uses the min/max accumulator).  The Q_n case
+was found by auditing every accumulator for the same pattern and is not
+in the report.  Sn, qqr, MAD, mean/variance, sum, median and the user
+function accumulators were checked and are already aligned.
+
+A portable alignment helper is added to `movstat/ringbuf.c`, which every
+accumulator includes.  C89 has no `alignof`, but a struct with a leading
+char places its next member at an offset equal to that member's
+alignment; the union of `ringbuf` and `double` gives the largest
+alignment any of these objects needs.  `ringbuf_align()` rounds a byte
+offset up to that boundary, and `mmacc_size`/`mmacc_init` and
+`qnacc_size`/`qnacc_init` now use it for every object offset.  No
+computed value changes.
+
+Negative control: no ordinary `ctest` can catch this, because the defect
+is undefined behaviour with no numeric symptom on x86-64 (the results
+are the same before and after).  The negative control is therefore a
+sanitizer run: a driver that exercises `gsl_movstat_accum_minmax` and
+`gsl_movstat_accum_Qn`, compiled with
+
+    clang -fsanitize=alignment -I . -I build-cmake -I movstat \
+        movstat/mmacc.c drv.c -o drv.exe
+
+reports the misaligned accesses at `deque.c:58-61` and `ringbuf.c:61`
+before the change and is silent after it (LLVM clang 18.1.1, inside the
+VS 2022 BuildTools environment; MSVC has no UBSan and MinGW has no
+`libubsan`).  The full MSVC `ctest` suite is 56/56 both before and
+after.
+
+Files: `movstat/ringbuf.c`, `movstat/mmacc.c`, `movstat/qnacc.c`.
+
+See Savannah bug #59834.
 
 
 
