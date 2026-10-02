@@ -29,7 +29,7 @@
 #ifdef STDC_HEADERS
 #include <stdarg.h>
 #else
-#include <varargs.h>
+#include <stdarg.h>
 #endif
 #endif
 
