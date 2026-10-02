@@ -49,6 +49,7 @@ void testDiscretePDF (double (*f) (void), double (*pdf) (unsigned int),
 void test_shuffle (void);
 void test_choose (void);
 double test_beta (void);
+double test_beta_small (void);
 double test_beta_pdf (double x);
 double test_bernoulli (void);
 double test_bernoulli_pdf (unsigned int n);
@@ -412,6 +413,16 @@ main (void)
   testDiscretePDF (FUNC2 (negative_binomial));
   testDiscretePDF (FUNC2 (pascal));
 
+  /* Beta(a,a) is symmetric about 1/2, so each half has probability 1/2.
+     The intervals straddle the atoms at 0 and 1, which testMoments would
+     otherwise exclude with its strict inequalities.  For very small a the
+     old gamma-ratio implementation returned NaN almost always (Savannah
+     bug #47646).  Keep these last: each consumes N variates from the shared
+     stream, and other statistical tests depend on the sequence. */
+
+  testMoments (FUNC (beta_small), -0.5, 0.5, 0.5);
+  testMoments (FUNC (beta_small),  0.5, 1.5, 0.5);
+
   gsl_rng_free (r_global);
   gsl_ran_discrete_free (g1);
   gsl_ran_discrete_free (g2);
@@ -737,6 +748,12 @@ double
 test_beta (void)
 {
   return gsl_ran_beta (r_global, 2.0, 3.0);
+}
+
+double
+test_beta_small (void)
+{
+  return gsl_ran_beta (r_global, 1e-5, 1e-5);
 }
 
 double
