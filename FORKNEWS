@@ -93,6 +93,8 @@ One line per change: date | tag | description | commit(s).
   2026-10-02 | [upstream] | specfunc: non-finite arguments in gsl_sf_hypot_e         | 1a470222a
   2026-10-02 | [upstream] | specfunc: reject the poles of 1F1 at x = 0               | 1f2607a0b
   2026-10-02 | [upstream] | cdf: robust gamma quantile solver for shape a < 1      | 9befdae95
+  2026-10-02 | [upstream] | specfunc: Cauchy principal value for elliptic Pi/RJ     | 2673ce0d8
+  2026-10-02 | [upstream] | specfunc: elliptic Pi error estimate for n < 0         | 2673ce0d8
 
 
 ## [upstream] rng: make the random() generators produce the documented sequences
@@ -2219,6 +2221,71 @@ suite at `gammainv.c:111`.  Full `ctest` is 56/56 on MSVC.
 Files: `cdf/gammainv.c`, `cdf/test.c`.
 
 Savannah bug #39057.
+
+
+## [upstream] specfunc: Cauchy principal value for the elliptic integrals of the third kind
+
+Commit: 2673ce0d8
+
+`gsl_sf_ellint_Pcomp_e` is what the report names, but the numbers in it
+are the *incomplete* `gsl_sf_ellint_P(phi, k, n)`: the reporter's
+`Pcomp(1.3, 0.5, -0.1)` equals `P_e(1.3, 0.5, -0.1) = 1.435170...`,
+which is `EllipticPi(0.1, 1.3, 0.25)` in Wolfram's convention (GSL's
+`n` is the negative of A&S's, as the manual states).
+
+Both functions evaluate `Pi` through Carlson's `RJ`, whose `p` argument
+is `1 + n sin^2(phi)` (respectively `1 + n`).  That argument is
+negative exactly when the integrand has a pole in the interval of
+integration (`n < -csc^2(phi)`), and `gsl_sf_ellint_RJ_e` rejected
+`p < 0` with `GSL_EDOM`, so the result was `NaN`:
+
+    P_e    (1.3, 0.5, -0.1)  ->  1.4351704933438834   (no pole)
+    P_e    (1.3, 0.5, -1.1)  ->  NaN                  (pole, PV = 4.721120537361089)
+    Pcomp_e(0.5,      -1.1)  ->  NaN                  (pole, PV = -0.240846396458214)
+
+The ordinary Riemann integral diverges at such a pole, but the Cauchy
+principal value is well defined and is what Wolfram Alpha and
+Boost.Math return.
+
+`gsl_sf_ellint_RJ_e()` now handles `p < 0` with the transformation
+[Carlson, Numer. Math. 33 (1979) 1; DLMF 19.20.14], the same one
+Boost.Math uses: sort `x <= y <= z`, put `q = -p` and
+`p' = (z(x + y + q) - xy)/(z + q)`, then
+
+    R_J(x, y, z, -q) = [(p' - z) R_J(x, y, z, p') - 3 R_F(x, y, z)
+                        + 3 sqrt(xyz/(xy + p'q)) R_C(xy + p'q, p'q)]
+                       / (z + q).
+
+This fixes `P`, `Pcomp` and any direct `RJ` caller in one place.
+`p = 0` stays `GSL_EDOM`, since the integral genuinely diverges there.
+
+The change also fixes a pre-existing error estimate in
+`gsl_sf_ellint_P_e()`: the two terms carrying the characteristic were
+propagated with the signed `n/3`, so for `n < 0` the reported error
+could be negative or much too small.  They now use `|n/3|`.
+
+Verification: `mpmath.elliprj` at 40 digits is the independent
+reference (its real part is the principal value); evaluated with the
+same double-precision arguments it agrees with the library to 2.6e-15
+over 25 random `p < 0` cases, and gives Wolfram's 4.72112 at the
+reported point.  Five vectors are added to `test_ellint()` in
+`specfunc/test_sf.c`.
+
+Negative control: with the RJ branch disabled, four of the five new
+vectors fail (`P_e(1.3,0.5,-1.1)`, `P_e(1.0,0.5,-3.0)`,
+`Pcomp_e(0.5,-1.1)`, `RJ_e(0.2,0.5,1.0,-0.2)`); the fifth,
+`P_e(1.3,0.5,-0.1)`, has no pole and exists to catch the error
+estimate.  With it applied the `specfunc` suite and the full `ctest`
+are 56/56 on MSVC.
+
+Documentation: the domain and the principal-value rule are added to the
+`Pcomp`, `P` and `RJ` entries of `doc/specfunc-ellint.rst` and
+`doc_texinfo/specfunc-ellint.texi`.
+
+Files: `specfunc/ellint.c`, `specfunc/test_sf.c`,
+`doc/specfunc-ellint.rst`, `doc_texinfo/specfunc-ellint.texi`.
+
+Savannah bug #53451.
 
 
 
