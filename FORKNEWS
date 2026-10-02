@@ -83,6 +83,7 @@ One line per change: date | tag | description | commit(s).
   2026-10-02 | [upstream] | specfunc: integer-d 2F1 reflection uses the series     | ac132a3c2
   2026-10-02 | [upstream] | specfunc: 2F1 series reports a meaningful error        | c1c2dc853
   2026-10-02 | [upstream] | specfunc: direct series for 1F1 with negative a, large x | 86aa5d161
+  2026-10-02 | [upstream] | specfunc: exact reduction in angle_restrict functions    | 0edd42642
 
 
 ## [upstream] rng: make the random() generators produce the documented sequences
@@ -1861,6 +1862,49 @@ Files: `specfunc/hyperg_1F1.c`, `specfunc/test_hyperg.c`.
 Savannah bug #43809.  The related #28267 is the same defect in the
 transition region `x ~ |a|^2`; neither the backward recurrence nor the
 series is accurate enough there and it remains open.
+
+
+## [upstream] specfunc: exact reduction in the angle restriction functions
+
+Commit: 0edd42642
+
+`gsl_sf_angle_restrict_symm_err_e` and `gsl_sf_angle_restrict_pos_err_e`
+reduced their argument with a three-term representation of `2 pi`.  That
+is the same construction that was replaced in `gsl_sf_sin_e`/`gsl_sf_cos_e`
+by commit `e7a66d24d`; the companion FORKNEWS entry explicitly left these
+two functions out of scope, and they kept the defect.  The reduced angle
+is `eps*|theta|`-accurate only up to `|theta| ~ 1e9`; above that it has no
+correct digits while the status stays `GSL_SUCCESS`:
+`gsl_sf_angle_restrict_pos_e(1e12)` returned `5.6255519649719057` against
+the true `5.6255605480428000094`.
+
+Both functions now call the exact pi/2 reduction added for sin/cos above
+`|theta| = 2^21`, mapping the `n mod 8` octant and the double-double
+remainder onto `[0, 2 pi)` (pos) or `(-pi, pi]` (symm); below the
+threshold the previous three-term path is kept, so the small-argument
+contract is unchanged.  The documented `GSL_ELOSS` above
+`0.0625/eps = 2.81e14` is preserved.  `gsl_sf_clausen_e` and
+`gsl_sf_polar_to_rect` reach the same reduction, so they are fixed too:
+`clausen(1e12)` returned `-0.93721134493561908` against the true
+`-0.93720759242145504459`.
+
+The error estimate becomes `2*eps*|val|` (plus `eps`) for the large
+branch, replacing the old `|val - theta|` form, which was meaningless
+once `theta` was large.  The `angle_restrict` vectors at `1e12` and
+`1e15` previously needed `TEST_SNGL` / `100*TEST_SNGL` and an `EXTENDED`
+guard; they pass at `TEST_TOL1` and are now unconditional.  The
+commented-out `2^47` vector is enabled and `clausen`, `angle_restrict`
+and a `2e14` vector are added.  Values are mpmath at 50 digits, computed
+on the exact double inputs.
+
+Negative control: with `trig.c` reverted 18 vectors fail, e.g.
+`angle_restrict_symm_e(1e11)` gives `1.1908755391967825` against
+`1.1908745855222386486`.  Full `ctest` suite 56/56 on MSVC.
+
+Files: `specfunc/trig.c`, `specfunc/test_sf.c`.
+
+Savannah bug #45746.
+
 
 
 
