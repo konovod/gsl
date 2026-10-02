@@ -72,6 +72,8 @@ One line per change: date | tag | description | commit(s).
   2026-10-02 | [upstream] | specfunc: two macOS-only last-ULP test failures           | 6eef17cf3
   2026-10-02 | [upstream] | specfunc: Hermite derivative error estimate; vectors      | 491f38efa, a71516e66
   2026-10-02 | [upstream] | linalg: HH_solve/HH_svx overdetermined systems            | 1f84bed77
+  2026-10-02 | [upstream] | complex: preserve special values in GSL_SET_COMPLEX      | 631da98f8
+  2026-10-02 | [fork]     | cmake: build the C11 complex test                        | db5fcdf6d
 
 
 ## [upstream] rng: make the random() generators produce the documented sequences
@@ -1399,6 +1401,69 @@ Files: `linalg/hh.c`, `linalg/test.c`, `doc/linalg.rst`,
 `doc_texinfo/linalg.texi`.
 
 See Savannah bug #42472.
+
+
+## [upstream] complex: preserve special values in GSL_SET_COMPLEX
+
+Commit: 631da98f8
+
+`GSL_SET_COMPLEX` has two definitions.  The fallback used when
+`<complex.h>` is absent stores the components directly, but the native
+C11 branch builds the value as
+
+    (*(zp) = (x) + I * (y))
+
+which is a complex multiplication and addition, not a store.  Those
+operations round, so `GSL_SET_COMPLEX(&z, -0.0, 0.0)` gave `+0.0` for
+the real part, and `GSL_SET_COMPLEX(&z, 0.0, INFINITY)` gave `NaN` - the
+`I * y` product computes `0 * inf` - instead of `+0.0`.
+
+The native definition now assigns the components directly through the
+same `GSL_REAL`/`GSL_IMAG` lvalues that `GSL_SET_REAL`/`GSL_SET_IMAG`
+already use, so signed zeros and non-finite parts survive.  This needs
+no `CMPLX`, which matters because neither posted patch is usable:
+`CMPLX.diff` uses the `double` variant for all three complex types (so
+`complex float` and `complex long double` targets lose precision), and
+the `_Generic` patch dispatches on the pointer type and calls
+`CMPLXF`/`CMPLXL`, neither of which MinGW's `<complex.h>` defines at all
+(verified with `gcc -E -dM`).
+
+A block of exact checks was added to `complex/test_source.c`, next to the
+`#47345` signed-zero check, and runs under both `test` (legacy) and
+`test_c11` (native).  It covers the reported `-0.0`, a non-finite part,
+signed zeros for `float` and `long double`, and a `1.0L + LDBL_EPSILON`
+round trip that would catch a `CMPLX(double)`-style truncating fix.
+
+Negative control: with the old macro the native branch fails four of the
+added checks (`-0.0` real, `(0, +inf)` real, `float -0.0`,
+`long double -0.0`); the legacy build passes throughout.  The full MSVC
+suite is 56/56, and a MinGW C11 build of `complex.test_c11` passes all
+10201 checks (and fails the same four with the macro reverted).
+
+Files: `complex/gsl_complex.h`, `complex/test.c`,
+`complex/test_source.c`, `doc/complex.rst`, `doc_texinfo/complex.texi`.
+
+See Savannah bug #65912.
+
+
+## [fork] cmake: build the C11 complex test
+
+Commit: db5fcdf6d
+
+`cmake/gsl_tests.cmake` is generated from the automake `check_PROGRAMS`
+variables, and `cmake/regen_tests.py` deliberately skips a program whose
+source list is a make variable.  `complex test_c11` is
+`$(test_SOURCES)`, so it was never registered and the native C11 complex
+branch was not tested by the CMake build - which is how the `#65912`
+defect escaped detection here.
+
+A `gsl_add_test_c11()` helper now builds a test as C11 with
+`<complex.h>` included (`-DTEST_C11`, mirroring `test_c11_CFLAGS`) and
+registers `complex.test_c11`.  It is a no-op on MSVC, whose `<complex.h>`
+has no C99 complex support.  The generated test list is untouched.
+
+This is fork-only infrastructure; upstream maintains the automake
+`test_c11`.
 
 
 
