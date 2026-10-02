@@ -304,19 +304,19 @@ int test_coulomb(void)
   /* The Steed branch where the choice of C in
    * gsl_sf_coulomb_wave_FG_e() is actually exercised: negative eta with
    * lam_F far above the turning point, so that
-   * N = ceil(lam_F - C + 0.5) is large and lam_0 = lam_F - N lands well
-   * inside the oscillatory region.  No earlier vector reaches this
-   * regime.  See Savannah #39292.
+   * N = ceil(lam_F - C + 0.5) is large and lam_0 = lam_F - N lands at
+   * the turning point, in the oscillatory region.  No earlier vector
+   * reaches this regime.  See Savannah #39292.
    *
-   * Expected values for F and F' come from integrating the Coulomb
-   * equation y'' = [lam(lam+1)/x^2 + 2 eta/x - 1] y by RK4 in long
-   * double, started from the Frobenius series
+   * Expected values for F and F' come from independently integrating the
+   * Coulomb equation y'' = [lam(lam+1)/x^2 + 2 eta/x - 1] y, started from
+   * the Frobenius series
    * b_k = (2 eta b_{k-1} - b_{k-2}) / (k (2 lam + k + 1)) and normalised by
    * C_lam = 2^lam e^(-eta pi/2) |Gamma(lam+1+i eta)| / (2 lam+1)!, the
-   * convention in CLeta() in specfunc/coulomb.c.  The integration
-   * reproduces F = sin(x) at eta = 0, lam = 0 to 1e-16, which is what
-   * establishes it as trustworthy.  It is not the code under test, so
-   * this is an independent check rather than a restatement.
+   * convention in CLeta() in specfunc/coulomb.c.  The integration matches
+   * the exact eta = 0 form sqrt(pi/2) sqrt(x) J_{lam+1/2}(x) to 4e-14 at
+   * these lambda, which establishes it as trustworthy.  It is not the code
+   * under test, so this is an independent check rather than a restatement.
    *
    * G and G' are computed for this check but not asserted: the irregular
    * solution's Frobenius series is not numerically usable at any useful
@@ -325,18 +325,17 @@ int test_coulomb(void)
    * is the exact identity linking G to the F checked above.
    *
    * These vectors pin the branch's values to the accuracy the independent
-   * reference supports.  At these points the effect of small changes to
-   * the branch's setup is comparable to the spread between targets, so
-   * they are not sensitive to it; the second comment block records the
-   * tolerance that is actually applied.
+   * reference supports.  The last one is nearer the turning point, where
+   * the pre-#39292 choice of C was wrong by about 1.5e-5, and is the
+   * regression guard for that fix.
    */
   {
-    /* The expected values are the library's own, to full precision, but
-     * the independent integration above justifies them: it agrees with
-     * these constants to 1e-12 relative or better at all four points, so
-     * they are not merely whatever the code happens to produce.  They are
-     * quoted at that accuracy rather than as raw reference output because
-     * the RK4 integration is itself only good to about 1e-12 relative.
+    /* The first four expected values are the library's own, to full
+     * precision; the independent integration above agrees with them to
+     * about 1e-14 relative, so they are not merely whatever the code
+     * produces.  The fifth is nearer the turning point, where the
+     * pre-#39292 choice of C is wrong by about 1.5e-5; it is the guard
+     * that keeps that defect from returning.
      *
      * The reported error bar is deliberately NOT asserted against these
      * constants.  test_sf_check_result() requires the expected value to
@@ -348,37 +347,41 @@ int test_coulomb(void)
      * therefore claim more about the library's error estimate than this
      * regression is trying to establish, so only the value is checked.
      *
-     * The tolerance is not a uniform TEST_TOL2 either: at eta = -2 and
-     * eta = -1.5 the cross-target spread and the reference's own 1e-12
-     * accuracy need TEST_TOL5 (2.9e-11); the other two stay at TEST_TOL2.
+     * The tolerance is per point: TEST_TOL5 (2.9e-11) at the two points
+     * whose x86/arm64 spread needs it, TEST_TOL2 elsewhere.  The turning
+     * point guard uses TEST_TOL4 (3.6e-12), far below the 1.5e-5 error a
+     * reverted fix produces.
      */
-    struct { double eta, lam, x; } steep[] = {
-      { -2.0, 30.0,  20.0 },
-      { -1.0, 20.0,  15.0 },
-      { -1.5, 20.0,  20.0 },
-      { -0.5, 25.0,  20.0 }
+    struct { double eta, lam, x, tol; } steep[] = {
+      { -2.0, 30.0,  20.0, TEST_TOL5 },
+      { -1.0, 20.0,  15.0, TEST_TOL2 },
+      { -1.5, 20.0,  20.0, TEST_TOL5 },
+      { -0.5, 25.0,  20.0, TEST_TOL2 },
+      { -2.0, 30.0,  12.0, TEST_TOL4 }
     };
-    const double sF[4] = {
-       0.00221949470266504488,
-       0.0491298788250501897,
+    const double sF[5] = {
+       0.00221949470266725709,
+       0.0491298788250499815,
        1.20331071052013527,
-       0.0530100511536985633
+       0.0530100511536989033,
+       4.86387667028124204e-09
     };
-    const double sFp[4] = {
-       0.0024597623167057648,
-       0.0457441049088985613,
+    const double sFp[5] = {
+       0.00245976231670821640,
+       0.0457441049088983670,
        0.279733289289929798,
-       0.0435390941411954446
+       0.0435390941411957291,
+       1.12597727302227228e-08
     };
     int i;
-    for (i = 0; i < 4; i++)
+    for (i = 0; i < 5; i++)
       {
         gsl_sf_coulomb_wave_FG_e(steep[i].eta, steep[i].x, steep[i].lam, 0,
                                  &F, &Fp, &G, &Gp, &Fe, &Ge);
         s = 0;
         message_buff[0] = 0;
-        s += test_sf_check_val(message_buff,  F.val,  sF[i],  (i == 0 || i == 2) ? TEST_TOL5 : TEST_TOL2);
-        s += test_sf_check_val(message_buff, Fp.val, sFp[i], (i == 0 || i == 2) ? TEST_TOL5 : TEST_TOL2);
+        s += test_sf_check_val(message_buff,  F.val,  sF[i],  steep[i].tol);
+        s += test_sf_check_val(message_buff, Fp.val, sFp[i], steep[i].tol);
         printf("%s", message_buff);
         gsl_test(s, "  gsl_sf_coulomb_wave_FG_e(%g, %g, lam_F=%g, lam_G=%g) "
                     "[Steed, large lam_F]", steep[i].eta, steep[i].x,
@@ -388,12 +391,10 @@ int test_coulomb(void)
   }
 
   /* The Steed branch, x > 2 eta, at eta = 0 and with lam_F large enough
-   * that C = sqrt(1 + 4 x (x - 2 eta)) in gsl_sf_coulomb_wave_FG_e()
+   * that C = 0.5 sqrt(1 + 4 x (x - 2 eta)) in gsl_sf_coulomb_wave_FG_e()
    * selects a lam_0 below lam_F.  Every earlier vector has lam_F <= 3.0
    * or eta large enough that ceil(lam_F - C + 0.5) <= 0, so none of them
-   * reach the region where that choice is made; see Savannah #39292, where
-   * the reported patch for that line (halving C) passed this test
-   * unchanged while changing 202 of 203 sampled values.
+   * reach the region where that choice is made.  See Savannah #39292.
    *
    * The expected values are exact rather than fitted.  At eta = 0 the
    * Coulomb equation is

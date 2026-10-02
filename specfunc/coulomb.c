@@ -1116,12 +1116,23 @@ gsl_sf_coulomb_wave_FG_e(const double eta, const double x,
      * using Steed's method at that oscillatory point, then
      * use recursion on F and G to obtain the required values.
      *
-     * lam_0   = a value of lambda such that x is below the turning point
+     * lam_0   = a value of lambda such that x is above the turning point
      * lam_min = minimum of lam_0 and the requested lam_G, since
      *           we must go at least as low as lam_G
+     *
+     * The lambda turning point is the root of lam(lam+1) = x(x-2 eta),
+     *
+     *     lam_turn = (sqrt(1 + 4 x (x - 2 eta)) - 1)/2,
+     *
+     * and lam_turn + 1/2 = 0.5 sqrt(1 + 4 x (x - 2 eta)).  Feeding that
+     * into ceil(lam_F - C + 1/2) steps lam_0 down to the integer at or
+     * just below lam_turn, i.e. into the oscillatory region.  The bare
+     * sqrt(1 + 4 Q) is 2 lam_turn + 1 and lands lam_0 deep in the
+     * classically forbidden region, where the normalisation is
+     * inaccurate.  See Savannah bug #39292.
      */
     const double SMALL = GSL_SQRT_DBL_EPSILON;
-    const double C = sqrt(1.0 + 4.0*x*(x-2.0*eta));
+    const double C = 0.5 * sqrt(1.0 + 4.0*x*(x-2.0*eta));
     const int N = ceil(lam_F - C + 0.5);
     const double lam_0   = lam_F - GSL_MAX(N, 0);
     const double lam_min = GSL_MIN(lam_0, lam_G);
