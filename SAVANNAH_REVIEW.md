@@ -95,6 +95,7 @@ has to be tested against the built library.  See `#52321` below.
 | `#37894` | already fixed upstream, inherited unchanged — commits `ae19e3e8b` (`LT_INIT([win32-dll])`, `LT_LIB_M`) and `1d002ee93` ("add cygwin patch from J.P. Flori") turn the old MinGW-only conditionals into a `*-*-cygwin* | *-*-mingw*` test that adds `-no-undefined` and `GSL_LIBADD=cblas/libgslcblas.la` to the shared libraries.  Both commits are ancestors of `savannah/master`, so the posted `gsl-autotools.diff` is fully present; no fork change is made |
 | `#58032` | **fixed 2026-10-02** (commit 1f2607a0b): `gsl_sf_hyperg_1F1_e`/`_int_e` tested `x == 0` before any parameter check and returned 1, so the pole at `b = 0, -1, -2, ...` was reported as `1F1(a,b,0) = 1`.  The branch now classifies the parameters as the `x != 0` branches do and returns `GSL_EDOM` there, while terminating cases (`a` a nonpositive integer with `a >= b`) stay at 1.  Manual updated in both trees.  No patch was posted to the tracker, so this is a from-scratch reproduction |
 | `#39057` | **fixed 2026-10-02** (commit 9befdae95): the reported call is real but its expected value, `0.99477710813146`, is `gsl_cdf_chisq_P(0.5, 0.01)`, not the inverse.  The gamma inverse's branch heuristic is only valid for `a >= 1`; with `a = 0.005` the fixed-step iteration cannot reach `3.51e-61`, and `gsl_cdf_gamma_Qinv` returned wrong values silently.  The solver is reworked around a bracketed Pegasus iteration on `log x`, and both entry points delegate to the smaller tail.  No patch was posted |
+| `#53451` | **fixed 2026-10-02** (commit 2673ce0d8): the title says `Pcomp` but the report's numbers are the *incomplete* `gsl_sf_ellint_P`.  Both it and `Pcomp` evaluate `Pi` through `RJ(..., 1 + n sin^2(phi))`, which rejected `p < 0` with `GSL_EDOM`; that is exactly the case where the integrand has a pole and the value is the Cauchy principal value.  `gsl_sf_ellint_RJ_e` now applies the DLMF 19.20.14 / Boost.Math transformation for `p < 0` (`p = 0` still `GSL_EDOM`), and `gsl_sf_ellint_P_e`'s error estimate no longer propagates a signed `n/3`.  Five vectors added; manual updated in both trees |
 
 ## Resolved
 
@@ -561,6 +562,48 @@ and points where GSL's forward `gamma_Q` is itself inaccurate (for
 Negative control: with `cdf/gammainv.c` reverted, the new `cdf/test.c`
 vectors abort at `gammainv.c:111`.  Full suite 56/56.  Files:
 `cdf/gammainv.c`, `cdf/test.c`.  Commit `9befdae95`.
+
+
+### `#53451` — elliptic `Pi` for a negative characteristic — the missing piece was the Cauchy principal value
+
+The title names `gsl_sf_ellint_Pcomp(k, n, mode)` and says it returns
+`NaN` for `mode < -1`, but the numbers in the report are the
+*incomplete* `gsl_sf_ellint_P(phi, k, n)`:
+
+    P_e(1.3, 0.5, -0.1) = 1.435170...    = EllipticPi(0.1, 1.3, 0.25)
+    P_e(1.3, 0.5, -1.1) = NaN            vs EllipticPi(1.1, 1.3, 0.25) = 4.72112
+
+and the convention matches once GSL's `n` is taken as the negative of
+A&S's (as the manual states).  `Pcomp` has the same defect, just with
+`p = 1 + n`.
+
+The root cause is not a bug in the Pi formulas: both call
+`RJ(x, y, 1, p)` with `p = 1 + n sin^2(phi)`, which is negative exactly
+when the integrand has a pole in `(0, phi]`, i.e. `n < -csc^2(phi)`.
+The Riemann integral diverges there, but the Cauchy principal value is
+well defined and is what Mathematica, Boost.Math and mpmath's analytic
+continuation (real part) return.  `gsl_sf_ellint_RJ_e` simply rejected
+`p < 0`, so GSL returned `NaN`.
+
+Applied: `gsl_sf_ellint_RJ_e` now uses the DLMF 19.20.14 transformation
+(the one Boost.Math implements) for `p < 0`, so `P`, `Pcomp` and direct
+`RJ` callers all get the principal value.  `p = 0` remains a domain
+error.  A pre-existing error-estimate defect in `gsl_sf_ellint_P_e` was
+fixed at the same time: it propagated the terms carrying the
+characteristic with a signed `n/3`, which for `n < 0` could make the
+reported error negative.
+
+The formula was validated against `mpmath.elliprj` (40 digits) with the
+same double arguments: 2.6e-15 worst relative difference over 25 random
+`p < 0` cases.  Note the conditioning: the exact-real value differs
+from the double-argument value by ~1e-14 near the pole, which is why
+the regression vector for the reported point is quoted at `TEST_TOL2`.
+
+Negative control: with the new RJ branch disabled, four of the five new
+vectors fail; the fifth (`n = -0.1`) has no pole and guards the error
+estimate.  Full `ctest` 56/56 on MSVC.  Files: `specfunc/ellint.c`,
+`specfunc/test_sf.c`, `doc/specfunc-ellint.rst`,
+`doc_texinfo/specfunc-ellint.texi`.  Commit `2673ce0d8`.
 
 
 ## Rejected

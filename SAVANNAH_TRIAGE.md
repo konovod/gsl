@@ -129,7 +129,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 52359 | 2017-11-07 | - | Runtime error | source airy_divbyzero.c | **fixed** — Airy err divided by vanishing series (ac5f72d98) | Unexpected results in airy_Ai function |
 | 52570 | 2017-12-01 | - | Runtime error | none | **fixed** — Airy huge negative arguments (ac5f72d98) | Inaccuracy of the Airy function due to invocation of GSL's cosine function with large input parameters |
 | 52927 | 2018-01-18 | bug | Runtime error | none | rejected — not reproducible; j2 large-x tests disabled under #45730 | make check fails on Bessel j2 test |
-| 53451 | 2018-03-24 | bug | - | none | not reviewed | gsl_sf_ellint_Pcomp( k, n, mode ) returns NaN if mode < -1 |
+| 53451 | 2018-03-24 | bug | - | none | **fixed** — Cauchy principal value for elliptic Pi/RJ (2673ce0d8) | gsl_sf_ellint_Pcomp( k, n, mode ) returns NaN if mode < -1 |
 | 53876 | 2018-05-11 | - | Accuracy problem | none | not reviewed | gsl_sf_hyperg_2F1_renorm missing factor |
 | 53903 | 2018-05-14 | bug | Runtime error | none | not reviewed | Test failure with gsl_sf_synchrotron_1_e on x86 |
 | 53904 | 2018-05-14 | bug | - | none | not reviewed | Bug gsl_matrix_complex_set |
