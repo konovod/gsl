@@ -85,6 +85,8 @@ has to be tested against the built library.  See `#52321` below.
 | `#65912` | **fixed 2026-10-02** (commit 631da98f8): the native branch built `x + I*y`, which loses the sign of a zero component and turns a non-finite part into `NaN`; the macro now assigns the components directly through `GSL_REAL`/`GSL_IMAG`.  Earlier verdict, for the record: rejected - both posted variants (`CMPLX`, `_Generic`+`CMPLXF/L`) are unusable |
 | `#59834` | **fixed 2026-10-02** (commit b705df5a4): the posted patch does actually align `maxque`, contrary to the earlier note; the fork instead adds an explicit `ringbuf_align()` helper and fixes the same defect in `qnacc` found while auditing |
 | `#47646` | code fix already upstream (`05c5b5179`); this fork only adds the missing regression test (commit d64cc4d93) |
+| `#36152` | **fixed 2026-10-02** (commits 35cebf9a7, e7a66d24d): the report is about the spherical Bessel family, and the *j* half was already fixed upstream (`cd2dd0519`, `bd5b94b47`).  The surviving defect was (a) the Y functions still calling `gsl_sf_sin_e`/`cos_e`, and (b) the underlying reduction in `gsl_sf_sin_e`/`cos_e` itself; both are fixed.  Also closes `#45726` and the trigonometric half of `#45746` |
+| `#68495` | **fixed 2026-10-02** (commit 41b1e2c00): the reported `-n` at `gsl_pow_int` is UB for `n = INT_MIN`; fixed as posted, and the identical negation in `gsl_sf_pow_int_e` - which `9493ac014` missed and which loops forever - is fixed with it |
 
 ## Resolved
 
@@ -1018,3 +1020,51 @@ group and are now applied.
   from `A2`, and a `printf` that read `r.val` in the same argument list as
   the call that sets it (argument evaluation order is unspecified).  When
   a Savannah patch says the library is broken, check the harness first.
+
+
+### `#36152` (+ `#45726`, `#45746`) — spherical Bessel asymptotics and the trig reduction — two changes
+
+The report says `j_n(x)` diverges instead of decaying like `1/x`, turning
+bad at `x ~ 1e18`.  That is real, but **the headline half was already
+fixed upstream**, so the tracker entry looks stale:
+
+* `gsl_sf_bessel_j0_e`, `j1_e` and `j2_e` were switched from
+  `gsl_sf_sin_e`/`cos_e` to the system `sin`/`cos` by `cd2dd0519` (2013)
+  and `bd5b94b47` (2017).  Measured on this tree, `j0(1e20)` is
+  `-6.452513e-21 = sin(1e20)/1e20` — correct.  `jl_e` never used the trig
+  functions for large `x` (it goes through the asymptotic Bessel).
+* What remained was the **Y family** (`y0`, `y1`, `y2`, and `yl`/
+  `yl_array` through their seeds), still on `gsl_sf_sin_e`/`cos_e`:
+  `y0(1e20)` returned `+2.86e22` with `GSL_SUCCESS`.
+
+Two changes, deliberately separate, both `[upstream]`:
+
+1. **`bessel_y.c` (commit 35cebf9a7).**  Large-`x` branches use the
+   system `sin`/`cos`, matching the *j* functions.  Fixes `#36152`'s
+   spherical family and `#45726`.
+2. **`trig.c` (commit e7a66d24d).**  The root cause: `gsl_sf_sin_e`/
+   `cos_e` reduce with a three-term pi/4 and lose the angle above
+   `~1e16`.  Replaced above `2^21` by the fdlibm Payne-Hanek reduction.
+   Fixes `#45746` and removes the reason the Y functions ever needed a
+   workaround.
+
+**Why two commits, not one.**  The `trig.c` change reaches `airy.c`,
+`sinint.c` and `legendre_*.c`; the narrow `bessel_y.c` change does not.
+The *j* functions were fixed one module at a time upstream for the same
+reason, and a reviewer accepting the Bessel fix should not be forced to
+accept a trig-kernel rewrite with it.  They can be cherry-picked
+independently.
+
+**Verification.**  `y0(1e20)` is now `-7.63970404441728225e-21`, matching
+`sqrt(pi/2x)Y_{1/2}(x)` from mpmath; seven Y vectors at 1e18–1e22 fail
+with `bessel_y.c` reverted.  The reduction was checked against the
+platform libm (itself checked against mpmath) on two million random
+doubles over the full exponent range: worst absolute error `2.2e-16`, no
+disagreement above `1e-13`.  Eight trig vectors fail with `trig.c`
+reverted.  `ctest` 56/56.
+
+**Not done:** `gsl_sf_angle_restrict_*` keeps its documented `GSL_ELOSS`
+above `0.0625/eps` and its own reduction; `gsl_sf_clausen_e` already
+returns `GSL_ELOSS` past that point, so it is unchanged.  `gsl_sf_sinc_e`
+is fixed for large `x` as a side effect (it calls `gsl_sf_sin_e`); no new
+vector there yet.

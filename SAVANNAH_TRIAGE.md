@@ -47,7 +47,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 32776 | 2011-03-14 | feature | - | source quadratic.c | **fixed** — multimin quadratic minimiser (53cd0d098) | RFE: Add brute-force quadratic numerical multidimensional minimizer |
 | 34361 | 2011-09-22 | - | Runtime error | none | not reviewed | gsl_bspline_knots_greville needs inequality constrained linear least squares |
 | 35032 | 2011-12-11 | doc | Documentation | none | not reviewed | gsl_test.h lacks documentation in the reference manual |
-| 36152 | 2012-04-11 | bug | Accuracy problem | source testbessel.c | not reviewed | Incorrect asymptotics of spherical Bessel functions |
+| 36152 | 2012-04-11 | bug | Accuracy problem | source testbessel.c | **fixed** — Y family libm sin/cos (35cebf9a7) + exact sin/cos reduction (e7a66d24d) | Incorrect asymptotics of spherical Bessel functions |
 | 36197 | 2012-04-15 | - | Build | dirty 36197b.diff +1 | not reviewed | reserved identifier violation |
 | 36578 | 2012-06-02 | - | Documentation | none | not reviewed | inconsistency in gsl_ieee_env_setup doc/api |
 | 37209 | 2012-08-28 | bug | Accuracy problem | none | not reviewed | gsl_sf_bessel_jl_e returns NaN for large inputs without setting error code |
@@ -93,8 +93,8 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 45099 | 2015-05-13 | bug | - | none | not reviewed | wrong formula for BFGS update in gsl_multimin? |
 | 45234 | 2015-06-02 | doc | Documentation | none | not reviewed | Mathieu function documentation hasn't been updated after switching to SF API conventions |
 | 45265 | 2015-06-06 | bug | Accuracy problem | none | not reviewed | gsl_sf_bessel_J0_e underestimates error for x>4 |
-| 45726 | 2015-08-10 | bug | Accuracy problem | source gslbesselytest.c | not reviewed | Incorrect results of functions bessel_y0, y1 and y2 |
-| 45746 | 2015-08-13 | bug | Accuracy problem | source gsltrigtest.c | not reviewed | Incorrect results of trigonometric functions gsl_sf_sin and gsl_sf_cos |
+| 45726 | 2015-08-10 | bug | Accuracy problem | source gslbesselytest.c | **fixed** — Y family libm sin/cos (35cebf9a7) | Incorrect results of functions bessel_y0, y1 and y2 |
+| 45746 | 2015-08-13 | bug | Accuracy problem | source gsltrigtest.c | **fixed** — exact sin/cos argument reduction (e7a66d24d) | Incorrect results of trigonometric functions gsl_sf_sin and gsl_sf_cos |
 | 45782 | 2015-08-17 | feature | Accuracy problem | none | not reviewed | Feature request: Make derivative epsilon configurable |
 | 45797 | 2015-08-19 | - | Accuracy problem | none | not reviewed | Possible problem with LAPACK Fortran routine ZGESVD |
 | 45924 | 2015-09-11 | bug | Runtime error | none | not reviewed | Bug in the inverse beta function gsl_cdf_beta_Pinv, and suggested fix |
