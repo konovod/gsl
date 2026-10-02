@@ -85,6 +85,10 @@ One line per change: date | tag | description | commit(s).
   2026-10-02 | [upstream] | specfunc: 2F1 series reports a meaningful error        | 882c8361d
   2026-10-02 | [upstream] | specfunc: direct series for 1F1 with negative a, large x | 52505315d
   2026-10-02 | [upstream] | specfunc: exact reduction in angle_restrict functions    | 5639c380f
+  2026-10-02 | [upstream] | specfunc: Bessel Jn/Yn overflow for n > 46340            | a43fc0055
+  2026-10-02 | [upstream] | specfunc: half-integer Jnu normalization NaN             | e6e34279a
+  2026-10-02 | [rejected] | specfunc: bessel J0 error estimate for x > 4             | - (see below)
+  2026-10-02 | [rejected] | specfunc: bessel j2 large-x make check failure           | - (see below)
 
 
 ## [upstream] rng: make the random() generators produce the documented sequences
@@ -1941,6 +1945,106 @@ Negative control: with `trig.c` reverted 18 vectors fail, e.g.
 Files: `specfunc/trig.c`, `specfunc/test_sf.c`.
 
 Savannah bug #45746.
+
+
+## [upstream] specfunc: avoid integer overflow in the Bessel Jn/Yn branch tests
+
+Commit: a43fc0055
+
+`gsl_sf_bessel_Jn_e` and `gsl_sf_bessel_Yn_e` chose their asymptotic
+branch with `(n*n + 1.0)`, where `n` is an `int`.  For `n > 46340` the
+product overflows - signed overflow is undefined, and the wrapped
+negative value made the comparison `GSL_ROOT4_DBL_EPSILON*x > (n*n+1.0)`
+true - so both functions took the large-argument asymptotic expansion
+outside its range.  `Jn` returned a NaN while reporting `GSL_SUCCESS`
+(`gsl_sf_bessel_Jn_e(46341, 51471.45)` was `nan`, Savannah bug #40755);
+`Yn` returned a finite but wrong value (`Yn(46341, 51471.45)` was
+`-0.0012152637` against the true `+0.0044148266`).
+
+The product is now computed in double.  `Jn` and `Yn` route to the
+Olver asymptotic (`n > 50`) and match `scipy.special.jv`/`yv` to the
+last digits.  Ten vectors at `n = 46341..46345`,
+`x = 51471.451912555509` are added; the references are scipy's `jv`
+and `yv` (an independent Amos implementation).
+
+Negative control: with the source change reverted, `specfunc_test`
+reports NaN for all five `Jn` vectors and a wrong value for all five
+`Yn` vectors.  Full `ctest` suite 56/56 on MSVC.
+
+Files: `specfunc/bessel_Jn.c`, `specfunc/bessel_Yn.c`,
+`specfunc/test_bessel.c`.
+
+Savannah bug #40755.
+
+The same `n*n` also appears in `bessel_In.c` and `bessel_Kn.c`.  It was
+left alone: for `In` the overflow does not change the selected branch,
+and for `Kn` it does, but both `Knu_scaled_asympx` and
+`Knu_scaled_asymp_unif` are wildly inaccurate for `n` near `x`
+(scipy's exponentially scaled `kve` overflows there), so the fix would
+swap one wrong approximation for another rather than correct anything.
+
+
+## [upstream] specfunc: use a non-vanishing endpoint in the half-integer Jnu
+
+Commit: e6e34279a
+
+`gsl_sf_bessel_Jnupos_e`, in the `x >= 2` branch, obtains `J_nu` by
+normalizing the backward recurrence at order `mu = nu - N` through the
+unnormalized `J_mu`.  For half-integer `nu`, `N = nu + 1/2` gives
+`mu = -1/2`, and `J_{-1/2}(x) = sqrt(2/(pi x)) cos(x)` vanishes at
+`x = (k + 1/2) pi`.  At `x = 3 pi / 2` the single recurrence step
+cancels to exactly zero - the CF1 ratio `J_{1/2}/J_{-1/2}` equals the
+coefficient `2 nu / x` - and the normalization divides by it, so
+`gsl_sf_bessel_Jnu_e(0.5, 1.5*M_PI)` returned a NaN with `GSL_SUCCESS`
+(Savannah bug #42042).  A step of `1e-15` in `x` already gave the
+correct `-0.36755259694786135`.
+
+Both endpoints `mu = -1/2` and `mu = +1/2` are admissible for
+half-integer `nu`.  When `mu = -1/2` and `|cos(x)| < |sin(x)|` the code
+now shifts to `mu = +1/2` (and `N` down by one), using the endpoint
+with the larger `|J_mu|`.  Half-integer `nu` reaches this branch only
+for `x >= sqrt(10 (nu+1)) > 2`, so the `x < 2` path is untouched.
+
+New vector `J_{1/2}(3 pi / 2) = -0.36755259694786135` (mpmath, 40
+digits).  Negative control: with the change reverted the vector reports
+NaN (`specfunc_test` FAILs on `gsl_sf_bessel_Jnu_e(0.5, 1.5*M_PI)`).
+Full `ctest` suite 56/56 on MSVC.
+
+Files: `specfunc/bessel_Jnu.c`, `specfunc/test_bessel.c`.
+
+Savannah bug #42042.
+
+
+## [rejected] specfunc: bessel J0 error estimate for x > 4
+
+Savannah bug #45265 reports that `gsl_sf_bessel_J0_e` underestimates
+its error for `x > 4`, "more than 4 times" for `17 < x < 30`.  It does
+not reproduce on the fork's reference build (MSVC x64, Release): a
+sweep of 128 arguments over `[4, 1000]` found a worst error ratio
+`true_err / result.err = 0.57` at `x = 29.5`, with the returned value
+correctly rounded against mpmath at 60 digits.  Without a platform
+where the estimate is genuinely too small there is nothing to fix, so
+the report is left as not-reproducible rather than acted on; it was
+filed against 1.16 on 32 bit glibc and may depend on that libm.
+
+
+## [rejected] specfunc: bessel j2 large-x make check failure
+
+Savannah bug #52927 is the `gsl_sf_bessel_j2_e(1048576.0)` check:
+on the reporter's CentOS 6 / glibc 2.12 the computed value differed
+from the expected one by `1.3e-20`, more than the reported `2.8e-22`
+error bar, so the harness flagged the value/error inconsistency.  On
+the reference build the same call gives `-3.1518539455252417e-07`
+against the true `-3.1518539455252406e-07`, an error of `1.1e-22`
+inside the reported `2.8e-22`, so it passes; the failure is specific to
+the platform's `sin`/`cos`.  The large-`x` `j2` tests are already
+disabled under `#if 0` in `specfunc/test_bessel.c` (bug #45730 block)
+exactly because the error estimate is not portable, and the fork's
+`trig.c` exact reduction does not reach this function - it calls the
+system `sin`/`cos` directly.  Recorded as not-reproducible; hardening
+the error estimate would be a separate test-quality change.
+
+Savannah bug #52927.
 
 
 
