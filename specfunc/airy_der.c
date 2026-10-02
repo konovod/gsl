@@ -622,9 +622,12 @@ airy_deriv_mod_phase(const double x, gsl_mode_t mode,
   sqx = sqrt(-x);
 
   ampl->val = sqrt(a * sqx);
-  ampl->err = fabs(ampl->val) * (GSL_DBL_EPSILON + fabs(result_a.err/result_a.val));
+  /* see airy_mod_phase() in airy.c: propagate through the full expression
+   * rather than dividing by the series correction, which can vanish */
+  ampl->err = 0.5 * fabs(ampl->val) * (fabs(result_a.err/a) + GSL_DBL_EPSILON);
   phi->val  = pi34 - x * sqx * p;
-  phi->err = fabs(phi->val) * (GSL_DBL_EPSILON + fabs(result_p.err/result_p.val));
+  phi->err  = fabs(x*sqx) * result_p.err
+            + GSL_DBL_EPSILON * fabs(phi->val);
 
   return GSL_SUCCESS;
 }
@@ -641,9 +644,18 @@ gsl_sf_airy_Ai_deriv_scaled_e(const double x, gsl_mode_t mode, gsl_sf_result * r
     gsl_sf_result a;
     gsl_sf_result p;
     int status_ap = airy_deriv_mod_phase(x, mode, &a, &p);
-    double c    = cos(p.val);
+    double c;
+
+    if(p.err >= 1.0) {
+      /* see gsl_sf_airy_Ai_e: the phase is indeterminate */
+      result->val = 0.0;
+      result->err = fabs(a.val);
+      return GSL_ELOSS;
+    }
+
+    c = cos(p.val);
     result->val  = a.val * c;
-    result->err  = fabs(result->val * p.err) + fabs(c * a.err);
+    result->err  = fabs(a.val * p.err) + fabs(c * a.err);
     result->err += GSL_DBL_EPSILON * fabs(result->val);
     return status_ap;
   }
@@ -702,9 +714,18 @@ gsl_sf_airy_Ai_deriv_e(const double x, gsl_mode_t mode, gsl_sf_result * result)
     gsl_sf_result a;
     gsl_sf_result p;
     int status_ap = airy_deriv_mod_phase(x, mode, &a, &p);
-    double c    = cos(p.val);
+    double c;
+
+    if(p.err >= 1.0) {
+      /* see gsl_sf_airy_Ai_e: the phase is indeterminate */
+      result->val = 0.0;
+      result->err = fabs(a.val);
+      return GSL_ELOSS;
+    }
+
+    c = cos(p.val);
     result->val  = a.val * c;
-    result->err  = fabs(result->val * p.err) + fabs(c * a.err);
+    result->err  = fabs(a.val * p.err) + fabs(c * a.err);
     result->err += GSL_DBL_EPSILON * fabs(result->val);
     return status_ap;
   }
@@ -746,9 +767,18 @@ gsl_sf_airy_Bi_deriv_scaled_e(const double x, gsl_mode_t mode, gsl_sf_result * r
     gsl_sf_result a;
     gsl_sf_result p;
     int status_ap = airy_deriv_mod_phase(x, mode, &a, &p);
-    double s     = sin(p.val);
+    double s;
+
+    if(p.err >= 1.0) {
+      /* see gsl_sf_airy_Ai_e: the phase is indeterminate */
+      result->val = 0.0;
+      result->err = fabs(a.val);
+      return GSL_ELOSS;
+    }
+
+    s = sin(p.val);
     result->val  = a.val * s;
-    result->err  = fabs(result->val * p.err) + fabs(s * a.err);
+    result->err  = fabs(a.val * p.err) + fabs(s * a.err);
     result->err += GSL_DBL_EPSILON * fabs(result->val);
     return status_ap;
   }
@@ -818,9 +848,18 @@ gsl_sf_airy_Bi_deriv_e(const double x, gsl_mode_t mode, gsl_sf_result * result)
     gsl_sf_result a;
     gsl_sf_result p;
     int status_ap = airy_deriv_mod_phase(x, mode, &a, &p);
-    double s    = sin(p.val);
+    double s;
+
+    if(p.err >= 1.0) {
+      /* see gsl_sf_airy_Ai_e: the phase is indeterminate */
+      result->val = 0.0;
+      result->err = fabs(a.val);
+      return GSL_ELOSS;
+    }
+
+    s = sin(p.val);
     result->val  = a.val * s;
-    result->err  = fabs(result->val * p.err) + fabs(s * a.err);
+    result->err  = fabs(a.val * p.err) + fabs(s * a.err);
     result->err += GSL_DBL_EPSILON * fabs(result->val);
     return status_ap;
   }

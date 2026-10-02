@@ -271,9 +271,16 @@ airy_mod_phase(const double x, gsl_mode_t mode, gsl_sf_result * mod, gsl_sf_resu
   sqx = sqrt(-x);
 
   mod->val   = sqrt(m/sqx);
-  mod->err  = fabs(mod->val) * (GSL_DBL_EPSILON + fabs(result_m.err/result_m.val));
+  /* propagate the series truncation error through sqrt(m/sqx); the
+   * relative error of m is result_m.err/m, and sqx contributes one
+   * rounding.  Do not divide by result_m.val, which can vanish. */
+  mod->err   = 0.5 * fabs(mod->val) * (fabs(result_m.err/m) + GSL_DBL_EPSILON);
+  /* phase = pi/4 - x*sqx*p.  The term x*sqx*p is of size ~|x|^{3/2}, so an
+   * error in p is amplified by |x*sqx|; the arithmetic itself rounds at
+   * the level of eps*|phase|, which for large |x| dominates. */
   phase->val = M_PI_4 - x*sqx * p;
-  phase->err = fabs(phase->val) * (GSL_DBL_EPSILON + fabs(result_p.err/result_p.val));
+  phase->err = fabs(x*sqx) * result_p.err
+             + GSL_DBL_EPSILON * fabs(phase->val);
 
   return GSL_SUCCESS;
 }
@@ -665,7 +672,20 @@ gsl_sf_airy_Ai_e(const double x, const gsl_mode_t mode, gsl_sf_result * result)
     gsl_sf_result theta;
     gsl_sf_result cos_result;
     int stat_mp  = airy_mod_phase(x, mode, &mod, &theta);
-    int stat_cos = gsl_sf_cos_err_e(theta.val, theta.err, &cos_result);
+    int stat_cos;
+
+    if(theta.err >= 1.0) {
+      /* The phase is not known to better than a radian, which happens once
+       * |x| is large enough that eps*|x|^{3/2} ~ 1.  The cosine cannot be
+       * evaluated (gsl_sf_cos_e would return a value outside [-1,1], or
+       * overflow), so report zero with the whole modulus as the error.
+       * This is a genuine loss of precision, not a domain error. */
+      result->val = 0.0;
+      result->err = fabs(mod.val);
+      return GSL_ELOSS;
+    }
+
+    stat_cos = gsl_sf_cos_err_e(theta.val, theta.err, &cos_result);
     result->val  = mod.val * cos_result.val;
     result->err  = fabs(mod.val * cos_result.err) + fabs(cos_result.val * mod.err);
     result->err += GSL_DBL_EPSILON * fabs(result->val);
@@ -706,7 +726,20 @@ gsl_sf_airy_Ai_scaled_e(const double x, gsl_mode_t mode, gsl_sf_result * result)
     gsl_sf_result theta;
     gsl_sf_result cos_result;
     int stat_mp  = airy_mod_phase(x, mode, &mod, &theta);
-    int stat_cos = gsl_sf_cos_err_e(theta.val, theta.err, &cos_result);
+    int stat_cos;
+
+    if(theta.err >= 1.0) {
+      /* The phase is not known to better than a radian, which happens once
+       * |x| is large enough that eps*|x|^{3/2} ~ 1.  The cosine cannot be
+       * evaluated (gsl_sf_cos_e would return a value outside [-1,1], or
+       * overflow), so report zero with the whole modulus as the error.
+       * This is a genuine loss of precision, not a domain error. */
+      result->val = 0.0;
+      result->err = fabs(mod.val);
+      return GSL_ELOSS;
+    }
+
+    stat_cos = gsl_sf_cos_err_e(theta.val, theta.err, &cos_result);
     result->val  = mod.val * cos_result.val;
     result->err  = fabs(mod.val * cos_result.err) + fabs(cos_result.val * mod.err);
     result->err += GSL_DBL_EPSILON * fabs(result->val);
@@ -744,7 +777,17 @@ int gsl_sf_airy_Bi_e(const double x, gsl_mode_t mode, gsl_sf_result * result)
     gsl_sf_result theta;
     gsl_sf_result sin_result;
     int stat_mp  = airy_mod_phase(x, mode, &mod, &theta);
-    int stat_sin = gsl_sf_sin_err_e(theta.val, theta.err, &sin_result);
+    int stat_sin;
+
+    if(theta.err >= 1.0) {
+      /* see gsl_sf_airy_Ai_e: the phase is indeterminate, so the sine is
+       * meaningless and the modulus is the honest error estimate */
+      result->val = 0.0;
+      result->err = fabs(mod.val);
+      return GSL_ELOSS;
+    }
+
+    stat_sin = gsl_sf_sin_err_e(theta.val, theta.err, &sin_result);
     result->val  = mod.val * sin_result.val;
     result->err  = fabs(mod.val * sin_result.err) + fabs(sin_result.val * mod.err);
     result->err += GSL_DBL_EPSILON * fabs(result->val);
@@ -801,7 +844,17 @@ gsl_sf_airy_Bi_scaled_e(const double x, gsl_mode_t mode, gsl_sf_result * result)
     gsl_sf_result theta;
     gsl_sf_result sin_result;
     int stat_mp  = airy_mod_phase(x, mode, &mod, &theta);
-    int stat_sin = gsl_sf_sin_err_e(theta.val, theta.err, &sin_result);
+    int stat_sin;
+
+    if(theta.err >= 1.0) {
+      /* see gsl_sf_airy_Ai_e: the phase is indeterminate, so the sine is
+       * meaningless and the modulus is the honest error estimate */
+      result->val = 0.0;
+      result->err = fabs(mod.val);
+      return GSL_ELOSS;
+    }
+
+    stat_sin = gsl_sf_sin_err_e(theta.val, theta.err, &sin_result);
     result->val  = mod.val * sin_result.val;
     result->err  = fabs(mod.val * sin_result.err) + fabs(sin_result.val * mod.err);
     result->err += GSL_DBL_EPSILON * fabs(result->val);
