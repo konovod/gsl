@@ -24,6 +24,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <limits.h>
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_errno.h>
 #include <gsl/gsl_ieee_utils.h>
@@ -2159,6 +2160,13 @@ int test_pow_int(void)
   TEST_SF(s,  gsl_sf_pow_int_e, (8.0, -41, &r), 9.403954806578300064e-38, TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s,  gsl_sf_pow_int_e, (-10.0, 41, &r), -1.0e+41, TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s,  gsl_sf_pow_int_e, (-8.0, -41, &r), -9.403954806578300064e-38, TEST_TOL0, GSL_SUCCESS);
+
+  /* n = INT_MIN: the negation of n must not overflow.  The repeated
+   * squaring accumulates rounding over the ~31 steps, so the value is
+   * compared with a relaxed tolerance rather than the reported error.
+   */
+  TEST_SF_RLX(s, gsl_sf_pow_int_e, (1.0000001, INT_MIN, &r), 5.44471031785229506e-94, 1e-6, GSL_SUCCESS);
+  TEST_SF(s,     gsl_sf_pow_int_e, (-1.0, INT_MIN, &r), 1.0, TEST_TOL0, GSL_SUCCESS);
 
   return status;
 }
