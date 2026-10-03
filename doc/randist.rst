@@ -38,6 +38,13 @@ described in this section are declared in :file:`gsl_randist.h`.  The
 corresponding cumulative distribution functions are declared in
 :file:`gsl_cdf.h`.
 
+.. note::
+
+   The distribution functions in this chapter do not check that their
+   parameters lie within the domain of the distribution.  Passing an
+   out-of-range parameter gives an undefined result; it is the caller's
+   responsibility to supply valid parameters.
+
 Note that the discrete random variate functions always
 return a value of type :code:`unsigned int`, and on most platforms this
 has a maximum value of
