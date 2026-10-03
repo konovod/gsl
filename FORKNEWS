@@ -131,6 +131,14 @@ One line per change: date | tag | description | commit(s).
   2026-10-03 | [upstream] | cdf: bracketed solver for the beta inverse            | 51a63cbd5
   2026-10-03 | [upstream] | statistics: reject empty data sets in mean/variance   | 68fc3c752
   2026-10-03 | [rejected] | cdf: gsl_cdf_ugaussian_Pinv(0.5) "returns 1"          | - (see below)
+  2026-10-03 | [upstream] | randist: accurate binomial BINV seed                 | 7376dc316
+  2026-10-03 | [upstream] | specfunc: avoid sin/cos(pi) cancellation in 0F1      | 5fafddc63
+  2026-10-03 | [upstream] | specfunc: cancellation-free exprel_2 for small x     | c2ba2e271
+  2026-10-03 | [upstream] | specfunc: small-a cancellation in gamma_inc_Q        | 18652f8c1
+  2026-10-03 | [upstream] | doc: note the zero-base case in pow_int              | afd7f7d6c
+  2026-10-03 | [rejected] | rstat: correction to skew and kurtosis               | - (see below)
+  2026-10-03 | [rejected] | specfunc: consistency of pow_int usage in hermite    | - (see below)
+  2026-10-03 | [rejected] | specfunc: accuracy problems (report remainder)       | - (see below)
 
 
 ## [upstream] rng: make the random() generators produce the documented sequences
@@ -3401,3 +3409,117 @@ returns exactly 0.0.
 Kept here so the report is not re-investigated.
 
 Savannah bug #42502.
+
+
+## [upstream] the "Group K" special-function accuracy reports
+
+Commits: 7376dc316, 5fafddc63, c2ba2e271, 18652f8c1, afd7f7d6c
+
+Five changes from four Savannah reports: `randist` and `specfunc`
+accuracy defects.
+
+**#68479 — `gsl_ran_binomial`.**  The small-mean BINV branch seeded its
+inverse-CDF walk with `f(0) = (1-p)^n`, computed as
+`gsl_pow_uint(1-p, n)`.  The rounding of `q = 1-p` is amplified by the
+exponent, so the seed's relative error grows like `n*eps` — 2.6e-8 at
+`p = 1e-9`, `n = 1e9`, measured against mpmath at 60 digits.  It is now
+`exp(n*log1p(-p))`, which never forms `1-p`; `randist/binomial.c`
+already used that form for the pdf.  File: `randist/binomial_tpe.c`,
+with a regression test in `randist/test.c` that uses a local generator
+returning a fixed uniform lying between the two seeds.  A statistical
+test cannot see a 1e-8 probability shift, which is why the seed is
+probed at its threshold.
+
+**#43259 — `hyperg_0F1`.**  For `c < 1` the reflection used
+`sin(pi(1-c))`; with `c` tiny, `1-c` rounds to `1` and `sin(pi)` is
+1.2e-16 rather than the tiny `sin(pi c)`, so `0F1(3.4e-215, 4e-242)`
+returned 1.15e198 instead of 1.  The helpers now take `c` and use
+`gsl_sf_sin_pi`/`gsl_sf_cos_pi` (`sin(pi(1-c)) = sin(pi c)`,
+`cos(pi(1-c)) = -cos(pi c)`).  File: `specfunc/hyperg_0F1.c`, three
+vectors in `specfunc/test_hyperg.c` (1, 2 and 1.7893298094111404e34
+from mpmath).
+
+**#43259 — `exprel_2`.**  The direct form `2(exp(x)-1-x)/x^2` cancels
+for small `|x|` (9e-14 relative at `x = -0.0277`) while the reported
+error was only `2*eps*|val|`.  For `|x| < 0.5` it now uses the Taylor
+series `2 sum x^k/(k+2)!`, and the direct branch's error estimate
+includes the cancellation.  File: `specfunc/exp.c`, vector in
+`specfunc/test_sf.c`.
+
+**#43259 — `gamma_inc_Q`.**  With `x <= 0.5 a` the dispatch formed
+`Q = 1 - P` before the dedicated small-a series, losing about
+`eps/(a|log x|)` relative accuracy (five digits at `a = 4.57e-13`,
+`x = 5.13e-61`).  A new early branch routes `a < 0.2`, `x < 5`,
+`a|log x| < 0.1` through `gamma_inc_Q_series()`.  File:
+`specfunc/gamma_inc.c`, vector in `specfunc/test_gamma.c`.  A 475-point
+sweep against mpmath improves or leaves every point and keeps
+`P + Q = 1` exact in its window.
+
+**#66993 — documentation.**  `doc/specfunc-pow-int.rst` and its Texinfo
+mirror claimed the `pow_int` functions do not check for overflow; a
+zero base with a negative exponent is reported as `GSL_EOVRFLW`, so the
+exception is now stated.
+
+Negative controls: reverting each code change makes the new vectors
+fail (`randist_test` reports 0 vs 1 and 1 vs 0; `specfunc_test` reports
+the `exprel_2`, `gamma_inc_Q` and three `0F1` vectors).  Full CTest
+suite 56/56 on MSVC.
+
+See Savannah bugs #68479, #43259 and #66993.
+
+
+## [rejected] rstat: correction to gsl_rstat_skew and gsl_rstat_kurtosis
+
+Not applied.  Savannah bug #68283 proposes returning 0 from
+`gsl_rstat_skew`/`gsl_rstat_kurtosis` unless `n > 2` / `n > 3` and
+`M2 > 0`.  The accumulator is deliberately the online equivalent of
+`gsl_stats_skew`/`gsl_stats_kurtosis`, which return `NaN` for `n = 1`
+and a defined value for kurtosis at `n = 2, 3` (-2.75 for `[1,2]`).
+The proposed guards would diverge from that and break `rstat_test`
+test1 at `j = 1` (0 vs `NaN`) and `j = 2, 3` (kurtosis 0 vs
+-2.75/-2.333); `gsl_test_rel` treats a value against a `NaN`
+expectation as a failure.  The values quoted are reproduced from the
+built DLL and match `gsl_stats_*` exactly.
+
+Savannah bug #68283.
+
+
+## [rejected] specfunc: consistency of pow_int usage in hermite.c
+
+Not applied.  Savannah bug #67494 asks that `gsl_pow_int(2.0, m)` in
+`specfunc/hermite.c:232` become `gsl_sf_pow_int(2.0, m)`.  Both routines
+return the same value and the result is not used with an error estimate,
+so the change is stylistic rather than a defect.  Out of scope for this
+review.
+
+Savannah bug #67494.
+
+
+## [rejected] specfunc: the remainder of the "accuracy problems" report
+
+Partly applied (see the Group K entry); the remaining items of Savannah
+bug #43259 are not acted on.
+
+The report lists fifteen inputs across nine functions with "estimated"
+and "actual" absolute errors.  In most rows the reported "actual error"
+equals the magnitude of the GSL value, i.e. the reporter's reference
+had underflowed to zero, so the figures are not evidence.  Re-derived
+against mpmath at 50-60 digits on the current build:
+
+* `clausen` (2 cases), `zeta`, `eta`: already accurate to a few ulp;
+  the errors were fixed by the exact angle reduction (commit
+  5639c380f).
+* `psi_1` (2 cases): now `GSL_EDOM`; the arguments are negative even
+  integers, i.e. poles, so no finite value is expected.
+* `pochrel` (3 cases): the `a` are around -1e89, where `Gamma(a)` has a
+  pole in double precision; `a` is an integer as far as a `double` can
+  tell, and the function is evaluated essentially at a singularity.
+* `ellint_P`: `n ~ 1.3e251` puts a pole of the integrand inside
+  `(0, phi]`; the value is a principal value that the double-argument
+  routine cannot be expected to represent.
+
+The three clean defects in the report (`hyperg_0F1`, `exprel_2`,
+`gamma_inc_Q`) were fixed; the rest are degenerate or already fixed.
+
+Savannah bug #43259.
+
