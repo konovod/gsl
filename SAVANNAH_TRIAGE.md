@@ -100,7 +100,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 45924 | 2015-09-11 | bug | Runtime error | none | not reviewed | Bug in the inverse beta function gsl_cdf_beta_Pinv, and suggested fix |
 | 45925 | 2015-09-11 | - | Runtime error | none | not reviewed | Incomplete Gamma Functions flipped? |
 | 46593 | 2015-12-02 | bug | Accuracy problem | none | not reviewed | multifit test failure in 32 bit mode |
-| 46677 | 2015-12-12 | - | - | none | not reviewed | Wigner d-matrix |
+| 46677 | 2015-12-12 | - | - | none | **deferred** — feature request: port the Wigner d-matrix (gsl_sf_wigner_drot) from contrib/wigner.c; new API, out of scope | Wigner d-matrix |
 | 46678 | 2015-12-12 | bug | - | none | not reviewed | Bug in gsl_sf_coulomb_wave_F_array |
 | 47027 | 2016-01-31 | bug | - | none | not reviewed | gsl_sf_coulomb_wave_FG_e returns NaN but with success flag |
 | 47028 | 2016-01-31 | bug | Runtime error | none | not reviewed | multifit testsuite failure on ppc64le |
