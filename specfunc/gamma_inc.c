@@ -524,6 +524,20 @@ gsl_sf_gamma_inc_Q_e(const double a, const double x, gsl_sf_result * result)
     result->err += 2.0 * GSL_DBL_EPSILON * fabs(result->val);
     return stat_P;
   }
+  else if(a >= 0.2 && x < 20.0 && x <= a + 2.0*sqrt(a)) {
+    /* gsl_sf_gamma_inc_P_e evaluates gamma_inc_P_series here, and in this
+       region P is not so close to 1 that forming 1 - P loses precision, so
+       returning the exact complement also makes P + Q == 1 to the last bit
+       (Savannah bug #21836).  Beyond x ~ a + 2 sqrt(a) the subtraction does
+       lose digits, and there Q's own continued fraction is kept below; for
+       a < 0.2 the dedicated small-a cancellation series is kept. */
+    gsl_sf_result P;
+    int stat_P = gamma_inc_P_series(a, x, &P);
+    result->val  = 1.0 - P.val;
+    result->err  = P.err;
+    result->err += 2.0 * GSL_DBL_EPSILON * fabs(result->val);
+    return stat_P;
+  }
   else if(a >= 1.0e+06 && (x-a)*(x-a) < a) {
     /* Then try the difficult asymptotic regime.
      * This is the only way to do this region.

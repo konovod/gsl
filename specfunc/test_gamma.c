@@ -395,6 +395,29 @@ int test_gamma(void)
 
   TEST_SF(s,  gsl_sf_beta_inc_e, (0.5, 101.5, 0.999457, &r), 1.0, TEST_TOL2, GSL_SUCCESS);
 
+  /* Savannah bug #21836: the sum of the regularized incomplete gamma
+     functions satisfies P + Q == 1 only within the rounding of two
+     independent evaluations.  In the region where P is evaluated by its
+     series and is not so close to 1 that the complement loses digits
+     (x <= a/2, or x <= a + 2 sqrt(a) with x < 20) Q now returns the exact
+     complement 1 - P, so the identity holds bit for bit there.  The
+     reported case is (a, x) = (0.3, 1.0). */
+  {
+    double aa, xx;
+    TEST_SF(s, gsl_sf_gamma_inc_P_e, (0.3, 1.0, &r), 9.156741562411074842e-01, TEST_TOL0, GSL_SUCCESS);
+    for(aa = 0.05; aa < 3.0; aa += 0.05) {
+      for(xx = 0.05; xx < 20.0; xx += 0.05) {
+        gsl_sf_result P, Q;
+        if(!(xx <= 0.5*aa || (aa >= 0.2 && xx < 20.0 && xx <= aa + 2.0*sqrt(aa)))) continue;
+        gsl_sf_gamma_inc_P_e(aa, xx, &P);
+        gsl_sf_gamma_inc_Q_e(aa, xx, &Q);
+        if(P.val + Q.val != 1.0) {
+          s++;
+          printf("FAIL: gamma_inc_P+Q: a=%g x=%g P+Q-1=%.3g\n", aa, xx, P.val+Q.val-1.0);
+        }
+      }
+    }
+  }
 
   return s;
 }
