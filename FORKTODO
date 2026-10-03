@@ -1,0 +1,68 @@
+# FORKTODO - pending work notes for this fork
+
+Scratch list of things to investigate.  This is **not** the change log:
+applied changes live in `FORKNEWS`, and rejected Savannah candidates in
+`SAVANNAH_REVIEW.md`.  An item here is a to-do, not a decision.
+
+Started 2026-10-03.
+
+
+## Audit exported-but-undocumented public functions
+
+Found while fixing the coupling symbols (Savannah bugs #43256 / #68312):
+`gsl_sf_coupling_RacahW()` and `gsl_sf_coupling_RacahW_e()` are declared
+in `gsl/gsl_sf_coupling.h` and exported by the library, but there is no
+entry for them anywhere in `doc/` or `doc_texinfo/`.  A function sitting
+next to fully documented neighbours having that gap suggests there are
+more, so the whole public API should be swept.
+
+For each function that is exported but not documented, decide whether it
+should be
+
+  * documented - add it to both `doc/*.rst` and the `doc_texinfo/*.texi`
+    mirror, following `AGENTS.md`;
+  * deprecated - with a marker derived from the actual
+    `GSL_DISABLE_DEPRECATED` block in the header, not from a comment; or
+  * hidden - renamed to a non-`gsl_` symbol, if it was never meant to be
+    public.  That is an API change and needs care.
+
+### Method
+
+  1. Take `gsl/*.h` as the definition of the public API.  Do **not** use
+     the DLL exports on Windows: the CMake build sets
+     `WINDOWS_EXPORT_ALL_SYMBOLS`, so `dumpbin`/`nm` list every symbol,
+     internal ones included.
+  2. Collect identifiers of the form `gsl_xxx(` from those headers, and
+     collect every identifier that occurs anywhere under `doc/` and
+     `doc_texinfo/` - not only the `.. function::` / `@deftypefun`
+     directives, because many functions are named only in prose or in an
+     example.
+  3. Subtract.  Discard names containing a templated-type token
+     (`float`, `long_double`, `char`, `uchar`, `short`, `ushort`, `int`,
+     `uint`, `long`, `ulong`, `complex`, `raw`): the manual documents
+     those through the generic `double` base name.
+
+A first pass on 2026-10-03 left 191 candidate names.  The heuristic is
+crude in both directions, so each row still needs a look by hand.
+
+### Confirmed examples (checked against both manual trees)
+
+  gsl_sf_coupling_RacahW            gsl_sf_coupling_RacahW_e
+  gsl_bspline_eval_basis            gsl_bspline_eval_deriv_basis
+  gsl_bspline_breakpoint            gsl_bspline_find_interval
+  gsl_bspline_init_greville         gsl_linalg_mcholesky_invert
+  gsl_linalg_matmult                gsl_linalg_matmult_mod
+  gsl_linalg_cholesky_solve_mat     gsl_linalg_cholesky_svx_mat
+  gsl_linalg_balance_columns        gsl_linalg_exponential_ss
+  gsl_multifit_covar                gsl_eigen_francis
+  gsl_eigen_invert_jacobi           gsl_cheb_new
+  gsl_min_find_bracket              gsl_bst_alloc
+
+(`gsl_bspline_eval_basis` is used in `doc/examples/bspline_knots.c` but
+is never described, which is exactly the kind of gap this is meant to
+catch.)
+
+Some candidates are almost certainly deliberate and want a deprecation
+marker rather than prose, e.g. the old `gsl_odeiv_*` control/step aliases
+and the `gsl_multifit_fdfsolver_*` compatibility names; do not document
+those as new API without checking `GSL_DISABLE_DEPRECATED`.

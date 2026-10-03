@@ -86,3 +86,4 @@ vector/test_static.dat
 
 # Scratch area for patch/reference files being evaluated for integration.
 /temp/
+doc/_build
