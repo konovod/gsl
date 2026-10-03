@@ -166,7 +166,13 @@ Trigonometric Integrals
 
          Ci(x) = -\int_x^\infty dt \cos(t)/t}
          
-   for :math:`x > 0`
+   for :math:`x > 0`.
+   The limit as :math:`x \to +\infty` is returned for ``+inf``:
+   :math:`\hbox{Si}(+\infty) = \pi/2` and
+   :math:`\hbox{Ci}(+\infty) = 0`.  ``Ci`` has no limit at infinity
+   for an argument other than :math:`+\infty`, so ``-inf`` is outside
+   the domain; ``Si`` has the limit :math:`-\pi/2` at ``-inf`` and
+   returns it.
 .. Domain: x > 0.0
 .. Exceptional Return Values: GSL_EDOM
 

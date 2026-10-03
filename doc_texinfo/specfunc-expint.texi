@@ -157,6 +157,8 @@ These routines compute the third-order exponential integral @c{${\rm Ei}_3(x) = 
 @deftypefunx int gsl_sf_Si_e (double @var{x}, gsl_sf_result * @var{result})
 These routines compute the Sine integral @c{$\hbox{Si}(x) = \int_0^x dt \sin(t)/t$}
 @math{Si(x) = \int_0^x dt \sin(t)/t}.
+The limits @math{Si(+\infty) = \pi/2} and @math{Si(-\infty) = -\pi/2}
+are returned for the infinite arguments.
 @comment Exceptional Return Values: none
 @end deftypefun
 
@@ -164,7 +166,10 @@ These routines compute the Sine integral @c{$\hbox{Si}(x) = \int_0^x dt \sin(t)/
 @deftypefun double gsl_sf_Ci (const double @var{x})
 @deftypefunx int gsl_sf_Ci_e (double @var{x}, gsl_sf_result * @var{result})
 These routines compute the Cosine integral @c{$\hbox{Ci}(x) = -\int_x^\infty dt \cos(t)/t$}
-@math{Ci(x) = -\int_x^\infty dt \cos(t)/t} for @math{x > 0}.  
+@math{Ci(x) = -\int_x^\infty dt \cos(t)/t} for @math{x > 0}.
+The limit @math{Ci(+\infty) = 0} is returned for @math{x = +\infty};
+@math{Ci} has no limit at @math{-\infty}, so that argument is outside
+the domain.
 @comment Domain: x > 0.0
 @comment Exceptional Return Values: GSL_EDOM
 @end deftypefun

@@ -40,7 +40,10 @@ declared in the header file :file:`gsl_sf_laguerre.h`.
 
    These routines evaluate the generalized Laguerre polynomials
    :math:`L^a_n(x)` for :math:`a > -1`,
-   :math:`n \ge 0`.
+   :math:`n \ge 0`.  For :math:`n = 0` the value is
+   :math:`L^a_0(x) = 1` for every :math:`x`.  A :code:`NaN` argument
+   is propagated, as it is throughout this chapter; it is not treated
+   as a domain error.
 .. Domain: a > -1.0, n >= 0
 .. Evaluate generalized Laguerre polynomials.
 .. Exceptional Return Values: GSL_EDOM

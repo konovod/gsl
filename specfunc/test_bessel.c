@@ -157,6 +157,11 @@ int test_bessel(void)
   TEST_SF(s, gsl_sf_bessel_Kn_scaled_e, (   5,    2.0, &r), 69.68655087607675118, TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_bessel_Kn_scaled_e, ( 100,  100.0, &r), 2.0475736731166756813e+19, TEST_TOL1, GSL_SUCCESS);
 
+  /* e^x K_0(x) -> 0 as x -> +Inf, so the scaled function at +Inf is 0
+   * with GSL_SUCCESS; the limit is finite, not a domain violation.
+   * See Savannah bug #58031. */
+  TEST_SF(s, gsl_sf_bessel_Kn_scaled_e, (0, GSL_POSINF, &r), 0.0, TEST_TOL0, GSL_SUCCESS);
+
   TEST_SF(s, gsl_sf_bessel_K0_e, (0.1, &r), 2.4270690247020166125, TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_bessel_K0_e, (1.95, &r), 0.1211226255426818887894, TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_bessel_K0_e, (2.0, &r), 0.11389387274953343565, TEST_TOL0, GSL_SUCCESS);

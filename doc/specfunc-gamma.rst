@@ -192,6 +192,9 @@ Pochhammer Symbol
    The Pochhammer symbol is also known as the Apell symbol and
    sometimes written as :math:`(a,x)`.  When :math:`a` and :math:`a + x` 
    are negative integers or zero, the limiting value of the ratio is returned. 
+   For a finite :math:`x > 0` the ratio tends to zero as
+   :math:`a \to -\infty`, and :math:`(a)_x = 0` is returned for
+   :math:`a = -\infty`.
 .. exceptions:  GSL_EDOM, GSL_EOVRFLW
 
 .. index:: logarithm of Pochhammer symbol
@@ -240,6 +243,9 @@ Incomplete Gamma Functions
    = \Gamma(a)\,(1 - P(a,x))`, so for example
    :math:`\Gamma(1,3) = Q(1,3) = e^{-3}`, while
    :math:`P(1,3) = 1 - e^{-3}`.
+
+   The limit :math:`\Gamma(a,+\infty) = 0` is returned for
+   :math:`x = +\infty`.
 .. exceptions: GSL_EDOM
 
 .. index:: incomplete Gamma function
@@ -250,6 +256,9 @@ Incomplete Gamma Functions
    These routines compute the normalized incomplete Gamma Function
    :math:`Q(a,x) = 1/\Gamma(a) \int_x^\infty dt t^{(a-1)} \exp(-t)`
    for :math:`a > 0`, :math:`x \ge 0`.
+   The limits are returned for an infinite argument: for fixed
+   :math:`a > 0`, :math:`Q(a,+\infty) = 0`; for fixed
+   :math:`x \ge 0`, :math:`Q(+\infty,x) = 1`.
 .. exceptions: GSL_EDOM
 
 .. index:: complementary incomplete Gamma function
@@ -260,6 +269,10 @@ Incomplete Gamma Functions
    These routines compute the complementary normalized incomplete Gamma Function
    :math:`P(a,x) = 1 - Q(a,x) = 1/\Gamma(a) \int_0^x dt t^{(a-1)} \exp(-t)`
    for :math:`a > 0`, :math:`x \ge 0`.
+
+   The limits are returned for an infinite argument: for fixed
+   :math:`a > 0`, :math:`P(a,+\infty) = 1`; for fixed
+   :math:`x \ge 0`, :math:`P(+\infty,x) = 0`.
 
    Note that Abramowitz & Stegun call :math:`P(a,x)` the incomplete gamma
    function (section 6.5).

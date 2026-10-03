@@ -218,6 +218,8 @@ Irregular Modified Cylindrical Bessel Functions
 
    These routines compute the scaled irregular modified cylindrical Bessel
    function of order :data:`n`, :math:`\exp(x) K_n(x)`, for :math:`x>0`.
+   Since :math:`\exp(x) K_n(x) \to 0` as :math:`x \to +\infty`, the
+   value 0 is returned for :math:`x = +\infty`.
 .. Domain: x > 0.0 
 .. Exceptional Return Values: GSL_EDOM, GSL_EUNDRFLW
 

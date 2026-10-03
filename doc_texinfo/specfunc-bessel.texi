@@ -232,6 +232,8 @@ function of first order @math{\exp(x) K_1(x)} for @math{x>0}.
 @deftypefunx int gsl_sf_bessel_Kn_scaled_e (int @var{n}, double @var{x}, gsl_sf_result * @var{result})
 These routines compute the scaled irregular modified cylindrical Bessel
 function of order @var{n}, @math{\exp(x) K_n(x)}, for @math{x>0}.
+Since @math{\exp(x) K_n(x) \to 0} as @math{x \to +\infty}, the value 0
+is returned for @math{x = +\infty}.
 @comment Domain: x > 0.0 
 @comment Exceptional Return Values: GSL_EDOM, GSL_EUNDRFLW
 @end deftypefun

@@ -69,6 +69,9 @@ Hypergeometric functions are described in Abramowitz & Stegun, Chapters
    denominator vanishes, i.e. when :data:`a` is a nonpositive integer
    with :math:`a \ge b`, the value is finite, and in particular
    :math:`M(a,b,0) = 1`.
+
+    A :code:`NaN` argument is propagated, as it is throughout this
+    chapter; it is not treated as a domain error.
 .. exceptions:
 
 .. function:: double gsl_sf_hyperg_U_int (int m, int n, double x)
