@@ -26,7 +26,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 21831 | 2007-12-18 | - | Accuracy problem | source levy.c | not reviewed | Levý random number generator for alpha < 1 |
 | 21833 | 2007-12-18 | - | Performance | none | not reviewed | suboptimal performance of gsl permutation? |
 | 21835 | 2007-12-18 | - | Accuracy problem | clean test_hyperg.diff +1 | not reviewed | gsl_sf_hyperg_2F1 problematic arguments |
-| 21836 | 2007-12-18 | - | Accuracy problem | none | not reviewed | gamma_inc_P and gamma_inc_Q only satisfy P+Q=1 within errors |
+| 21836 | 2007-12-18 | - | Accuracy problem | none | **fixed** — Q returns exact complement of P in the series window (6f23a4cb5) | gamma_inc_P and gamma_inc_Q only satisfy P+Q=1 within errors |
 | 21837 | 2007-12-18 | - | Runtime error | none | not reviewed | gsl_linalg_solve_symm_tridiag requires positive definite matrix |
 | 24252 | 2008-09-12 | feature | - | source gamma_tail_jpl_080908.c | not reviewed | suggestion: add gamma tail distribution |
 | 24871 | 2008-11-18 | feature | - | none | not reviewed | suggestion, add support for E_n |
@@ -40,7 +40,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 30885 | 2010-08-27 | - | Runtime error | none | not reviewed | nans from gsl_sf_coulomb_wave_FG_e(1.2693881947287221e-07, 0.0, lam_F=37, lam_G=36) |
 | 30947 | 2010-09-02 | - | - | clean 0001-Fixed-step-size-control-object.patch | not reviewed | Please, include fixed step size control object for ode suite |
 | 31109 | 2010-09-23 | - | Performance | none | not reviewed | ode-initval/bsimp is always high order |
-| 31362 | 2010-10-18 | bug | Runtime error | none | not reviewed | The Complete Elliptic Integrals (gsl_sf_ellint_Ecomp and _Kcomp) Loop Forever with NaN Argument |
+| 31362 | 2010-10-18 | bug | Runtime error | none | **fixed** — NaN rejected as GSL_EDOM in the complete elliptic integrals (14d595eb8) | The Complete Elliptic Integrals (gsl_sf_ellint_Ecomp and _Kcomp) Loop Forever with NaN Argument |
 | 31426 | 2010-10-23 | - | Runtime error | none | not reviewed | infinite loop in gsl_eigen_symm |
 | 32257 | 2011-01-26 | - | - | none | not reviewed | RFE: Import integration routines from quadrule |
 | 32306 | 2011-01-31 | bug | Accuracy problem | source hyp.c | **fixed** — integer-d 2F1 series and error estimate (e4c4ac326, 882c8361d) | sign error in gsl_sf_hyperg_2F1 |
@@ -98,7 +98,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 45782 | 2015-08-17 | feature | Accuracy problem | none | not reviewed | Feature request: Make derivative epsilon configurable |
 | 45797 | 2015-08-19 | - | Accuracy problem | none | not reviewed | Possible problem with LAPACK Fortran routine ZGESVD |
 | 45924 | 2015-09-11 | bug | Runtime error | none | not reviewed | Bug in the inverse beta function gsl_cdf_beta_Pinv, and suggested fix |
-| 45925 | 2015-09-11 | - | Runtime error | none | not reviewed | Incomplete Gamma Functions flipped? |
+| 45925 | 2015-09-11 | - | Runtime error | none | **rejected** — not-a-bug: report confused Gamma(a,x) with P; Q matches (3cc1aaa54 docs) | Incomplete Gamma Functions flipped? |
 | 46593 | 2015-12-02 | bug | Accuracy problem | none | not reviewed | multifit test failure in 32 bit mode |
 | 46677 | 2015-12-12 | - | - | none | **deferred** — feature request: port the Wigner d-matrix (gsl_sf_wigner_drot) from contrib/wigner.c; new API, out of scope | Wigner d-matrix |
 | 46678 | 2015-12-12 | bug | - | none | not reviewed | Bug in gsl_sf_coulomb_wave_F_array |
@@ -109,14 +109,14 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 47348 | 2016-03-05 | bug | - | none | not reviewed | Use of incorrect ideom floor(x+0.5) |
 | 47402 | 2016-03-13 | - | - | none | not reviewed | Mathieu functions |
 | 47646 | 2016-04-07 | bug | Accuracy problem | partial test_beta_small.c +2 | **fixed** — code fix upstream (05c5b5179); regression test added (d64cc4d93) | gsl_ran_beta returns NaN for small arguments |
-| 48702 | 2016-08-04 | - | Runtime error | none | not reviewed | gsl_sf_ellint_Kcomp stalls on GSL_NAN |
+| 48702 | 2016-08-04 | - | Runtime error | none | **fixed** — same NaN rejection as #31362 (14d595eb8) | gsl_sf_ellint_Kcomp stalls on GSL_NAN |
 | 48915 | 2016-08-26 | - | Runtime error | none | not reviewed | some test failures on AIX system for GSL 2.1.91 |
 | 49465 | 2016-10-28 | - | Performance | clean 0001-initialize-newton-steffenson-solvers-with-GSL_FN_FDF.patch | **fixed** — roots Newton/Steffenson fdf init (4eac6584f) | initialize newton and steffenson solvers with GSL_FN_FDF_EVAL_F_DF |
 | 49518 | 2016-11-02 | bug | Build | none | not reviewed | bug in matrix/vector tests |
 | 49697 | 2016-11-24 | bug | - | none | not reviewed | gsl 2.2.1 linalg test fails with gcc (4.9.4 and later) and -mavx |
 | 50343 | 2017-02-17 | - | Runtime error | inline | rejected — not-a-bug: Mathieu branch cut is arbitrary, GSL correct | Different value for mathieu_ce in Mathematica and GSL |
 | 50382 | 2017-02-22 | feature | Build | none | not reviewed | Add CMAKE and NUGET support for Windows |
-| 50459 | 2017-03-04 | - | - | none | not reviewed | Non termination of the incomplete gamma function due to floating-point rounding errors |
+| 50459 | 2017-03-04 | - | - | none | **fixed** — negative-a recurrence guard for |a| > 2^53 (932087bcd) | Non termination of the incomplete gamma function due to floating-point rounding errors |
 | 50711 | 2017-04-03 | - | - | none | not reviewed | Gauss hypergeometric function : gsl_sf_hyperg_2F1 gives up (GSL_EUNIMPL) |
 | 50712 | 2017-04-03 | bug | - | none | not reviewed | Test failure for lm+accel and fdfvv |
 | 50734 | 2017-04-05 | - | Performance | clean 0001-initialize-newton-steffenson-solvers-with-GSL_FN_FDF.patch | **fixed** — same fix as #49465 (4eac6584f) | initialize newton, steffenson solvers with GSL_FN_FDF_EVAL_F_DF |

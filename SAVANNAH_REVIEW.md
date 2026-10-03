@@ -1390,3 +1390,58 @@ symbol (`-4.3149240273135e-3`); the overflowing call is the doubled one.
 The regression vector uses the doubled form and the exact value.
 
 See FORKNEWS; commit `59fc479e2`.
+
+
+## Group F — non-termination: #31362, #48702, #50459, #21836, #45925
+
+Reviewed 2026-10-03 against the built `build-cmake/gsl.dll` with scratch
+programs under `%TEMP%`.  Five reports were grouped as "elliptic/gamma
+loops and stalls".  Only one is a genuine non-termination.
+
+### #31362 / #48702 — complete elliptic integrals on NaN
+
+`gsl_sf_ellint_Kcomp_e(GSL_NAN)` returns `GSL_EMAXITER` here in 0.0 ms; it
+does **not** loop.  Upstream `9a7cf12e0` already added the `nmax` counters
+to the Carlson RC/RD/RF/RJ loops, turning the original infinite loop into a
+MAXITER error, and left the `FIXME` in `test_sf.c` noting the code should
+be a domain error.  `9b3cce337` is the commit that introduced the NaN test
+vectors ("infinite loop for ellint with NAN argument").  #48702 is the same
+defect as a 2016 OS-dependent "stall".  Fix: reject NaN with `DOMAIN_ERROR`
+before iterating, in Kcomp, Ecomp, Dcomp and Pcomp; `gsl_isnan(k)` not
+`isfinite`, so `k = +-inf` keeps its existing `k*k >= 1.0` EDOM path.
+
+Negative control: with the guard removed the vectors return `GSL_EMAXITER`
+(and before `9a7cf12e0` did not return at all).  This reverses the earlier
+`sin_pi`/`cos_pi` policy of letting NaN propagate — justified in FORKNEWS
+because these functions have a bounded domain (`|k| < 1`).
+
+### #50459 — incomplete gamma, a < -2^53
+
+Reproduced: `gsl_sf_gamma_inc_e(-1e25, 0.1)` still running after 8 s.  The
+report's diagnosis is exactly right: the negative-a recurrence does
+`alpha -= 1.0` until `alpha > a`, and at `|alpha| >= 2^53` the decrement
+rounds to `alpha`, so the loop never terminates.  Fix: guard `a < -2^53`
+and return 0 with `GSL_EUNDRFLW` (Gamma has underflowed).  Negative
+control: the vector hangs without the guard.
+
+### #21836 — exact P + Q = 1
+
+Reproduced `P(0.3,1) + Q(0.3,1) - 1 = -1.44e-15`.  Making P and Q use the
+same branch everywhere would force one of them to be a subtraction of the
+other in a region where it is the small tail, degrading its accuracy
+(e.g. `Q(1,10) = e^-10`).  The fix is therefore scoped to where the
+subtraction is lossless: `a >= 0.2`, `x < 20`, `x <= a + 2 sqrt(a)`.
+Measured `1 - P_series` against Q's own CF across the window: relative
+difference below 1e-13 throughout, and the identity is then bit-exact.
+Outside it Q keeps its tuned method.  Negative control: the grid reports
+1099 failures with the new branch removed, 0 with it.
+
+### #45925 — "flipped" incomplete gamma functions
+
+Not a bug.  `gsl_sf_gamma_inc` is `Gamma(a,x)`; the complement of `P` is
+`Q`.  `Gamma(1,3) = Q(1,3) = 0.049787...` is correct.  The beta half of the
+report has the same shape (`I_x(a,b)` vs `I_{1-x}(b,a)` are equal only up
+to rounding), and is not a defect either.  Documented in both manual trees;
+no code change.
+
+Full CTest suite: 56/56 after the changes.
