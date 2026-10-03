@@ -118,6 +118,9 @@ gsl_eigen_symmv (gsl_matrix * A, gsl_vector * eval, gsl_matrix * evec,
       double *const sd = w->sd;
       const size_t N = A->size1;
       size_t a, b;
+      size_t iter = 0;
+      const size_t max_iter = 30 * N;
+      int shift = 0;
 
       /* handle special case */
 
@@ -128,6 +131,55 @@ gsl_eigen_symmv (gsl_matrix * A, gsl_vector * eval, gsl_matrix * evec,
           gsl_matrix_set (evec, 0, 0, 1.0);
           return GSL_SUCCESS;
         }
+
+      /* Rescale by a power of two if the entries lie far outside the
+         normal range.  The QR iteration can otherwise stall when the
+         chopping threshold underflows to zero; the eigenvalues are
+         scaled back at the end.  Only the diagonal and lower triangle
+         are referenced by the reduction. */
+
+      {
+        int emax = 0;
+        int found = 0;
+        size_t i, j;
+
+        for (i = 0; i < N; i++)
+          {
+            for (j = 0; j <= i; j++)
+              {
+                const double aij = gsl_matrix_get (A, i, j);
+
+                if (aij != 0.0)
+                  {
+                    int e;
+                    frexp (fabs (aij), &e);
+
+                    if (!found || e > emax)
+                      {
+                        emax = e;
+                        found = 1;
+                      }
+                  }
+              }
+          }
+
+        if (found)
+          {
+            shift = -emax;
+
+            if (shift != 0)
+              {
+                for (i = 0; i < N; i++)
+                  {
+                    for (j = 0; j <= i; j++)
+                      {
+                        const double aij = gsl_matrix_get (A, i, j);
+                        gsl_matrix_set (A, i, j, ldexp (aij, shift));
+                      }
+                  }
+              }
+          }
+      }
 
       /* use sd as the temporary workspace for the decomposition when
          computing eigenvectors */
@@ -154,6 +206,7 @@ gsl_eigen_symmv (gsl_matrix * A, gsl_vector * eval, gsl_matrix * evec,
           if (sd[b - 1] == 0.0 || isnan(sd[b - 1]))
             {
               b--;
+              iter = 0;
               continue;
             }
           
@@ -178,6 +231,11 @@ gsl_eigen_symmv (gsl_matrix * A, gsl_vector * eval, gsl_matrix * evec,
             double *sd_block = sd + a;
             double * const gc = w->gc;
             double * const gs = w->gs;
+
+            if (iter >= max_iter)
+              {
+                GSL_ERROR ("QR iteration failed to converge", GSL_EMAXITER);
+              }
             
             /* apply QR reduction with implicit deflation to the
                unreduced block */
@@ -203,6 +261,8 @@ gsl_eigen_symmv (gsl_matrix * A, gsl_vector * eval, gsl_matrix * evec,
             /* remove any small off-diagonal elements */
             
             chop_small_elements (N, d, sd);
+
+            iter++;
           }
         }
 
@@ -210,6 +270,17 @@ gsl_eigen_symmv (gsl_matrix * A, gsl_vector * eval, gsl_matrix * evec,
         gsl_vector_view d_vec = gsl_vector_view_array (d, N);
         gsl_vector_memcpy (eval, &d_vec.vector);
       }
+
+      if (shift != 0)
+        {
+          size_t i;
+
+          for (i = 0; i < N; i++)
+            {
+              gsl_vector_set (eval, i,
+                              ldexp (gsl_vector_get (eval, i), -shift));
+            }
+        }
       
       return GSL_SUCCESS;
     }

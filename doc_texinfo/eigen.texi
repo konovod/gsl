@@ -52,7 +52,8 @@ This function computes the eigenvalues of the real symmetric matrix
 in @var{w}.  The diagonal and lower triangular part of @var{A} are
 destroyed during the computation, but the strict upper triangular part
 is not referenced.  The eigenvalues are stored in the vector @var{eval}
-and are unordered.
+and are unordered.  The function returns @code{GSL_SUCCESS} on success,
+or @code{GSL_EMAXITER} if the internal QR iteration fails to converge.
 @end deftypefun
 
 @deftypefun {gsl_eigen_symmv_workspace *} gsl_eigen_symmv_alloc (const size_t @var{n})
@@ -76,7 +77,8 @@ vector @var{eval} and are unordered.  The corresponding eigenvectors are
 stored in the columns of the matrix @var{evec}.  For example, the
 eigenvector in the first column corresponds to the first eigenvalue.
 The eigenvectors are guaranteed to be mutually orthogonal and normalised
-to unit magnitude.
+to unit magnitude.  The function returns @code{GSL_SUCCESS} on success,
+or @code{GSL_EMAXITER} if the internal QR iteration fails to converge.
 @end deftypefun
 
 @node Complex Hermitian Matrices

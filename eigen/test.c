@@ -460,6 +460,79 @@ test_eigen_symm(void)
 
 } /* test_eigen_symm() */
 
+static void
+test_eigen_symm_subnormal (void)
+{
+  /* A tridiagonal matrix scaled below the normal range used to stall
+     gsl_eigen_symm: the chopping threshold underflows to zero, so the
+     QR sweep reaches a fixed point and the loop never deflates.
+     Savannah bug #31426. */
+
+  const size_t N = 16;
+  const double scale = GSL_DBL_MIN;
+  double expected[16];
+  double got[16];
+  double m;
+  int emax;
+  size_t i;
+  int status;
+
+  gsl_matrix *A = gsl_matrix_alloc (N, N);
+  gsl_matrix *A2 = gsl_matrix_alloc (N, N);
+  gsl_vector *eval = gsl_vector_alloc (N);
+  gsl_matrix *evec = gsl_matrix_alloc (N, N);
+  gsl_eigen_symm_workspace *w = gsl_eigen_symm_alloc (N);
+  gsl_eigen_symmv_workspace *wv = gsl_eigen_symmv_alloc (N);
+
+  /* The eigenvalues are subnormal at this scale, so compare the
+     normalised values ldexp(eval, -emax); the algorithm works on
+     scale*2^-emax and this simply undoes that rescaling. */
+
+  m = frexp (scale, &emax);
+
+  for (i = 0; i < N; i++)
+    expected[i] = m * (1.0 + 2.0 * cos (M_PI * (i + 1.0) / (N + 1.0)));
+
+  gsl_matrix_set_zero (A);
+  for (i = 0; i < N; i++)
+    gsl_matrix_set (A, i, i, scale);
+  for (i = 0; i + 1 < N; i++)
+    {
+      gsl_matrix_set (A, i, i + 1, scale);
+      gsl_matrix_set (A, i + 1, i, scale);
+    }
+
+  gsl_matrix_memcpy (A2, A);
+
+  status = gsl_eigen_symm (A, eval, w);
+  gsl_test_int (status, GSL_SUCCESS, "eigen_symm subnormal status");
+
+  for (i = 0; i < N; i++)
+    got[i] = ldexp (gsl_vector_get (eval, i), -emax);
+  gsl_sort (got, 1, N);
+  gsl_sort (expected, 1, N);
+  for (i = 0; i < N; i++)
+    gsl_test_rel (got[i], expected[i], 1e-12,
+                  "eigen_symm subnormal eigenvalue %d", i);
+
+  status = gsl_eigen_symmv (A2, eval, evec, wv);
+  gsl_test_int (status, GSL_SUCCESS, "eigen_symmv subnormal status");
+
+  for (i = 0; i < N; i++)
+    got[i] = ldexp (gsl_vector_get (eval, i), -emax);
+  gsl_sort (got, 1, N);
+  for (i = 0; i < N; i++)
+    gsl_test_rel (got[i], expected[i], 1e-12,
+                  "eigen_symmv subnormal eigenvalue %d", i);
+
+  gsl_eigen_symmv_free (wv);
+  gsl_eigen_symm_free (w);
+  gsl_matrix_free (evec);
+  gsl_vector_free (eval);
+  gsl_matrix_free (A2);
+  gsl_matrix_free (A);
+} /* test_eigen_symm_subnormal() */
+
 /******************************************
  * herm test code                         *
  ******************************************/
@@ -1337,6 +1410,7 @@ main()
   gsl_rng_env_setup ();
 
   test_eigen_symm();
+  test_eigen_symm_subnormal();
   test_eigen_herm();
   test_eigen_nonsymm();
   test_eigen_gensymm();
