@@ -72,6 +72,10 @@ Legendre Form of Complete Elliptic Integrals
    the accuracy specified by the mode variable :data:`mode`.  
    Note that Abramowitz & Stegun define this function in terms of the
    parameter :math:`m = k^2`.
+
+   The function is defined for :math:`|k| < 1`; any argument outside that
+   range, including a NaN, is a domain error and returns
+   :macro:`GSL_EDOM` with a value of NaN.
 .. Exceptional Return Values:  GSL_EDOM
 
 .. function:: double gsl_sf_ellint_Ecomp (double k, gsl_mode_t mode)
@@ -81,6 +85,10 @@ Legendre Form of Complete Elliptic Integrals
    accuracy specified by the mode variable :data:`mode`.
    Note that Abramowitz & Stegun define this function in terms of the
    parameter :math:`m = k^2`.
+
+   The function is defined for :math:`|k| < 1`; any argument outside that
+   range, including a NaN, is a domain error and returns
+   :macro:`GSL_EDOM` with a value of NaN.
 .. Exceptional Return Values:  GSL_EDOM
 
 .. function:: double gsl_sf_ellint_Pcomp (double k, double n, gsl_mode_t mode)
@@ -94,6 +102,10 @@ Legendre Form of Complete Elliptic Integrals
 
    For :math:`n \le -1` the integrand has a pole in :math:`(0,\pi/2]` and the
    reported value is the Cauchy principal value.
+
+   The function is defined for :math:`|k| < 1`; any argument outside that
+   range, including a NaN, is a domain error and returns
+   :macro:`GSL_EDOM` with a value of NaN.
 .. Exceptional Return Values:  GSL_EDOM
 
 Legendre Form of Incomplete Elliptic Integrals

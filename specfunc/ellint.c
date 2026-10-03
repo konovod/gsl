@@ -527,7 +527,10 @@ gsl_sf_ellint_D_e(double phi, double k, gsl_mode_t mode, gsl_sf_result * result)
 int
 gsl_sf_ellint_Dcomp_e(double k, gsl_mode_t mode, gsl_sf_result * result)
 {
-  if(k*k >= 1.0) {
+  if(gsl_isnan(k)) {
+    DOMAIN_ERROR(result);
+  }
+  else if(k*k >= 1.0) {
     DOMAIN_ERROR(result);
   } else {
     const double y = 1.0 - k*k;  /* FIXME: still need to handle k~=~1 */
@@ -544,7 +547,10 @@ gsl_sf_ellint_Dcomp_e(double k, gsl_mode_t mode, gsl_sf_result * result)
 int
 gsl_sf_ellint_Kcomp_e(double k, gsl_mode_t mode, gsl_sf_result * result)
 {
-  if(k*k >= 1.0) {
+  if(gsl_isnan(k)) {
+    DOMAIN_ERROR(result);
+  }
+  else if(k*k >= 1.0) {
     DOMAIN_ERROR(result);
   }
   else if(k*k >= 1.0 - GSL_SQRT_DBL_EPSILON) {
@@ -581,7 +587,10 @@ gsl_sf_ellint_Kcomp_e(double k, gsl_mode_t mode, gsl_sf_result * result)
 int
 gsl_sf_ellint_Ecomp_e(double k, gsl_mode_t mode, gsl_sf_result * result)
 {
-  if(k*k >= 1.0) {
+  if(gsl_isnan(k)) {
+    DOMAIN_ERROR(result);
+  }
+  else if(k*k >= 1.0) {
     DOMAIN_ERROR(result);
   }
   else if(k*k >= 1.0 - GSL_SQRT_DBL_EPSILON) {
@@ -611,7 +620,10 @@ gsl_sf_ellint_Ecomp_e(double k, gsl_mode_t mode, gsl_sf_result * result)
 int
 gsl_sf_ellint_Pcomp_e(double k, double n, gsl_mode_t mode, gsl_sf_result * result)
 {
-  if(k*k >= 1.0) {
+  if(gsl_isnan(k) || gsl_isnan(n)) {
+    DOMAIN_ERROR(result);
+  }
+  else if(k*k >= 1.0) {
     DOMAIN_ERROR(result);
   }
   /* FIXME: need to handle k ~=~ 1  cancellations */

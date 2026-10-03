@@ -89,6 +89,10 @@ These routines compute the complete elliptic integral @math{K(k)} to
 the accuracy specified by the mode variable @var{mode}.  
 Note that Abramowitz & Stegun define this function in terms of the
 parameter @math{m = k^2}.
+
+The function is defined for @math{|k| < 1}; any argument outside that
+range, including a NaN, is a domain error and returns
+@code{GSL_EDOM} with a value of NaN.
 @comment Exceptional Return Values:  GSL_EDOM
 @end deftypefun
 
@@ -98,6 +102,10 @@ These routines compute the complete elliptic integral @math{E(k)} to the
 accuracy specified by the mode variable @var{mode}.
 Note that Abramowitz & Stegun define this function in terms of the
 parameter @math{m = k^2}.
+
+The function is defined for @math{|k| < 1}; any argument outside that
+range, including a NaN, is a domain error and returns
+@code{GSL_EDOM} with a value of NaN.
 @comment Exceptional Return Values:  GSL_EDOM
 @end deftypefun
 
@@ -111,6 +119,10 @@ change of sign @math{n \to -n}.
 
 For @math{n \le -1} the integrand has a pole in @math{(0,\pi/2]} and the
 reported value is the Cauchy principal value.
+
+The function is defined for @math{|k| < 1}; any argument outside that
+range, including a NaN, is a domain error and returns
+@code{GSL_EDOM} with a value of NaN.
 @comment Exceptional Return Values:  GSL_EDOM
 @end deftypefun
 
