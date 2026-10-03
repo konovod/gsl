@@ -575,19 +575,28 @@ int test_coulomb(void)
   gsl_test(s, "  gsl_sf_coulomb_wave_FG_e(3.25, 0.0, lam_F=1, lam_G=0)");
   status += s;
 
-#ifdef FIXME
-  /* compute F_37(eta=0,x), F'_37 and G_36(eta=0,x), G'_36 for
-     x=1.2693881947287221e-07 */
-
-  /* For eta=0 expanding A&S 4.3.1 gives
-
-     FplusIG(L,r)={I*exp(-I*r)*sum(k=0,L,((L+k)!/(k!*(L-k)!))*(I^(L-k))*(2*r)^(-k))
-     
-     or alternatively F+iG can be expressed in terms of bessel functions
-
-     FplusIG(L,r)=sqrt(Pi*x/2)*besselh1(L+1/2,x))
-  */
-
+  /* Savannah #30885: for eta = 0 and large lam_F at tiny x the
+   * unnormalized downward recurrence in coulomb_F_recur() overflows
+   * (F' grows without bound) even though the normalized F, F', G, G'
+   * are all representable.  Dividing by the overflowed F' made
+   * Gp_lam_min infinite and left G = G' = NaN while still returning
+   * GSL_SUCCESS.  The recurrence now rescales (F,F') by exact powers
+   * of two so the ratio F'/F survives.
+   *
+   * F and F' are subnormal here, so their low bits carry no
+   * information; the expected values are the nearest doubles to the
+   * exact results.  The reference is an independent high-precision
+   * evaluation of the Frobenius series
+   *
+   *   F_l = C_l(eta) x^(l+1) sum_k a_k x^k,
+   *   a_0 = 1, a_k = (2 eta a_{k-1} - a_{k-2}) / (k (2l + k + 1)),
+   *   C_l = 2^l exp(-eta pi/2) |Gamma(l+1+i eta)| / (2l+1)!,
+   *
+   * with G and G' obtained from the 1F1/U connection formulas
+   * (DLMF 33.2.4 and 33.2.8) at 60 significant digits.  It agrees
+   * with these values to the last bit.  On the unpatched code the
+   * last two checks see NaN instead.
+   */
   lam_F = 37.0;
   eta = 0.0;
   x = 1.2693881947287221e-07;
@@ -595,15 +604,13 @@ int test_coulomb(void)
   gsl_sf_coulomb_wave_FG_e(eta, x, lam_F, k_G, &F, &Fp, &G, &Gp, &Fe, &Ge);
   s = 0;
   message_buff[0] = 0;
-  s += test_sf_check_result(message_buff,  F, 6.5890724278623412974127e-318 , TEST_TOL3);
+  s += test_sf_check_result(message_buff,  F, 6.5890724278623412974127e-318,  TEST_TOL3);
   s += test_sf_check_result(message_buff, Fp, 1.97248369961623986509839591990e-309, TEST_TOL3);
-  s += test_sf_check_result(message_buff,  G, 4.46663541714903607940730e299, TEST_TOL3);
-  s += test_sf_check_result(message_buff, Gp, -1.26674311046140805594543e308 , TEST_TOL3);
+  s += test_sf_check_result(message_buff,  G, 4.46663541714903607940730e299,  TEST_TOL3);
+  s += test_sf_check_result(message_buff, Gp, -1.26674311046140805594543e308, TEST_TOL3);
   printf("%s", message_buff);
-  gsl_test(s, "  gsl_sf_coulomb_wave_FG_e(1.2693881947287221e-07, 0.0, lam_F=37, lam_G=36)");
+  gsl_test(s, "  gsl_sf_coulomb_wave_FG_e(0.0, 1.2693881947287221e-07, lam_F=37, lam_G=36)");
   status += s;
-#endif
-
 
   return status;
 }

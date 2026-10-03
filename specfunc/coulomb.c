@@ -514,13 +514,19 @@ coulomb_FGmhalf_series(const double eta, const double x,
  *    R_lam = sqrt(1 + (eta/lam)^2)
  *    S_lam = lam/x + eta/lam
  *
+ * For small x and large lam the unnormalized values span more than the
+ * double range even though the normalized F is representable.  The
+ * recurrence is linear, so the pair (F,F') is rescaled by exact powers
+ * of two whenever it grows or shrinks too far; the net exponent is
+ * returned so the caller can undo it.  The ratio F'/F is unchanged.
  */
 static
 int
 coulomb_F_recur(double lam_min, int kmax,
                 double eta, double x,
                 double F_lam_max, double Fp_lam_max,
-                double * F_lam_min, double * Fp_lam_min
+                double * F_lam_min, double * Fp_lam_min,
+                int * exponent
                 )
 {
   double x_inv = 1.0/x;
@@ -528,13 +534,33 @@ coulomb_F_recur(double lam_min, int kmax,
   double fpl = Fp_lam_max;
   double lam_max = lam_min + kmax;
   double lam = lam_max;
+  int e = 0;
   int k;
 
   for(k=kmax-1; k>=0; k--) {
     double el = eta/lam;
     double rl = hypot(1.0, el);
     double sl = el  + lam*x_inv;
+    double amax = fabs(sl) + fabs(rl);
     double fc_lm1;
+
+    /* Rescale by an exact power of two so that the next step cannot
+     * overflow or underflow. */
+    while((fabs(fcl) + fabs(fpl)) * amax > 0.25*GSL_DBL_MAX
+          && gsl_finite(fcl) && gsl_finite(fpl)
+          && (fcl != 0.0 || fpl != 0.0)) {
+      fcl *= 0.5;
+      fpl *= 0.5;
+      ++e;
+    }
+    while((fabs(fcl) + fabs(fpl)) < 0.25*GSL_DBL_MIN
+          && gsl_finite(fcl) && gsl_finite(fpl)
+          && (fcl != 0.0 || fpl != 0.0)) {
+      fcl *= 2.0;
+      fpl *= 2.0;
+      --e;
+    }
+
     fc_lm1 = (fcl*sl + fpl)/rl;
     fpl    =  fc_lm1*sl - fcl*rl;
     fcl    =  fc_lm1;
@@ -542,8 +568,13 @@ coulomb_F_recur(double lam_min, int kmax,
   }
 
   *F_lam_min  = fcl;
-  *Fp_lam_min = fpl;  
-  return GSL_SUCCESS;
+  *Fp_lam_min = fpl;
+  *exponent   = e;
+
+  if(gsl_isinf(fcl) || gsl_isinf(fpl))
+    GSL_ERROR ("overflow", GSL_EOVRFLW);
+  else
+    return GSL_SUCCESS;
 }
 
 
@@ -580,7 +611,11 @@ coulomb_G_recur(const double lam_min, const int kmax,
   
   *G_lam_max  = gcl;
   *Gp_lam_max = gpl;
-  return GSL_SUCCESS;
+
+  if(gsl_isinf(gcl) || gsl_isinf(gpl))
+    GSL_ERROR ("overflow", GSL_EOVRFLW);
+  else
+    return GSL_SUCCESS;
 }
 
 
@@ -962,6 +997,7 @@ gsl_sf_coulomb_wave_FG_e(const double eta, const double x,
     int stat_ser;
     int stat_Fr;
     int stat_Gr;
+    int F_recur_exp = 0;
 
     /* Recurse down with unnormalized F,F' values. */
     F_lam_F  = SMALL;
@@ -969,7 +1005,8 @@ gsl_sf_coulomb_wave_FG_e(const double eta, const double x,
     if(span != 0) {
       stat_Fr = coulomb_F_recur(lam_min, span, eta, x,
                                 F_lam_F, Fp_lam_F,
-                                &F_lam_min_unnorm, &Fp_lam_min_unnorm
+                                &F_lam_min_unnorm, &Fp_lam_min_unnorm,
+                                &F_recur_exp
                                 );
     }
     else {
@@ -1003,12 +1040,26 @@ gsl_sf_coulomb_wave_FG_e(const double eta, const double x,
       stat_ser = coulomb_FG_series(lam_min, eta, x, &F_lam_min, &G_lam_min);
     }
 
-    /* Determine remaining quantities. */
-    Fp_over_F_lam_min = Fp_lam_min_unnorm / F_lam_min_unnorm;
+    /* Determine remaining quantities.  F_lam_min_unnorm is returned
+     * scaled by 2^F_recur_exp; undo the scaling when normalising. */
+    if(F_lam_min_unnorm == 0.0) {
+      Fp_over_F_lam_min = 0.0;
+      F_scale = 0.0;
+      if(stat_Fr == GSL_SUCCESS)
+        stat_Fr = GSL_EUNDRFLW;
+    }
+    else {
+      Fp_over_F_lam_min = Fp_lam_min_unnorm / F_lam_min_unnorm;
+      F_scale = ldexp(F_lam_min.val / F_lam_min_unnorm, -F_recur_exp);
+      if(!gsl_finite(F_scale)) {
+        F_scale = 0.0;
+        if(stat_Fr == GSL_SUCCESS)
+          stat_Fr = GSL_EUNDRFLW;
+      }
+    }
     Gp_lam_min.val  = Fp_over_F_lam_min*G_lam_min.val - 1.0/F_lam_min.val;
     Gp_lam_min.err  = fabs(Fp_over_F_lam_min)*G_lam_min.err;
     Gp_lam_min.err += fabs(1.0/F_lam_min.val) * fabs(F_lam_min.err/F_lam_min.val);
-    F_scale     = F_lam_min.val / F_lam_min_unnorm;
 
     /* Apply scale to the original F,F' values. */
     F_scale_frac_err  = fabs(F_lam_min.err/F_lam_min.val);
@@ -1158,6 +1209,7 @@ gsl_sf_coulomb_wave_FG_e(const double eta, const double x,
 
     int F_recur_count;
     int G_recur_count;
+    int F_recur_exp = 0;
 
     double err_amplify;
 
@@ -1168,9 +1220,17 @@ gsl_sf_coulomb_wave_FG_e(const double eta, const double x,
     F_recur_count = GSL_MAX(k_lam_G, N);
     stat_Fr = coulomb_F_recur(lam_min, F_recur_count, eta, x,
                               F_lam_F, Fp_lam_F,
-                              &F_lam_min_unnorm, &Fp_lam_min_unnorm
+                              &F_lam_min_unnorm, &Fp_lam_min_unnorm,
+                              &F_recur_exp
                               );
-    Fp_over_F_lam_min = Fp_lam_min_unnorm / F_lam_min_unnorm;
+    if(F_lam_min_unnorm == 0.0) {
+      Fp_over_F_lam_min = 0.0;
+      if(stat_Fr == GSL_SUCCESS)
+        stat_Fr = GSL_EUNDRFLW;
+    }
+    else {
+      Fp_over_F_lam_min = Fp_lam_min_unnorm / F_lam_min_unnorm;
+    }
 
     /* Steed evaluation to complete evaluation of F,Fp,G,Gp at lam_min */
     stat_CF2 = coulomb_CF2(lam_min, eta, x, &P_lam_min, &Q_lam_min, &CF2_count);
@@ -1184,8 +1244,21 @@ gsl_sf_coulomb_wave_FG_e(const double eta, const double x,
     G_lam_min  = gamma * F_lam_min;
     Gp_lam_min = (P_lam_min * gamma - Q_lam_min) * F_lam_min;
 
-    /* Apply scale to values of F,Fp at lam_F (the top). */
-    F_scale = F_lam_min / F_lam_min_unnorm;    
+    /* Apply scale to values of F,Fp at lam_F (the top).  Undo the
+     * power-of-two scaling applied inside coulomb_F_recur(). */
+    if(F_lam_min_unnorm == 0.0) {
+      F_scale = 0.0;
+      if(stat_Fr == GSL_SUCCESS)
+        stat_Fr = GSL_EUNDRFLW;
+    }
+    else {
+      F_scale = ldexp(F_lam_min / F_lam_min_unnorm, -F_recur_exp);
+      if(!gsl_finite(F_scale)) {
+        F_scale = 0.0;
+        if(stat_Fr == GSL_SUCCESS)
+          stat_Fr = GSL_EUNDRFLW;
+      }
+    }
     F_lam_F  *= F_scale;
     Fp_lam_F *= F_scale;
 
