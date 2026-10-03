@@ -29,6 +29,7 @@
 #include <gsl/gsl_sf_bessel.h>
 #include <gsl/gsl_sf_laguerre.h>
 #include <gsl/gsl_sf_pow_int.h>
+#include <gsl/gsl_sf_psi.h>
 #include <gsl/gsl_sf_hyperg.h>
 
 #include "error.h"
@@ -1519,6 +1520,129 @@ hyperg_U_int_origin (const int a, const int b, gsl_sf_result_e10 * result)
 
 */
 
+/* U(a, n+1, x) for x < 0 and integer n >= 0, evaluated from
+ * [DLMF 13.2.9],
+ *
+ *   U(a,n+1,x) = (-1)^(n+1) / (n! Gamma(a-n))
+ *                  sum_{k=0}^inf (a)_k / ((n+1)_k k!) x^k
+ *                    (ln x + psi(a+k) - psi(1+k) - psi(n+k+1))
+ *                + 1/Gamma(a) sum_{k=1}^n (k-1)! (1-a+k)_{n-k}/(n-k)! x^(-k)
+ *
+ * with ln x replaced by ln|x|.  For x < 0 the principal value of U is
+ * complex - it has a branch cut on the negative real axis - and taking
+ * ln|x| selects its real part, which is the real, continuous solution of
+ * Kummer's equation and hence the value a real-valued routine has to
+ * return.  This is exactly the b = 1 pole and the b >= 2 integer limit
+ * that hyperg_U_negx() cannot reach with its [A&S 13.1.3] formula, where
+ * 1/Gamma(1-b) and 1/Gamma(2-b) are poles.
+ *
+ * Assumes a is not a non-positive integer, so 1/Gamma(a-n) and 1/Gamma(a)
+ * are finite; the caller checks this.
+ */
+static
+int
+hyperg_U_negx_int_b(const double a, const int n, const double x,
+                    gsl_sf_result_e10 * result)
+{
+  const double lnx = log(-x);
+  const int maxiter = 20000;
+  gsl_sf_result gamr_an;
+  gsl_sf_result gamr_a;
+  double inv_fact;
+  double pref, pref_err;
+  double ser, ser_err;
+  double fsum, fsum_err;
+  double p, xk;
+  int stat = 0;
+  int k, kk;
+
+  if(n > 170) {
+    result->val = GSL_NAN;
+    result->err = GSL_NAN;
+    GSL_ERROR ("integer b too large for DLMF 13.2.9", GSL_EUNIMPL);
+  }
+
+  stat += gsl_sf_gammainv_e(a - n, &gamr_an);
+  stat += gsl_sf_gammainv_e(a, &gamr_a);
+
+  inv_fact = 1.0;
+  for(k=2; k<=n; k++) inv_fact /= (double) k;
+
+  pref = (GSL_IS_ODD(n+1) ? -1.0 : 1.0) * inv_fact * gamr_an.val;
+  pref_err = inv_fact * gamr_an.err + 2.0 * GSL_DBL_EPSILON * fabs(pref);
+
+  /* Infinite series. */
+  ser = 0.0;
+  ser_err = 0.0;
+  p  = 1.0;   /* (a)_k / ((n+1)_k k!) */
+  xk = 1.0;   /* x^k                */
+  for(k=0; k<maxiter; k++) {
+    gsl_sf_result pa, p1, pn;
+    double B, term, terr;
+
+    stat += gsl_sf_psi_e(a + k, &pa);
+    stat += gsl_sf_psi_e(1.0 + k, &p1);
+    stat += gsl_sf_psi_e(n + 1.0 + k, &pn);
+
+    B = lnx + pa.val - p1.val - pn.val;
+    term = p * xk * B;
+    terr = fabs(p * xk) * (pa.err + p1.err + pn.err)
+         + 2.0 * GSL_DBL_EPSILON * (1.0 + fabs(B)) * fabs(term);
+    ser += term;
+    ser_err += terr;
+
+    if(k > 0 && fabs(term) < GSL_DBL_EPSILON * fabs(ser)) break;
+
+    p  *= (a + k) / ((n + 1.0 + k) * (k + 1.0));
+    xk *= x;
+  }
+  if(k >= maxiter) {
+    result->val = GSL_NAN;
+    result->err = GSL_NAN;
+    GSL_ERROR ("DLMF 13.2.9 series failed to converge", GSL_EMAXITER);
+  }
+  ser_err += 2.0 * GSL_DBL_EPSILON * (k + 1.0) * fabs(ser);
+
+  /* Finite sum. */
+  fsum = 0.0;
+  fsum_err = 0.0;
+  for(kk=1; kk<=n; kk++) {
+    gsl_sf_result poch, px;
+    double lf, coeff, term, terr;
+
+    stat += gsl_sf_poch_e(1.0 - a + kk, n - kk, &poch);
+    stat += gsl_sf_pow_int_e(x, -kk, &px);
+
+    /* (kk-1)! / (n-kk)! */
+    lf = gsl_sf_lngamma((double) kk) - gsl_sf_lngamma((double) (n - kk + 1));
+    coeff = exp(lf) * poch.val;
+    term = coeff * px.val;
+    terr = fabs(coeff) * px.err + fabs(px.val) * exp(lf) * poch.err
+         + 2.0 * GSL_DBL_EPSILON * fabs(term);
+    fsum += term;
+    fsum_err += terr;
+  }
+
+  {
+    double fv = gamr_a.val * fsum;
+    double fe = fabs(gamr_a.val) * fsum_err + fabs(fsum) * gamr_a.err
+              + 2.0 * GSL_DBL_EPSILON * fabs(fv);
+    result->val = pref * ser + fv;
+    result->err = fabs(pref) * ser_err + fabs(ser) * pref_err + fe
+                + 2.0 * GSL_DBL_EPSILON * fabs(result->val);
+    result->e10 = 0;
+  }
+
+  if(!gsl_finite(result->val) || !gsl_finite(result->err)) {
+    result->val = GSL_NAN;
+    result->err = GSL_NAN;
+    GSL_ERROR ("overflow in DLMF 13.2.9", GSL_EOVRFLW);
+  }
+
+  return stat;
+}
+
+
 static int
 hyperg_U_negx (const double a, const double b, const double x, gsl_sf_result_e10 * result)
 {
@@ -1528,6 +1652,14 @@ hyperg_U_negx (const double a, const double b, const double x, gsl_sf_result_e10
   int b_int = (b == floor(b));
 
   double T1 = 0, T1_err = 0, T2 = 0, T2_err = 0;
+
+  /* b a positive integer with a not an integer: the [A&S 13.1.3]
+   * reduction has poles at b = 1 and b = 2, 3, ...  Use the DLMF 13.2.9
+   * limit instead (Savannah bug #30510).  Confined to moderate |x| so
+   * the series cannot overflow before it cancels. */
+  if(b_int && b >= 1.0 && !a_int && fabs(x) <= 100.0) {
+    return hyperg_U_negx_int_b(a, (int) b - 1, x, result);
+  }
 
   /* Compute the first term poch(1+a-b) M(a,b,x) */
 

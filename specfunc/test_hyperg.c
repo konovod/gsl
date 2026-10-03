@@ -568,6 +568,25 @@ int test_hyperg(void)
   TEST_SF(s, gsl_sf_hyperg_U_e, (-6, -4, -0.1, &r), 0.000061, TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_hyperg_U_e, (-7, -4, -0.1, &r), -0.0004341, TEST_TOL0, GSL_SUCCESS);
 
+  /* Tests for non-integer a and integer b > 0 (Savannah bug #30510).
+   * The [A&S 13.1.3] reduction has poles at b = 1, 2, ..., so these use
+   * the DLMF 13.2.9 limit on the real branch (ln|x|).  References are
+   * Re(KummerU) from mpmath at 40 digits, independently confirmed by
+   * integrating the Kummer ODE analytically from x > 0 to x < 0. */
+
+  TEST_SF(s, gsl_sf_hyperg_U_e, (-0.5, 1, -1, &r), -0.0329189651101379319, TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_U_e, ( 0.5, 1, -1, &r),  0.316334616461923664,  TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_U_e, (-2.5, 1, -1, &r), -0.024298534576854052,  TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_U_e, ( 1.3, 1, -1, &r), -1.04248002953410181,   TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_U_e, (-0.5, 2, -1, &r),  0.0297052064502740181, TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_U_e, ( 0.5, 2, -1, &r), -0.1252483431208239,    TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_U_e, (-2.5, 3, -1, &r), -0.085044871018989182,  TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_U_e, (-1.5, 4, -1, &r), -0.136279092649005715,  TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_U_e, (-0.5, 1, -2.5, &r), -0.00293387033950308241, TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_U_e, ( 0.5, 2, -0.3, &r), -1.07985147494099852, TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_U_e, (-1.5, 4, -0.5, &r), -2.54643936959610509, TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_U_e, ( 0.25, 3, -1.2, &r), 0.557601404286371362, TEST_TOL2, GSL_SUCCESS);
+
   /* Tests for integer a */
 
   TEST_SF(s, gsl_sf_hyperg_U_e, (-3, 0.5, -0.5, &r), -9.5, TEST_TOL2, GSL_SUCCESS);
