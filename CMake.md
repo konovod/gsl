@@ -90,6 +90,15 @@ build-time prefix and stop working once the archive is extracted elsewhere.
 The README text shipped inside the archive lives in
 .github/windows-dll-README.txt and is substituted by the workflow.
 
+.github/workflows/docs.yml builds the Sphinx manual under `doc/` and
+publishes it to GitHub Pages with the native Pages actions (see
+`.github/docs-requirements.txt` for the pinned Sphinx and theme versions).
+The HTML is rendered with MathJax, so no TeX installation is needed, and
+the manual version is read from `configure.ac` in the same way the CMake
+build does.  It runs on pushes to the default branches and on demand.  The
+repository must have Pages configured with "Source: GitHub Actions"; this
+is fork-only, since upstream builds the manual by hand (see HACKING).
+
 Notes on the implementation
 ---------------------------
   * cmake/regen_sources.py regenerates cmake/gsl_sources.cmake from the

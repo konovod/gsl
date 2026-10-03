@@ -1,0 +1,7 @@
+# Python packages needed to build the Sphinx manual under doc/.
+#
+# Fork-only: upstream builds the manual by hand (see HACKING).  Pinned so the
+# GitHub Pages build is reproducible; bump deliberately after checking that
+# the manual still builds without new warnings.
+Sphinx==8.1.3
+sphinx_rtd_theme==3.1.0

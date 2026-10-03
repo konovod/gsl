@@ -1,0 +1,82 @@
+name: Docs
+
+# Build the Sphinx manual under doc/ and publish it to GitHub Pages.
+#
+# Fork-only infrastructure.  Upstream builds the HTML manual by hand and
+# rsyncs it to www.gnu.org (see HACKING); this workflow replaces that manual
+# sphinx-build / rsync step with actions/deploy-pages.
+#
+# Configure once in the repository settings:
+#   * Settings -> Pages -> Build and deployment -> Source = GitHub Actions
+#   * the repository must be public (or on a plan that allows Pages)
+on:
+  push:
+    branches: [ master, main ]
+  workflow_dispatch:
+
+# Allow the deploy job to publish to Pages and mint the OIDC token it needs.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Only one Pages deployment at a time.  Queue rather than cancel so a run
+# that is already publishing is not interrupted.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: build manual
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install Sphinx
+        run: pip install -r .github/docs-requirements.txt
+
+      # configure.ac is the single source of truth for the version; the CMake
+      # build and the Windows DLL workflow read it the same way.  Pass it to
+      # Sphinx so the manual does not show the stale hard-coded value in
+      # doc/conf.py.
+      - name: Determine version
+        id: ver
+        shell: bash
+        run: |
+          version=$(sed -n 's/^AC_INIT(\[gsl\],\[\([0-9.]*\)\(+\)\{0,1\}\]).*/\1\2/p' configure.ac)
+          if [ -z "$version" ]; then
+            echo "could not determine the GSL version from configure.ac" >&2
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      # MathJax (see doc/conf.py) renders the equations, so no TeX install is
+      # needed.  -D version/release override the hard-coded values in conf.py.
+      - name: Build manual
+        run: >
+          sphinx-build -M html doc doc/_build
+          -D version="${{ steps.ver.outputs.version }}"
+          -D release="${{ steps.ver.outputs.version }}"
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: doc/_build/html
+
+  deploy:
+    name: deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
