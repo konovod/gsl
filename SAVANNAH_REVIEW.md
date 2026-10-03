@@ -1192,6 +1192,48 @@ hand; `#47345`, `#60371`, `#67621`, `#42472` and `#47646` came out of this
 group and are now applied.
 
 
+## Offline source: working without Savannah (2026-10-03)
+
+`savannah.gnu.org` became unreachable during the review (the sweep was
+rate-limited / the host refused connections), so the remaining bugs are
+worked from copies held outside Savannah.  None of this is part of the
+fork's record; the material lives under the git-ignored `temp/`.
+
+Three sources were evaluated:
+
+* **bug-gsl mbox archive** — `lists.gnu.org/archive/mbox/bug-gsl/`, one file
+  per month, 2002-10 … 2026-09, 277 files, 82 MB.  Savannah mirrors every
+  bug notification there as `[bug #NNNNN]`, so a bug's whole discussion is
+  recoverable.  Downloaded in bulk (one request per month, small delay) to
+  `temp/bug-gsl-mbox/`.  This is the primary fallback: it covers the bug
+  *traffic*, which is what a review needs, even when the Savannah page is
+  gone.
+* **CNMAT `BUGS`** — `github.com/CNMAT/gsl/blob/master/BUGS`, a dump of the
+  bug database generated 2011-04-01, whole bug text for everything up to that
+  date.  Kept as `temp/cnmat_BUGS.txt`.
+* **Wayback Machine** — the CDX listing
+  `web.archive.org/cdx/search/cdx?url=savannah.gnu.org/bugs/&matchType=prefix`
+  (one request) gives the snapshot id for every archived bug page.
+
+Coverage of the 96 still-open bugs: mbox 56, Wayback 37, CNMAT 13,
+**91 with at least one source**, 5 with none (`50712`, `51104`, `52351`,
+`53903`, `53904`).  Text is merged into per-bug dossiers under
+`temp/savannah-store/` (see its `README.md`), which is what the review now
+reads instead of the tracker page.
+
+The mbox host is not Savannah and is not rate-limited; keep the pulls to one
+request per month.  `scripts/savannah_bugs.py` still needs Savannah for the
+live list, so the 2026-10-01 cached `cache.json` is the metadata source until
+it is reachable again; re-run `--refresh` once and diff the inventory when it
+is.
+
+A separate caution that this episode made concrete: the mbox archive also
+proves that `git apply --check` on an attachment is not the only risk — the
+*report itself* can be wrong, and on macOS `savannah.gnu.org` and the
+`lists.gnu.org` archive are the two independent records that let a later
+reader tell a withdrawn report from a real one (`#66862` is the example).
+
+
 ## Method notes
 
 * **`-ffp-contract=fast` can be tested directly here.** This machine has
