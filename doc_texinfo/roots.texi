@@ -157,7 +157,11 @@ code of @code{GSL_ENOMEM}.
 @deftypefun int gsl_root_fsolver_set (gsl_root_fsolver * @var{s}, gsl_function * @var{f}, double @var{x_lower}, double @var{x_upper})
 This function initializes, or reinitializes, an existing solver @var{s}
 to use the function @var{f} and the initial search interval
-[@var{x_lower}, @var{x_upper}].
+[@var{x_lower}, @var{x_upper}].  If the function values at the two ends of
+the interval do not straddle zero then the function returns
+@code{GSL_EINVAL} and invokes the error handler.  With the default handler
+the program is aborted; call @code{gsl_set_error_handler_off} if you want
+to test the interval and handle the status yourself.
 @end deftypefun
 
 @deftypefun int gsl_root_fdfsolver_set (gsl_root_fdfsolver * @var{s}, gsl_function_fdf * @var{fdf}, double @var{root})

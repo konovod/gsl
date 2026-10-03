@@ -142,7 +142,11 @@ Initializing the Solver
 
    This function initializes, or reinitializes, an existing solver :data:`s`
    to use the function :data:`f` and the initial search interval
-   [:data:`x_lower`, :data:`x_upper`].
+   [:data:`x_lower`, :data:`x_upper`].  If the function values at the two
+   ends of the interval do not straddle zero then the function returns
+   :macro:`GSL_EINVAL` and invokes the error handler.  With the default
+   handler the program is aborted; call :func:`gsl_set_error_handler_off`
+   if you want to test the interval and handle the status yourself.
 
 .. function:: int gsl_root_fdfsolver_set (gsl_root_fdfsolver * s, gsl_function_fdf * fdf, double root)
 
