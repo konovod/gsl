@@ -372,6 +372,44 @@ test1d (void)
   gsl_test (h->n != N,
             "gsl_histogram_calloc_uniform returns valid size");
 
+  {
+    /* Savannah bug #38548: with an integer span equal to the number
+       of bins the limits must be exact, so that an integer value falls
+       in its own bin. */
+    double lower, upper;
+    size_t k;
+    gsl_histogram *hu = gsl_histogram_calloc_uniform (60, 0.0, 60.0);
+
+    gsl_histogram_get_range (hu, 31, &lower, &upper);
+    gsl_test (lower != 31.0,
+              "gsl_histogram_calloc_uniform returns exact interior limit");
+    gsl_test (upper != 32.0,
+              "gsl_histogram_calloc_uniform returns exact interior limit (upper)");
+
+    gsl_histogram_find (hu, 31.0, &k);
+    gsl_test (k != 31,
+              "gsl_histogram_find places an integer in its own bin");
+    gsl_histogram_free (hu);
+
+    /* The averaged formula can move range[0] above xmin for this
+       count, so the exact end points are checked separately. */
+    hu = gsl_histogram_calloc_uniform (107, 0.0, 1.0);
+    gsl_histogram_get_range (hu, 0, &lower, &upper);
+    gsl_test (lower != 0.0,
+              "gsl_histogram_calloc_uniform preserves the lower end point");
+    gsl_histogram_find (hu, 0.0, &k);
+    gsl_test (k != 0,
+              "gsl_histogram_find places xmin in the first bin");
+    gsl_histogram_free (hu);
+
+    hu = gsl_histogram_calloc (60);
+    gsl_histogram_set_ranges_uniform (hu, 0.0, 60.0);
+    gsl_histogram_get_range (hu, 31, &lower, &upper);
+    gsl_test (lower != 31.0,
+              "gsl_histogram_set_ranges_uniform returns exact interior limit");
+    gsl_histogram_free (hu);
+  }
+
   gsl_histogram_accumulate (h, 0.0, 1.0);
   gsl_histogram_accumulate (h, 0.1, 2.0);
   gsl_histogram_accumulate (h, 0.2, 3.0);

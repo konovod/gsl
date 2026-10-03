@@ -599,6 +599,31 @@ test2d (void)
   gsl_test (h->nx != M1, "gsl_histogram2d_calloc_uniform returns valid nx");
   gsl_test (h->ny != N1, "gsl_histogram2d_calloc_uniform returns valid ny");
 
+  {
+    /* Savannah bug #38548, two-dimensional case. */
+    double xlower, xupper;
+    size_t ii, jj;
+    gsl_histogram2d *hu =
+      gsl_histogram2d_calloc_uniform (60, 60, 0.0, 60.0, 0.0, 60.0);
+
+    gsl_histogram2d_get_xrange (hu, 31, &xlower, &xupper);
+    gsl_test (xlower != 31.0,
+              "gsl_histogram2d_calloc_uniform returns exact interior limit");
+    gsl_test (xupper != 32.0,
+              "gsl_histogram2d_calloc_uniform returns exact interior limit (upper)");
+
+    gsl_histogram2d_find (hu, 31.0, 31.0, &ii, &jj);
+    gsl_test (ii != 31,
+              "gsl_histogram2d_find places an integer in its own bin");
+    gsl_histogram2d_free (hu);
+
+    hu = gsl_histogram2d_calloc_uniform (107, 107, 0.0, 1.0, 0.0, 1.0);
+    gsl_histogram2d_get_xrange (hu, 0, &xlower, &xupper);
+    gsl_test (xlower != 0.0,
+              "gsl_histogram2d_calloc_uniform preserves the lower end point");
+    gsl_histogram2d_free (hu);
+  }
+
   gsl_histogram2d_accumulate (h, 0.0, 3.01, 1.0);
   gsl_histogram2d_accumulate (h, 0.1, 2.01, 2.0);
   gsl_histogram2d_accumulate (h, 0.2, 1.01, 3.0);

@@ -71,13 +71,25 @@ static void
 make_uniform (double range[], size_t n, double xmin, double xmax)
 {
   size_t i;
+  const double span = xmax - xmin;
+
+  /* Evaluate xmin + span * i / n rather than xmin + i * (span / n):
+     the bin width span / n is rounded, so multiplying it by i
+     accumulates that error and can push an exact integer boundary
+     (for example 31 in a 60-bin histogram over [0,60]) off by an ulp.
+     Multiplying the span by i before dividing keeps the intermediate
+     exact whenever the span and n are whole numbers. */
 
   for (i = 0; i <= n; i++)
     {
-      double f1 = ((double) (n-i) / (double) n);
-      double f2 = ((double) i / (double) n);
-      range[i] = f1 * xmin +  f2 * xmax;
+      range[i] = xmin + span * i / (double) n;
     }
+
+  /* The expression can still move the end limits off the caller's
+     values; pin them. */
+
+  range[0] = xmin;
+  range[n] = xmax;
 }
 
 gsl_histogram *
