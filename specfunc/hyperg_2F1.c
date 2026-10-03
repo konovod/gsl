@@ -895,15 +895,25 @@ gsl_sf_hyperg_2F1_renorm_e(const double a, const double b, const double c,
         DOMAIN_ERROR(result);
       }
       else {
+        /* [Abramowitz+Stegun, 15.1.2] carries a factor x^(1-c), which the
+         * original code dropped; c is a negative integer here, so 1-c is
+         * a positive integer and gsl_sf_pow_int_e applies
+         * (Savannah bug #53876). */
         gsl_sf_result F;
+        gsl_sf_result powx;
         int stat_F = gsl_sf_hyperg_2F1_e(a-c+1, b-c+1, -c+2, x, &F);
+        int stat_p = gsl_sf_pow_int_e(x, 1 - (int)rintc, &powx);
         double ln_pre_val = g1.val + g2.val - g3.val - g4.val - g5.val;
         double ln_pre_err = g1.err + g2.err + g3.err + g4.err + g5.err;
         double sg  = s1 * s2 * s3 * s4 * s5;
+        double pre_val = sg * powx.val * F.val;
+        double pre_err = fabs(sg * powx.val) * F.err
+                       + fabs(sg * F.val) * powx.err
+                       + 2.0 * GSL_DBL_EPSILON * fabs(pre_val);
         int stat_e = gsl_sf_exp_mult_err_e(ln_pre_val, ln_pre_err,
-                                              sg * F.val, F.err,
+                                              pre_val, pre_err,
                                               result);
-        return GSL_ERROR_SELECT_2(stat_e, stat_F);
+        return GSL_ERROR_SELECT_3(stat_e, stat_F, stat_p);
       }
     }
   }
@@ -954,14 +964,22 @@ gsl_sf_hyperg_2F1_conj_renorm_e(const double aR, const double aI, const double c
         DOMAIN_ERROR(result);
       }
       else {
+        /* As above, the x^(1-c) factor of [Abramowitz+Stegun, 15.1.2]
+         * was missing (Savannah bug #53876). */
         gsl_sf_result F;
+        gsl_sf_result powx;
         int stat_F = gsl_sf_hyperg_2F1_conj_e(aR-c+1, aI, -c+2, x, &F);
+        int stat_p = gsl_sf_pow_int_e(x, 1 - (int)rintc, &powx);
         double ln_pre_val = 2.0*(g1.val - g2.val) - g3.val;
         double ln_pre_err = 2.0 * (g1.err + g2.err) + g3.err;
+        double pre_val = powx.val * F.val;
+        double pre_err = fabs(powx.val) * F.err
+                       + fabs(F.val) * powx.err
+                       + 2.0 * GSL_DBL_EPSILON * fabs(pre_val);
         int stat_e = gsl_sf_exp_mult_err_e(ln_pre_val, ln_pre_err,
-                                              F.val, F.err,
+                                              pre_val, pre_err,
                                               result);
-        return GSL_ERROR_SELECT_2(stat_e, stat_F);
+        return GSL_ERROR_SELECT_3(stat_e, stat_F, stat_p);
       }
     }
   }
