@@ -53,7 +53,8 @@ the machine precision.
    in :data:`w`.  The diagonal and lower triangular part of :data:`A` are
    destroyed during the computation, but the strict upper triangular part
    is not referenced.  The eigenvalues are stored in the vector :data:`eval`
-   and are unordered.
+   and are unordered.  The function returns :macro:`GSL_SUCCESS` on success,
+   or :macro:`GSL_EMAXITER` if the internal QR iteration fails to converge.
 
 .. type:: gsl_eigen_symmv_workspace
 
@@ -81,7 +82,8 @@ the machine precision.
    stored in the columns of the matrix :data:`evec`.  For example, the
    eigenvector in the first column corresponds to the first eigenvalue.
    The eigenvectors are guaranteed to be mutually orthogonal and normalised
-   to unit magnitude.
+   to unit magnitude.  The function returns :macro:`GSL_SUCCESS` on success,
+   or :macro:`GSL_EMAXITER` if the internal QR iteration fails to converge.
 
 Complex Hermitian Matrices
 ==========================

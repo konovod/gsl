@@ -139,6 +139,13 @@ One line per change: date | tag | description | commit(s).
   2026-10-03 | [rejected] | rstat: correction to skew and kurtosis               | - (see below)
   2026-10-03 | [rejected] | specfunc: consistency of pow_int usage in hermite    | - (see below)
   2026-10-03 | [rejected] | specfunc: accuracy problems (report remainder)       | - (see below)
+  2026-10-03 | [upstream] | interpolation: average the Akima slopes when a weight vanishes | 0efb5f87f
+  2026-10-03 | [upstream] | eigen: rescale and bound the symmetric QR iteration | 7d586d89b
+  2026-10-03 | [upstream] | doc: tridiagonal solvers return GSL_EZERODIV | 9418afa5f
+  2026-10-03 | [upstream] | integration: guard the cquad error estimate at nc = 0 | f20496de6
+  2026-10-03 | [rejected] | linalg: solve_symm_tridiag permutation for a zero diagonal | - (see below)
+  2026-10-03 | [rejected] | poly: "possible error in poly test suite" | - (see below)
+  2026-10-03 | [rejected] | integration: qagiu on cosh(x) exp(-cosh(x)) | - (see below)
 
 
 ## [upstream] rng: make the random() generators produce the documented sequences
@@ -3523,3 +3530,177 @@ The three clean defects in the report (`hyperg_0F1`, `exprel_2`,
 
 Savannah bug #43259.
 
+
+## [upstream] interpolation: average the Akima slopes when a weight vanishes
+
+Commit: 0efb5f87f
+
+Savannah bug #52351 ("akima.c array indexing") reports a misbehaving
+Akima spline.  There is no out-of-bounds access: the defect is in
+`akima_calc()`, in the handling of the weight denominator
+
+    NE = |m[i+1] - m[i]| + |m[i-1] - m[i-2]|
+
+and its counterpart for the tangent at the right end of the interval.
+When the two differences are equal the denominator is zero and GSL
+substituted one of the adjacent slopes: `m[i]` for the tangent at
+`x_i`, and `m[i]` again for the tangent at `x_{i+1}`.  The resulting
+spline is not C1: on the demo2 data (`x = 0..7`,
+`y = 0,0,2,0,-1,-2,-1,0`) it has a slope of -1 then +1 at the minimum
+at `x = 5`.
+
+The indeterminate limit is the average of the two adjacent slopes.
+The code now uses `0.5*(m[i-1] + m[i])` for the tangent at `x_i` and
+`0.5*(m[i] + m[i+1])` for the tangent at `x_{i+1}`, and always forms
+the cubic coefficients so the averaged tangent is used.  This is not
+the reporter's proposed `m[i+1]`, which removes the corner but
+overshoots the minimum and still differs from the reference by 0.14.
+
+Verified against the independent scipy implementation
+`Akima1DInterpolator(method="akima")`: the fixed code agrees to
+4.4e-16 on the demo2 data, the old code was off by 0.140625, and the
+reporter's variant likewise.  A vector at `x = 4.25 ... 5.75` was
+added to `interpolation/test.c`; with the source change reverted all
+six points fail (e.g. -1.5 observed vs -1.625 expected at `x = 4.5`).
+
+Files: `interpolation/akima.c`, `interpolation/test.c`.
+
+Savannah bug #52351.
+
+
+## [upstream] eigen: rescale and bound the symmetric QR iteration
+
+Commit: 7d586d89b
+
+Savannah bug #31426 reports an infinite loop in `gsl_eigen_symm()` on
+a 1024x1024 matrix (the attachment is no longer reachable).  The loop
+is real and reproducible with a much simpler input: a symmetric
+tridiagonal matrix whose entries are subnormal.  The chopping
+threshold `GSL_DBL_EPSILON * (|d_i| + |d_{i+1}|)` underflows to zero,
+so `chop_small_elements()` can never remove the subdiagonal; the QR
+sweep then reaches an exact fixed point (for `N = 16` with all entries
+`GSL_DBL_MIN`, `d` and `sd` are unchanged after the first sweep) and
+`b` never decrements.  This is the same class of failure as #28096,
+which the 2009 `qrstep` guard did not cover.
+
+`gsl_eigen_symm()` and `gsl_eigen_symmv()` now rescale the referenced
+(diagonal and lower) triangle by a power of two so that its largest
+entry lands in [0.5,1), run the existing decomposition and QR sweep,
+and scale the eigenvalues back with `ldexp()`.  Power-of-two scaling
+is exact and the Householder and QR steps are scale-equivariant, so
+results for normal matrices are bit-identical.  As a safety net the
+sweep count per unreduced block is bounded and `GSL_EMAXITER` is
+returned if it is exceeded, so the function can no longer hang.
+
+Verified with a faithful transcription of the loop and against
+`numpy.linalg.eigvalsh` and the closed form `1 + 2 cos(k pi/(N+1))`;
+a 16x16 `GSL_DBL_MIN` tridiagonal matrix was added to `eigen/test.c`.
+With the two source changes reverted `eigen_test` hangs (observed with
+a 12 s timeout); with them it returns the correct eigenvalues through
+both entry points.  The new `GSL_EMAXITER` return is documented in
+both manuals.
+
+Note: the original `mat.bin` attachment is unavailable, so this
+addresses a reproduced class of non-termination rather than that exact
+matrix.
+
+Files: `eigen/symm.c`, `eigen/symmv.c`, `eigen/test.c`,
+`doc/eigen.rst`, `doc_texinfo/eigen.texi`.
+
+Savannah bug #31426.
+
+
+## [upstream] doc: correct the tridiagonal solver error code
+
+Commit: 9418afa5f
+
+Savannah bug #21837 reports that `gsl_linalg_solve_symm_tridiag()`
+returns NaN for a zero diagonal and asks for a solution to be computed.
+The maintainer answered in 2007 that the routine returns an error code
+and that a solution would need a permutation (see `slatec/dgtsl.f`);
+that is a new algorithm and out of scope here.
+
+While verifying the behaviour we found a documentation defect: the
+Tridiagonal Systems section of both manuals said the functions return
+`GSL_ESING` for a non-positive-definite matrix, but `tridiag.c`
+returns `GSL_EZERODIV`.  Building the reporter's example with a
+returning error handler gives status 12 (`GSL_EZERODIV`), not 21
+(`GSL_ESING`).  Both manuals now state the correct code.
+
+Files: `doc/linalg.rst`, `doc_texinfo/linalg.texi`.
+
+Savannah bug #21837.
+
+
+## [upstream] integration: guard the cquad error estimate against nc == 0
+
+Commit: f20496de6
+
+Savannah bug #59913 reports a SIGFPE (arithmetic exception) inside
+`gsl_integration_cquad()`.  A 2025 follow-up could not reproduce the
+original program, but the underlying defect is present:
+`integration/cquad.c` forms the initial error estimate with
+
+    if (ncdiff / nc > 0.1 && iv->err < 2 * h * nc)
+
+without checking the denominator, whereas the analogous test later in
+the function is guarded by `nc > 0`.  When the integrand is zero at
+the initial nodes `nc` is zero and the quotient is 0/0 (`FE_INVALID`),
+which aborts the process if that trap is enabled.
+
+The guard `nc > 0` was added.  A regression test integrates
+`f(x) = 0` under an invalid-operation trap (MSVC `_controlfp_s`, glibc
+`feenableexcept`): with the guard reverted the test process is killed
+by the trap; with the guard `cquad` returns `GSL_SUCCESS` and zero.
+
+Files: `integration/cquad.c`, `integration/test.c`.
+
+Savannah bug #59913.
+
+
+## [rejected] linalg: solve_symm_tridiag permutation for a zero diagonal
+
+Not applied.  Savannah bug #21837 asks `gsl_linalg_solve_symm_tridiag()`
+to solve a system whose first diagonal entry is zero, where the
+Cholesky-like algorithm divides by zero.  The maintainer's August 2007
+reply is the decision: the function returns an error code and a
+solution would require a permutation (see `slatec/dgtsl.f`).  That is
+a new algorithm, outside the bug-fix/documentation/test scope, so only
+the documentation error code was corrected (see the `[upstream]` entry
+above).
+
+Savannah bug #21837.
+
+
+## [rejected] poly: "possible error in poly test suite"
+
+Already fixed upstream and inherited; no change.  Savannah bug #40176
+reports the 15th-order polynomial test failing with the two conjugate
+roots at `-0.65893856175240950 +/- 0.83459757287426684 i` interchanged.
+`poly/test.c` is identical to `savannah/master`: `9cc12d037` (2014)
+changed the comparator to sort by the real part then the imaginary
+part and listed the negative imaginary root first, and `0466df866`
+switched the check from `gsl_test_abs` to `gsl_test_rel`.  The vector
+passes on the current build.
+
+Savannah bug #40176 (duplicate of #39055).
+
+
+## [rejected] integration: qagiu on cosh(x) exp(-cosh(x))
+
+Not a library bug; no change.  Savannah bug #59911 asks why
+`gsl_integration_qagiu()` fails on
+
+    int_0^inf cosh(x) exp(-cosh(x)) dx
+
+with "bad integrand behavior".  The `qagiu` transformation evaluates
+the integrand at `x = (1 - t)/t`, which grows without bound as
+`t -> 0`.  For `x > ~710.5`, `cosh(x)` overflows to `+Inf`,
+`exp(-cosh(x))` underflows to 0, and the product is `NaN`; that NaN
+reaches the quadrature.  With a 1000-interval workspace the call
+returns `GSL_EMAXITER` with a NaN result.  GSL cannot rescue an
+integrand that is not finite at the points the transformation probes.
+The Savannah thread's own answer - substitute `u = sinh(x)`, giving
+`int_0^inf exp(-sqrt(1+u^2)) du` - is the correct advice.
+
+Savannah bug #59911.

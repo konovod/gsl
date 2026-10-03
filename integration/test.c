@@ -34,6 +34,13 @@
 
 #include "tests.h"
 
+#if defined(_MSC_VER)
+#include <float.h>
+#elif defined(__GLIBC__)
+#include <fenv.h>
+extern int feenableexcept (int excepts);
+#endif
+
 #define SQRT15             3.8729833462074168852
 #define SQRT30             5.4772255750516611346
 #define SQRT70             8.3666002653407554798
@@ -104,6 +111,15 @@ test_fixed_quadrature(const gsl_integration_fixed_type * T, const size_t n,
   gsl_integration_fixed_free(w);
 
   return status;
+}
+
+
+static double
+cquad_zero_f (double x, void *params)
+{
+  (void) x;
+  (void) params;
+  return 0.0;
 }
 
 
@@ -2443,6 +2459,45 @@ main (void)
 
       gsl_integration_cquad_workspace_free(ws);
     }
+  }
+
+  /* An identically zero integrand used to divide by zero while forming
+     the initial error estimate (Savannah bug #59913).  Enable the
+     invalid-operation trap so that a regression is observable. */
+  {
+    gsl_integration_cquad_workspace *ws = gsl_integration_cquad_workspace_alloc (200);
+    gsl_function f = make_function (&cquad_zero_f, NULL);
+    double result = 1.0, abserr = 1.0;
+    size_t nevals = 0;
+    int status;
+
+#if defined(_MSC_VER)
+    {
+      unsigned int old_cw;
+      _controlfp_s (&old_cw, 0, _EM_INVALID | _EM_ZERODIVIDE);
+      status = gsl_integration_cquad (&f, 0.0, 1.0, 0.0, 1e-12, ws,
+                                      &result, &abserr, &nevals);
+      _controlfp_s (&old_cw, old_cw, _MCW_EM);
+    }
+#elif defined(__GLIBC__)
+    {
+      fenv_t env;
+      fegetenv (&env);
+      feclearexcept (FE_ALL_EXCEPT);
+      feenableexcept (FE_INVALID | FE_DIVBYZERO);
+      status = gsl_integration_cquad (&f, 0.0, 1.0, 0.0, 1e-12, ws,
+                                      &result, &abserr, &nevals);
+      fesetenv (&env);
+    }
+#else
+    status = gsl_integration_cquad (&f, 0.0, 1.0, 0.0, 1e-12, ws,
+                                    &result, &abserr, &nevals);
+#endif
+
+    gsl_test_int (status, GSL_SUCCESS, "cquad zero integrand status");
+    gsl_test_abs (result, 0.0, 0.0, "cquad zero integrand result");
+
+    gsl_integration_cquad_workspace_free (ws);
   }
 
   /* test fixed quadrature */

@@ -1548,7 +1548,7 @@ non-symmetric and cyclic tridiagonal systems with minimal storage.
 Note that the current implementations of these functions use a variant
 of Cholesky decomposition, so the tridiagonal matrix must be positive
 definite.  For non-positive definite matrices, the functions return
-the error code @code{GSL_ESING}.
+the error code @code{GSL_EZERODIV}.
 
 @deftypefun int gsl_linalg_solve_tridiag (const gsl_vector * @var{diag}, const gsl_vector * @var{e}, const gsl_vector * @var{f}, const gsl_vector * @var{b}, gsl_vector * @var{x})
 This function solves the general @math{N}-by-@math{N} system @math{A x =
