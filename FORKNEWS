@@ -128,6 +128,9 @@ One line per change: date | tag | description | commit(s).
   2026-10-03 | [upstream] | statistics: correct the gsl_stats_select comment     | 521bed61d
   2026-10-03 | [upstream] | doc: document the binary search tree module          | 20eda0316
   2026-10-03 | [rejected] | tests: platform-specific make-check failures (Group H) | - (see below)
+  2026-10-03 | [upstream] | cdf: bracketed solver for the beta inverse            | 51a63cbd5
+  2026-10-03 | [upstream] | statistics: reject empty data sets in mean/variance   | 68fc3c752
+  2026-10-03 | [rejected] | cdf: gsl_cdf_ugaussian_Pinv(0.5) "returns 1"          | - (see below)
 
 
 ## [upstream] rng: make the random() generators produce the documented sequences
@@ -3285,3 +3288,116 @@ target (MSVC, Linux, macOS) and this is left alone.
 
 See Savannah bugs #39152, #46593, #47028, #48915, #49518, #49697,
 #52127, #52322, #54919, #56843, #59759, #67446, #67447 and #67705.
+
+
+## [upstream] cdf: bracketed solver for the beta inverse
+
+Commit: 51a63cbd5
+
+gsl_cdf_beta_Pinv and _Qinv returned NaN for large a and b at any tail
+probability away from one half.  The routine bisected to an absolute
+tolerance Ptol = 0.01 in P and then ran an unsafeguarded Newton
+iteration.  For a = 8000, b = 2000 the small-x starting approximation
+already satisfies |Px - P| < 0.01 while being nowhere near the root, so
+bisect returned it on the first pass; Newton then stepped in the wrong
+direction and the final residual test raised "inverse failed to
+converge".  Two further defects shared the root cause: for a << 1 the
+quantile can lie hundreds of decades below the mean, which a bisection
+on x cannot reach within the 64-step budget, and Qinv formed the upper
+tail as 1 - Pinv(Q, b, a), losing every digit by cancellation when the
+result is small.
+
+Measured on the built DLL before the change: all ten cases in the
+report (a = 8000, b = 2000; a = 630, b = 9370; a = 5000, b = 5000 at
+P = 0.005, 0.995, 5e-5, 0.99995) returned NaN.
+
+The solver now works on t = logit(x).  In both the lower-tail
+(F = P(x) - target) and upper-tail (F = target - Q(x)) cases F is
+monotone increasing in t, so [log(DBL_MIN), -log(DBL_MIN)] is always a
+bracket.  A Newton step from the density is taken when it stays inside
+the bracket and changes x, otherwise the bracket is halved; convergence
+is accepted when the bracket closes, when the Newton step is below the
+resolution of t, or when x can no longer change.  A root below
+GSL_DBL_MIN returns zero, matching the gamma inverse.  Both entry
+points now invert whichever tail is no larger than one half and
+evaluate that tail directly, so Qinv no longer subtracts from one.
+
+Verification.  References are scipy 1.15 `betaincinv` / `betainccinv`
+at double precision, agreeing with the Boost values quoted in the
+report.  All ten reported cases agree to about 4e-14 relative.  A
+random grid of 73085 Pinv and 99658 Qinv points with a, b in
+[1e-4, 1e4] and tail probability from 1e-12 to 1/2 has no failures and
+a worst relative error of 7.4e-11, inside the TEST_TOL6 of 2.3e-10.
+gsl_cdf_fdist_Pinv/Qinv delegate to this routine and inherit the fix;
+two large-nu fdist vectors are added.
+
+The regression vectors are the ten report cases for both Pinv and Qinv
+plus the two fdist vectors, in `cdf/test.c`.  Negative control: with
+`cdf/betainv.c` reverted, `cdf_test` aborts at the first new vector
+with "inverse failed to converge" (exit 0xc0000409), and with the
+error handler disabled all ten reported cases return NaN.  Full suite
+56/56.
+
+Files: `cdf/betainv.c`, `cdf/test.c`.
+
+Savannah bug #45924.
+
+
+## [upstream] statistics: reject empty data sets in the mean and variance family
+
+Commit: 68fc3c752
+
+gsl_stats_mean accumulated with the recurrence
+mean += (x_i - mean)/(i+1), which leaves the accumulator at zero when
+size is zero, so an empty data set returned 0.0 rather than the
+undefined value its documented definition (1/N) sum x_i gives.  R and
+numpy return NaN.  gsl_stats_variance and gsl_stats_sd inherited the
+zero through variance_m, and their _m and fixed-mean variants returned
+zero too: the empty loop produced zero and the 1/(N-1) or 1/N factor
+could not correct it.
+
+Measured with the built DLL: mean, variance and sd of a zero-length
+array all returned 0.0.
+
+gsl_stats_mean and the shared compute_variance helper - reached by
+variance_m, sd_m, variance_with_fixed_mean and sd_with_fixed_mean, and
+so by variance and sd - now raise GSL_EBADLEN for size zero.  With the
+error handler disabled they return NaN.  gsl_stats_tss is deliberately
+left alone: the total sum of squares of an empty set is genuinely
+zero.
+
+The behaviour is recorded in the mean/variance/sd section of both
+manuals.
+
+The empty-array checks in `statistics/test_float_source.c` and
+`statistics/test_int_source.c` set the error handler off and assert NaN
+for the double, float, long double and all eight integer types.
+Negative control: with the two guards reverted `statistics_test`
+reports 99 failures, all new ("... empty"); with them applied the
+module is clean and the full suite is 56/56.
+
+Files: `statistics/mean_source.c`, `statistics/variance_source.c`,
+`statistics/mean.c`, `statistics/variance.c`, `statistics/test.c`,
+`statistics/test_float_source.c`, `statistics/test_int_source.c`,
+`doc/statistics.rst`, `doc_texinfo/statistics.texi`.
+
+Savannah bug #67058.
+
+
+## [rejected] cdf: gsl_cdf_ugaussian_Pinv(0.5) "returns 1"
+
+Not a bug.  No code change.
+
+Savannah bug #42502 reports that `gsl_cdf_ugaussian_Pinv(0.5)` returns
+1.0 instead of 0.0, from a program that includes only `<gsl/gsl_math.h>`
+and `<stdio.h>`.  `<gsl/gsl_cdf.h>` is missing, so the function is
+implicitly declared as returning `int`; the real function still leaves
+the double `0.0` in `xmm0`, and the second `%f` reads a stale vararg
+slot, which is the `1.000000` printed.  The call itself is correct and
+is covered by `cdf/test.c:498`,
+`TEST (gsl_cdf_ugaussian_Pinv, (0.5), 0.0, TEST_TOL0)`; the built DLL
+returns exactly 0.0.
+
+Kept here so the report is not re-investigated.
+
+Savannah bug #42502.
