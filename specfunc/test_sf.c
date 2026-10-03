@@ -1408,6 +1408,12 @@ int test_expint(void)
   TEST_SF(s,  gsl_sf_Si_e, (1.0e+20, &r), 1.5707963267948966192, TEST_TOL0, GSL_SUCCESS);
   */
 
+  /* Si(x) -> +-pi/2 as x -> +-Inf; the limits are returned for the
+   * infinite arguments themselves.  See Savannah bug #58064.
+   */
+  TEST_SF(s,  gsl_sf_Si_e, (GSL_POSINF, &r), 1.5707963267948966192, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s,  gsl_sf_Si_e, (GSL_NEGINF, &r), -1.5707963267948966192, TEST_TOL0, GSL_SUCCESS);
+
   TEST_SF(s,  gsl_sf_Ci_e, (1.0/4294967296.0, &r), -21.603494113016717041, TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s,  gsl_sf_Ci_e, (1.0/65536.0, &r), -10.513139224115799751, TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s,  gsl_sf_Ci_e, (1.0/8.0, &r), -1.5061295845296396649, TEST_TOL0, GSL_SUCCESS);
@@ -1418,6 +1424,9 @@ int test_expint(void)
   TEST_SF(s,  gsl_sf_Ci_e, (65536.0, &r), 0.000010560248837656279453, TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s,  gsl_sf_Ci_e, (4294967296.0, &r), -1.0756463261957757485e-10, TEST_SQRT_TOL0, GSL_SUCCESS);
   TEST_SF(s,  gsl_sf_Ci_e, (1099511627776.0, &r), -3.689865584710764214e-13, 1024.0*TEST_SQRT_TOL0, GSL_SUCCESS);
+
+  /* Ci(x) -> 0 as x -> +Inf.  See Savannah bug #58064. */
+  TEST_SF(s,  gsl_sf_Ci_e, (GSL_POSINF, &r), 0.0, TEST_TOL0, GSL_SUCCESS);
 
   TEST_SF(s,  gsl_sf_atanint_e, (1.0e-10, &r), 1.0e-10, TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s,  gsl_sf_atanint_e, (1.0e-05, &r), 9.99999999988888888889e-06, TEST_TOL0, GSL_SUCCESS);
@@ -1591,21 +1600,23 @@ int test_gegen(void)
   int sa;
 
   TEST_SF(s,  gsl_sf_gegenpoly_1_e, (-0.2,   1.0, &r), -0.4, TEST_TOL0, GSL_SUCCESS);
-  TEST_SF(s,  gsl_sf_gegenpoly_1_e, ( 0.0,   1.0, &r), 2.0, TEST_TOL0, GSL_SUCCESS);
+  /* C_n^(lambda)(x) -> 0 as lambda -> 0 for n >= 1, so the value at
+   * lambda = 0 is 0.  See Savannah bug #58065. */
+  TEST_SF(s,  gsl_sf_gegenpoly_1_e, ( 0.0,   1.0, &r), 0.0, TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s,  gsl_sf_gegenpoly_1_e, ( 1.0,   1.0, &r), 2.0, TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s,  gsl_sf_gegenpoly_1_e, ( 1.0,   0.5, &r), 1.0, TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s,  gsl_sf_gegenpoly_1_e, ( 5.0,   1.0, &r), 10.0, TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s,  gsl_sf_gegenpoly_1_e, ( 100.0, 0.5, &r), 100.0, TEST_TOL0, GSL_SUCCESS);
 
   TEST_SF(s,  gsl_sf_gegenpoly_2_e, (-0.2,   0.5, &r), 0.12, TEST_TOL0, GSL_SUCCESS);
-  TEST_SF(s,  gsl_sf_gegenpoly_2_e, ( 0.0,   1.0, &r), 1.00, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s,  gsl_sf_gegenpoly_2_e, ( 0.0,   1.0, &r), 0.0, TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s,  gsl_sf_gegenpoly_2_e, ( 1.0,   1.0, &r), 3.00, TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s,  gsl_sf_gegenpoly_2_e, ( 1.0,   0.1, &r), -0.96, TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s,  gsl_sf_gegenpoly_2_e, ( 5.0,   1.0, &r), 55.0, TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s,  gsl_sf_gegenpoly_2_e, ( 100.0, 0.5, &r), 4950.0, TEST_TOL0, GSL_SUCCESS);
 
   TEST_SF(s,  gsl_sf_gegenpoly_3_e, (-0.2,   0.5, &r), 0.112, TEST_TOL0, GSL_SUCCESS);
-  TEST_SF(s,  gsl_sf_gegenpoly_3_e, ( 0.0,   1.0, &r), -2.0/3.0, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s,  gsl_sf_gegenpoly_3_e, ( 0.0,   1.0, &r), 0.0, TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s,  gsl_sf_gegenpoly_3_e, ( 1.0,   1.0, &r), 4.000, TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s,  gsl_sf_gegenpoly_3_e, ( 1.0,   0.1, &r), -0.392, TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s,  gsl_sf_gegenpoly_3_e, ( 5.0,   1.0, &r), 220.000, TEST_TOL0, GSL_SUCCESS);
@@ -1621,10 +1632,24 @@ int test_gegen(void)
   TEST_SF(s,  gsl_sf_gegenpoly_n_e, (103,   207.0, 2.0, &r), 1.4210272202235983e+145, TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s,  gsl_sf_gegenpoly_n_e, (103,    -0.4, 0.3, &r), -1.64527498094522e-04, TEST_TOL1, GSL_SUCCESS);
 
+  /* C_n^(0)(x) = 0 for every n >= 1, for |x| <= 1 and for x outside
+   * the orthogonality interval alike.  See Savannah bug #58065.
+   */
+  TEST_SF(s,  gsl_sf_gegenpoly_n_e, (1, 0.0, 5.0, &r), 0.0, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s,  gsl_sf_gegenpoly_n_e, (2, 0.0, 5.0, &r), 0.0, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s,  gsl_sf_gegenpoly_n_e, (3, 0.0, 0.5, &r), 0.0, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s,  gsl_sf_gegenpoly_n_e, (4, 0.0, 0.5, &r), 0.0, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s,  gsl_sf_gegenpoly_n_e, (100, 0.0, -0.3, &r), 0.0, TEST_TOL0, GSL_SUCCESS);
+
   sa = 0;
   gsl_sf_gegenpoly_array(99, 5.0, 1.0, ga);
   sa += ( test_sf_frac_diff( ga[1],     10.0    ) > TEST_TOL0 );
   sa += ( test_sf_frac_diff( ga[10], 9.23780e+4 ) > TEST_TOL0 );
+
+  /* the lambda = 0 array has C_n^(0) = 0 for n >= 1 */
+  gsl_sf_gegenpoly_array(5, 0.0, 0.5, ga);
+  sa += ( test_sf_frac_diff( ga[0], 1.0 ) > TEST_TOL0 );
+  { int k; for(k=1; k<=5; k++) sa += ( ga[k] != 0.0 ); }
   gsl_test(sa, "  gsl_sf_gegenpoly_array");
   s += sa;
 

@@ -22,6 +22,7 @@
 #include <config.h>
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_errno.h>
+#include <gsl/gsl_sys.h>
 #include <gsl/gsl_sf_trig.h>
 #include <gsl/gsl_sf_expint.h>
 
@@ -322,7 +323,16 @@ int gsl_sf_Si_e(const double x, gsl_sf_result * result)
   
   /* CHECK_POINTER(result) */
 
-  if(ax < GSL_SQRT_DBL_EPSILON) {
+  if(gsl_isinf(x)) {
+    /* Si(x) is odd, so the limits are +pi/2 at +Inf and -pi/2 at -Inf.
+     * The asymptotics below cannot be evaluated at an infinite
+     * argument (cos/sin of Inf is NaN).  See Savannah bug #58064.
+     */
+    result->val = GSL_SIGN(x) * M_PI_2;
+    result->err = 2.0 * GSL_DBL_EPSILON * M_PI_2;
+    return GSL_SUCCESS;
+  }
+  else if(ax < GSL_SQRT_DBL_EPSILON) {
     result->val = x;
     result->err = 0.0;
     return GSL_SUCCESS;
@@ -355,7 +365,16 @@ int gsl_sf_Ci_e(const double x, gsl_sf_result * result)
 {
   /* CHECK_POINTER(result) */
 
-  if(x <= 0.0) {
+  if(x == GSL_POSINF) {
+    /* Ci(x) -> 0.  The integral converges conditionally for every
+     * x > 0, and the limit is 0; the asymptotics below cannot be
+     * evaluated at an infinite argument, so take it directly.
+     */
+    result->val = 0.0;
+    result->err = 0.0;
+    return GSL_SUCCESS;
+  }
+  else if(x <= 0.0) {
     DOMAIN_ERROR(result);
   }
   else if(x <= 4.0) {
