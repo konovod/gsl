@@ -11,11 +11,11 @@ pkginclude_HEADERS = gsl_math.h gsl_pow_int.h gsl_nan.h gsl_machine.h gsl_mode.h
 bin_SCRIPTS = gsl-config
 
 pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA= gsl.pc
+pkgconfig_DATA= gsl.pc gsl-without-cblas.pc
 
-CLEANFILES = gsl.pc gsl-config
+CLEANFILES = gsl.pc gsl-without-cblas.pc gsl-config
 
-EXTRA_DIST = autogen.sh gsl-config.in gsl.pc.in configure.ac THANKS BUGS gsl.spec.in gsl.m4 test_gsl_histogram.sh pkgconfig.test
+EXTRA_DIST = autogen.sh gsl-config.in gsl.pc.in gsl-without-cblas.pc.in configure.ac THANKS BUGS gsl.spec.in gsl.m4 test_gsl_histogram.sh pkgconfig.test
 
 lib_LTLIBRARIES = libgsl.la
 libgsl_la_SOURCES = version.c
@@ -54,7 +54,7 @@ edit = $(SED) \
 	-e 's|@LIBS[@]|$(LIBS)|g' \
 	-e 's|@VERSION[@]|$(VERSION)|g'
 
-gsl-config gsl.pc: Makefile 
+gsl-config gsl.pc gsl-without-cblas.pc: Makefile 
 	@rm -f $@ $@.tmp
 	@$(edit) '$(srcdir)/$@.in' >>$@.tmp
 	@chmod a-w $@.tmp
@@ -63,4 +63,5 @@ gsl-config gsl.pc: Makefile
 
 gsl-config: $(srcdir)/gsl-config.in
 gsl.pc: $(srcdir)/gsl.pc.in
+gsl-without-cblas.pc: $(srcdir)/gsl-without-cblas.pc.in
 
