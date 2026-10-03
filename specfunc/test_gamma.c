@@ -238,6 +238,10 @@ int test_gamma(void)
   TEST_SF(s, gsl_sf_gamma_inc_Q_e, (0.001, 1.0, &r), 0.00021960835758555639171, TEST_TOL1, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_gamma_inc_Q_e, (0.001, 2.0, &r), 0.00004897691783098147880, TEST_TOL2, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_gamma_inc_Q_e, (0.001, 5.0, &r), 1.1509813397308608541e-06, TEST_TOL1, GSL_SUCCESS);
+  /* tiny a, x: Q is small and 1 - P cancels (Savannah bug #43259);
+     reference from mpmath at 50 digits */
+  TEST_SF(s, gsl_sf_gamma_inc_Q_e, (4.5709545795691087e-13, 5.1312377568032546e-61, &r),
+          6.3191220136968329431e-11, TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_gamma_inc_Q_e, (1.0, 0.001, &r), 0.9990004998333749917, TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_gamma_inc_Q_e, (1.0, 1.01, &r), 0.3642189795715233198, TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_gamma_inc_Q_e, (1.0, 10.0, &r), 0.00004539992976248485154, TEST_TOL0, GSL_SUCCESS);

@@ -513,6 +513,14 @@ gsl_sf_gamma_inc_Q_e(const double a, const double x, gsl_sf_result * result)
     result->err = 0.0;
     return GSL_SUCCESS;
   }
+  else if(a < 0.2 && x < 5.0 && a*fabs(log(x)) < 0.1) {
+    /* Q(a,x) is O(a |log x|) here, so forming 1 - P would cancel and
+     * lose about eps/(a|log x|) relative accuracy.  The dedicated
+     * small-a series handles the subtraction analytically (Savannah
+     * bug #43259); it is the same routine used for a < 0.2 with
+     * x > 0.5 a below, restricted here to the cancellation regime. */
+    return gamma_inc_Q_series(a, x, result);
+  }
   else if(x <= 0.5*a) {
     /* If the series is quick, do that. It is
      * robust and simple.
