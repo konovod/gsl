@@ -146,6 +146,13 @@ One line per change: date | tag | description | commit(s).
   2026-10-03 | [rejected] | linalg: solve_symm_tridiag permutation for a zero diagonal | - (see below)
   2026-10-03 | [rejected] | poly: "possible error in poly test suite" | - (see below)
   2026-10-03 | [rejected] | integration: qagiu on cosh(x) exp(-cosh(x)) | - (see below)
+  2026-10-03 | [upstream] | histogram: exact uniform bin limits for integer ranges | f9c977f52
+  2026-10-03 | [upstream] | histogram: size_t for the accessor index               | ae60e2883
+  2026-10-03 | [upstream] | randist: regression test for poisson_pdf at mu = 0     | 5346bba43
+  2026-10-03 | [upstream] | doc: state the gsl_histogram2d_pdf_sample arguments   | 2b15efbff
+  2026-10-03 | [upstream] | doc: require two observations for the sample variance | 65bc71664
+  2026-10-03 | [upstream] | doc: document the gsl_root_fsolver_set error return   | aaecb86e6
+  2026-10-03 | [rejected] | histogram/statistics/roots: Group M reports           | - (see below)
 
 
 ## [upstream] rng: make the random() generators produce the documented sequences
@@ -3704,3 +3711,171 @@ The Savannah thread's own answer - substitute `u = sinh(x)`, giving
 `int_0^inf exp(-sqrt(1+u^2)) du` - is the correct advice.
 
 Savannah bug #59911.
+
+
+## [upstream] histogram: exact uniform bin limits for integer ranges
+
+Commit: f9c977f52
+
+`make_uniform()` built each limit as
+`((n-i)/n)*xmin + (i/n)*xmax`, rounding both coefficients before
+applying them.  With an integer span equal to the number of bins -
+`xmin = 0`, `xmax = 60`, `n = 60` - the boundary `range[31]` came out
+as `31.000000000000004`, so the integer value 31 fell in bin 30, and
+in general an integer boundary could drift by an ulp.
+
+The limit is now evaluated as `xmin + (xmax - xmin) * i / n`.  Taking
+the product with the span before dividing keeps the intermediate exact
+whenever the span and `n` are whole numbers: a 60-bin histogram over
+`[0,60]` has `range[31] = 31` exactly.  The same helper is duplicated
+in `init2d.c` for the two-dimensional histograms and is changed there
+too.
+
+Three formulas were compared against exact rational arithmetic: the
+reported midpoint `0.5*(xmin + i*dx) + 0.5*(xmax - (n-i)*dx)`, the
+single `xmin + i*dx`, and the chosen `xmin + (xmax - xmin)*i/n`.  Only
+the last is exact both for the reported case and for the correctly
+rounded boundaries of a 10-bin histogram over `[0,1]`, where the other
+two move `0.1`, `0.2`, `0.4` or `0.6` by an ulp.  The division can
+still move the end limits, so `range[0]` and `range[n]` are pinned to
+`xmin` and `xmax`.
+
+Test vectors in `histogram/test1d.c` and `test2d.c` check the exact
+interior limit, that an integer lands in its own bin, and that
+`range[0]` is preserved for `n = 107`.  With the old formula the new
+assertions report 5 failures (3 one-dimensional, 2 two-dimensional);
+the suite is 56/56 on MSVC.
+
+Files: `histogram/init.c`, `histogram/init2d.c`, `histogram/test1d.c`,
+`histogram/test2d.c`.
+
+See Savannah bug #38548.
+
+
+## [upstream] histogram: size_t for the accessor index
+
+Commit: ae60e2883
+
+`gsl_histogram_max()` and `gsl_histogram2d_xmax()`/`ymax()` stored the
+last bin index in an `int` before indexing the range array, although
+the public sizes are `size_t`.  The narrowing is harmless for any
+histogram that can actually be allocated, but it is unnecessary and
+would truncate above `INT_MAX`, so the locals are `size_t` now.
+
+Files: `histogram/params.c`, `histogram/params2d.c`.
+
+See Savannah bug #68379.
+
+
+## [upstream] randist: regression test for gsl_ran_poisson_pdf at mu = 0
+
+Commit: 5346bba43
+
+The degenerate rate `mu = 0` was fixed in `4f9f4f4fc` (Savannah bug
+#43326) but had no test, and Savannah bug #47193 then reported the same
+case again.  A zero-rate Poisson distribution carries all of its mass
+at `k = 0`; the new test asserts `gsl_ran_poisson_pdf(0,0) == 1` and
+`gsl_ran_poisson_pdf(k,0) == 0` for `k = 1` and `k = 10`.
+
+With the `mu == 0` guard disabled the new assertion is the only failure
+in `randist_test`; the suite is 56/56 on MSVC.
+
+File: `randist/test.c`.
+
+See Savannah bugs #43326 and #47193.
+
+
+## [upstream] doc: state the gsl_histogram2d_pdf_sample arguments
+
+Commit: 2b15efbff
+
+`gsl_histogram2d_pdf_sample()` was documented only as using "two
+uniform random numbers".  The description now says that `r1` selects
+the bin through the cumulative distribution and also positions the
+sample within that bin in `x`, that `r2` positions it within the bin
+in `y`, and that both must lie in `[0,1]`.
+
+Savannah bug #67301 proposed calling `find()` a second time on `r2`.
+That is not correct: `find()` locates a value in the cumulative
+distribution, while `r2` is a within-bin fraction, so a second lookup
+would overwrite the bin selected by `r1` and mix two different bins.
+Only the description is changed.
+
+Files: `doc/histogram.rst`, `doc_texinfo/histogram.texi`.
+
+See Savannah bug #67301.
+
+
+## [upstream] doc: require two observations for the sample variance
+
+Commit: 65bc71664
+
+Savannah bug #68415 reported that the `n = 1` case was handled
+inconsistently: `gsl_stats_variance_m()` "returns 0.0",
+`gsl_stats_covariance()` has "no guard, inf or NaN", and
+`gsl_stats_pvariance()` "returns GSL_EDOM".  The premises do not
+reproduce on the current build: all three return `NaN` for `n = 1`,
+because the sum of squares is exactly zero and it is multiplied by
+`n/(n-1) = 1/0`.  The three functions are therefore already consistent.
+
+The estimators are genuinely undefined for a single observation and
+`NaN` is the natural IEEE result, so no code is changed; returning a
+domain error instead would make the default error handler abort on
+data a caller may simply have not screened.  Both manuals now state
+that the sample variance and covariance require at least two
+observations.
+
+Files: `doc/statistics.rst`, `doc_texinfo/statistics.texi`.
+
+See Savannah bug #68415.
+
+
+## [upstream] doc: document the gsl_root_fsolver_set error return
+
+Commit: aaecb86e6
+
+Savannah bug #63519 asked `gsl_root_fsolver_set()` to return
+`GSL_EINVAL` for an interval whose ends do not straddle a root instead
+of "throwing an error".  `GSL_ERROR` already returns the code; it also
+invokes the error handler, whose default action is to abort.  That is
+the uniform contract of a GSL error, and a caller who wants the status
+without the handler turns it off with `gsl_set_error_handler_off()`,
+which the reporter was already using.
+
+The two manuals now document the `GSL_EINVAL` return and the
+error-handler behaviour so the choice is explicit.  A per-call variant
+is the new API proposed as `gsl_root_fsolver_set_with_values()`
+(Savannah bug #66576, feature request, out of scope here).
+
+Files: `doc/roots.rst`, `doc_texinfo/roots.texi`.
+
+See Savannah bug #63519.
+
+
+## [rejected] histogram/statistics/roots: the Group M reports that need no code change
+
+Kept for the record; each report was reproduced before it was set
+aside.
+
+* **#65932, complex tridiagonal solvers** - asks why the patch posted
+  as #60457 has not been applied.  #60457 is a feature request for
+  complex tridiagonal solvers, new API and new algorithms, which the
+  fork's eligibility rule excludes.  It remains deferred, not
+  re-investigated here.
+
+* **#67301, the second `find()` on `r2`** - rejected as proposed; see
+  the `doc: state the gsl_histogram2d_pdf_sample arguments` entry
+  above.  `r2` is not a cumulative probability and a second lookup
+  would pick the wrong bin.  The description now spells out how the
+  two variates are used.
+
+* **#68415, variance at `n = 1`** - the reported return values do not
+  reproduce; all of variance, covariance and pooled variance return
+  `NaN`.  See the `doc: require two observations for the sample
+  variance` entry above.
+
+* **#63519, `gsl_root_fsolver_set` error handling** - by design;
+  `GSL_ERROR` returns the code and invokes the handler.  See the
+  `doc: document the gsl_root_fsolver_set error return` entry above.
+
+Savannah bugs #65932, #67301, #68415, #63519.
