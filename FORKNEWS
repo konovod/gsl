@@ -117,6 +117,16 @@ One line per change: date | tag | description | commit(s).
   2026-10-03 | [upstream] | doc: attach deprecated markers to their functions      | 973212c4e
   2026-10-03 | [fork]     | doc: render the HTML manual with MathJax               | 4b7802490
   2026-10-03 | [fork]     | ci: publish the Sphinx manual on GitHub Pages          | 27c86b3f3
+  2026-10-03 | [upstream] | doc: relate the Legendre and Carlson forms          | b0eec8bc6
+  2026-10-03 | [upstream] | doc: gsl_test support functions in usage             | 8ef88af6e
+  2026-10-03 | [upstream] | doc: correct the gsl_ieee_env_setup description      | 060c2472c
+  2026-10-03 | [upstream] | doc: state the gsl_integration_qag key coercion      | 6feb963d3
+  2026-10-03 | [upstream] | doc: document the gsl_sf_bessel_Jnu domain           | 42f33104b
+  2026-10-03 | [upstream] | doc: allow a = 0 in gsl_sf_gamma_inc_Q               | e90d4f002
+  2026-10-03 | [upstream] | doc: note the permutation application header files   | aa796e20b
+  2026-10-03 | [upstream] | doc: note that randist does not validate arguments   | dbe316d49
+  2026-10-03 | [upstream] | statistics: correct the gsl_stats_select comment     | 521bed61d
+  2026-10-03 | [upstream] | doc: document the binary search tree module          | 20eda0316
 
 
 ## [upstream] rng: make the random() generators produce the documented sequences
@@ -3070,3 +3080,158 @@ code change, and the rest are documented.
 Kept here so the reports are not re-investigated.
 
 See Savannah bugs #58031, #58060, #58061, #58062, #58063 and #58064.
+
+
+## [upstream] the "Group I" documentation reports
+
+Twelve documentation reports were grouped as "Group I".  Each was
+checked against the current tree first, because the reports date from
+2010-2026.  Two needed no change at all and are recorded here so they
+are not re-investigated: `#41605`, whose `gsl_histogram_pdf` section is
+complete in both manuals, and `#45234`, whose Mathieu documentation
+already uses the SF API (`_e` variants and `int` return types).
+
+The ten changes below share one property: only `#68073` touches a
+compiled file, and only its comment, so there is no behaviour to test
+with a negative control.  Verification was instead a reading of the
+implementation plus a reproduction of the documented fact against the
+built `gsl.dll`.
+
+
+### `#30583` - the Legendre and Carlson elliptic forms
+
+The chapter defined both families but never related them, and gave no
+guidance for the `m = k^2` parameterisation used by Abramowitz & Stegun
+and Mathematica - the origin of the help-gsl thread "Wolfram EllipticK
+vs gsl_sf_ellint_Kcomp".  A new subsection lists the complete and
+incomplete Legendre integrals in terms of RF, RD and RJ, in the sign
+convention the implementation uses, and then handles a negative
+parameter: for `m < 0` the imaginary modulus reduces by
+
+    K(ik) = K(k/sqrt(1 + k^2)) / sqrt(1 + k^2),
+
+which was checked against the built library and mpmath at 30 digits for
+`m = -0.4`, `-1` and `-3`.
+
+Files: `doc/specfunc-ellint.rst`, `doc_texinfo/specfunc-ellint.texi`.
+Commit `b0eec8bc6`.  See Savannah bug #30583.
+
+
+### `#35032` - the gsl_test support functions
+
+`gsl_test.h` is installed (`pkginclude_HEADERS` in `test/Makefile.am`)
+but was absent from the reference manual.  A "Test Support Functions"
+section in the "Using the Library" chapter now documents `gsl_test`,
+`gsl_test_rel`, `gsl_test_abs`, `gsl_test_factor`, `gsl_test_int`,
+`gsl_test_str`, `gsl_test_verbose` and `gsl_test_summary`, derived from
+`test/results.c`.  The section is explicitly marked as an AI-assisted,
+unreviewed draft.
+
+Files: `doc/usage.rst`, `doc_texinfo/usage.texi`.  Commit `8ef88af6e`.
+See Savannah bug #35032.
+
+
+### `#36578` - gsl_ieee_env_setup does not return GSL_EUNSUP
+
+The manual claimed the function "returns an error code of GSL_EUNSUP",
+but it is declared `void`; `ieee-utils/env.c` discards the code returned
+by `gsl_ieee_set_mode()`.  The text now says the error handler is
+invoked with `GSL_EUNSUP` and that the code never reaches the caller.
+The reporter's alternative, changing the signature to return `int`, is
+an API change and is not taken.
+
+Files: `doc/ieee754.rst`, `doc_texinfo/ieee754.texi`.  Commit
+`060c2472c`.  See Savannah bug #36578.
+
+
+### `#40196` - gsl_integration_qag key coercion
+
+`integration/qag.c` clamps a `key` below 1 to `GSL_INTEG_GAUSS15` and
+above 6 to `GSL_INTEG_GAUSS61`; the manual listed the six rules but not
+the clamp.  Reproduced in the source and documented.
+
+Files: `doc/integration.rst`, `doc_texinfo/integration.texi`.  Commit
+`6feb963d3`.  See Savannah bug #40196.
+
+
+### `#58068` - the gsl_sf_bessel_Jnu domain
+
+`gsl_sf_bessel_Jnu_e()` rejects `x <= 0` with `GSL_EDOM`, including
+`x = 0`, even though `J_0(0) = 1`.  Reproduced against the built
+library (`Jnu_e(1,-1)` and `Jnu_e(0,0)` both `GSL_EDOM`, `Jnu_e(0,1)`
+succeeds); the domain is now documented as `x > 0`.
+
+Files: `doc/specfunc-bessel.rst`, `doc_texinfo/specfunc-bessel.texi`.
+Commit `42f33104b`.  See Savannah bug #58068.
+
+
+### `#58069` - a = 0 in gsl_sf_gamma_inc_Q
+
+`gsl_sf_gamma_inc_Q_e()` accepts `a = 0` and returns `Q(0,x) = 0` for
+`x > 0`, so the documented domain `a > 0` was too narrow; it is now
+`a >= 0`.  The asymmetric `gsl_sf_gamma_inc_P_e()` is deliberately left
+at `a > 0`: the implementation rejects `a = 0` there with `GSL_EDOM`
+(`gamma_inc.c` tests `a <= 0.0`), even though `P = 1 - Q` would suggest
+`P(0,x) = 1`.  Both points were confirmed with the built library, and
+the report only concerns `Q`.
+
+Files: `doc/specfunc-gamma.rst`, `doc_texinfo/specfunc-gamma.texi`.
+Commit `e90d4f002`.  See Savannah bug #58069.
+
+
+### `#59912` - permutation application header files
+
+The chapter said only that the functions live in `gsl_permutation.h`,
+but `gsl_permute`, `gsl_permute_vector` and `gsl_permute_matrix` are
+declared in their own headers, none of which `gsl_permutation.h`
+includes.  The introduction and the "Applying Permutations" section now
+name all three.
+
+Files: `doc/permutation.rst`, `doc_texinfo/permutation.texi`.  Commit
+`aa796e20b`.  See Savannah bug #59912.
+
+
+### `#66894` - randist does not validate arguments
+
+The chapter introduction now states that the distribution functions do
+not check their parameters against the domain of the distribution, and
+that an out-of-range parameter gives an undefined result.  The module
+was audited: the only `GSL_ERROR` sites test array dimensions or sizes,
+never parameter values, so the blanket statement is accurate.
+
+Files: `doc/randist.rst`, `doc_texinfo/randist.texi`.  Commit
+`dbe316d49`.  See Savannah bug #66894.
+
+
+### `#68073` - the gsl_stats_select comment
+
+The block comment above `gsl_stats_select()` said "k-th largest"; the
+routine returns the k-th smallest (verified against the built library:
+select over `{9,1,5,3,7}` gives `1,3,5,7,9` for `k = 0..4`).  The
+manual already said "k-th smallest".  Comment only; no code change.
+
+File: `statistics/select_source.c`.  Commit `521bed61d`.
+See Savannah bug #68073.
+
+
+### `#68592` - the binary search tree module
+
+`bst/` is built, installed and public (`SUBDIRS` and `SUBLIBS` in the
+top-level `Makefile.am`, `pkginclude_HEADERS` in `bst/Makefile.am`), but
+it had no manual entry at all: no `doc/bst.rst`, no `bst.texi`, and no
+mention in either index.  A concise chapter now covers the types
+(`gsl_bst_type`, `gsl_bst_workspace`, `gsl_bst_trav`, `gsl_bst_allocator`,
+`gsl_bst_cmp_function`), the `gsl_bst_avl` / `gsl_bst_rb` trees, and the
+allocation, modification and traversal routines, and is wired into
+`doc/index.rst` and the Texinfo menu/chapter chain.  The text is written
+from the headers and `bst/bst.c`, `bst/trav.c`, and is marked as an
+AI-assisted, unreviewed draft.  `bst_test` passes 186476/186476 and the
+Sphinx build adds no new warnings.
+
+Files: `doc/bst.rst` (new), `doc_texinfo/bst.texi` (new),
+`doc/index.rst`, `doc_texinfo/gsl-ref.texi`.  Commit `20eda0316`.
+See Savannah bug #68592.
+
+
+See Savannah bugs #30583, #35032, #36578, #40196, #58068, #58069,
+#59912, #66894, #68073 and #68592.
