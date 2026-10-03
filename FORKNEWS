@@ -108,6 +108,7 @@ One line per change: date | tag | description | commit(s).
   2026-10-03 | [rejected] | specfunc: "incomplete gamma functions flipped"        | - (see below)
   2026-10-03 | [upstream] | specfunc: terminating 2F1 for non-positive integers  | 2aa89bae8
   2026-10-03 | [upstream] | specfunc: x^(1-c) factor in the 2F1 renorm functions    | 46b7c412e
+  2026-10-03 | [upstream] | specfunc: hyperg_U for x < 0, integer b             | 00859f816
   2026-10-03 | [upstream] | doc: attach deprecated markers to their functions      | 973212c4e
   2026-10-03 | [fork]     | doc: render the HTML manual with MathJax               | 4b7802490
   2026-10-03 | [fork]     | ci: publish the Sphinx manual on GitHub Pages          | 27c86b3f3
@@ -2844,3 +2845,54 @@ it to www.gnu.org (see HACKING).
 
 Files: `.github/workflows/docs.yml`, `.github/docs-requirements.txt`,
 `CMake.md`.
+
+
+## [upstream] specfunc: hyperg_U for x < 0 with non-integer a and integer b
+
+Commit: 00859f816
+
+`hyperg_U_negx()` reduces `U(a,b,x)` for `x < 0` with the
+[Abramowitz+Stegun 13.1.3] connection formula.  Both of its terms carry a
+denominator that vanishes when `b` is a positive integer: `Gamma(1-b)` in
+the first and `Gamma(2-b)` in the second.  When `a` is not an integer the
+two poles do not cancel, and the call fails outright:
+
+    gsl_sf_hyperg_U(-0.5, 1, -1)   GSL_EDOM      poch(a,-a) = Gamma(0)/Gamma(a)
+    gsl_sf_hyperg_U(-0.5, 2, -1)   GSL_EUNIMPL
+    gsl_sf_hyperg_U(-0.5, 3, -1)   GSL_EUNIMPL
+
+These are the cases Savannah bug #30510 reports (the `b = 1` hole and the
+`b >= 2` integer limit).
+
+The integer-`b` case `b = n+1`, `n >= 0`, is now evaluated with the DLMF
+13.2.9 limit
+
+    U(a,n+1,x) = (-1)^(n+1)/(n! Gamma(a-n))
+                   sum_{k>=0} (a)_k/((n+1)_k k!) x^k
+                     (ln x + psi(a+k) - psi(1+k) - psi(n+k+1))
+               + 1/Gamma(a) sum_{k=1}^n (k-1)! (1-a+k)_{n-k}/(n-k)! x^(-k),
+
+with `ln x` replaced by `ln|x|`.  For `x < 0` the principal value of `U`
+is complex - it has a branch cut on the negative real axis - and `ln|x|`
+selects its real part, the continuous real solution of Kummer's equation,
+which is the value a real-valued routine has to return.  The new path is
+confined to `|x| <= 100` and `n <= 170`; outside that range the previous
+`GSL_EDOM` / `GSL_EUNIMPL` behaviour is kept rather than overflow the
+series.
+
+Correctness was established independently three ways.  `mpmath.hyperu`
+at 50 digits agrees with the formula for `x > 0`; for `x < 0` the
+`ln|x|` value equals the real part of the principal value, confirmed by
+integrating Kummer's ODE from `x > 0` to `x < 0` through the upper
+half-plane (the integration reproduces `mpmath.hyperu` to 12 digits).  A
+660-point grid (`a` in `[-12.5, 3.5]`, `b` in `[1,12]`, `x` in
+`[-0.5, -20]`) has a worst ratio of true error to reported error of 0.61,
+so the error estimate remains honest even where the series cancels.
+
+Negative control: with the new branch removed, `specfunc_test` reports 13
+failures - the twelve new vectors and the summary line.  With it the
+`specfunc` suite and the full CTest suite pass.
+
+Files: `specfunc/hyperg_U.c`, `specfunc/test_hyperg.c`.
+
+See Savannah bug #30510.
