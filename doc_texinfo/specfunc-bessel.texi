@@ -485,6 +485,9 @@ efficiency, and therefore may differ slightly from the exact values.
 @deftypefunx int gsl_sf_bessel_Jnu_e (double @var{nu}, double @var{x}, gsl_sf_result * @var{result})
 These routines compute the regular cylindrical Bessel function of
 fractional order @math{\nu}, @math{J_\nu(x)}.
+
+The domain of the function is @math{x > 0}; the point @math{x = 0} is
+rejected, even though @math{J_0(0) = 1}.
 @comment Exceptional Return Values: GSL_EDOM, GSL_EUNDRFLW
 @end deftypefun
 

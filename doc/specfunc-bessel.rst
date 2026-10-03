@@ -468,6 +468,10 @@ Regular Bessel Function---Fractional Order
 
    These routines compute the regular cylindrical Bessel function of
    fractional order :math:`\nu`, :math:`J_\nu(x)`.
+
+   The domain of the function is :math:`x > 0`; the point :math:`x = 0` is
+   rejected, even though :math:`J_0(0) = 1`.
+.. Domain: x > 0
 .. Exceptional Return Values: GSL_EDOM, GSL_EUNDRFLW
 
 .. function:: int gsl_sf_bessel_sequence_Jnu_e (double nu, gsl_mode_t mode, size_t size, double v[])
