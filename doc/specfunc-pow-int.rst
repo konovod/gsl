@@ -13,7 +13,9 @@ declared in the header file :file:`gsl_sf_pow_int.h`.
    power is computed using the minimum number of multiplications. For
    example, :math:`x^8` is computed as :math:`((x^2)^2)^2`, requiring only 3
    multiplications.  For reasons of efficiency, these functions do not
-   check for overflow or underflow conditions. The following is a simple example::
+   check for overflow or underflow conditions, except that a zero base
+   raised to a negative power is reported as an overflow. The following
+   is a simple example::
 
       #include <gsl/gsl_sf_pow_int.h>
       /* compute 3.0**12 */
