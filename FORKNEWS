@@ -98,6 +98,7 @@ One line per change: date | tag | description | commit(s).
   2026-10-03 | [upstream] | specfunc: Coulomb F recurrence overflow/rescale        | 25841970e
   2026-10-03 | [upstream] | specfunc: Coulomb G' overflow is signalled             | 8031f18bf
   2026-10-03 | [upstream] | specfunc: F_array recurrence regression vector         | 861de2adc
+  2026-10-03 | [rejected] | specfunc: port the Wigner d-matrix (wigner_drot)       | - (see below)
 
 
 ## [upstream] rng: make the random() generators produce the documented sequences
@@ -2390,6 +2391,43 @@ turning-point guard also fails).
 Files: `specfunc/test_coulomb.c`.
 
 Savannah bug #46678.
+
+
+## [rejected] specfunc: port the Wigner d-matrix (gsl_sf_wigner_drot)
+
+Deferred, not applied.  No patch.
+
+Savannah bug #46677 asks why `contrib/wigner.h` was never ported into
+`specfunc/`.  Most of it was: the 3j, 6j and 9j symbols now live in
+`specfunc/coupling.c` and are declared in `gsl/gsl_sf_coupling.h`.  The
+one function left behind is `gsl_sf_wigner_drot` / `_e`, the Wigner
+(small) d-matrix, whose only home is `contrib/wigner.c`.
+
+That is a feature request - a new public function, its header entry, its
+documentation and its tests - rather than a bug fix, so it falls outside
+the eligibility rule for this review and is deferred rather than taken or
+rejected on the merits.  The submitter's own probe (copy the file, rename
+to GSL conventions, add the source to the build) is the shape of the
+change; it would also need test vectors and a decision on the two-j /
+two-m integer parameter convention and the `theta` argument.
+
+Two things to keep in mind if it is ever picked up:
+
+* Adding the file means touching both build systems: `specfunc/Makefile.am`
+  and the generated `cmake/gsl_sources.cmake` (regenerate with
+  `python cmake/regen_sources.py`), as `AGENTS.md` requires.
+
+* `contrib/wigner.c` is *not* a more accurate implementation than
+  `specfunc`.  Its 3j/6j/9j go through `lndelta_e` (log factorials), so
+  they do not overflow the way the factorial normalisation in
+  `specfunc/coupling.c` can, but they are still direct alternating sums,
+  so they lose accuracy for large `j` in exactly the way Savannah bug
+  `#68312` reports.  Porting the file would therefore not close `#68312`,
+  which needs a stable algorithm.
+
+Kept here so the item is not re-investigated.
+
+Savannah bug #46677.
 
 
 
