@@ -403,4 +403,22 @@ FUNCTION (test, func) (const size_t stridea, const size_t strideb)
   free (igroupa);
   free (igroupb);
   free (test1);
+
+  /* An empty data set has no mean, variance or standard deviation, so
+     the result must be NaN rather than zero (Savannah bug #67058). */
+  {
+    gsl_error_handler_t * old_handler = gsl_set_error_handler_off ();
+    BASE empty[1];
+    double mean, variance, sd;
+
+    mean = FUNCTION(gsl_stats,mean) (empty, 1, 0);
+    variance = FUNCTION(gsl_stats,variance) (empty, 1, 0);
+    sd = FUNCTION(gsl_stats,sd) (empty, 1, 0);
+
+    gsl_test (!gsl_isnan (mean), NAME(gsl_stats) "_mean empty");
+    gsl_test (!gsl_isnan (variance), NAME(gsl_stats) "_variance empty");
+    gsl_test (!gsl_isnan (sd), NAME(gsl_stats) "_sd empty");
+
+    gsl_set_error_handler (old_handler);
+  }
 }

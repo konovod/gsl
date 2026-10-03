@@ -23,6 +23,7 @@
 #include <math.h>
 
 #include <gsl/gsl_math.h>
+#include <gsl/gsl_errno.h>
 #include <gsl/gsl_test.h>
 #include <gsl/gsl_sort.h>
 #include <gsl/gsl_sort_vector.h>

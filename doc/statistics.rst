@@ -137,6 +137,12 @@ Mean, Standard Deviation and Variance
    fixed population mean :data:`mean`.  The result is the square root of the
    corresponding variance function.
 
+The mean, variance and standard deviation functions in this section are
+undefined for an empty data set (:data:`n` equal to zero).  They raise the
+error :macro:`GSL_EBADLEN`, and return `NaN` when the error handler has been
+disabled.  The total sum of squares of an empty data set is zero, since the
+empty sum is zero.
+
 Absolute deviation
 ==================
 

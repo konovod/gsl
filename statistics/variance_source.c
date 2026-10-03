@@ -32,6 +32,11 @@ FUNCTION(compute,variance) (const BASE data[], const size_t stride, const size_t
 
   size_t i;
 
+  if (n == 0)
+    {
+      GSL_ERROR_VAL ("data set must be non-empty", GSL_EBADLEN, GSL_NAN);
+    }
+
   /* find the sum of the squares */
   for (i = 0; i < n; i++)
     {

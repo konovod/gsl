@@ -172,6 +172,12 @@ fixed population mean @var{mean}.  The result is the square root of the
 corresponding variance function.
 @end deftypefun
 
+The mean, variance and standard deviation functions in this section are
+undefined for an empty data set (@var{n} equal to zero).  They raise the
+error @code{GSL_EBADLEN}, and return @code{NaN} when the error handler has
+been disabled.  The total sum of squares of an empty data set is zero,
+since the empty sum is zero.
+
 @node Absolute deviation
 @section Absolute deviation
 
