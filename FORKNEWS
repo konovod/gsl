@@ -98,6 +98,7 @@ One line per change: date | tag | description | commit(s).
   2026-10-03 | [upstream] | specfunc: Coulomb F recurrence overflow/rescale        | 25841970e
   2026-10-03 | [upstream] | specfunc: Coulomb G' overflow is signalled             | 8031f18bf
   2026-10-03 | [upstream] | specfunc: F_array recurrence regression vector         | 861de2adc
+  2026-10-03 | [upstream] | specfunc: 6j symbol by the Schulten-Gordon recurrence  | 59fc479e2
   2026-10-03 | [rejected] | specfunc: port the Wigner d-matrix (wigner_drot)       | - (see below)
 
 
@@ -2423,11 +2424,70 @@ Two things to keep in mind if it is ever picked up:
   `specfunc/coupling.c` can, but they are still direct alternating sums,
   so they lose accuracy for large `j` in exactly the way Savannah bug
   `#68312` reports.  Porting the file would therefore not close `#68312`,
-  which needs a stable algorithm.
+  which needs a stable algorithm.  That algorithm is now in place
+  separately: `gsl_sf_coupling_6j_e()` uses the Schulten-Gordon
+  recurrence as of commit `59fc479e2`.
 
 Kept here so the item is not re-investigated.
 
 Savannah bug #46677.
+
+
+## [upstream] specfunc: compute the 6j symbol by the Schulten-Gordon recurrence
+
+Commit: 59fc479e2
+
+`gsl_sf_coupling_6j_e()` evaluated the Racah sum term by term with exact
+factorials.  Two things go wrong as `j` grows.  The factorials themselves
+overflow: `delta()` formed the product of three factorials before
+dividing, and the term loop called `gsl_sf_fact_e()`, which fails at
+about `171!`, so `gsl_sf_coupling_6j_e(28,32,32,156,124,152)` - the
+doubled form of the symbol in the report, whose value is
+`3.6028588700321e-4` - returned `+Inf` with `GSL_EOVRFLW` (bug #43256).
+And even below the overflow threshold the alternating sum cancels: at
+`j = 100` the largest term is some `3e14` times the result, so the value
+carried only one or two correct digits (bug #68312).  The 9j symbol and
+the Racah W coefficient are built from 6j values and inherited both
+defects.
+
+The 6j is now evaluated by the three-term recurrence of Schulten and
+Gordon in the first angular momentum, as implemented by the public-domain
+SLATEC routine DRC6J: the recurrence is run forwards and backwards, the
+two sequences are matched in the interior, and the result is normalised
+by the orthogonality sum.  No factorial is formed and no cancelling sum
+is taken, so both defects are removed at once.  The 9j and Racah W now
+follow from the stable 6j unchanged.  `delta()` and the unused
+`locMin5()` are deleted.
+
+Independent references came from sympy's exact `wigner_6j`/`wigner_9j`
+and from a 60-digit evaluation of the Racah formula, never from GSL.  The
+recurrence was checked against them on several hundred random cases of
+both integer and half-integer angular momentum (agreement to a few ulp)
+before the C port, and the built library was then compared with sympy
+through ctypes on a further four thousand cases.  The
+`3j(100,100,100;0,0,0)` closed form, already produced correctly by the
+edge recursion, is now locked in by a vector as well.
+
+Regression vectors in `specfunc/test_sf.c`:
+
+| symbol | value |
+|---|---|
+| `6j(28,32,32,156,124,152)` | `3.60285887003211998154e-4` |
+| `6j(100,100,100,100,100,100)` | `-1.12137492362641992871e-4` |
+| `6j(200,200,200,200,200,200)` | `-4.69841623298744208135e-4` |
+| `6j(200,200,0,200,200,0)` | `1/201` |
+| `6j(199,201,2,199,201,2)` | `-2.46293286045022412689e-7` |
+| `3j(100,100,100;0,0,0)` | `6.03239131346568400665e-3` |
+| `9j(100,...,100)` | `5.10641080337977029997e-6` |
+| `9j(200,...,200)` | `8.09666386879291383890e-7` |
+
+Negative control: with commit `59fc479e2` reverted the seven 6j/9j
+vectors fail with `val = inf` and `GSL_EOVRFLW`, while the rest of the
+suite still passes; all 56 `ctest` tests pass with the change.
+
+Files: `specfunc/coupling.c`, `specfunc/test_sf.c`.
+
+See Savannah bugs #43256 and #68312.
 
 
 
