@@ -5,11 +5,11 @@ Generated 2026-10-02 from the `scripts/savannah_bugs.py` sweep (`inventory.tsv`)
 Scratch index, not part of the fork's record of changes. Verdicts are curated from
 `FORKNEWS`, `SAVANNAH_REVIEW.md` and the git history; every other row is un-triaged.
 
-**219 open items: 71 reviewed/handled, 148 remaining.**
+**219 open items: 73 reviewed/handled, 146 remaining.**
 
 | status | count |
 |---|---:|
-| fixed | 54 |
+| fixed | 56 |
 | partial | 2 |
 | rejected | 13 |
 | deferred | 1 |
@@ -80,7 +80,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 42472 | 2014-05-31 | - | Runtime error | partial gsl_hh_test.c +1 | **fixed** — HH_solve/HH_svx shared tall QR (1f84bed77) | gsl_linalg_HH_solve bugs |
 | 42502 | 2014-06-03 | bug | Runtime error | none | not reviewed | wrong results of the function gsl_cdf_ugaussian_Pinv |
 | 42830 | 2014-07-23 | bug | - | none | not reviewed | Bug in gsl_bspline_knot constructor |
-| 43256 | 2014-09-19 | - | Runtime error | source sixjsymbols.c | not reviewed | gsl_sf_coupling_6j overflows |
+| 43256 | 2014-09-19 | - | Runtime error | source sixjsymbols.c | **fixed** — stable 6j by Schulten-Gordon recurrence (59fc479e2) | gsl_sf_coupling_6j overflows |
 | 43259 | 2014-09-19 | - | - | none | not reviewed | accuracy problems in specfunc |
 | 43326 | 2014-09-29 | bug | Runtime error | clean bug43326.diff | **fixed** — poisson_pdf at mu=0 (4f9f4f4fc) | Bug in gsl_ran_poisson_pdf() for mu = 0.0 |
 | 43496 | 2014-10-29 | bug | Runtime error | none | **fixed** — Brent parabolic-step test (c27559ec6) | Possible error in brent minimizer convergence criteria |
@@ -227,7 +227,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 68073 | 2026-02-20 | bug | Documentation | none | not reviewed | Bug: incorrect inline code comment on BASE FUNCTION(gsl_stats,select) |
 | 68098 | 2026-02-27 | feature | - | none | not reviewed | Feature: division by zero when data is perfectly correlated |
 | 68283 | 2026-04-26 | - | - | none | not reviewed | Correction to gsl_rstat_skew and gsl_rstat_kurtosis |
-| 68312 | 2026-05-07 | bug | Accuracy problem | none | not reviewed | Wigner symbols inaccurate for large j |
+| 68312 | 2026-05-07 | bug | Accuracy problem | none | **fixed** — same recurrence as #43256 (59fc479e2) | Wigner symbols inaccurate for large j |
 | 68367 | 2026-05-19 | feature | - | source invelljac.c | not reviewed (feature-shaped) — skipped in first pass as feature-shaped | Feature: inverse Jacobi elliptic integrals |
 | 68379 | 2026-05-21 | - | - | none | not reviewed | Histogram: expand scope of internal variables |
 | 68398 | 2026-05-26 | feature | - | none | not reviewed | Feature: use GSL native gsl_ldexp in eta fuction for integer argument |

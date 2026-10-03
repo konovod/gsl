@@ -96,6 +96,7 @@ has to be tested against the built library.  See `#52321` below.
 | `#58032` | **fixed 2026-10-02** (commit 1f2607a0b): `gsl_sf_hyperg_1F1_e`/`_int_e` tested `x == 0` before any parameter check and returned 1, so the pole at `b = 0, -1, -2, ...` was reported as `1F1(a,b,0) = 1`.  The branch now classifies the parameters as the `x != 0` branches do and returns `GSL_EDOM` there, while terminating cases (`a` a nonpositive integer with `a >= b`) stay at 1.  Manual updated in both trees.  No patch was posted to the tracker, so this is a from-scratch reproduction |
 | `#39057` | **fixed 2026-10-02** (commit 9befdae95): the reported call is real but its expected value, `0.99477710813146`, is `gsl_cdf_chisq_P(0.5, 0.01)`, not the inverse.  The gamma inverse's branch heuristic is only valid for `a >= 1`; with `a = 0.005` the fixed-step iteration cannot reach `3.51e-61`, and `gsl_cdf_gamma_Qinv` returned wrong values silently.  The solver is reworked around a bracketed Pegasus iteration on `log x`, and both entry points delegate to the smaller tail.  No patch was posted |
 | `#53451` | **fixed 2026-10-02** (commit 2673ce0d8): the title says `Pcomp` but the report's numbers are the *incomplete* `gsl_sf_ellint_P`.  Both it and `Pcomp` evaluate `Pi` through `RJ(..., 1 + n sin^2(phi))`, which rejected `p < 0` with `GSL_EDOM`; that is exactly the case where the integrand has a pole and the value is the Cauchy principal value.  `gsl_sf_ellint_RJ_e` now applies the DLMF 19.20.14 / Boost.Math transformation for `p < 0` (`p = 0` still `GSL_EDOM`), and `gsl_sf_ellint_P_e`'s error estimate no longer propagates a signed `n/3`.  Five vectors added; manual updated in both trees |
+| `#43256` + `#68312` | **fixed 2026-10-03** (commit 59fc479e2): the direct Racah 6j sum overflowed at about `171!` (the report's `(14,16,16;78,62,76)` is the doubled form of `(28,32,32;156,124,152)`) and, below that, cancelled catastrophically - at `j = 100` the largest term is `~3e14` times the result.  Replaced by the Schulten-Gordon recurrence (public-domain SLATEC `DRC6J`), with backward/forward matching and orthogonal normalisation; 9j and Racah W inherit it.  References from sympy and an exact Racah evaluation; negative control fails with `val = inf`, `GSL_EOVRFLW` |
 
 ## Resolved
 
@@ -1335,3 +1336,57 @@ that reason.
   (the `#45730` block) precisely because that error estimate is not
   portable, and `j2` calls the system `sin`/`cos`, so the fork's `trig.c`
   reduction never reaches it.  Recorded as rejected.
+
+
+### `#43256` + `#68312` — the 6j symbol for large angular momenta — fixed
+
+Two defects in the same function, both from evaluating the Racah sum
+directly.
+
+**#43256.** `gsl_sf_coupling_6j_e()` formed `delta()` as the product of
+three exact factorials divided by a fourth, and the term loop called
+`gsl_sf_fact_e()`, which fails at about `171!`.  The report's symbol is
+written with actual angular momenta, `(14,16,16;78,62,76)`, but GSL takes
+*twice* those values, so the call that overflows is
+`gsl_sf_coupling_6j_e(28,32,32,156,124,152)`.  Its exact value, from the
+report's own closed form, is `3.60285887003211998154e-4`; the built
+library returned `+Inf` with `GSL_EOVRFLW`.
+
+**#68312.** Below the overflow threshold the alternating sum still
+cancels.  At the all-equal case `j = 100` the largest term of the Racah
+sum is `3.1e14` times the result, so a double-precision direct sum
+retains only one or two correct digits; the reporter measured `~1e3`
+relative error.  The 9j symbol and the Racah W coefficient are sums of 6j
+values and inherited the error.
+
+**Fix.** `gsl_sf_coupling_6j_e()` now uses the three-term recurrence of
+Schulten and Gordon in the first angular momentum, adapted from the
+public-domain SLATEC routine `DRC6J`: forward and backward recursions are
+run and matched in the interior, the sequence is rescaled as needed, and
+the result is normalised by
+`(2 L4 + 1) sum (2 L1 + 1) {6j}^2 = 1`; the overall sign is fixed by the
+phase convention on the last coefficient.  No factorial is formed and no
+cancelling sum is taken.  The now-unused `delta()` and `locMin5()` are
+deleted.  The 9j and Racah W are unchanged and inherit the stable 6j.
+
+**Validation.** The full suite passes 56/56.  Independent references came
+from sympy's exact `wigner_6j`/`wigner_9j` and from a 60-digit evaluation
+of the Racah formula, never from GSL.  The recurrence was first
+implemented in Python and reproduced the references to a few ulp over
+hundreds of random integer and half-integer cases; the C port was then
+compared with sympy through ctypes over four thousand more cases, and the
+specific large cases were checked to 40 digits.  The one value the report
+gives for the 3j, the closed form `(100 100 100; 0 0 0)`, is produced by
+the existing edge recursion and is now pinned by a test.
+
+Negative control: with commit `59fc479e2` reverted, the seven new 6j/9j
+vectors fail with `val = inf` and `GSL_EOVRFLW` and the suite reports one
+test failure; with the fix in place all pass.
+
+One thing the report gets right by accident and is worth writing down:
+the arguments in `(14,16,16;78,62,76)` are actual angular momenta, so the
+literal GSL call with those integers is a *different*, perfectly finite
+symbol (`-4.3149240273135e-3`); the overflowing call is the doubled one.
+The regression vector uses the doubled form and the exact value.
+
+See FORKNEWS; commit `59fc479e2`.
