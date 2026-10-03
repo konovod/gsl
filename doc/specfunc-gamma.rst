@@ -255,10 +255,13 @@ Incomplete Gamma Functions
 
    These routines compute the normalized incomplete Gamma Function
    :math:`Q(a,x) = 1/\Gamma(a) \int_x^\infty dt t^{(a-1)} \exp(-t)`
-   for :math:`a > 0`, :math:`x \ge 0`.
+   for :math:`a \ge 0`, :math:`x \ge 0`.
    The limits are returned for an infinite argument: for fixed
    :math:`a > 0`, :math:`Q(a,+\infty) = 0`; for fixed
    :math:`x \ge 0`, :math:`Q(+\infty,x) = 1`.
+
+   The case :math:`a = 0` is defined by the limit
+   :math:`Q(0,x) = 0` for :math:`x > 0`.
 .. exceptions: GSL_EDOM
 
 .. index:: complementary incomplete Gamma function

@@ -264,11 +264,12 @@ The limit @math{\Gamma(a,+\infty) = 0} is returned for
 These routines compute the normalized incomplete Gamma Function
 @c{$Q(a,x) = 1/\Gamma(a) \int_x^\infty dt\, t^{(a-1)} \exp(-t)$}
 @math{Q(a,x) = 1/\Gamma(a) \int_x^\infty dt t^@{a-1@} \exp(-t)}
-for @math{a > 0}, @c{$x \ge 0$}
+for @math{a >= 0}, @c{$x \ge 0$}
 @math{x >= 0}.
 The limits @math{Q(a,+\infty) = 0} for fixed @math{a > 0} and
 @math{Q(+\infty,x) = 1} for fixed @math{x \ge 0} are returned for the
-infinite arguments.
+infinite arguments.  The case @math{a = 0} is defined by the limit
+@math{Q(0,x) = 0} for @math{x > 0}.
 @comment exceptions: GSL_EDOM
 @end deftypefun
 
