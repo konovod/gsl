@@ -1096,7 +1096,11 @@ generate random samples from it.
 
    This function uses two uniform random numbers between zero and one,
    :data:`r1` and :data:`r2`, to compute a single random sample from the
-   two-dimensional probability distribution :data:`p`.
+   two-dimensional probability distribution :data:`p`.  :data:`r1` selects
+   the bin through the cumulative probability distribution, and the same
+   number positions the sample within the selected bin in :math:`x`;
+   :data:`r2` positions the sample within the selected bin in :math:`y`.
+   Both numbers must lie in the range :math:`[0,1]`.
 
 Example programs for 2D histograms
 ==================================

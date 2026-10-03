@@ -1142,7 +1142,11 @@ function @var{p} and all of the memory associated with it.
 @deftypefun int gsl_histogram2d_pdf_sample (const gsl_histogram2d_pdf * @var{p}, double @var{r1}, double @var{r2}, double * @var{x}, double * @var{y})
 This function uses two uniform random numbers between zero and one,
 @var{r1} and @var{r2}, to compute a single random sample from the
-two-dimensional probability distribution @var{p}.
+two-dimensional probability distribution @var{p}.  @var{r1} selects the
+bin through the cumulative probability distribution, and the same number
+positions the sample within the selected bin in @math{x}; @var{r2}
+positions the sample within the selected bin in @math{y}.  Both numbers
+must lie in the range @math{[0,1]}.
 @end deftypefun
 
 @page
