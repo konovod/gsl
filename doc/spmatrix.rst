@@ -491,9 +491,9 @@ Matrix Operations
 
    Input matrix formats supported: :ref:`COO <sec_spmatrix-coo>`, :ref:`CSC <sec_spmatrix-csc>`, :ref:`CSR <sec_spmatrix-csr>`
 
-.. deprecated::
-
 .. function:: int gsl_spmatrix_add_to_dense (gsl_matrix * a, const gsl_spmatrix * b)
+
+   .. deprecated:: 2.7
 
    This function is deprecated and will be removed in a future release.
    Use :func:`gsl_spmatrix_dense_add` instead.

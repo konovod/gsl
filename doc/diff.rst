@@ -66,23 +66,23 @@ Functions
    This function is equivalent to calling :func:`gsl_deriv_forward` with a
    negative step-size.
 
-.. deprecated::
-
 .. function:: int gsl_diff_central (const gsl_function * f, double x, double * result, double * abserr)
+
+   .. deprecated:: 1.5
 
    This function is deprecated and will be removed in a future release.
    Use :func:`gsl_deriv_central` instead.
 
-.. deprecated::
-
 .. function:: int gsl_diff_backward (const gsl_function * f, double x, double * result, double * abserr)
+
+   .. deprecated:: 1.5
 
    This function is deprecated and will be removed in a future release.
    Use :func:`gsl_deriv_backward` instead.
 
-.. deprecated::
-
 .. function:: int gsl_diff_forward (const gsl_function * f, double x, double * result, double * abserr)
+
+   .. deprecated:: 1.5
 
    This function is deprecated and will be removed in a future release.
    Use :func:`gsl_deriv_forward` instead.

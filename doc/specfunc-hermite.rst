@@ -250,40 +250,40 @@ The following functions are deprecated and will be removed in a future
 release.  They are retained only for backwards compatibility and have been
 renamed; use the indicated replacement instead.
 
-.. deprecated::
-
 .. function:: double gsl_sf_hermite_phys (const int n, const double x)
               int gsl_sf_hermite_phys_e (const int n, const double x, gsl_sf_result * result)
+
+   .. deprecated:: 2.6
 
    These routines are deprecated.  Use :func:`gsl_sf_hermite` or
    :func:`gsl_sf_hermite_e` instead.
 
-.. deprecated::
-
 .. function:: double gsl_sf_hermite_phys_der (const int m, const int n, const double x)
               int gsl_sf_hermite_phys_der_e (const int m, const int n, const double x, gsl_sf_result * result)
+
+   .. deprecated:: 2.6
 
    These routines are deprecated.  Use :func:`gsl_sf_hermite_deriv` or
    :func:`gsl_sf_hermite_deriv_e` instead.
 
-.. deprecated::
-
 .. function:: int gsl_sf_hermite_prob_array_der (const int m, const int nmax, const double x, double * result_array)
+
+   .. deprecated:: 2.6
 
    This routine is deprecated.  Use :func:`gsl_sf_hermite_prob_array_deriv`
    instead.
 
-.. deprecated::
-
 .. function:: int gsl_sf_hermite_prob_der_array (const int mmax, const int n, const double x, double * result_array)
+
+   .. deprecated:: 2.6
 
    This routine is deprecated.  Use :func:`gsl_sf_hermite_prob_deriv_array`
    instead.
 
-.. deprecated::
-
 .. function:: double gsl_sf_hermite_prob_der (const int m, const int n, const double x)
               int gsl_sf_hermite_prob_der_e (const int m, const int n, const double x, gsl_sf_result * result)
+
+   .. deprecated:: 2.6
 
    These routines are deprecated.  Use :func:`gsl_sf_hermite_prob_deriv` or
    :func:`gsl_sf_hermite_prob_deriv_e` instead.
