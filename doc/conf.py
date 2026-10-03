@@ -31,7 +31,12 @@ import sphinx_rtd_theme
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.imgmath']
+#
+# HTML math is rendered with MathJax rather than sphinx.ext.imgmath so that
+# the manual can be built without a TeX installation.  The custom operators
+# below have to be declared for MathJax as well (imgmath got them from the
+# LaTeX preamble).
+extensions = ['sphinx.ext.mathjax']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -169,7 +174,35 @@ latex_documents = [
      my_latex_authors, 'manual'),
 ]
 
-imgmath_latex_preamble = my_latex_preamble
+# -- Options for MathJax output -------------------------------------------
+
+# Definitions for the custom operators used in the manual, mirroring the
+# \DeclareMathOperator lines of my_latex_preamble above.  Keep the two in
+# step: the LaTeX preamble is used for the PDF output, these for the HTML.
+mathjax3_config = {
+    'tex': {
+        'macros': {
+            'arccosh': r'\operatorname{arccosh}',
+            'arcsinh': r'\operatorname{arcsinh}',
+            'arctanh': r'\operatorname{arctanh}',
+            'arcsec': r'\operatorname{arcsec}',
+            'arccsc': r'\operatorname{arccsc}',
+            'arccot': r'\operatorname{arccot}',
+            'csch': r'\operatorname{csch}',
+            'sech': r'\operatorname{sech}',
+            'arcsech': r'\operatorname{arcsech}',
+            'arccsch': r'\operatorname{arccsch}',
+            'arccoth': r'\operatorname{arccoth}',
+            'erf': r'\operatorname{erf}',
+            'erfc': r'\operatorname{erfc}',
+            'sgn': r'\operatorname{sgn}',
+            'sinc': r'\operatorname{sinc}',
+            'Var': r'\operatorname{Var}',
+            'diag': r'\operatorname{diag}',
+            'undermat': [r'\underbrace{\begin{matrix}#2\end{matrix}}_{\text{#1}}', 2],
+        },
+    },
+}
 
 
 # -- Options for manual page output ---------------------------------------
