@@ -62,6 +62,72 @@ by,
      RJ(x,y,z,p) = 3/2 \int_0^\infty dt 
                       (t+x)^(-1/2) (t+y)^(-1/2) (t+z)^(-1/2) (t+p)^(-1)
 
+Relations between the Legendre and Carlson forms
+------------------------------------------------
+
+The complete and incomplete Legendre integrals can be written directly
+in terms of the Carlson symmetric forms.  In the conventions used here,
+
+.. only:: not texinfo
+
+   .. math::
+
+      K(k) &= RF(0, 1 - k^2, 1) \\
+      E(k) &= RF(0, 1 - k^2, 1) - {k^2 \over 3} RD(0, 1 - k^2, 1) \\
+      \Pi(k,n) &= RF(0, 1 - k^2, 1) - {n \over 3} RJ(0, 1 - k^2, 1, 1 + n)
+
+.. only:: texinfo
+
+   ::
+
+      K(k) = RF(0, 1 - k^2, 1)
+      E(k) = RF(0, 1 - k^2, 1) - (k^2/3) RD(0, 1 - k^2, 1)
+      Pi(k,n) = RF(0, 1 - k^2, 1) - (n/3) RJ(0, 1 - k^2, 1, 1 + n)
+
+and, for the incomplete integrals,
+
+.. only:: not texinfo
+
+   .. math::
+
+      F(\phi,k) &= \sin\phi \, RF(\cos^2\phi, 1 - k^2 \sin^2\phi, 1) \\
+      E(\phi,k) &= F(\phi,k) - {k^2 \over 3} \sin^3\phi \, RD(\cos^2\phi, 1 - k^2 \sin^2\phi, 1) \\
+      \Pi(\phi,k,n) &= F(\phi,k) - {n \over 3} \sin^3\phi \, RJ(\cos^2\phi, 1 - k^2 \sin^2\phi, 1, 1 + n \sin^2\phi)
+
+.. only:: texinfo
+
+   ::
+
+      F(phi,k) = sin(phi) RF(cos^2(phi), 1 - k^2 sin^2(phi), 1)
+      E(phi,k) = F(phi,k) - (k^2/3) sin^3(phi) RD(cos^2(phi), 1 - k^2 sin^2(phi), 1)
+      Pi(phi,k,n) = F(phi,k) - (n/3) sin^3(phi) RJ(cos^2(phi), 1 - k^2 sin^2(phi), 1, 1 + n sin^2(phi))
+
+.. index:: negative parameter, elliptic integrals
+
+The Carlson forms are defined for non-negative arguments, so the
+relations above cover the range :math:`k^2 \le 1` in which the Legendre
+integrals converge.  Abramowitz & Stegun, and most computer algebra
+systems including Mathematica, parametrize the complete integrals by the
+*parameter* :math:`m = k^2`, so their :math:`K(m)` is
+:math:`K(\sqrt{m})` in the notation used here.  A negative parameter
+therefore corresponds to an imaginary modulus :math:`k = i\sqrt{-m}`,
+which can be reduced to a real modulus with the analytic continuation
+
+.. only:: not texinfo
+
+   .. math:: K(ik) = {1 \over \sqrt{1 + k^2}} K\left({k \over \sqrt{1 + k^2}}\right)
+
+.. only:: texinfo
+
+   ::
+
+      K(ik) = (1/sqrt(1 + k^2)) K(k/sqrt(1 + k^2))
+
+so that :math:`K(m) = K(\sqrt{-m}/\sqrt{1-m})/\sqrt{1-m}` for
+:math:`m < 0`, a call with a real argument between zero and one.  GSL
+itself accepts only :math:`|k| < 1` and returns :macro:`GSL_EDOM` outside
+that range, so the reduction has to be applied by the caller.
+
 Legendre Form of Complete Elliptic Integrals
 --------------------------------------------
 

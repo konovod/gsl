@@ -7,6 +7,7 @@ integrals can be found in Abramowitz & Stegun, Chapter 17.
 @menu
 * Definition of Legendre Forms::  
 * Definition of Carlson Forms::  
+* Relations between the Legendre and Carlson forms::  
 * Legendre Form of Complete Elliptic Integrals::  
 * Legendre Form of Incomplete Elliptic Integrals::  
 * Carlson Forms::               
@@ -79,6 +80,79 @@ RJ(x,y,z,p) = 3/2 \int_0^\infty dt
                  (t+x)^(-1/2) (t+y)^(-1/2) (t+z)^(-1/2) (t+p)^(-1)
 @end example
 @end ifinfo
+
+@node Relations between the Legendre and Carlson forms
+@subsection Relations between the Legendre and Carlson forms
+@cindex negative parameter, elliptic integrals
+The complete and incomplete Legendre integrals can be written directly
+in terms of the Carlson symmetric forms.  In the conventions used here,
+@tex
+\beforedisplay
+$$
+\eqalign{
+K(k) &= RF(0, 1 - k^2, 1)\cr
+E(k) &= RF(0, 1 - k^2, 1) - {k^2 \over 3} RD(0, 1 - k^2, 1)\cr
+\Pi(k,n) &= RF(0, 1 - k^2, 1) - {n \over 3} RJ(0, 1 - k^2, 1, 1 + n)
+}
+$$
+\afterdisplay
+@end tex
+@ifinfo
+
+@example
+K(k) = RF(0, 1 - k^2, 1)
+E(k) = RF(0, 1 - k^2, 1) - (k^2/3) RD(0, 1 - k^2, 1)
+Pi(k,n) = RF(0, 1 - k^2, 1) - (n/3) RJ(0, 1 - k^2, 1, 1 + n)
+@end example
+@end ifinfo
+@noindent
+and, for the incomplete integrals,
+@tex
+\beforedisplay
+$$
+\eqalign{
+F(\phi,k) &= \sin\phi \, RF(\cos^2\phi, 1 - k^2 \sin^2\phi, 1)\cr
+E(\phi,k) &= F(\phi,k) - {k^2 \over 3} \sin^3\phi \, RD(\cos^2\phi, 1 - k^2 \sin^2\phi, 1)\cr
+\Pi(\phi,k,n) &= F(\phi,k) - {n \over 3} \sin^3\phi \, RJ(\cos^2\phi, 1 - k^2 \sin^2\phi, 1, 1 + n \sin^2\phi)
+}
+$$
+\afterdisplay
+@end tex
+@ifinfo
+
+@example
+F(phi,k) = sin(phi) RF(cos^2(phi), 1 - k^2 sin^2(phi), 1)
+E(phi,k) = F(phi,k) - (k^2/3) sin^3(phi) RD(cos^2(phi), 1 - k^2 sin^2(phi), 1)
+Pi(phi,k,n) = F(phi,k) - (n/3) sin^3(phi) RJ(cos^2(phi), 1 - k^2 sin^2(phi), 1, 1 + n sin^2(phi))
+@end example
+@end ifinfo
+@noindent
+The Carlson forms are defined for non-negative arguments, so the
+relations above cover the range @math{k^2 <= 1} in which the Legendre
+integrals converge.  Abramowitz & Stegun, and most computer algebra
+systems including Mathematica, parametrize the complete integrals by the
+@dfn{parameter} @math{m = k^2}, so their @math{K(m)} is
+@math{K(\sqrt@{m@})} in the notation used here.  A negative parameter
+therefore corresponds to an imaginary modulus @math{k = i\sqrt@{-m@}},
+which can be reduced to a real modulus with the analytic continuation
+@tex
+\beforedisplay
+$$
+K(ik) = {1 \over \sqrt{1+k^2}} K@{@{k \over \sqrt{1+k^2}}@}
+$$
+\afterdisplay
+@end tex
+@ifinfo
+
+@example
+K(ik) = (1/sqrt(1+k^2)) K(k/sqrt(1+k^2))
+@end example
+@end ifinfo
+@noindent
+so that @math{K(m) = K(\sqrt@{-m@}/\sqrt@{1-m@})/\sqrt@{1-m@}} for
+@math{m < 0}, a call with a real argument between zero and one.  GSL
+itself accepts only @math{|k| < 1} and returns @code{GSL_EDOM} outside
+that range, so the reduction has to be applied by the caller.
 
 @node Legendre Form of Complete Elliptic Integrals
 @subsection Legendre Form of Complete Elliptic Integrals
