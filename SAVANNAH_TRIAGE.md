@@ -5,17 +5,17 @@ Generated 2026-10-02 from the `scripts/savannah_bugs.py` sweep (`inventory.tsv`)
 Scratch index, not part of the fork's record of changes. Verdicts are curated from
 `FORKNEWS`, `SAVANNAH_REVIEW.md` and the git history; every other row is un-triaged.
 
-**219 open items: 123 reviewed/handled, 96 remaining.**
+**219 open items: 128 reviewed/handled, 91 remaining.**
 
 | status | count |
 |---|---:|
-| fixed | 83 |
-| partial | 3 |
-| rejected | 33 |
+| fixed | 84 |
+| partial | 5 |
+| rejected | 35 |
 | deferred | 3 |
 | superseded | 1 |
 | not reviewed (feature-shaped) | 21 |
-| not reviewed | 75 |
+| not reviewed | 70 |
 
 Legend for the *Patch* column: the sweep's `git apply` verdict (`clean` / `partial` / `dirty`), `source` for a whole
 replacement file, `inline` for a patch pasted into the bug text, `none` for no patch.
@@ -81,7 +81,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 42502 | 2014-06-03 | bug | Runtime error | none | **rejected** — reporter's program omits `gsl_cdf.h`, so the function is implicitly `int`; `Pinv(0.5) = 0.0` on the built DLL and is already tested | wrong results of the function gsl_cdf_ugaussian_Pinv |
 | 42830 | 2014-07-23 | bug | - | none | not reviewed | Bug in gsl_bspline_knot constructor |
 | 43256 | 2014-09-19 | - | Runtime error | source sixjsymbols.c | **fixed** — stable 6j by Schulten-Gordon recurrence (59fc479e2) | gsl_sf_coupling_6j overflows |
-| 43259 | 2014-09-19 | - | - | none | not reviewed | accuracy problems in specfunc |
+| 43259 | 2014-09-19 | - | - | none | **partial** — `hyperg_0F1` (5fafddc63), `exprel_2` (c2ba2e271) and `gamma_inc_Q` (18652f8c1) fixed; clausen/zeta/eta already fixed; psi_1/pochrel/ellint_P degenerate | accuracy problems in specfunc |
 | 43326 | 2014-09-29 | bug | Runtime error | clean bug43326.diff | **fixed** — poisson_pdf at mu=0 (4f9f4f4fc) | Bug in gsl_ran_poisson_pdf() for mu = 0.0 |
 | 43496 | 2014-10-29 | bug | Runtime error | none | **fixed** — Brent parabolic-step test (c27559ec6) | Possible error in brent minimizer convergence criteria |
 | 43809 | 2014-12-12 | bug | Runtime error | source gsl_hyperg.c | **fixed** — direct series for `a < 0`, large `x` (52505315d) | bug in gsl_sf_hyperg_1F1 |
@@ -210,14 +210,14 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 66894 | 2025-03-11 | - | Documentation | none | **fixed** — chapter introduction notes that randist does not validate distribution parameters (dbe316d49) | Domain value checking for random number distributions |
 | 66922 | 2025-03-17 | feature | Build | clean specfunc_trig.diff | not reviewed (feature-shaped) — skipped in first pass as feature-shaped | Feature: special case for special functin logsin() |
 | 66949 | 2025-03-25 | feature | Build | source erlang.c | not reviewed (feature-shaped) — skipped in first pass as feature-shaped | Feature: Erlang cumulative distribution |
-| 66993 | 2025-04-05 | bug | Accuracy problem | none | not reviewed | Bug: pow_int issues |
+| 66993 | 2025-04-05 | bug | Accuracy problem | none | **partial** — zero-base overflow documented (afd7f7d6c); the other claims do not reproduce | Bug: pow_int issues |
 | 67058 | 2025-04-28 | - | Accuracy problem | none | **fixed** — empty data sets raise `GSL_EBADLEN` (NaN with the handler off) (68fc3c752) | gsl_stats_mean and gsl_stats_sd result to 0.0 when array with zero length |
 | 67301 | 2025-07-10 | bug | - | none | not reviewed | Bug: Test for existence of uniform random variate in histogram |
 | 67359 | 2025-07-27 | feature | - | clean hyperg_2F0.c.patch +1 | not reviewed (feature-shaped) — skipped in first pass as feature-shaped | Feature: Add special case for gsl_sf_hyperg_2F0 |
 | 67445 | 2025-08-20 | - | Build | clean 0001-linalg-increase-cholesky_invert-Hilbert-test-toleran.patch | **fixed** — cholesky_invert Hilbert tolerance (f84a57a0f) | linalg test failures under gcc 14.2.1 |
 | 67446 | 2025-08-20 | - | Build | none | rejected — gcc 14.2.1; passes on gcc 15.2 x64 | multilarge_nlinear test failures under gcc 14.2.1 |
 | 67447 | 2025-08-20 | - | Build | none | rejected — gcc 14.2.1; passes on gcc 15.2 x64 | spmatrix test failures under gcc 14.2.1 |
-| 67494 | 2025-09-09 | - | Accuracy problem | none | not reviewed | Consistency in pow_int usage |
+| 67494 | 2025-09-09 | - | Accuracy problem | none | rejected — cosmetic; `gsl_pow_int` and `gsl_sf_pow_int` return identical values | Consistency in pow_int usage |
 | 67621 | 2025-10-23 | - | Documentation | clean rst_deprecated.diff | **fixed** — deprecation markers from headers (5df6c0079) | Mark functions as deprecated if they are also deprecated in the code |
 | 67689 | 2025-11-10 | doc | Documentation | clean specfunc-psi.rst.patch | **fixed** — gsl_sf_complex_psi_e documented (345883172) | Incomplete documentation of digamma functions in GSL specfunc |
 | 67705 | 2025-11-15 | bug | Build | none | rejected — not reproducible; linalg passes with a fixed seed | ttest failure in linalg/QR_solve_r random |
@@ -226,13 +226,13 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 68068 | 2026-02-19 | bug | Accuracy problem | none | not reviewed | Bug: incorrect straddling of area of convergence in quad_golden |
 | 68073 | 2026-02-20 | bug | Documentation | none | **fixed** — gsl_stats_select comment corrected from "k-th largest" to "k-th smallest" (521bed61d) | Bug: incorrect inline code comment on BASE FUNCTION(gsl_stats,select) |
 | 68098 | 2026-02-27 | feature | - | none | not reviewed | Feature: division by zero when data is perfectly correlated |
-| 68283 | 2026-04-26 | - | - | none | not reviewed | Correction to gsl_rstat_skew and gsl_rstat_kurtosis |
+| 68283 | 2026-04-26 | - | - | none | rejected — proposed guards break the `gsl_stats` equivalence in `rstat_test` | Correction to gsl_rstat_skew and gsl_rstat_kurtosis |
 | 68312 | 2026-05-07 | bug | Accuracy problem | none | **fixed** — same recurrence as #43256 (59fc479e2) | Wigner symbols inaccurate for large j |
 | 68367 | 2026-05-19 | feature | - | source invelljac.c | not reviewed (feature-shaped) — skipped in first pass as feature-shaped | Feature: inverse Jacobi elliptic integrals |
 | 68379 | 2026-05-21 | - | - | none | not reviewed | Histogram: expand scope of internal variables |
 | 68398 | 2026-05-26 | feature | - | none | not reviewed | Feature: use GSL native gsl_ldexp in eta fuction for integer argument |
 | 68415 | 2026-06-02 | bug | - | none | not reviewed | Bug: inconsistency in variance error handling in statictics module |
-| 68479 | 2026-06-25 | bug | Accuracy problem | none | not reviewed | Bug: gsl_ran_binomial is not accurate |
+| 68479 | 2026-06-25 | bug | Accuracy problem | none | **fixed** — BINV seed as `exp(n log1p(-p))` (7376dc316) | Bug: gsl_ran_binomial is not accurate |
 | 68495 | 2026-07-03 | bug | Build | inline | **fixed** — pow_int INT_MIN overflow (41b1e2c00) | Undefined behavior in gsl_pow_int: signed int overflow |
 | 68518 | 2026-07-13 | - | Build | none | not reviewed | Remove stale construct in configure.ac |
 | 68549 | 2026-07-23 | - | - | none | not reviewed | Breaking change: match argument list among distribution functions |

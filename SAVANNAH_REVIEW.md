@@ -1985,3 +1985,99 @@ change is made.  Recorded in `FORKNEWS` as `[rejected]`.
 
 Recorded in `FORKNEWS` under `[upstream]` (two changes) and `[rejected]`
 (one entry).  Full CTest suite 56/56 on MSVC x64.
+
+
+## Group K - special-function accuracy, 2025-2026: #68479, #68283, #43259, #66993, #67494
+
+Reviewed 2026-10-03 on branch `group-k` (base `b999b7e05`), in a
+separate worktree from the parallel Group L work.  Every reproduction
+is against the built DLL; references are mpmath at 50-60 digits.  The
+applied changes are recorded in `FORKNEWS`.
+
+### #68479 - gsl_ran_binomial, BINV seed - fixed
+
+The small-mean branch seeds `f(0) = (1-p)^n` with `gsl_pow_uint(1-p,n)`.
+The rounding of `q = 1-p` is amplified by `n`, so the seed's relative
+error is `~n*eps`:
+
+    p=1e-9  n=1e9  q^n = 0.36787945073036543   exp(n log1p(-p)) = 0.36787944098750258
+    p=1e-8  n=1e9  q^n = 4.5399925828314055e-05 exp(n log1p(-p)) = 4.5399927492488394e-05
+
+`exp(n*log1p(-p))` agrees with mpmath; the seed is the base of every
+probability in the inverse-CDF walk, so the whole distribution was
+perturbed.  Fixed as posted (commit 7376dc316), with a regression test
+that returns a fixed uniform in the gap between the two seeds.
+
+### #43259 - accuracy problems in specfunc - partly fixed
+
+Fifteen inputs across nine functions.  The report's "actual error"
+usually equals the magnitude of the GSL value, i.e. the reporter's
+reference underflowed to 0, so the figures are not evidence; each case
+was re-derived here.
+
+| function | current build | reference | verdict |
+|---|---|---|---|
+| `clausen` x2 | `0.7414877353776` / `0.7813604462495` | match to ~4e-16 | already fixed (5639c380f) |
+| `zeta`, `eta` | match to ~4e-16 | err now >= actual | already fixed |
+| `psi_1` x2 | `GSL_EDOM` | arguments are poles (negative even integers) | correct |
+| `exprel_2` | rel err `8.9e-14`, reported `4.4e-16` | mpmath | **fixed** (c2ba2e271) |
+| `gamma_inc_Q` | rel err `1.6e-5` | `6.3191220136968329e-11` | **fixed** (18652f8c1) |
+| `hyperg_0F1` x3 | `1.15e198`, `1.14e168`, `2.23e157` | `1`, `2`, `1.7893298094111404e34` | **fixed** (5fafddc63) |
+| `pochrel` x3 | `~203`, `~208`, `~133` | `a ~ -1e89` sits on a `Gamma` pole | degenerate |
+| `ellint_P` | `4.148e-119` | `n ~ 1.3e251` puts a pole in `(0,phi]` | degenerate |
+
+The `hyperg_0F1` failure is the instructive one: for `c < 1` the code
+used `sin(pi(1-c))`, and with `c ~ 1e-215`, `1-c` rounds to `1`, so
+`sin(pi)` is `1.2e-16` instead of `sin(pi c) ~ 1e-214`; the `K` term is
+then wrong by ~120 orders of magnitude.  The fix passes `c` to the
+helpers and uses `gsl_sf_sin_pi`/`gsl_sf_cos_pi`.  `exprel_2` and
+`gamma_inc_Q` are cancellation, not mis-classification: the direct
+`exp(x)-1-x` and the `1-P` complement lose digits for small arguments,
+and both now use the cancellation-free series when appropriate.
+
+A 475-point `gamma_inc_Q` grid (`a` 1e-1..1e-19, `x` 1e0..1e-24) has no
+point worse than before with the new branch threshold `a|log x| < 0.1`,
+and `P + Q = 1` is still exact in its window.
+
+### #68283 - gsl_rstat_skew/kurtosis "correction" - rejected
+
+The proposed guards (`n>2 && M2>0`, `n>3 && M2>0`) are inconsistent
+with the module's own contract: `gsl_rstat_*` is the online equivalent
+of `gsl_stats_skew`/`gsl_stats_kurtosis`, and `rstat_test` asserts that
+equivalence.  Measured on the built DLL:
+
+    n=1 [5]         skew=nan  kurtosis=nan
+    n=2 [1,2]       skew=0    kurtosis=-2.75
+    n=3 [1,2,3]     skew=0    kurtosis=-2.333
+    n=4 constant    skew=nan  kurtosis=nan
+
+`gsl_stats_skew` returns `NaN` for `n=1` and `gsl_stats_kurtosis` the
+listed values for `n=2,3`.  The proposed change would fail test1 at
+`j=1` (0 vs `NaN`) and `j=2,3` (kurtosis 0 vs -2.75/-2.333), because
+`gsl_test_rel` treats value-vs-`NaN` as a failure.  No code change.
+
+### #66993 - pow_int issues - rejected (one doc note)
+
+Four claims, none reproducing on the current build:
+
+    (0.5)^-9        = 512.0 exactly   (report: 512.0000000000010232)
+    (-0.3)^1        = -0.3 exactly    (report: -0.3000000000000002)
+    (-0.0)^-1       = -inf            (report: -7205759403792794)
+    0.0^-1          = +inf, GSL_EOVRFLW (report wanted GSL_EZERODIV)
+
+The deprecation/rationalisation proposal is an API change and out of
+scope.  The only valid point is that `doc/specfunc-pow-int.*` says the
+functions never check overflow, while `specfunc/pow_int.c:42` returns
+`GSL_EOVRFLW` for a zero base with a negative exponent; that exception
+is now documented (afd7f7d6c).  Changing the code to `GSL_EZERODIV`
+would be a behaviour change with no demonstrated defect.
+
+### #67494 - consistency of pow_int usage - rejected
+
+`gsl_pow_int(2.0, m)` and `gsl_sf_pow_int(2.0, m)` in `hermite.c:232`
+return identical values and no error estimate is used; purely
+stylistic.  No change.
+
+Full CTest suite 56/56 on MSVC x64.  Negative controls for each applied
+change are in `FORKNEWS`.
+
