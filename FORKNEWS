@@ -103,6 +103,11 @@ One line per change: date | tag | description | commit(s).
   2026-10-03 | [rejected] | specfunc: port the Wigner d-matrix (wigner_drot)       | - (see below)
   2026-10-03 | [upstream] | specfunc: reject NaN in the complete elliptic integrals | 14d595eb8
   2026-10-03 | [upstream] | specfunc: terminate gamma_inc for large negative a    | 932087bcd
+  2026-10-03 | [upstream] | specfunc: propagate NaN in gsl_sf_hyperg_1F1_e       | 99a73dd36
+  2026-10-03 | [upstream] | specfunc: finite limits for Si and Ci at infinity    | 3afec212b
+  2026-10-03 | [upstream] | specfunc: gsl_sf_gegenpoly_n at lambda = 0           | 01d7e7609
+  2026-10-03 | [upstream] | doc: document limit behaviour and the n = 0 cases    | fc4059b12
+  2026-10-03 | [rejected] | specfunc: "dropped NaN" in the n = 0 special cases    | - (see below)
   2026-10-03 | [upstream] | specfunc: exact P + Q = 1 in the series region        | 6f23a4cb5
   2026-10-03 | [upstream] | doc: distinguish gamma_inc from the normalized P, Q   | 3cc1aaa54
   2026-10-03 | [rejected] | specfunc: "incomplete gamma functions flipped"        | - (see below)
@@ -2896,3 +2901,172 @@ failures - the twelve new vectors and the summary line.  With it the
 Files: `specfunc/hyperg_U.c`, `specfunc/test_hyperg.c`.
 
 See Savannah bug #30510.
+
+
+## [upstream] specfunc: propagate NaN in gsl_sf_hyperg_1F1_e
+
+Commit: 99a73dd36
+
+`gsl_sf_hyperg_1F1_e()` classified its parameters and fell through to the
+generic evaluation without ever inspecting them for a NaN.  With
+`b = NaN` the classification marks nothing, `b > 0.0` is false, and the
+`b < 0.0` branch calls `hyperg_1F1_ab_neg()`, which with `x = -1` reaches
+`hyperg_1F1_U()`.  That routine evaluates `M(ap,bp,x)` for
+`ap = a-b+1 = NaN`, `bp = 2-b = NaN`, and calls `gsl_sf_hyperg_1F1_e()`
+again with the same `b = NaN`.  The two functions recurse into each other
+with no base case:
+
+    gsl_sf_hyperg_1F1_e(1.0, NAN, -1.0, &r)
+      -> hyperg_1F1_ab_neg -> hyperg_1F1_U -> gsl_sf_hyperg_1F1_e
+      -> hyperg_1F1_ab_neg -> ...            (stack overflow)
+
+Measured on the built DLL under ctypes: the call raises
+`OSError: stack overflow` in the caller and, run as a process, dies with
+`STATUS_STACK_OVERFLOW` (`0xC00000FD`).  The reporter's `NAN` was a
+compile-time constant in the `GSL.jl` test that found it.
+
+The fix is the same shape as `#57978` and `#57979`: a NaN argument
+propagates.  `gsl_sf_hyperg_1F1_e()` now returns `NaN`/`NaN` with
+`GSL_SUCCESS` for a NaN `a`, `b` or `x`, before any classification.  This
+is not a domain error - a NaN is not an argument outside the domain, it
+is an unknown one, and everywhere else in `specfunc` it flows through the
+arithmetic rather than being trapped.  The earlier `#58032` fix for the
+`x = 0` poles is unaffected: it classifies with `b < 0` and `b == 0`,
+both false for NaN, so the NaN check has to come first.
+
+Negative control: with the guard disabled the three new vectors are not
+merely reported wrong, the test program aborts with a stack overflow, so
+they cannot pass by accident.  With it `specfunc_test` and the full CTest
+suite are green.
+
+Files: `specfunc/hyperg_1F1.c`, `specfunc/test_hyperg.c`, plus
+`<gsl/gsl_sys.h>` for `gsl_isnan`.
+
+See Savannah bug #55687.
+
+
+## [upstream] specfunc: finite limits for Si and Ci at infinity
+
+Commit: 3afec212b
+
+`gsl_sf_Si_e()` and `gsl_sf_Ci_e()` take the `|x| > 4` asymptotics for an
+infinite argument.  The asymptotics form `f cos(x) + g sin(x)` with
+`f, g` finite, and `cos(inf)`/`sin(inf)` are NaN, so `Si(+inf)`,
+`Si(-inf)` and `Ci(+inf)` all returned NaN.
+
+Both functions have finite limits at infinity, so by the rule applied to
+`#57978` and `#57979` these are non-finite arguments *with* a limit and
+belong to the domain:
+
+    Si(+inf) = +pi/2      Si is odd, so Si(-inf) = -pi/2
+    Ci(+inf) = 0
+
+The limit is now returned directly, with `GSL_SUCCESS`.  `Ci` has no
+limit at `-inf`: the integral does not converge for `x < 0` and the
+function is not defined there at all, so `Ci(-inf)` remains `GSL_EDOM`
+via the existing `x <= 0` rule.  That asymmetry is deliberate and
+mirrors the domain: Si is entire (odd, with limits at both ends), Ci is
+defined only for `x > 0` with a limit at one end.  A NaN argument still
+propagates through the series and asymptotics.
+
+The `+inf` branch was verified against values at large finite `x`: the
+library already returned 1.5707963267075846 for `Si(1e10)` and
+-4.9e-11 for `Ci(1e10)`, so the limits are the continuation of the
+existing values, not an independent formula.  `Si(-1e10)` gives
+-1.5707963267075846, the negative of `Si(1e10)`, confirming the odd
+branch.
+
+Negative control: with the two `GSL_POSINF` / `gsl_isinf` branches
+disabled the three new vectors fail with NaN.  `specfunc_test` and the
+full CTest suite are green with them.
+
+Files: `specfunc/sinint.c`, `specfunc/test_sf.c`.
+
+See Savannah bug #58064.
+
+
+## [upstream] specfunc: gsl_sf_gegenpoly_n at lambda = 0
+
+Commit: 01d7e7609
+
+The Gegenbauer polynomial `C_n^(lambda)(x)` is identically zero for
+`lambda = 0` and `n >= 1`.  The standard normalisation is
+`C_n^(1/2) = P_n`; scaling to finite coefficients at `lambda = 0` forces
+every polynomial of positive degree to vanish.  scipy's `gegenbauer` and
+mpmath both return 0 for `n = 1` through `5` at `lambda = 0`.
+
+GSL returned the value of the *limit* `lambda -> 0` instead, which is
+`2 T_n(x)/n`, and is not the value at `lambda = 0`:
+
+    gegenpoly_1_e(0, x)  =  2x                C_1^(0)(x) = 0
+    gegenpoly_2_e(0, x)  =  2x^2 - 1          C_2^(0)(x) = 0
+    gegenpoly_3_e(0, x)  =  x(4x^2/3 - 2)     C_3^(0)(x) = 0
+
+and `gsl_sf_gegenpoly_n_e(n, 0, x)` for `n >= 4` built its recurrence on
+those two seeds, so it returned `2 T_n(x)/n` as well.  The comment in the
+code even labelled the branch `2 T_n(x)/n`, which is the limit rather
+than the value.
+
+All four now return 0 with `err = 0` for `lambda = 0` and `n >= 1`, and
+`gsl_sf_gegenpoly_array()` fills its `n >= 1` entries with 0.  `n = 0`
+(the value 1) and every `lambda != 0` are untouched: the existing vectors
+at `lambda = -0.2, 1, 5, 100` all still pass.
+
+Three existing vectors encoded the old limit values at `lambda = 0`
+(`gegenpoly_1_e(0,1) = 2`, `_2_e(0,1) = 1`, `_3_e(0,1) = -2/3`); they
+are corrected to 0, which is what the definition requires.  New vectors
+cover `n = 1, 2, 3, 4, 100` at `lambda = 0`, for `|x| <= 1` and for `x`
+outside the orthogonality interval, and the array form.  Reverting the
+change makes every one of them fail.
+
+Files: `specfunc/gegenbauer.c`, `specfunc/test_sf.c`.
+
+See Savannah bug #58065.
+
+
+## [rejected] specfunc: the "dropped NaN" reports for the n = 0 special cases
+
+Not applied.  The reports are not bugs.
+
+Jackson Vanover filed five related items (Savannah `#58060` to `#58063`)
+arguing that `gsl_sf_laguerre_n(0, a, x)`, `gsl_sf_hyperg_U_int(0, 1, x)`,
+`gsl_sf_hyperg_1F1_int(0, 1, x)`, `gsl_sf_hermite(0, x)`,
+`gsl_sf_gegenpoly_n(0, lambda, x)` and `gsl_sf_bessel_zero_Jnu(nu, s)`
+should reject a NaN argument with an error instead of returning `1` (or
+`0`), because a NaN does not satisfy the documented domain restriction on
+the second parameter.  He later conceded in a comment on `#58062` that
+"1F1(0;b;x)=1 for all x if b != 0, so even if x is entirely
+unspecified/unknown the result is 1".
+
+The fork's rule, settled in `#57978` and applied again here, is that a
+NaN argument propagates and is not a domain error.  Where a function has
+an actual removing value at `n = 0`, returning it is exactly "propagate
+the unknown only as far as it matters": the result does not depend on the
+unknown parameter, so a finite answer is correct and a NaN would be
+invented, not propagated.  This is the same semantics the fork's own
+`#58032` fix gave `1F1_e` at `x = 0`, where the value 1 is returned for
+the terminating cases.  Forbidding the NaN would also be inconsistent
+with `gsl_sf_laguerre_n_e(1, NaN, x)`, which correctly returns NaN
+because the value *does* depend on `a`.
+
+What the reports do expose is a documentation gap: the manuals did not
+state the `n = 0` value or the NaN rule, and `#58060`'s original example
+even used the wrong function name.  That is fixed in commit `fc4059b12`;
+the code is deliberately left alone.  `#58061`'s `U_int(0,1,x) = 1` and
+`#58062`'s `1F1_int(0,1,x) = 1` are the correct limits for every `x`,
+including `x = NaN` in the sense above.
+
+`#58031` (`gsl_sf_bessel_Kn_scaled(0, +inf)` -> 0) is in the same group.
+`exp(x) K_0(x) -> 0` is the limit, the return value 0 with `GSL_SUCCESS`
+is correct, and the reporter's "indeterminate form 0 x inf" describes the
+asymptotic expansion, not the limit of the scaled function.  A vector
+documenting the value is added; no code change.
+
+`#58064`'s `gsl_sf_gamma_inc_P/Q(+inf, x)`, `gamma_inc_P/Q(a, +inf)`,
+`gamma_inc(a, +inf)`, `erf(+inf)`, `erfc(+inf)` and `poch(-inf, x)` cases
+are also correct - each returns the finite limit - so only Si/Ci needed a
+code change, and the rest are documented.
+
+Kept here so the reports are not re-investigated.
+
+See Savannah bugs #58031, #58060, #58061, #58062, #58063 and #58064.
