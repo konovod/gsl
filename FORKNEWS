@@ -107,6 +107,7 @@ One line per change: date | tag | description | commit(s).
   2026-10-03 | [upstream] | doc: distinguish gamma_inc from the normalized P, Q   | 3cc1aaa54
   2026-10-03 | [rejected] | specfunc: "incomplete gamma functions flipped"        | - (see below)
   2026-10-03 | [upstream] | specfunc: terminating 2F1 for non-positive integers  | 2aa89bae8
+  2026-10-03 | [upstream] | specfunc: x^(1-c) factor in the 2F1 renorm functions    | 46b7c412e
 
 
 ## [upstream] rng: make the random() generators produce the documented sequences
@@ -2718,3 +2719,45 @@ suite pass.
 Files: `specfunc/hyperg_2F1.c`, `specfunc/test_hyperg.c`.
 
 See Savannah bugs #21835, #39056, #50711 and #53905.
+
+
+## [upstream] specfunc: restore the x^(1-c) factor in the 2F1 renorm functions
+
+Commit: 46b7c412e
+
+`gsl_sf_hyperg_2F1_renorm_e()` and `gsl_sf_hyperg_2F1_conj_renorm_e()`
+continue `2F1(a,b;c;x)/Gamma(c)` to negative integer `c` with the
+[Abramowitz+Stegun, 15.1.2] relation.  That relation carries a factor
+`x^(1-c)` which the code dropped, so the returned value was too large by
+`x^(c-1)`:
+
+    renorm(1,2,-3,0.4)   2572.016   instead of  65.8436
+    renorm(5,5,-1,0.5)   4.95e6     four times too large
+    renorm(5,5,-10,0.5)  1.39e20    2048 times too large
+
+The same omission was present in the conjugate-parameter variant.  Since `c`
+is a negative integer in this branch, `1-c` is a positive integer, so the
+factor is evaluated with `gsl_sf_pow_int_e()` and its error is propagated
+into the prefactor.  The early-termination branch (where a non-positive
+integer `a` or `b` cancels the pole in `c`) returns zero and is unaffected,
+because the polynomial value carries no `c`-pole to begin with.
+
+This closes Savannah bug #53876.
+
+The existing renorm vectors at `c = -1`, `-10` and `-100` had been generated
+from the buggy code and therefore encoded the missing factor; they are
+corrected here.  The corrected values come from the A&S limit evaluated
+independently with mpmath at 50 digits - `hyp2f1` itself cannot be used
+because `Gamma(c)` is a pole, so the prefactor
+`Gamma(1+a-c)Gamma(1+b-c) x^(1-c) / (Gamma(a)Gamma(b)Gamma(2-c))` and the
+remaining `2F1(1+a-c, 1+b-c; 2-c; x)` are formed separately.  The old and new
+values differ by exactly `x^(c-1)` (a factor of 4 for `c = -1`, 2048 for
+`c = -10`), which is the signature of the missing term.
+
+Negative control: with the factor reverted, `specfunc_test` reports 8
+failures - the seven renorm vectors and the summary line.  With it applied
+the `specfunc` suite and the full CTest suite pass.
+
+Files: `specfunc/hyperg_2F1.c`, `specfunc/test_hyperg.c`.
+
+See Savannah bug #53876.
