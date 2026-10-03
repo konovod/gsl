@@ -40,7 +40,7 @@ section are declared in the header file :file:`gsl_sf_coupling.h`.
 
    where the arguments are given in half-integer units, :math:`ja` =
    :data:`two_ja`/2, :math:`ma` = :data:`two_ma`/2, etc.
-.. Exceptional Return Values: GSL_EDOM, GSL_EOVRFLW
+.. Exceptional Return Values: GSL_EDOM
 
 6-j Symbols
 -----------
@@ -68,7 +68,7 @@ section are declared in the header file :file:`gsl_sf_coupling.h`.
 
    where the arguments are given in half-integer units, :math:`ja` =
    :data:`two_ja`/2, :math:`ma` = :data:`two_ma`/2, etc.
-.. Exceptional Return Values: GSL_EDOM, GSL_EOVRFLW
+.. Exceptional Return Values: GSL_EDOM
 
 .. deprecated::
 
@@ -108,4 +108,4 @@ section are declared in the header file :file:`gsl_sf_coupling.h`.
 
    where the arguments are given in half-integer units, :math:`ja` =
    :data:`two_ja`/2, :math:`ma` = :data:`two_ma`/2, etc.
-.. Exceptional Return Values: GSL_EDOM, GSL_EOVRFLW
+.. Exceptional Return Values: GSL_EDOM

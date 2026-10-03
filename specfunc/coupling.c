@@ -680,12 +680,16 @@ gsl_sf_coupling_9j_e(int two_ja, int two_jb, int two_jc,
       double term_err;
       int status = 0;
 
-      status += gsl_sf_coupling_6j_e(two_ja, two_ji, tk,  two_jh, two_jd, two_jg,  &s1);
-      status += gsl_sf_coupling_6j_e(two_jb, two_jf, tk,  two_jd, two_jh, two_je,  &s2);
-      status += gsl_sf_coupling_6j_e(two_ja, two_ji, tk,  two_jf, two_jb, two_jc,  &s3);
+      status = gsl_sf_coupling_6j_e(two_ja, two_ji, tk,  two_jh, two_jd, two_jg,  &s1);
+      if(status == GSL_SUCCESS)
+        status = gsl_sf_coupling_6j_e(two_jb, two_jf, tk,  two_jd, two_jh, two_je,  &s2);
+      if(status == GSL_SUCCESS)
+        status = gsl_sf_coupling_6j_e(two_ja, two_ji, tk,  two_jf, two_jb, two_jc,  &s3);
 
       if(status != GSL_SUCCESS) {
-        OVERFLOW_ERROR(result);
+        result->val = GSL_NAN;
+        result->err = GSL_NAN;
+        return status;
       }
       term = s1.val * s2.val * s3.val;
       term_err  = s1.err * fabs(s2.val*s3.val);

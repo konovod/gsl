@@ -44,7 +44,7 @@ $$
 @noindent
 where the arguments are given in half-integer units, @math{ja} =
 @var{two_ja}/2, @math{ma} = @var{two_ma}/2, etc.
-@comment Exceptional Return Values: GSL_EDOM, GSL_EOVRFLW
+@comment Exceptional Return Values: GSL_EDOM
 @end deftypefun
 
 
@@ -73,7 +73,7 @@ $$
 @noindent
 where the arguments are given in half-integer units, @math{ja} =
 @var{two_ja}/2, @math{ma} = @var{two_ma}/2, etc.
-@comment Exceptional Return Values: GSL_EDOM, GSL_EOVRFLW
+@comment Exceptional Return Values: GSL_EDOM
 @end deftypefun
 
 @deftypefun double gsl_sf_coupling_6j_INCORRECT (int @var{two_ja}, int @var{two_jb}, int @var{two_jc}, int @var{two_jd}, int @var{two_je}, int @var{two_jf})
@@ -111,6 +111,6 @@ $$
 @noindent
 where the arguments are given in half-integer units, @math{ja} =
 @var{two_ja}/2, @math{ma} = @var{two_ma}/2, etc.
-@comment Exceptional Return Values: GSL_EDOM, GSL_EOVRFLW
+@comment Exceptional Return Values: GSL_EDOM
 @end deftypefun
 
