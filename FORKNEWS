@@ -153,6 +153,13 @@ One line per change: date | tag | description | commit(s).
   2026-10-03 | [upstream] | doc: require two observations for the sample variance | 65bc71664
   2026-10-03 | [upstream] | doc: document the gsl_root_fsolver_set error return   | aaecb86e6
   2026-10-03 | [rejected] | histogram/statistics/roots: Group M reports           | - (see below)
+  2026-10-03 | [upstream] | headers: rename include guards to avoid reserved identifiers | e40dc7ceb
+  2026-10-03 | [upstream] | err,rng,poly: remove source files that no build references | 14920fa04
+  2026-10-03 | [upstream] | configure.ac: replace DISCARD_POINTER with a void cast | 46fa69ae1
+  2026-10-03 | [fork]     | cmake: drop the DISCARD_POINTER macro                   | 2afdbb721
+  2026-10-03 | [upstream] | build: install a gsl-without-cblas.pc                    | 442b7cbd2
+  2026-10-03 | [fork]     | cmake: install gsl-without-cblas.pc                     | 9ad4ed051
+  2026-10-03 | [rejected] | build: the Group N reports that need no code change    | - (see below)
 
 
 ## [upstream] rng: make the random() generators produce the documented sequences
@@ -3879,3 +3886,166 @@ aside.
   `doc: document the gsl_root_fsolver_set error return` entry above.
 
 Savannah bugs #65932, #67301, #68415, #63519.
+
+
+## [upstream] headers: rename include guards to avoid reserved identifiers
+
+Commit: e40dc7ceb
+
+GSL include guards began with a double underscore (`__GSL_MATH_H__`).  An
+identifier that starts with an underscore and an uppercase letter is
+reserved to the implementation, and in C++ any identifier containing a
+double underscore is reserved as well, so a program that includes a GSL
+header was relying on names it is not allowed to define.
+
+Every guard drops its leading double underscore (`__GSL_MATH_H__` becomes
+`GSL_MATH_H__`), the change the tracker discussion settled on; the
+trailing double underscore is deliberately kept.  The same leading
+removal is applied to the private guards `__ERROR_CBLAS*` and
+`__ROOTS_H__`, to `build.h` (`__GSL_BUILD_H__`, `__GSL_INLINE_H__`,
+which must stay in step with `gsl_inline.h`), to `gsl_version.h.in`, the
+`contrib/wigner.h` guard and the two `ringbuf.c` includers.  The header
+example in both design manuals is updated too; the historical ChangeLog
+mention is left alone.  `__BEGIN_DECLS`/`__END_DECLS` are untouched.
+
+The replacement was applied only to the enumerated guard tokens, never
+by stripping `__` blindly, so compiler and language macros such as
+`__cplusplus`, `__GNUC__` and `__attribute__` are unaffected.
+
+Verified on MSVC x64 with a clean CMake build and 56/56 ctest, and by
+compiling each installed public header twice on its own: 251 headers
+pass, and the 15 `spmatrix` headers are not standalone-includable
+(a pre-existing condition, unrelated to the guards).  Negative control:
+restoring the old `#define` name in `gsl_vector_double.h` makes the
+double-include check report "conflicting types for 'gsl_vector'".
+
+Files: 278 headers, `.in` files and two design manuals.
+See Savannah bug #36197.
+
+
+## [upstream] err,rng,poly: remove source files that no build references
+
+Commit: 14920fa04
+
+Savannah bug #39120 lists files whose status is unclear.  Five of them
+are referenced neither by a build nor by any other source:
+`err/env.c` (`gsl_err_env_setup()` is never called), `err/warn.c`
+(`gsl_warning()`/`gsl_warnings_off` are unused, and `err/ChangeLog`
+records the file as removed back in 2003), `rng/g05faf.c` (the NAG
+G05FAF generator, absent from `gsl_rng.h` and the rng source list),
+`poly/norm.c` (`norm_companion()` is defined only there) and
+`poly/inline.c` (a duplicate of `poly/eval.c`, which both builds
+compile).  `statistics/wcovar.c`, also named in the report, is already
+absent.
+
+`ode-initval2/modnewton1.c` is kept: it is included by the implicit RK
+steppers.  `matrix/matrix.c` is kept: it is built.  The report's
+suggestion to rename `poly/eval.c` and `matrix/matrix.c` to `inline.c`
+is rejected as cosmetic churn that would invalidate the checked-in
+source lists.
+
+Verified: `git grep` finds no reference to a removed file or symbol in
+the sources, the module `Makefile.am` files, `EXTRA_DIST` or the
+generated CMake lists; the CMake build and 56/56 ctest still pass.
+
+See Savannah bug #39120.
+
+
+## [upstream] configure.ac: replace DISCARD_POINTER with a void cast
+
+Commit: 46fa69ae1
+
+`configure.ac` defined `DISCARD_POINTER` as a `do { } while` hack whose
+only job was to silence unused-parameter warnings.  The plain `(void) x;`
+idiom is clearer and needs no configure-time support, so the three uses
+in `monte/vegas.c` and `interpolation/akima.c` became `(void)` casts and
+the `AH_BOTTOM` block was removed.  Two commented-out references in
+`interpolation/steffen.c` are left as comments.
+
+Verified on MSVC x64 (CMake build, 56/56 ctest) and by compiling the two
+changed files with GCC's `-Wunused-parameter`: no warning, while dropping
+the cast reproduces "unused parameter 'xu'".
+
+Files: `configure.ac`, `monte/vegas.c`, `interpolation/akima.c`.
+See Savannah bug #68518.
+
+
+## [fork] cmake: drop the DISCARD_POINTER macro
+
+Commit: 2afdbb721
+
+`cmake/config.h.cmake` injected the same `DISCARD_POINTER` macro that
+`configure.ac` used to define.  It now has no users, so it was removed
+from the CMake template to keep the generated `config.h` in step with
+`configure.ac`.
+
+This is the CMake half of Savannah bug #68518; the autotools half is the
+preceding entry.  Verified: the regenerated `build-cmake/config.h` no
+longer contains `DISCARD_POINTER`, and the build with 56/56 ctest still
+passes on MSVC x64.
+
+
+## [upstream] build: install a gsl-without-cblas.pc
+
+Commit: 442b7cbd2
+
+`gsl-config --libs-without-cblas` lets a program link GSL against an
+alternative BLAS, but there was no matching pkg-config file: `pkg-config
+--libs gsl` always emits `-lgslcblas`, which clashes with the alternative
+library.  A `gsl-without-cblas.pc.in` template was added, installed
+alongside `gsl.pc` from the same `edit` rule, and `pkgconfig.test` now
+checks that it does not pull in CBLAS.
+
+The template uses the same substitutions as `gsl.pc.in` but omits the
+`GSL_CBLAS_LIB` variable, so its `Libs:` line is just
+`-L${libdir} -lgsl`.
+
+Verified by simulating the `edit` substitution (the generated `Libs:`
+line has no CBLAS).  `pkg-config` is not installed on the review machine,
+so the scripted `pkgconfig.test` check has to run in Linux CI.
+
+Files: `gsl-without-cblas.pc.in`, `Makefile.am`, `pkgconfig.test`.
+See Savannah bug #63927.
+
+
+## [fork] cmake: install gsl-without-cblas.pc
+
+Commit: 9ad4ed051
+
+The CMake build generates `gsl-without-cblas.pc` from the new template
+and installs it next to `gsl.pc`, matching the autotools build.  This is
+the CMake half of Savannah bug #63927.
+
+Verified: `build-cmake/gsl-without-cblas.pc` has `Libs:
+-L${libdir} -lgsl` with no CBLAS, and `cmake --install` places both `.pc`
+files under `lib/pkgconfig`.
+
+
+## [rejected] build: the Group N reports that need no code change
+
+Kept for the record; each report was checked before it was set aside.
+
+* **#39165, conditional arguments always evaluating to true** - both
+  sites named by the report are already corrected.  The `gegenbauer.c`
+  expression was replaced wholesale by the `#58065` work
+  (`C_n^(0)(x) = 0` for `n >= 1`), and `ode-initval2/driver.c` lost its
+  `hmin >= 0.0 || hmin < 0.0` test in bzr revision 4829.  The remaining
+  `hmax > 0.0 || hmax < 0.0` guard is not the reported construct: it is
+  false at zero and at `NaN`, unlike `hmax != 0.0`.
+
+* **#41457, valgrind finds errors in `matrix/test.c`** - already fixed
+  upstream by commit `6ed874986` (2014-02-04), which added the
+  `memset(m->data, 0, MULTIPLICITY * n1 * n2 * sizeof(ATOMIC))` to
+  `matrix/init_source.c`; the memset covers the padding bytes that
+  `long_double_fwrite` reads.  `valgrind` is not available on the Windows
+  review machine, so the fixed source was inspected rather than re-run.
+
+* **#55965, implement the PCG random number generator** - a new algorithm
+  and new API, excluded by the fork's eligibility rule.  Deferred.
+
+* **#50382, add CMake and NuGet support for Windows** - the fork already
+  builds with CMake, which is the usable half of the request; NuGet
+  packaging is new distribution surface and outside the eligibility rule.
+  Rejected.
+
+Savannah bugs #39165, #41457, #55965, #50382.
