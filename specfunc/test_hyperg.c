@@ -41,6 +41,15 @@ int test_hyperg(void)
   TEST_SF(s, gsl_sf_hyperg_0F1_e, (1, -5.0, &r),   -0.3268752818235339109, TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_hyperg_0F1_e, (-0.5, -5.0, &r),-4.581634759005381184,  TEST_TOL1, GSL_SUCCESS);
 
+  /* Near c = 0 the old sin(pi(c-1)) lost the argument to rounding
+     (Savannah bug #43259).  References from mpmath at 60 digits. */
+  TEST_SF(s, gsl_sf_hyperg_0F1_e, (3.3902381054338468e-215, 3.9518502040597301e-242, &r),
+          1.0000000000000000000, TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_0F1_e, (3.4173080679583941e-185, 3.4173080679583941e-185, &r),
+          2.0000000000000000000, TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_0F1_e, (1.7441963804403448e-174, 3.1209425769889232e-140, &r),
+          1.7893298094111404306e+34, TEST_TOL2, GSL_SUCCESS);
+
 
   /* 1F1 for integer parameters */
 

@@ -26,6 +26,7 @@
 #include <gsl/gsl_sf_gamma.h>
 #include <gsl/gsl_sf_bessel.h>
 #include <gsl/gsl_sf_hyperg.h>
+#include <gsl/gsl_sf_sincos_pi.h>
 
 #include "error.h"
 
@@ -36,18 +37,26 @@
  * This is fine here because we do not not allow
  * nu to be a negative integer.
  * x > 0.
+ *
+ * The argument is the 0F1 parameter c, with nu = c - 1.  It is passed
+ * rather than nu so that sin(pi nu) can be evaluated as sin(pi c): for
+ * a c close to a positive integer, nu = c - 1 rounds and sin(pi nu)
+ * loses the argument entirely (Savannah bug #43259).
  */
 static
 int
-hyperg_0F1_bessel_I(const double nu, const double x, gsl_sf_result * result)
+hyperg_0F1_bessel_I(const double c, const double x, gsl_sf_result * result)
 {
+  const double nu = c - 1.0;
+
   if(x > GSL_LOG_DBL_MAX) {
     OVERFLOW_ERROR(result);
   }
 
   if(nu < 0.0) { 
     const double anu = -nu;
-    const double s   = 2.0/M_PI * sin(anu*M_PI);
+    /* sin(pi anu) = sin(pi (1-c)) = sin(pi c) */
+    const double s   = 2.0/M_PI * gsl_sf_sin_pi(c);
     const double ex  = exp(x);
     gsl_sf_result I;
     gsl_sf_result K;
@@ -73,21 +82,27 @@ hyperg_0F1_bessel_I(const double nu, const double x, gsl_sf_result * result)
  * This is fine here because we do not not allow
  * nu to be a negative integer.
  * x > 0.
+ *
+ * As above, c is the 0F1 parameter and nu = c - 1; sin(pi nu) and
+ * cos(pi nu) are evaluated as sin(pi c) and -cos(pi c).
  */
 static
 int
-hyperg_0F1_bessel_J(const double nu, const double x, gsl_sf_result * result)
+hyperg_0F1_bessel_J(const double c, const double x, gsl_sf_result * result)
 {
+  const double nu = c - 1.0;
+
   if(nu < 0.0) { 
     const double anu = -nu;
-    const double s   = sin(anu*M_PI);
-    const double c   = cos(anu*M_PI);
+    /* sin(pi anu) = sin(pi c),  cos(pi anu) = -cos(pi c) */
+    const double s   = gsl_sf_sin_pi(c);
+    const double co  = -gsl_sf_cos_pi(c);
     gsl_sf_result J;
     gsl_sf_result Y;
     int stat_J = gsl_sf_bessel_Jnu_e(anu, x, &J);
     int stat_Y = gsl_sf_bessel_Ynu_e(anu, x, &Y);
-    result->val  = c * J.val - s * Y.val;
-    result->err  = fabs(c * J.err) + fabs(s * Y.err);
+    result->val  = co * J.val - s * Y.val;
+    result->err  = fabs(co * J.err) + fabs(s * Y.err);
     result->err += fabs(anu * M_PI) * GSL_DBL_EPSILON * fabs(J.val + Y.val);
     return GSL_ERROR_SELECT_2(stat_Y, stat_J);
   }
@@ -115,7 +130,7 @@ gsl_sf_hyperg_0F1_e(double c, double x, gsl_sf_result * result)
     gsl_sf_result lg_c;
     double sgn;
     int stat_g = gsl_sf_lngamma_sgn_e(c, &lg_c, &sgn);
-    int stat_J = hyperg_0F1_bessel_J(c-1.0, 2.0*sqrt(-x), &Jcm1);
+    int stat_J = hyperg_0F1_bessel_J(c, 2.0*sqrt(-x), &Jcm1);
     if(stat_g != GSL_SUCCESS) {
       result->val = 0.0;
       result->err = 0.0;
@@ -145,7 +160,7 @@ gsl_sf_hyperg_0F1_e(double c, double x, gsl_sf_result * result)
     gsl_sf_result lg_c;
     double sgn;
     int stat_g = gsl_sf_lngamma_sgn_e(c, &lg_c, &sgn);
-    int stat_I = hyperg_0F1_bessel_I(c-1.0, 2.0*sqrt(x), &Icm1);
+    int stat_I = hyperg_0F1_bessel_I(c, 2.0*sqrt(x), &Icm1);
     if(stat_g != GSL_SUCCESS) {
       result->val = 0.0;
       result->err = 0.0;
