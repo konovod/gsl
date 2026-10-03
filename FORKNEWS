@@ -95,6 +95,9 @@ One line per change: date | tag | description | commit(s).
   2026-10-02 | [upstream] | cdf: robust gamma quantile solver for shape a < 1      | 9befdae95
   2026-10-02 | [upstream] | specfunc: Cauchy principal value for elliptic Pi/RJ     | 2673ce0d8
   2026-10-02 | [upstream] | specfunc: elliptic Pi error estimate for n < 0         | 2673ce0d8
+  2026-10-03 | [upstream] | specfunc: Coulomb F recurrence overflow/rescale        | 25841970e
+  2026-10-03 | [upstream] | specfunc: Coulomb G' overflow is signalled             | 8031f18bf
+  2026-10-03 | [upstream] | specfunc: F_array recurrence regression vector         | 861de2adc
 
 
 ## [upstream] rng: make the random() generators produce the documented sequences
@@ -2286,6 +2289,107 @@ Files: `specfunc/ellint.c`, `specfunc/test_sf.c`,
 `doc/specfunc-ellint.rst`, `doc_texinfo/specfunc-ellint.texi`.
 
 Savannah bug #53451.
+
+
+## [upstream] specfunc: the Coulomb F recurrence no longer overflows
+
+Commit: 25841970e
+
+`gsl_sf_coulomb_wave_FG_e(0.0, 1.2693881947287221e-07, 37.0, 1, ...)`
+returned `G = G' = NaN` while reporting `GSL_SUCCESS`.  The true values
+are finite: `G = 4.466635417149036e+299` and
+`G' = -1.266743110461408e+308`.
+
+The defect is in the unnormalized downward recurrence for `F, F'` in
+`coulomb_F_recur()`.  At this point the intermediate `F'` exceeds the
+double range (it reaches about `1e+310`) even though the normalized
+values are representable, so `Fp_over_F_lam_min` became infinite, `G`
+at `lam_min` became NaN, and the NaN propagated through
+`coulomb_G_recur()`.  The same overflow also perturbs `F` in its last
+bits, but `F` and `F'` are subnormal here, the old value was in fact
+the nearest double, and only `G` and `G'` were visibly broken.
+
+`coulomb_F_recur()` now rescales `(F, F')` by exact powers of two
+whenever the next step would leave the double range, and returns the
+net exponent; the recurrence is linear, so `F'/F` is unchanged.  Both
+callers undo the scaling with `ldexp()` and report `GSL_EUNDRFLW` for a
+zero or non-finite scale.  `coulomb_G_recur()` reports `GSL_EOVRFLW`
+for an infinite result instead of `GSL_SUCCESS`.
+
+Verification: the expected values come from the Frobenius series for
+`F` and the 1F1/U connection formulas (DLMF 33.2.4, 33.2.8) for `G`,
+evaluated with mpmath at 60 significant digits; they agree with the
+fixed library to the last representable bit.  Negative control (the two
+rescaling loops disabled): the new vector fails at `G` and `G'`
+(observed NaN), while the pre-existing `lam_F = 39` and `40` cases and
+the rest of the Coulomb suite still pass.
+
+Files: `specfunc/coulomb.c`, `specfunc/test_coulomb.c`.
+
+Savannah bug #30885.
+
+
+## [upstream] specfunc: a G' overflow in the WKB branch is reported
+
+Commit: 8031f18bf
+
+`gsl_sf_coulomb_wave_FG_e(340.0, 48.524525790349422, 0.0, 0, ...)`
+returned `Gp = NaN` with `GSL_SUCCESS`.  The true
+`G' = -1.9248375400...e+308` is 7% beyond `DBL_MAX`, so no double can
+hold it; the correct outcome is `GSL_EOVRFLW`.
+
+The WKB branch evaluated `G' = F'/F * G - 1/F`.  Here `F = 2.6e-309`
+and `G = 5.3e+307`, so `F'/F * G` and `1/F` are both about `1.9e+308`
+and both round to infinity; their difference is NaN.  The product is
+now grouped as `G' = (F'/F * (G*F) - 1)/F`, which cannot form inf - inf
+in this branch, and an infinite result is reported as `GSL_EOVRFLW`.
+The finite `F`, `F'` and `G` are still stored; `exp_F` and `exp_G` stay
+zero because there is no scaling exponent for `G'` alone.  Reference:
+1F1/U connection formulas (DLMF 33.2.4, 33.2.8) at 60 significant
+digits.
+
+Negative control (rearrangement and infinity check reverted): the new
+vector returns `GSL_SUCCESS` and fails; the rest of the Coulomb suite
+is unaffected.  The contract for a component-only overflow is
+documented in `doc/specfunc-coulomb.rst` and
+`doc_texinfo/specfunc-coulomb.texi`.
+
+Files: `specfunc/coulomb.c`, `specfunc/test_coulomb.c`,
+`doc/specfunc-coulomb.rst`, `doc_texinfo/specfunc-coulomb.texi`.
+
+Savannah bug #47027.
+
+
+## [upstream] specfunc: F_array recurrence regression vector
+
+Commit: 861de2adc
+
+Savannah #46678 reported unphysical spikes in
+`gsl_sf_coulomb_wave_F_array()` for large `|eta|`.  Reconstructing the
+reporter's program (attachment 35718: `eta = -100`, `l = 0..20`,
+`x = 0.01..20`) locates the spike at `x = 0.55`, where `F_0` was
+`7.35e-01` instead of `2.24e-01`, a factor 2.28.
+
+The cause is the choice of `C` in the Steed branch, already fixed under
+Savannah #39292 (commit `90d9037a5`, the `0.5*C` change).  With that
+change the reporter's whole scan agrees with a direct evaluation to
+about `4e-12`, and a sweep of the series and Steed branches at
+`lmax = 5..40`, `|eta| <= 300`, `x <= 60` finds no silent disagreement
+above `1e-6`.  A separate overflow regime exists deep below the turning
+point for large positive `eta`, but there the library already returns
+`GSL_EOVRFLW` rather than `GSL_SUCCESS`, so it is not the silent-NaN
+defect reported here.
+
+This commit adds the one vector the #39292 tests do not reach: the top
+of the `F_array` recurrence is nine orders of magnitude below `F_0` and
+the array is rebuilt by twenty downward steps.  Expected values are an
+independent Frobenius-series evaluation.  Negative control: with the
+`0.5` factor reverted the new vector fails (and the pre-existing
+turning-point guard also fails).
+
+Files: `specfunc/test_coulomb.c`.
+
+Savannah bug #46678.
 
 
 
