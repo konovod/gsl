@@ -1217,9 +1217,10 @@ Three sources were evaluated:
 
 Coverage of the 96 still-open bugs: mbox 56, Wayback 37, CNMAT 13,
 **91 with at least one source**, 5 with none (`50712`, `51104`, `52351`,
-`53903`, `53904`).  Text is merged into per-bug dossiers under
-`temp/savannah-store/` (see its `README.md`), which is what the review now
-reads instead of the tracker page.
+`53903`, `53904`).  All 35 Wayback snapshots that augment a bug with no mbox
+thread were then fetched and their text extracted into the dossiers.  Text is
+merged into per-bug dossiers under `temp/savannah-store/` (see its
+`README.md`), which is what the review now reads instead of the tracker page.
 
 The mbox host is not Savannah and is not rate-limited; keep the pulls to one
 request per month.  `scripts/savannah_bugs.py` still needs Savannah for the
