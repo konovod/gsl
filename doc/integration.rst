@@ -222,6 +222,11 @@ subintervals are managed by the following struct,
    while lower-order rules save time when the function contains local
    difficulties, such as discontinuities.
 
+   A value of :data:`key` outside the range 1--6 is coerced to the nearest
+   end of the range: values less than 1 are treated as
+   :macro:`GSL_INTEG_GAUSS15` and values greater than 6 as
+   :macro:`GSL_INTEG_GAUSS61`.
+
    On each iteration the adaptive integration strategy bisects the interval
    with the largest error estimate.  The subintervals and their results are
    stored in the memory provided by :data:`workspace`.  The maximum number of
