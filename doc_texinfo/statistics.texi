@@ -114,6 +114,9 @@ $$
 \Hat\sigma^2 = (1/(N-1)) \sum (x_i - mean)^2
 @end example
 @end ifinfo
+The sample variance requires at least two observations.  For @var{n}
+equal to one the estimator is undefined and the function returns
+@code{NaN}.
 @end deftypefun
 
 @deftypefun double gsl_stats_sd (const double @var{data}[], size_t @var{stride}, size_t @var{n})
@@ -385,6 +388,9 @@ $$
 covar = (1/(n - 1)) \sum_@{i = 1@}^@{n@} (x_i - \Hat x) (y_i - \Hat y)
 @end example
 @end ifinfo
+The sample covariance requires at least two observations.  For @var{n}
+equal to one the estimator is undefined and the function returns
+@code{NaN}.
 @end deftypefun
 
 @deftypefun double gsl_stats_covariance_m (const double @var{data1}[], const size_t @var{stride1}, const double @var{data2}[], const size_t @var{stride2}, const size_t @var{n}, const double @var{mean1}, const double @var{mean2})

@@ -88,6 +88,10 @@ Mean, Standard Deviation and Variance
 
          \Hat\sigma^2 = (1/(N-1)) \sum (x_i - mean)^2
 
+   The sample variance requires at least two observations.  For
+   :data:`n` equal to one the estimator is undefined and the function
+   returns :code:`NaN`.
+
 .. function:: double gsl_stats_sd (const double data[], size_t stride, size_t n)
               double gsl_stats_sd_m (const double data[], size_t stride, size_t n, double mean)
 
@@ -328,6 +332,10 @@ Covariance
       ::
 
          covar = (1/(n - 1)) \sum_{i = 1}^{n} (x_i - \Hat x) (y_i - \Hat y)
+
+   The sample covariance requires at least two observations.  For
+   :data:`n` equal to one the estimator is undefined and the function
+   returns :code:`NaN`.
 
 .. function:: double gsl_stats_covariance_m (const double data1[], const size_t stride1, const double data2[], const size_t stride2, const size_t n, const double mean1, const double mean2)
 
