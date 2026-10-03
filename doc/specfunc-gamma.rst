@@ -232,6 +232,14 @@ Incomplete Gamma Functions
    These functions compute the unnormalized incomplete Gamma Function
    :math:`\Gamma(a,x) = \int_x^\infty dt t^{(a-1)} \exp(-t)`
    for :math:`a` real and :math:`x \ge 0`.
+
+   This is the upper (complementary) tail.  Do not confuse it with the
+   normalized functions below: :math:`\Gamma(a,x)` is not
+   :math:`P(a,x)`.  When :math:`a > 0` the two are related by
+   :math:`\Gamma(a,x) = \Gamma(a)\,Q(a,x)
+   = \Gamma(a)\,(1 - P(a,x))`, so for example
+   :math:`\Gamma(1,3) = Q(1,3) = e^{-3}`, while
+   :math:`P(1,3) = 1 - e^{-3}`.
 .. exceptions: GSL_EDOM
 
 .. index:: incomplete Gamma function
