@@ -1445,3 +1445,121 @@ to rounding), and is not a defect either.  Documented in both manual trees;
 no code change.
 
 Full CTest suite: 56/56 after the changes.
+
+
+## Group G — 2F1 / hyperg residual: #21835, #30324, #30510, #41837, #50711, #53876, #53905
+
+Reviewed 2026-10-03 against the built `build-cmake/gsl.dll` (values read
+through ctypes) with independent references from mpmath at 40-60 digits.
+The reports were retrieved through the Wayback Machine, as the tracker was
+not reachable directly.  Two of the group are code fixes, two are deferrals
+and one was already fixed.
+
+### #50711, #53905, #21835 (x >= 1 half), #39056 (Wolpert) — one defect, fixed
+
+All four are the same dispatch bug in `gsl_sf_hyperg_2F1_e()`.  The
+terminating Gauss series is only reached through the
+`fabs(a) < 10 && fabs(b) < 10` branch, and the series itself sits behind the
+`|x| < 1` domain check, so:
+
+    #50711  2F1(-1,-13,1,0.651439)   GSL_EUNIMPL   (|b| = 13 over the gate)
+    #53905  2F1(-10,2,0.5,0.5)       GSL_EUNIMPL   (|a| = 10 over the gate)
+    #39056  2F1(-1,-10,1,0.5)        GSL_EUNIMPL   (Wolpert; disabled vector)
+    #21835  2F1(-1,-1,-0.5,1.5)      GSL_EDOM      (x > 1)
+    #21835  2F1(0,1,1,11)            GSL_EDOM      (x > 1; fermat a = 0)
+
+When `a` or `b` is zero or a negative integer the Gauss series terminates
+and 2F1 is a polynomial, valid for every `x`.  The terminating case is now
+dispatched to `hyperg_2F1_series()` before the domain check and outside the
+magnitude gate, with the negative-integer-`c` cancellation test preserved.
+Fixed in commit `2aa89bae8`; ten vectors added and the two #39056 vectors
+re-enabled.  Negative control: 11 failures (10 vectors + summary) with the
+dispatch reverted; 0 with it.  The `ldnlwm` vector that shared the `#if 0`
+block passes either way and was enabled too.
+
+#39056 was recorded as fixed by the earlier e4c4ac326/882c8361d work, but
+that only covered the Monajemi case; its Wolpert vector was still disabled
+at `test_hyperg.c:688-696`.  The triage row is corrected to name both cases.
+
+### #21835 (c = a + b near x = 1) — still a limitation, documented
+
+The other half of #21835, `2F1(1,13,14,0.999227196008978)`, is the nearby
+singularity `c = a + b` at `x = 1`.  On the current build it returns the
+right value, `53.4645144...` (mpmath: `53.464514418791908495`), but with
+status `GSL_EMAXITER` (11), so the convergence is exhausted while the
+partial sum is accurate to ~9 digits.  `doc/specfunc-hyperg.rst` already
+documents this region as `GSL_EMAXITER`.  Adding the A&S 15.3.10 `c = a+b`
+formula is a separate, larger change and was not attempted; #21835 is
+recorded as **partial**.
+
+### #30324 — extend 2F1 to x < -1 — deferred (feature)
+
+The report proposes the MathWorld/A&S transformations to cover `x < -1`,
+which GSL rejects at `hyperg_2F1.c` (`x < -1.0`).  The manual promises only
+`|x| < 1`, so this adds a new domain and a new evaluation path: a feature,
+outside the eligibility rule for this review.  Deferred, no code change.
+
+### #30510 — `hyperg_U(a,b,x)` for x < 0 — deferred
+
+The central case is real: when `a` is not an integer and `b` is an integer
+with `x < 0`, the A&S 13.1.3 reduction used by `hyperg_U_negx()` is
+degenerate.  Measured on the current build:
+
+    U(-0.5, 1, -1)   GSL_EDOM          poch(a,-a) is a Gamma(0) pole at b=1
+    U(-0.5, 2, -1)   GSL_EUNIMPL       b >= 2 integer limit unimplemented
+    U(-0.5, 2.7, -1) GSL_SUCCESS, NaN  (silent; non-integer b)
+
+The reporter's own fix is the DLMF 13.2.41 limit for `b = 1`, which needs
+`U(1-a,1,-x)`, `M(1-a,1,-x)` and a complex exponential `exp(i pi (1-a))`;
+GSL's `specfunc` has no complex confluent/`1F1` machinery, and the branch
+choice for `x^(1-b)` at integer `b` is delicate.  A wrong special-function
+implementation would be worse than the current explicit error, so the case
+is deferred rather than attempted.  Note this is broader than the reported
+`b = 1` hole: the whole `x < 0`, non-integer-`a` region is affected.
+
+### #41837 — "bugs in gsl_sf_hyperg_U" — not reproducible on the current build
+
+The three values named in the report are all correct here, against mpmath:
+
+    2F1-style call                     GSL (current)        mpmath
+    U(1, -6.67, 1)                     0.1136908226796134   0.1136908226796136
+    U(1, -500, 0.1)                    0.0019956088624270   0.0019956088624194
+    U(1, -500, 40)                     0.0018481758515476   0.0018481758515484
+
+The follow-up comment's concern - that `hyperg_U_series()` continues to the
+infinite sum after a successful finite sum when `1+a-b` is a negative
+integer, and then fails inside `gamma.c` - does not reproduce either; a
+grid of such calls (`1+a-b = -1, -2`, `beps != 0`, `x > 0`) all return the
+correct values with `GSL_SUCCESS`.  The defects were evidently repaired
+upstream since the 2014 report, so no fork change is made; the row is marked
+fixed (inherited).
+
+### #54998 — confirmed fixed, no further work
+
+The report's `2F1(-0.25, 0.25, 1, 0.9) = 0.920589251382092768` and the
+error-estimate case `2F1(-0.25, 0.25, 1, 0.25)` are both covered by the
+vectors added with e4c4ac326/882c8361d and pass; the negative-integer
+Gamma-prefactor sign defect described in the report's 2025 comments is the
+one already fixed there.  Nothing further.
+
+### #53876 — missing `x^(1-c)` in the 2F1 renorm functions — fixed
+
+`gsl_sf_hyperg_2F1_renorm_e()` and `gsl_sf_hyperg_2F1_conj_renorm_e()`
+dropped the `x^(1-c)` factor of [A&S 15.1.2] in the negative-integer-`c`
+branch, so the result was too large by `x^(c-1)`:
+
+    renorm(1,2,-3,0.4)   2572.016    vs    65.8436
+    renorm(5,5,-1,0.5)   4949760     vs    1237440      (4x)
+    renorm(5,5,-10,0.5)  1.39e20     vs    6.81e16      (2048x)
+
+Fixed in commit `46b7c412e` with `gsl_sf_pow_int_e()`; the early-termination
+branch returns zero and is unaffected.  **The pre-existing test vectors at
+`c = -1, -10, -100` were themselves generated from the buggy code and
+encoded the missing factor**; they are corrected against the A&S limit
+evaluated independently with mpmath (mpmath's `hyp2f1` cannot be used
+directly because `Gamma(c)` is a pole, so the ratio of Gamma functions, the
+`x^(1-c)` power and the remaining `2F1` are formed separately).  Negative
+control: 8 failures (7 vectors + summary) with the factor reverted.
+
+Files: `specfunc/hyperg_2F1.c`, `specfunc/test_hyperg.c`.  Commits
+`2aa89bae8`, `46b7c412e`.  Full CTest suite: 56/56.

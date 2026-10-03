@@ -5,17 +5,17 @@ Generated 2026-10-02 from the `scripts/savannah_bugs.py` sweep (`inventory.tsv`)
 Scratch index, not part of the fork's record of changes. Verdicts are curated from
 `FORKNEWS`, `SAVANNAH_REVIEW.md` and the git history; every other row is un-triaged.
 
-**219 open items: 73 reviewed/handled, 146 remaining.**
+**219 open items: 86 reviewed/handled, 133 remaining.**
 
 | status | count |
 |---|---:|
-| fixed | 56 |
-| partial | 2 |
-| rejected | 13 |
-| deferred | 1 |
+| fixed | 64 |
+| partial | 3 |
+| rejected | 14 |
+| deferred | 4 |
 | superseded | 1 |
 | not reviewed (feature-shaped) | 21 |
-| not reviewed | 127 |
+| not reviewed | 112 |
 
 Legend for the *Patch* column: the sweep's `git apply` verdict (`clean` / `partial` / `dirty`), `source` for a whole
 replacement file, `inline` for a patch pasted into the bug text, `none` for no patch.
@@ -25,7 +25,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 21828 | 2007-12-18 | - | Performance | none | not reviewed | suboptimal performance of gsl_fdfsolver_lmsder |
 | 21831 | 2007-12-18 | - | Accuracy problem | source levy.c | not reviewed | Levý random number generator for alpha < 1 |
 | 21833 | 2007-12-18 | - | Performance | none | not reviewed | suboptimal performance of gsl permutation? |
-| 21835 | 2007-12-18 | - | Accuracy problem | clean test_hyperg.diff +1 | not reviewed | gsl_sf_hyperg_2F1 problematic arguments |
+| 21835 | 2007-12-18 | - | Accuracy problem | clean test_hyperg.diff +1 | **partial** — non-positive-integer termination for x >= 1 fixed (2aa89bae8); c = a+b near x = 1 still returns GSL_EMAXITER | gsl_sf_hyperg_2F1 problematic arguments |
 | 21836 | 2007-12-18 | - | Accuracy problem | none | **fixed** — Q returns exact complement of P in the series window (6f23a4cb5) | gamma_inc_P and gamma_inc_Q only satisfy P+Q=1 within errors |
 | 21837 | 2007-12-18 | - | Runtime error | none | not reviewed | gsl_linalg_solve_symm_tridiag requires positive definite matrix |
 | 24252 | 2008-09-12 | feature | - | source gamma_tail_jpl_080908.c | not reviewed | suggestion: add gamma tail distribution |
@@ -33,8 +33,8 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 25320 | 2009-01-14 | - | Accuracy problem | none | not reviewed | Import fresnel, bugs on GSL Extension Fresnel |
 | 28267 | 2009-12-11 | - | Accuracy problem | source hyperg1F1.c | **partial** — same defect as #43809 (52505315d); transition region `x ~ a^2` still loses digits | poor convergence region for gsl_sf_hyperg_1F1 |
 | 29834 | 2010-05-09 | - | Runtime error | source error_cblas_v2.h | not reviewed | insufficient argument checking in blas wrapper |
-| 30324 | 2010-07-02 | - | Accuracy problem | none | not reviewed | improve range of 2F1 |
-| 30510 | 2010-07-21 | - | Runtime error | none | not reviewed | problems with hyperg_U(a,b,x) for x<0 |
+| 30324 | 2010-07-02 | - | Accuracy problem | none | **deferred** — feature: extend 2F1 to x < -1 by transformation; new domain/algorithm, out of eligibility | improve range of 2F1 |
+| 30510 | 2010-07-21 | - | Runtime error | none | **deferred** — U(a,b,x) for x < 0 with non-integer a needs the DLMF 13.2.41 limit at integer b (b=1 throws GSL_EDOM, b >= 2 GSL_EUNIMPL); not attempted | problems with hyperg_U(a,b,x) for x<0 |
 | 30540 | 2010-07-24 | feature | Accuracy problem | partial bug-ode2.c +2 | not reviewed | please, add convergence checks in rk4imp/rk2imp |
 | 30583 | 2010-07-28 | doc | Documentation | none | not reviewed | improve documentation for Elliptic functions |
 | 30885 | 2010-08-27 | - | Runtime error | none | not reviewed | nans from gsl_sf_coulomb_wave_FG_e(1.2693881947287221e-07, 0.0, lam_F=37, lam_G=36) |
@@ -54,7 +54,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 37408 | 2012-09-20 | - | - | clean au.patch | **fixed** — const AU/parsec updated to IAU 2012 (3377c7fbe) | The astronomical unit (AU) has been re-defined |
 | 37894 | 2012-12-10 | bug | Build | clean gsl-autotools.diff | **fixed** — upstream 1d002ee93/ae19e3e8b (inherited, no fork change) | Shared library does not build on Cygwin |
 | 38548 | 2013-03-19 | - | Accuracy problem | none | not reviewed | Rounding issues in gsl-histogram with integer numbers |
-| 39056 | 2013-05-23 | bug | Runtime error | none | **fixed** — same 2F1 integer-d fix, Monajemi case (e4c4ac326, 882c8361d) | gsl_sf_hyperg_2F1_e fails for some test cases |
+| 39056 | 2013-05-23 | bug | Runtime error | none | **fixed** — Monajemi case (e4c4ac326) and the Wolpert vector now enabled (2aa89bae8) | gsl_sf_hyperg_2F1_e fails for some test cases |
 | 39057 | 2013-05-23 | bug | Runtime error | none | **fixed** — gamma inverse reworked (9befdae95); report's expected value was the forward CDF | gsl_cdf_chisq_Pinv fails for some values |
 | 39120 | 2013-05-29 | - | Build | none | not reviewed | Possible removal of some files |
 | 39152 | 2013-06-03 | - | Accuracy problem | none | not reviewed | make check errors with Intel icc 13.0.1 |
@@ -72,7 +72,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 41457 | 2014-02-04 | - | Runtime error | none | not reviewed | valgrind finds errors in matrix/test.c |
 | 41527 | 2014-02-09 | bug | - | none | not reviewed | Change/add multimin functions to return error codes |
 | 41605 | 2014-02-15 | - | Documentation | none | not reviewed | gsl_histogram_pdf docs |
-| 41837 | 2014-03-11 | - | Runtime error | none | not reviewed | bugs in gsl_sf_hyperg_U |
+| 41837 | 2014-03-11 | - | Runtime error | none | **fixed** (inherited) — the three reported values are correct on the current build; the finite-sum-skip concern does not reproduce | bugs in gsl_sf_hyperg_U |
 | 42042 | 2014-04-03 | bug | Runtime error | none | **fixed** — non-vanishing half-integer Jnu endpoint (e6e34279a) | nan bug in bessel_Jnu |
 | 42058 | 2014-04-05 | bug | - | none | not reviewed | GSL RSS Feed does not validate |
 | 42219 | 2014-04-28 | - | Runtime error | source bug_gnewton.c | not reviewed | Division by zero in "gnewton" when "f" and "fdf" differ |
@@ -117,7 +117,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 50343 | 2017-02-17 | - | Runtime error | inline | rejected — not-a-bug: Mathieu branch cut is arbitrary, GSL correct | Different value for mathieu_ce in Mathematica and GSL |
 | 50382 | 2017-02-22 | feature | Build | none | not reviewed | Add CMAKE and NUGET support for Windows |
 | 50459 | 2017-03-04 | - | - | none | **fixed** — negative-a recurrence guard for |a| > 2^53 (932087bcd) | Non termination of the incomplete gamma function due to floating-point rounding errors |
-| 50711 | 2017-04-03 | - | - | none | not reviewed | Gauss hypergeometric function : gsl_sf_hyperg_2F1 gives up (GSL_EUNIMPL) |
+| 50711 | 2017-04-03 | - | - | none | **fixed** — terminating 2F1 for a non-positive-integer order (2aa89bae8) | Gauss hypergeometric function : gsl_sf_hyperg_2F1 gives up (GSL_EUNIMPL) |
 | 50712 | 2017-04-03 | bug | - | none | not reviewed | Test failure for lm+accel and fdfvv |
 | 50734 | 2017-04-05 | - | Performance | clean 0001-initialize-newton-steffenson-solvers-with-GSL_FN_FDF.patch | **fixed** — same fix as #49465 (4eac6584f) | initialize newton, steffenson solvers with GSL_FN_FDF_EVAL_F_DF |
 | 51000 | 2017-05-11 | bug | Accuracy problem | none | **fixed** — airy_deriv at huge arguments (ac5f72d98) | Incorrect results of gsl_airy_deriv function |
@@ -130,10 +130,10 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 52570 | 2017-12-01 | - | Runtime error | none | **fixed** — Airy huge negative arguments (ac5f72d98) | Inaccuracy of the Airy function due to invocation of GSL's cosine function with large input parameters |
 | 52927 | 2018-01-18 | bug | Runtime error | none | rejected — not reproducible; j2 large-x tests disabled under #45730 | make check fails on Bessel j2 test |
 | 53451 | 2018-03-24 | bug | - | none | **fixed** — Cauchy principal value for elliptic Pi/RJ (2673ce0d8) | gsl_sf_ellint_Pcomp( k, n, mode ) returns NaN if mode < -1 |
-| 53876 | 2018-05-11 | - | Accuracy problem | none | not reviewed | gsl_sf_hyperg_2F1_renorm missing factor |
+| 53876 | 2018-05-11 | - | Accuracy problem | none | **fixed** — missing x^(1-c) factor in the 2F1 renorm functions (46b7c412e) | gsl_sf_hyperg_2F1_renorm missing factor |
 | 53903 | 2018-05-14 | bug | Runtime error | none | not reviewed | Test failure with gsl_sf_synchrotron_1_e on x86 |
 | 53904 | 2018-05-14 | bug | - | none | not reviewed | Bug gsl_matrix_complex_set |
-| 53905 | 2018-05-14 | bug | - | none | not reviewed | Bug in Hypergeometric function |
+| 53905 | 2018-05-14 | bug | - | none | **fixed** — terminating 2F1 for a non-positive-integer order (2aa89bae8) | Bug in Hypergeometric function |
 | 53919 | 2018-05-16 | - | Runtime error | clean v2-erf.diff +1 | **fixed** — erfc/log_erfc overflow rewritten (708791c25) | handle large values correctly in (log_)erf(c) functions |
 | 54077 | 2018-06-07 | - | Runtime error | clean 0001-replace-atol-by-strtoul-in-gsl-randist.c.patch | **fixed** — gsl-randist seed via strtoul (aebe57a5c) | usage of atol in gsl-randistdoes not allow to pass big seed |
 | 54919 | 2018-10-30 | bug | Build | none | not reviewed | gsl 2.5+ test fails with icc (2016.4 and later) |
