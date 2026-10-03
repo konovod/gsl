@@ -293,6 +293,13 @@ int test_gamma(void)
   TEST_SF(s, gsl_sf_gamma_inc_e, (-100.0, 10.0,  &r), 4.1238327669858313997e-107, TEST_TOL2, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_gamma_inc_e, (-200.0, 10.0,  &r), 2.1614091830529343423e-207, TEST_TOL2, GSL_SUCCESS);
 
+  /* Savannah bug #50459: for a < -2^53 and 0 < x <= 0.25 the negative-a
+     recurrence decremented alpha by one until alpha-1 rounded to alpha
+     itself and the loop protecting alpha > a never terminated.  The value
+     has underflowed to zero here; the call must return promptly with a
+     nonzero error, not hang. */
+  TEST_SF(s, gsl_sf_gamma_inc_e, (-1.0e25, 0.1, &r), 0.0, TEST_TOL0, GSL_EUNDRFLW);
+
   TEST_SF(s, gsl_sf_gamma_inc_e, (  0.0,     0.001, &r), 6.3315393641361493320, TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_gamma_inc_e, (  0.001,   0.001, &r), 6.3087159394864007261, TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_gamma_inc_e, (  1.0,     0.001, &r), 0.99900049983337499167, TEST_TOL0, GSL_SUCCESS);

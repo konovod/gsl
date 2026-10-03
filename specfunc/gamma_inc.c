@@ -672,6 +672,19 @@ gsl_sf_gamma_inc_e(const double a, const double x, gsl_sf_result * result)
   {
     return gamma_inc_series(a, x, result);
   }
+  else if(a < -9007199254740992.0)
+  {
+    /* For a < 0 and x small the half-integer recurrence below steps alpha
+       down by one at a time.  Once alpha has reached about -2^53 the
+       decrement alpha-1 rounds to alpha itself (the spacing of doubles has
+       become 2), the loop no longer advances and the termination test
+       alpha > a can never be satisfied: the routine hangs.  In this regime
+       x is so small relative to |a| that Gamma(a,x) underflows to zero, so
+       return that directly.  See Savannah bug #50459. */
+    result->val = 0.0;
+    result->err = 2.0*(1.0 + fabs(a))*GSL_DBL_EPSILON*fabs(result->val);
+    GSL_ERROR ("underflow", GSL_EUNDRFLW);
+  }
   else
   {
     /* a = fa + da; da >= 0 */
