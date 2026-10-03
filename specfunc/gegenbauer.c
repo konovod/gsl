@@ -35,8 +35,9 @@ gsl_sf_gegenpoly_1_e(double lambda, double x, gsl_sf_result * result)
   /* CHECK_POINTER(result) */
 
   if(lambda == 0.0) {
-    result->val = 2.0*x;
-    result->err = 2.0 * GSL_DBL_EPSILON * fabs(result->val);
+    /* C_1^(0)(x) = 0.  See Savannah bug #58065. */
+    result->val = 0.0;
+    result->err = 0.0;
     return GSL_SUCCESS;
   }
   else {
@@ -52,10 +53,9 @@ gsl_sf_gegenpoly_2_e(double lambda, double x, gsl_sf_result * result)
   /* CHECK_POINTER(result) */
 
   if(lambda == 0.0) {
-    const double txx = 2.0*x*x;
-    result->val  = -1.0 + txx;
-    result->err  = 2.0 * GSL_DBL_EPSILON * fabs(txx);
-    result->err += 2.0 * GSL_DBL_EPSILON * fabs(result->val);
+    /* C_2^(0)(x) = 0.  See Savannah bug #58065. */
+    result->val = 0.0;
+    result->err = 0.0;
     return GSL_SUCCESS;
   }
   else {
@@ -71,8 +71,9 @@ gsl_sf_gegenpoly_3_e(double lambda, double x, gsl_sf_result * result)
   /* CHECK_POINTER(result) */
 
   if(lambda == 0.0) {
-    result->val = x*(-2.0 + 4.0/3.0*x*x);
-    result->err = GSL_DBL_EPSILON * (2.0 * fabs(result->val) + fabs(x));
+    /* C_3^(0)(x) = 0.  See Savannah bug #58065. */
+    result->val = 0.0;
+    result->err = 0.0;
     return GSL_SUCCESS;
   }
   else {
@@ -106,33 +107,35 @@ gsl_sf_gegenpoly_n_e(int n, double lambda, double x, gsl_sf_result * result)
   else if(n == 3) {
     return gsl_sf_gegenpoly_3_e(lambda, x, result);
   }
+  else if(lambda == 0.0) {
+    /* C_n^(0)(x) = 0 for all n >= 1.  The general formula
+     * 2 T_n(x)/n for the lambda = 0 limit of C_n^(lambda)(x)
+     * is reached only as lambda -> 0 and is not valid at
+     * lambda == 0 itself, where the polynomial is identically
+     * zero.  See Savannah bug #58065.
+     */
+    result->val = 0.0;
+    result->err = 0.0;
+    return GSL_SUCCESS;
+  }
   else {
-    if(lambda == 0.0 && (x >= -1.0 && x <= 1.0)) {
-      /* 2 T_n(x)/n */
-      const double z = n * acos(x);
-      result->val = 2.0 * cos(z) / n;
-      result->err = 2.0 * GSL_DBL_EPSILON * fabs(z * result->val);
-      return GSL_SUCCESS;
+    int k;
+    gsl_sf_result g2;
+    gsl_sf_result g3;
+    int stat_g2 = gsl_sf_gegenpoly_2_e(lambda, x, &g2);
+    int stat_g3 = gsl_sf_gegenpoly_3_e(lambda, x, &g3);
+    int stat_g  = GSL_ERROR_SELECT_2(stat_g2, stat_g3);
+    double gkm2 = g2.val;
+    double gkm1 = g3.val;
+    double gk = 0.0;
+    for(k=4; k<=n; k++) {
+      gk = (2.0*(k+lambda-1.0)*x*gkm1 - (k+2.0*lambda-2.0)*gkm2) / k;
+      gkm2 = gkm1;
+      gkm1 = gk;
     }
-    else {
-      int k;
-      gsl_sf_result g2;
-      gsl_sf_result g3;
-      int stat_g2 = gsl_sf_gegenpoly_2_e(lambda, x, &g2);
-      int stat_g3 = gsl_sf_gegenpoly_3_e(lambda, x, &g3);
-      int stat_g  = GSL_ERROR_SELECT_2(stat_g2, stat_g3);
-      double gkm2 = g2.val;
-      double gkm1 = g3.val;
-      double gk = 0.0;
-      for(k=4; k<=n; k++) {
-        gk = (2.0*(k+lambda-1.0)*x*gkm1 - (k+2.0*lambda-2.0)*gkm2) / k;
-        gkm2 = gkm1;
-        gkm1 = gk;
-      }
-      result->val = gk;
-      result->err = 2.0 * GSL_DBL_EPSILON * 0.5 * n * fabs(gk);
-      return stat_g;
-    }
+    result->val = gk;
+    result->err = 2.0 * GSL_DBL_EPSILON * 0.5 * n * fabs(gk);
+    return stat_g;
   }
 }
 
@@ -152,11 +155,16 @@ gsl_sf_gegenpoly_array(int nmax, double lambda, double x, double * result_array)
   result_array[0] = 1.0;
   if(nmax == 0) return GSL_SUCCESS;
 
+  if(lambda == 0.0) {
+    /* C_n^(0)(x) = 0 for all n >= 1.  See Savannah bug #58065. */
+    for(k=1; k<=nmax; k++) {
+      result_array[k] = 0.0;
+    }
+    return GSL_SUCCESS;
+  }
+
   /* n == 1 */
-  if(lambda == 0.0)
-    result_array[1] = 2.0*x;
-  else
-    result_array[1] = 2.0*lambda*x;
+  result_array[1] = 2.0*lambda*x;
 
   /* n <= nmax */
   for(k=2; k<=nmax; k++) {
