@@ -109,6 +109,8 @@ One line per change: date | tag | description | commit(s).
   2026-10-03 | [upstream] | specfunc: terminating 2F1 for non-positive integers  | 2aa89bae8
   2026-10-03 | [upstream] | specfunc: x^(1-c) factor in the 2F1 renorm functions    | 46b7c412e
   2026-10-03 | [upstream] | doc: attach deprecated markers to their functions      | 973212c4e
+  2026-10-03 | [fork]     | doc: render the HTML manual with MathJax               | 4b7802490
+  2026-10-03 | [fork]     | ci: publish the Sphinx manual on GitHub Pages          | 27c86b3f3
 
 
 ## [upstream] rng: make the random() generators produce the documented sequences
@@ -2789,3 +2791,56 @@ remainder are unrelated).
 
 Files: `doc/diff.rst`, `doc/interp.rst`, `doc/specfunc-coupling.rst`,
 `doc/specfunc-hermite.rst`, `doc/spmatrix.rst`.
+
+
+## [fork] doc: render the HTML manual with MathJax
+
+Commit: 4b7802490
+
+The HTML builder used `sphinx.ext.imgmath`, which renders every equation
+to a PNG with LaTeX (`latex` + `dvipng`), so building the manual required
+a TeX installation.  The GitHub Pages job cannot assume one, so the HTML
+builder now uses `sphinx.ext.mathjax`.
+
+The custom operators the manual uses (`arccosh`, `sech`, `diag`, `Var`,
+...) were declared only in the imgmath LaTeX preamble; they are now also
+declared in `mathjax3_config`, since MathJax would otherwise fail on
+them.  The compound `\undermat` macro from `linalg.rst` is provided to
+MathJax as well.  `my_latex_preamble` is kept, as the LaTeX/PDF builder
+still uses it.
+
+Fork-specific: upstream renders the manual's math as images, so this
+would change the gnu.org output if it were offered upstream.
+
+Verified with Sphinx 8.1.3 / sphinx_rtd_theme 3.1.0: the manual builds
+without LaTeX, emits no `_images/math`, and carries the MathJax script.
+Every custom macro expands cleanly under `mathjax-full`, including the
+`pmatrix` `\undermat` formula in `linalg.rst`.
+
+File: `doc/conf.py`.
+
+
+## [fork] ci: publish the Sphinx manual on GitHub Pages
+
+Commit: 27c86b3f3
+
+`.github/workflows/docs.yml` builds `doc/` with Sphinx and deploys it to
+GitHub Pages with the native Pages actions (`configure-pages`,
+`upload-pages-artifact`, `deploy-pages`).  No library build is needed -
+the manual includes its own sources and figures - and, with the MathJax
+change above, no TeX install either.  The manual version is read from
+`configure.ac`, the same source `CMakeLists.txt` and the Windows DLL
+workflow use, and passed to Sphinx with `-D version`/`-D release`.
+`Sphinx` and `sphinx_rtd_theme` are pinned in
+`.github/docs-requirements.txt`.
+
+Requires the repository to have Pages set to "Source: GitHub Actions".
+The workflow runs on pushes to the default branches and on demand and
+deploys with the `github-pages` environment.  Five unrelated Sphinx
+warnings are emitted but do not fail the build (no `-W`).
+
+Fork-only infrastructure: upstream builds the manual by hand and rsyncs
+it to www.gnu.org (see HACKING).
+
+Files: `.github/workflows/docs.yml`, `.github/docs-requirements.txt`,
+`CMake.md`.
