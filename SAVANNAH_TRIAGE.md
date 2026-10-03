@@ -5,17 +5,17 @@ Generated 2026-10-02 from the `scripts/savannah_bugs.py` sweep (`inventory.tsv`)
 Scratch index, not part of the fork's record of changes. Verdicts are curated from
 `FORKNEWS`, `SAVANNAH_REVIEW.md` and the git history; every other row is un-triaged.
 
-**219 open items: 61 reviewed/handled, 158 remaining.**
+**219 open items: 71 reviewed/handled, 148 remaining.**
 
 | status | count |
 |---|---:|
-| fixed | 44 |
+| fixed | 54 |
 | partial | 2 |
 | rejected | 13 |
 | deferred | 1 |
 | superseded | 1 |
-| not reviewed (feature-shaped) | 22 |
-| not reviewed | 136 |
+| not reviewed (feature-shaped) | 21 |
+| not reviewed | 127 |
 
 Legend for the *Patch* column: the sweep's `git apply` verdict (`clean` / `partial` / `dirty`), `source` for a whole
 replacement file, `inline` for a patch pasted into the bug text, `none` for no patch.
@@ -43,7 +43,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 31362 | 2010-10-18 | bug | Runtime error | none | not reviewed | The Complete Elliptic Integrals (gsl_sf_ellint_Ecomp and _Kcomp) Loop Forever with NaN Argument |
 | 31426 | 2010-10-23 | - | Runtime error | none | not reviewed | infinite loop in gsl_eigen_symm |
 | 32257 | 2011-01-26 | - | - | none | not reviewed | RFE: Import integration routines from quadrule |
-| 32306 | 2011-01-31 | bug | Accuracy problem | source hyp.c | not reviewed | sign error in gsl_sf_hyperg_2F1 |
+| 32306 | 2011-01-31 | bug | Accuracy problem | source hyp.c | **fixed** — integer-d 2F1 series and error estimate (e4c4ac326, 882c8361d) | sign error in gsl_sf_hyperg_2F1 |
 | 32776 | 2011-03-14 | feature | - | source quadratic.c | **fixed** — multimin quadratic minimiser (53cd0d098) | RFE: Add brute-force quadratic numerical multidimensional minimizer |
 | 34361 | 2011-09-22 | - | Runtime error | none | not reviewed | gsl_bspline_knots_greville needs inequality constrained linear least squares |
 | 35032 | 2011-12-11 | doc | Documentation | none | not reviewed | gsl_test.h lacks documentation in the reference manual |
@@ -54,7 +54,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 37408 | 2012-09-20 | - | - | clean au.patch | **fixed** — const AU/parsec updated to IAU 2012 (3377c7fbe) | The astronomical unit (AU) has been re-defined |
 | 37894 | 2012-12-10 | bug | Build | clean gsl-autotools.diff | **fixed** — upstream 1d002ee93/ae19e3e8b (inherited, no fork change) | Shared library does not build on Cygwin |
 | 38548 | 2013-03-19 | - | Accuracy problem | none | not reviewed | Rounding issues in gsl-histogram with integer numbers |
-| 39056 | 2013-05-23 | bug | Runtime error | none | not reviewed | gsl_sf_hyperg_2F1_e fails for some test cases |
+| 39056 | 2013-05-23 | bug | Runtime error | none | **fixed** — same 2F1 integer-d fix, Monajemi case (e4c4ac326, 882c8361d) | gsl_sf_hyperg_2F1_e fails for some test cases |
 | 39057 | 2013-05-23 | bug | Runtime error | none | **fixed** — gamma inverse reworked (9befdae95); report's expected value was the forward CDF | gsl_cdf_chisq_Pinv fails for some values |
 | 39120 | 2013-05-29 | - | Build | none | not reviewed | Possible removal of some files |
 | 39152 | 2013-06-03 | - | Accuracy problem | none | not reviewed | make check errors with Intel icc 13.0.1 |
@@ -138,7 +138,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 54077 | 2018-06-07 | - | Runtime error | clean 0001-replace-atol-by-strtoul-in-gsl-randist.c.patch | **fixed** — gsl-randist seed via strtoul (aebe57a5c) | usage of atol in gsl-randistdoes not allow to pass big seed |
 | 54919 | 2018-10-30 | bug | Build | none | not reviewed | gsl 2.5+ test fails with icc (2016.4 and later) |
 | 54925 | 2018-10-31 | - | Performance | clean 0001-Reduce-cache-misses-for-source_gemm_r.patch | rejected — out-of-scope: performance-only loop reorder | Reduce cache misses for source_gemm_r |
-| 54998 | 2018-11-10 | - | Accuracy problem | none | not reviewed | Bugs in gsl_sf_hyperg_2F1 |
+| 54998 | 2018-11-10 | - | Accuracy problem | none | **fixed** — same 2F1 integer-d fix (e4c4ac326, 882c8361d) | Bugs in gsl_sf_hyperg_2F1 |
 | 55687 | 2019-02-10 | bug | - | none | not reviewed | Bad error handling in gsl_sf_hyperg_1F1_e with NaN arguments |
 | 55965 | 2019-03-20 | feature | - | none | not reviewed | Implement PCG random number generator |
 | 56843 | 2019-08-31 | - | Accuracy problem | none | not reviewed | Unit Tests in linalg eigen fail on non-x86 hardware due to slight accuracy differences |
