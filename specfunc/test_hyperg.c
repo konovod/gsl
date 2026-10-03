@@ -685,15 +685,29 @@ TEST_SF(s, gsl_sf_hyperg_U_e, (2, -6.4, 1, &r),1.2141502795806162484648638e-02
     gsl_test(!(er.err < 1e-6), "gsl_sf_hyperg_2F1_e (-0.5,1.5,1,0.4) error estimate (err=%g)", er.err);
   }
 
-#if 0 /* XXX - bug #39056 */
-  /* Test case from Robert L Wolpert <Wolpert@stat.duke.edu> */
+  /* 2F1 terminates when a or b is zero or a negative integer.  The
+   * resulting polynomial is finite for every x, including |x| >= 1
+   * where the Gauss series does not converge; the dispatch used to
+   * reject these with GSL_EUNIMPL or GSL_EDOM (Savannah bugs #21835,
+   * #50711, #53905).  References: elementary closed forms and mpmath. */
+
+  TEST_SF(s, gsl_sf_hyperg_2F1_e, (0, 1, 1, 11, &r),  1.0, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_2F1_e, (1, 0, 1, 11, &r),  1.0, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_2F1_e, (-1, 1, 1, 11, &r), -10.0, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_2F1_e, (-1, -1, 1, 11, &r), 12.0, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_2F1_e, (-1, 1, 2, 11, &r), -4.5, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_2F1_e, (-1, -1, 2, 11, &r), 6.5, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_2F1_e, (-1, -1, -0.5, 1.5, &r), -2.0, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_2F1_e, (-1, -13, 1, 0.651439, &r), 9.4687069999999998737, TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_2F1_e, (-10, 2, 0.5, 0.5, &r), 0.077832384333932321548, TEST_TOL2, GSL_SUCCESS);
+
+  /* Test case from Robert L Wolpert <Wolpert@stat.duke.edu> (bug #39056) */
 
   TEST_SF(s, gsl_sf_hyperg_2F1_e, (-1.0, -10.0, 1.0, 0.5, &r), 6.0, TEST_TOL0, GSL_SUCCESS);
 
   /* Test case from ldnlwm@163.com */
 
   TEST_SF(s, gsl_sf_hyperg_2F1_e, (3.23191, -4.0229, 8.02291, 0.5, &r), 0.4300243900348170646, TEST_TOL2, GSL_SUCCESS);
-#endif
 
   /* 2F1 conj */
 

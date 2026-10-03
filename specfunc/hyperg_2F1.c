@@ -696,6 +696,29 @@ gsl_sf_hyperg_2F1_e(double a, double b, const double c,
       return status;
   }
   
+  /* 2F1 reduces to a polynomial when a or b is zero or a negative
+   * integer.  That polynomial is finite for every x, including |x| >= 1
+   * where the defining Gauss series does not converge, so evaluate it
+   * with the terminating series before the convergence-domain check.
+   * The existing dispatch only reached the terminating series through
+   * the |a|,|b| < 10 branch below, so e.g. 2F1(-1,-10,1,1/2) was
+   * rejected with GSL_EUNIMPL (Savannah bugs #50711, #53905, #21835).
+   */
+  if(a == 0.0 || b == 0.0 || a_neg_integer || b_neg_integer) {
+    const double ap = (a_neg_integer ? rinta : a);
+    const double bp = (b_neg_integer ? rintb : b);
+
+    if(c_neg_integer) {
+      /* c is a negative integer; a or b must terminate before the
+       * factor (c + k) vanishes, exactly as in the general path. */
+      if(! (a_neg_integer && a > c + 0.1) && ! (b_neg_integer && b > c + 0.1)) {
+        DOMAIN_ERROR(result);
+      }
+    }
+
+    return hyperg_2F1_series(ap, bp, c, x, result);
+  }
+
   if(x < -1.0 || 1.0 <= x) {
     DOMAIN_ERROR(result);
   }
