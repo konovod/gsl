@@ -1641,3 +1641,53 @@ which also adds the NaN rule to the relevant entries and a
 
 Recorded in `FORKNEWS` under `[upstream]` (four changes) and `[rejected]`
 (one entry), commit `91bdc2d04`.  Full CTest suite 56/56 on MSVC.
+
+
+## Group I — documentation: #30583, #35032, #36578, #40196, #41605,
+## #45234, #58068, #58069, #59912, #66894, #68073, #68592
+
+Reviewed 2026-10-03.  Twelve reports, all in category Documentation.
+Two needed no change and are recorded here so they are not
+re-investigated:
+
+* `#41605` - the `gsl_histogram_pdf` section is complete in both
+  manuals (`histogram.rst` / `histogram.texi`); the online gap the
+  report described is gone.
+* `#45234` - `specfunc-mathieu.{rst,texi}` already use the SF API
+  (`_e` variants, `int` return types).
+
+The other ten were fixed, one commit each, followed by the common
+`FORKNEWS` commit `10e4f4df2`:
+
+```
+#30583  b0eec8bc6  doc: relate the Legendre and Carlson elliptic forms
+#35032  8ef88af6e  doc: gsl_test support functions in usage
+#36578  060c2472c  doc: correct the gsl_ieee_env_setup description
+#40196  6feb963d3  doc: state the gsl_integration_qag key coercion
+#58068  42f33104b  doc: document the gsl_sf_bessel_Jnu domain
+#58069  e90d4f002  doc: allow a = 0 in gsl_sf_gamma_inc_Q
+#59912  aa796e20b  doc: note the permutation application header files
+#66894  dbe316d49  doc: note that randist does not validate arguments
+#68073  521bed61d  statistics: correct the gsl_stats_select comment
+#68592  20eda0316  doc: document the binary search tree module
+```
+
+Method notes:
+
+* Only `#68073` touches a compiled file, and only a comment, so there
+  is no behaviour to test with a negative control.  Each documented
+  fact was instead reproduced with the built `gsl.dll`: `Jnu_e(1,-1)`
+  and `Jnu_e(0,0)` return `GSL_EDOM`; `gamma_inc_Q_e(0,2.2)` returns 0
+  with `GSL_SUCCESS` while `gamma_inc_P_e(0,2.2)` returns `GSL_EDOM`;
+  `gsl_stats_select` returns the k-th smallest; and the elliptic
+  identity was checked with mpmath.
+* `#58069` has a subtlety worth keeping: `Q` accepts `a = 0` but `P`
+  does not, despite `P = 1 - Q`.  The doc was widened only where the
+  code allows it.
+* The Sphinx manual builds with the same 5 pre-existing warnings and no
+  new ones.  `makeinfo` is not installed here, so the Texinfo edits were
+  checked structurally only (balanced directives, consistent node
+  chain); they should be rebuilt with GNU Texinfo before being trusted.
+* `#68592` and `#35032` carry an explicit note marking the new text as
+  an unreviewed, AI-assisted draft, per instruction.
+* `bst_test` passes 186476/186476.

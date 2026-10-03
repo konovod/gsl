@@ -5,17 +5,17 @@ Generated 2026-10-02 from the `scripts/savannah_bugs.py` sweep (`inventory.tsv`)
 Scratch index, not part of the fork's record of changes. Verdicts are curated from
 `FORKNEWS`, `SAVANNAH_REVIEW.md` and the git history; every other row is un-triaged.
 
-**219 open items: 86 reviewed/handled, 133 remaining.**
+**219 open items: 98 reviewed/handled, 121 remaining.**
 
 | status | count |
 |---|---:|
-| fixed | 65 |
+| fixed | 77 |
 | partial | 3 |
 | rejected | 14 |
 | deferred | 3 |
 | superseded | 1 |
 | not reviewed (feature-shaped) | 21 |
-| not reviewed | 112 |
+| not reviewed | 100 |
 
 Legend for the *Patch* column: the sweep's `git apply` verdict (`clean` / `partial` / `dirty`), `source` for a whole
 replacement file, `inline` for a patch pasted into the bug text, `none` for no patch.
@@ -36,7 +36,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 30324 | 2010-07-02 | - | Accuracy problem | none | **deferred** — feature: extend 2F1 to x < -1 by transformation; new domain/algorithm, out of eligibility | improve range of 2F1 |
 | 30510 | 2010-07-21 | - | Runtime error | none | **fixed** — U(a,b,x) for x < 0, integer b, non-integer a, via the DLMF 13.2.9 limit (00859f816) | problems with hyperg_U(a,b,x) for x<0 |
 | 30540 | 2010-07-24 | feature | Accuracy problem | partial bug-ode2.c +2 | not reviewed | please, add convergence checks in rk4imp/rk2imp |
-| 30583 | 2010-07-28 | doc | Documentation | none | not reviewed | improve documentation for Elliptic functions |
+| 30583 | 2010-07-28 | doc | Documentation | none | **fixed** — Legendre/Carlson relations and the negative-parameter (imaginary-modulus) transformation documented (b0eec8bc6) | improve documentation for Elliptic functions |
 | 30885 | 2010-08-27 | - | Runtime error | none | not reviewed | nans from gsl_sf_coulomb_wave_FG_e(1.2693881947287221e-07, 0.0, lam_F=37, lam_G=36) |
 | 30947 | 2010-09-02 | - | - | clean 0001-Fixed-step-size-control-object.patch | not reviewed | Please, include fixed step size control object for ode suite |
 | 31109 | 2010-09-23 | - | Performance | none | not reviewed | ode-initval/bsimp is always high order |
@@ -46,10 +46,10 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 32306 | 2011-01-31 | bug | Accuracy problem | source hyp.c | **fixed** — integer-d 2F1 series and error estimate (e4c4ac326, 882c8361d) | sign error in gsl_sf_hyperg_2F1 |
 | 32776 | 2011-03-14 | feature | - | source quadratic.c | **fixed** — multimin quadratic minimiser (53cd0d098) | RFE: Add brute-force quadratic numerical multidimensional minimizer |
 | 34361 | 2011-09-22 | - | Runtime error | none | not reviewed | gsl_bspline_knots_greville needs inequality constrained linear least squares |
-| 35032 | 2011-12-11 | doc | Documentation | none | not reviewed | gsl_test.h lacks documentation in the reference manual |
+| 35032 | 2011-12-11 | doc | Documentation | none | **fixed** — gsl_test support functions documented in the usage chapter, marked as an unreviewed AI draft (8ef88af6e) | gsl_test.h lacks documentation in the reference manual |
 | 36152 | 2012-04-11 | bug | Accuracy problem | source testbessel.c | **fixed** — Y family libm sin/cos (a08ef2f7f) + exact sin/cos reduction (8a46ec7cf) | Incorrect asymptotics of spherical Bessel functions |
 | 36197 | 2012-04-15 | - | Build | dirty 36197b.diff +1 | not reviewed | reserved identifier violation |
-| 36578 | 2012-06-02 | - | Documentation | none | not reviewed | inconsistency in gsl_ieee_env_setup doc/api |
+| 36578 | 2012-06-02 | - | Documentation | none | **fixed** — doc now says the error handler is invoked with GSL_EUNSUP and that the void function returns no code (060c2472c) | inconsistency in gsl_ieee_env_setup doc/api |
 | 37209 | 2012-08-28 | bug | Accuracy problem | none | **fixed** — upstream 441bc40ff (inherited); NaN gone | gsl_sf_bessel_jl_e returns NaN for large inputs without setting error code |
 | 37408 | 2012-09-20 | - | - | clean au.patch | **fixed** — const AU/parsec updated to IAU 2012 (3377c7fbe) | The astronomical unit (AU) has been re-defined |
 | 37894 | 2012-12-10 | bug | Build | clean gsl-autotools.diff | **fixed** — upstream 1d002ee93/ae19e3e8b (inherited, no fork change) | Shared library does not build on Cygwin |
@@ -67,11 +67,11 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 40092 | 2013-09-23 | - | Performance | source gsl-falsepos64.c | not reviewed | false position root finding requires too many function evals |
 | 40116 | 2013-09-26 | bug | Runtime error | none | not reviewed | possible error in integration routines |
 | 40176 | 2013-10-04 | bug | Runtime error | none | not reviewed | possible error in poly test suite |
-| 40196 | 2013-10-07 | - | Documentation | none | not reviewed | Document gsl_integration_qag behavior on key out-of-range |
+| 40196 | 2013-10-07 | - | Documentation | none | **fixed** — the out-of-range key coercion (< 1 -> GAUSS15, > 6 -> GAUSS61) documented (6feb963d3) | Document gsl_integration_qag behavior on key out-of-range |
 | 40755 | 2013-11-30 | bug | Accuracy problem | none | **fixed** — double cast in the Jn/Yn asymptotics test (a43fc0055) | Sporadic nan's from gsl_sf_bessel_Jn an related functions |
 | 41457 | 2014-02-04 | - | Runtime error | none | not reviewed | valgrind finds errors in matrix/test.c |
 | 41527 | 2014-02-09 | bug | - | none | not reviewed | Change/add multimin functions to return error codes |
-| 41605 | 2014-02-15 | - | Documentation | none | not reviewed | gsl_histogram_pdf docs |
+| 41605 | 2014-02-15 | - | Documentation | none | **fixed** — already complete in both manuals (histogram.rst / histogram.texi); no fork change needed | gsl_histogram_pdf docs |
 | 41837 | 2014-03-11 | - | Runtime error | none | **fixed** (inherited) — the three reported values are correct on the current build; the finite-sum-skip concern does not reproduce | bugs in gsl_sf_hyperg_U |
 | 42042 | 2014-04-03 | bug | Runtime error | none | **fixed** — non-vanishing half-integer Jnu endpoint (e6e34279a) | nan bug in bessel_Jnu |
 | 42058 | 2014-04-05 | bug | - | none | not reviewed | GSL RSS Feed does not validate |
@@ -91,7 +91,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 44952 | 2015-04-28 | - | Build | clean stdarg.patch | **fixed** — test/results.c uses stdarg.h (e2354de55) | test/results.c uses outdated header file name varargs.h |
 | 45053 | 2015-05-07 | - | Runtime error | source gsl_bug.c +1 | rejected — bracketing patch collapses interval; 3 min tests fail | gsl_min_find_bracket is most likely incorrectly implemented |
 | 45099 | 2015-05-13 | bug | - | none | not reviewed | wrong formula for BFGS update in gsl_multimin? |
-| 45234 | 2015-06-02 | doc | Documentation | none | not reviewed | Mathieu function documentation hasn't been updated after switching to SF API conventions |
+| 45234 | 2015-06-02 | doc | Documentation | none | **fixed** — specfunc-mathieu.{rst,texi} already use the SF API (_e variants, int returns); no fork change needed | Mathieu function documentation hasn't been updated after switching to SF API conventions |
 | 45265 | 2015-06-06 | bug | Accuracy problem | none | rejected — not reproducible on MSVC x64 (true/err ≤ 0.57 over x in [4,1000]) | gsl_sf_bessel_J0_e underestimates error for x>4 |
 | 45726 | 2015-08-10 | bug | Accuracy problem | source gslbesselytest.c | **fixed** — Y family libm sin/cos (a08ef2f7f) | Incorrect results of functions bessel_y0, y1 and y2 |
 | 45746 | 2015-08-13 | bug | Accuracy problem | source gsltrigtest.c | **fixed** - exact argument reduction (8a46ec7cf, 5639c380f) | Incorrect results of trigonometric functions gsl_sf_sin and gsl_sf_cos |
@@ -155,15 +155,15 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 58065 | 2020-03-28 | - | - | none | **fixed** — `C_n^(0)(x) = 0` for n >= 1 (01d7e7609) | gsl_sf_gegenpoly_n returning unexpected values |
 | 58066 | 2020-03-28 | bug | Accuracy problem | clean psi.c.patch | **fixed** — psi poles at all non-positive integers (d53d00109) | Digamma function returning incorrect values for (most) negative integers |
 | 58067 | 2020-03-28 | - | Accuracy problem | none | rejected — not-a-bug: Ai(113) genuinely underflows; documented | Missing asymptotic behavior of the airy Ai function |
-| 58068 | 2020-03-28 | - | Documentation | none | not reviewed | gsl_sf_bessel_Jnu docs lacking important domain information |
-| 58069 | 2020-03-28 | doc | Documentation | none | not reviewed | Correction to gsl_sf_gamma_inc_Q documentation |
+| 58068 | 2020-03-28 | - | Documentation | none | **fixed** — domain x > 0 (including x = 0 rejected) documented (42f33104b) | gsl_sf_bessel_Jnu docs lacking important domain information |
+| 58069 | 2020-03-28 | doc | Documentation | none | **fixed** — Q documented for a >= 0 with Q(0,x) = 0; P deliberately left at a > 0 (it rejects a = 0) (e90d4f002) | Correction to gsl_sf_gamma_inc_Q documentation |
 | 58763 | 2020-07-14 | bug | Runtime error | source demo.c +2 | rejected — not reproducible; `brent_init` already sets `c`/`fc` | gsl_root_fsolver_bren produces wrong results when run under valgrind |
 | 59759 | 2020-12-23 | bug | Runtime error | none | not reviewed | spmatrix test fails on x86_64 |
 | 59834 | 2021-01-06 | bug | Runtime error | clean mmacc.c.patch | **fixed** — movstat accumulator alignment (4e4a88242) | Misaligned memory access error in deque.c |
 | 59845 | 2021-01-08 | - | Performance | clean 0001-initialize-newton-steffenson-solvers-with-GSL_FN_FDF.patch | **fixed** — same fix as #49465 (4eac6584f) | Initialize newton, steffenson solvers with GSL_FN_FDF_EVAL_F_DF |
 | 59900 | 2021-01-17 | feature | - | inline | not reviewed | Add truncated normal distribution |
 | 59911 | 2021-01-20 | - | - | none | not reviewed | Problem with qagui 1D integrator |
-| 59912 | 2021-01-20 | - | Documentation | none | not reviewed | gsl_permutation header files |
+| 59912 | 2021-01-20 | - | Documentation | none | **fixed** — gsl_permute/vector/matrix header files named in the permutation chapter (aa796e20b) | gsl_permutation header files |
 | 59913 | 2021-01-20 | - | - | none | not reviewed | gsl 2.3.0 problem in gsl_integration_cquad |
 | 59914 | 2021-01-20 | - | - | none | not reviewed | Native build of GSL-2.5 on windows 10 |
 | 60026 | 2021-02-09 | - | - | none | not reviewed | Incorporate MIXMAX random number extension into GSL |
@@ -207,7 +207,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 66877 | 2025-03-06 | feature | Build | none | not reviewed (feature-shaped) — skipped in first pass as feature-shaped | Feature: test cases for hyperg_0F1() |
 | 66880 | 2025-03-07 | feature | Build | clean test_hyperg_U.diff | not reviewed (feature-shaped) — skipped in first pass as feature-shaped | Feature: test cases for function hyperg_0F1() |
 | 66886 | 2025-03-09 | feature | Build | clean specfunc_trig_.diff | not reviewed (feature-shaped) — skipped in first pass as feature-shaped | Feature: refactoring of specfunc/trig.c |
-| 66894 | 2025-03-11 | - | Documentation | none | not reviewed | Domain value checking for random number distributions |
+| 66894 | 2025-03-11 | - | Documentation | none | **fixed** — chapter introduction notes that randist does not validate distribution parameters (dbe316d49) | Domain value checking for random number distributions |
 | 66922 | 2025-03-17 | feature | Build | clean specfunc_trig.diff | not reviewed (feature-shaped) — skipped in first pass as feature-shaped | Feature: special case for special functin logsin() |
 | 66949 | 2025-03-25 | feature | Build | source erlang.c | not reviewed (feature-shaped) — skipped in first pass as feature-shaped | Feature: Erlang cumulative distribution |
 | 66993 | 2025-04-05 | bug | Accuracy problem | none | not reviewed | Bug: pow_int issues |
@@ -224,7 +224,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 67728 | 2025-11-23 | bug | Accuracy problem | source psi_dropin.c | **fixed** — polygamma at negative arguments (e9f69933a) | gsl_sf_psi_n_e yields domain error |
 | 67774 | 2025-12-05 | feature | Accuracy problem | none | not reviewed | Feature: arctan integral is also defined for negative inputs |
 | 68068 | 2026-02-19 | bug | Accuracy problem | none | not reviewed | Bug: incorrect straddling of area of convergence in quad_golden |
-| 68073 | 2026-02-20 | bug | Documentation | none | not reviewed | Bug: incorrect inline code comment on BASE FUNCTION(gsl_stats,select) |
+| 68073 | 2026-02-20 | bug | Documentation | none | **fixed** — gsl_stats_select comment corrected from "k-th largest" to "k-th smallest" (521bed61d) | Bug: incorrect inline code comment on BASE FUNCTION(gsl_stats,select) |
 | 68098 | 2026-02-27 | feature | - | none | not reviewed | Feature: division by zero when data is perfectly correlated |
 | 68283 | 2026-04-26 | - | - | none | not reviewed | Correction to gsl_rstat_skew and gsl_rstat_kurtosis |
 | 68312 | 2026-05-07 | bug | Accuracy problem | none | **fixed** — same recurrence as #43256 (59fc479e2) | Wigner symbols inaccurate for large j |
@@ -236,7 +236,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 68495 | 2026-07-03 | bug | Build | inline | **fixed** — pow_int INT_MIN overflow (41b1e2c00) | Undefined behavior in gsl_pow_int: signed int overflow |
 | 68518 | 2026-07-13 | - | Build | none | not reviewed | Remove stale construct in configure.ac |
 | 68549 | 2026-07-23 | - | - | none | not reviewed | Breaking change: match argument list among distribution functions |
-| 68592 | 2026-08-03 | doc | Documentation | none | not reviewed | Documentation: missing Binary search tree documentation from index |
+| 68592 | 2026-08-03 | doc | Documentation | none | **fixed** — new BST chapter added to both manuals and to the index/menu, marked as an unreviewed AI draft (20eda0316) | Documentation: missing Binary search tree documentation from index |
 | 68611 | 2026-08-13 | feature | - | none | not reviewed | Feature: guard against degenerate histogram input |
 | 68625 | 2026-08-21 | bug | Accuracy problem | none | **fixed** — hermite_func_der at n=0,1 (5d36e1999) | Bug: incorrect derivative of the Hermite function of order 0 or 1 |
 | 68663 | 2026-08-31 | feature | - | none | not reviewed | Feature: remove GAMM_INC macro in favor of direct call |
