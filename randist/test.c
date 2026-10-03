@@ -234,6 +234,7 @@ double test_poisson (void);
 double test_poisson_pdf (unsigned int x);
 double test_poisson_large (void);
 double test_poisson_large_pdf (unsigned int x);
+void test_poisson_pdf_zero (void);
 double test_dir2d (void);
 double test_dir2d_pdf (double x);
 double test_dir2d_trig_method (void);
@@ -448,6 +449,7 @@ main (void)
   testDiscretePDF (FUNC2 (discrete3));
   testDiscretePDF (FUNC2 (poisson));
   testDiscretePDF (FUNC2 (poisson_large));
+  test_poisson_pdf_zero ();
   testDiscretePDF (FUNC2 (bernoulli));
   testDiscretePDF (FUNC2 (binomial));
   testDiscretePDF (FUNC2 (binomial0));
@@ -2512,6 +2514,20 @@ double
 test_poisson_large_pdf (unsigned int n)
 {
   return gsl_ran_poisson_pdf (n, 30.0);
+}
+
+void
+test_poisson_pdf_zero (void)
+{
+  /* A Poisson distribution of rate zero is degenerate: all the mass
+     is at k = 0.  Savannah bugs #43326 and #47193. */
+  int status = 0;
+
+  status |= (gsl_ran_poisson_pdf (0, 0.0) != 1.0);
+  status |= (gsl_ran_poisson_pdf (1, 0.0) != 0.0);
+  status |= (gsl_ran_poisson_pdf (10, 0.0) != 0.0);
+
+  gsl_test (status, "gsl_ran_poisson_pdf at mu = 0");
 }
 
 
