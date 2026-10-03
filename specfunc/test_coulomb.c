@@ -612,6 +612,40 @@ int test_coulomb(void)
   gsl_test(s, "  gsl_sf_coulomb_wave_FG_e(0.0, 1.2693881947287221e-07, lam_F=37, lam_G=36)");
   status += s;
 
+  /* Savannah #46678: the reporter saw gsl_sf_coulomb_wave_F_array()
+   * produce unphysical spikes for large |eta|.  At eta = -100 the
+   * spurious factor-2.28 spike at x = 0.55 came from the wrong choice
+   * of C in the Steed branch, fixed under Savannah #39292 (commit
+   * 90d9037a5).  This vector pins the F_array recurrence down to a
+   * case the existing Steed vectors do not reach: the top of the
+   * recurrence is F_20, which is nine orders of magnitude smaller than
+   * F_0, and the array is rebuilt by twenty downward steps.
+   *
+   * The expected values are the same independent Frobenius series as
+   * in the #30885 vector above, evaluated at eta = -100.  With the
+   * #39292 fix reverted the l = 0 value is 7.35e-01 instead of
+   * 2.24e-01.
+   */
+  {
+    double Fa[21];
+    double Fexp_arr;
+    const struct { int l; double f; } fa46678[] = {
+      {  0, 2.242787377004718530e-01 },
+      {  5, 2.268927395514489798e-01 },
+      { 10, 2.133123081254155451e-01 },
+      { 20, 2.126120346759134281e-09 }
+    };
+    unsigned int j;
+    gsl_sf_coulomb_wave_F_array(0.0, 20, -100.0, 0.55, Fa, &Fexp_arr);
+    s = 0;
+    message_buff[0] = 0;
+    for(j = 0; j < sizeof(fa46678)/sizeof(fa46678[0]); j++)
+      s += test_sf_check_val(message_buff, Fa[fa46678[j].l], fa46678[j].f, TEST_TOL4);
+    printf("%s", message_buff);
+    gsl_test(s, "  gsl_sf_coulomb_wave_F_array(0, 20, eta=-100, x=0.55)");
+    status += s;
+  }
+
   /* Savannah #47027: eta = 340, x = 48.524525790349422, lam_F = 0.
    * The WKB branch returns finite F, F' and G, but the true
    * G' = -1.9248375400...e308 lies 7% beyond the double range.
