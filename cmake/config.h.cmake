@@ -126,12 +126,6 @@
 #define isnan gsl_isnan
 #endif
 
-#ifdef __GNUC__
-#define DISCARD_POINTER(p) do { ; } while(p ? 0 : 0);
-#else
-#define DISCARD_POINTER(p) /* ignoring discarded pointer */
-#endif
-
 #if defined(GSL_RANGE_CHECK_OFF) || !defined(GSL_RANGE_CHECK)
 #define GSL_RANGE_CHECK 0  /* turn off range checking by default internally */
 #endif
