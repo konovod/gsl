@@ -20,8 +20,8 @@
 
 /* header for the gsl "vegas" routines.  Mike Booth, May 1998 */
 
-#ifndef __GSL_MONTE_VEGAS_H__
-#define __GSL_MONTE_VEGAS_H__
+#ifndef GSL_MONTE_VEGAS_H__
+#define GSL_MONTE_VEGAS_H__
 
 #include <stdlib.h>
 #include <gsl/gsl_rng.h>
@@ -121,5 +121,5 @@ void gsl_monte_vegas_params_set (gsl_monte_vegas_state * state,
 
 __END_DECLS
 
-#endif /* __GSL_MONTE_VEGAS_H__ */
+#endif /* GSL_MONTE_VEGAS_H__ */
 

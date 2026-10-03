@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GSL_RNG_H__
-#define __GSL_RNG_H__
+#ifndef GSL_RNG_H__
+#define GSL_RNG_H__
 #include <stdlib.h>
 #include <gsl/gsl_types.h>
 #include <gsl/gsl_errno.h>
@@ -214,4 +214,4 @@ gsl_rng_uniform_int (const gsl_rng * r, unsigned long int n)
 
 __END_DECLS
 
-#endif /* __GSL_RNG_H__ */
+#endif /* GSL_RNG_H__ */

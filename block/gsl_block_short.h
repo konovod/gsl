@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GSL_BLOCK_SHORT_H__
-#define __GSL_BLOCK_SHORT_H__
+#ifndef GSL_BLOCK_SHORT_H__
+#define GSL_BLOCK_SHORT_H__
 
 #include <stdlib.h>
 #include <gsl/gsl_errno.h>
@@ -62,4 +62,4 @@ short * gsl_block_short_data (const gsl_block_short * b);
 
 __END_DECLS
 
-#endif /* __GSL_BLOCK_SHORT_H__ */
+#endif /* GSL_BLOCK_SHORT_H__ */

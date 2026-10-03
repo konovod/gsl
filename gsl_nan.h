@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GSL_NAN_H__
-#define __GSL_NAN_H__
+#ifndef GSL_NAN_H__
+#define GSL_NAN_H__
 
 #ifdef INFINITY
 # define GSL_POSINF INFINITY
@@ -42,4 +42,4 @@
 #define GSL_POSZERO (+0.0)
 #define GSL_NEGZERO (-0.0)
 
-#endif /* __GSL_NAN_H__ */
+#endif /* GSL_NAN_H__ */

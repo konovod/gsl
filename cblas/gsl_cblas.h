@@ -22,8 +22,8 @@
  * break our model for flexible BLAS functionality.
  */
 
-#ifndef __GSL_CBLAS_H__
-#define __GSL_CBLAS_H__
+#ifndef GSL_CBLAS_H__
+#define GSL_CBLAS_H__
 #include <stddef.h>
 
 #undef __BEGIN_DECLS
@@ -603,4 +603,4 @@ void cblas_xerbla(int p, const char *rout, const char *form, ...);
 
 __END_DECLS
 
-#endif /* __GSL_CBLAS_H__ */
+#endif /* GSL_CBLAS_H__ */

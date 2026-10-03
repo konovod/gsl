@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GSL_SORT_VECTOR_UINT_H__
-#define __GSL_SORT_VECTOR_UINT_H__
+#ifndef GSL_SORT_VECTOR_UINT_H__
+#define GSL_SORT_VECTOR_UINT_H__
 
 #include <stdlib.h>
 #include <gsl/gsl_errno.h>
@@ -49,4 +49,4 @@ int gsl_sort_vector_uint_largest_index (size_t * p, const size_t k, const gsl_ve
 
 __END_DECLS
 
-#endif /* __GSL_SORT_VECTOR_UINT_H__ */
+#endif /* GSL_SORT_VECTOR_UINT_H__ */

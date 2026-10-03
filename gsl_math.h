@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GSL_MATH_H__
-#define __GSL_MATH_H__
+#ifndef GSL_MATH_H__
+#define GSL_MATH_H__
 #include <math.h>
 #include <gsl/gsl_sys.h>
 #include <gsl/gsl_inline.h>
@@ -161,4 +161,4 @@ typedef struct gsl_function_vec_struct gsl_function_vec ;
 
 __END_DECLS
 
-#endif /* __GSL_MATH_H__ */
+#endif /* GSL_MATH_H__ */

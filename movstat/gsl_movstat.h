@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GSL_MOVSTAT_H__
-#define __GSL_MOVSTAT_H__
+#ifndef GSL_MOVSTAT_H__
+#define GSL_MOVSTAT_H__
 
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_vector.h>
@@ -135,4 +135,4 @@ GSL_VAR const gsl_movstat_accum * gsl_movstat_accum_variance;
 
 __END_DECLS
 
-#endif /* __GSL_MOVSTAT_H__ */
+#endif /* GSL_MOVSTAT_H__ */

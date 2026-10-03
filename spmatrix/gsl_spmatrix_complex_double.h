@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GSL_SPMATRIX_COMPLEX_DOUBLE_H__
-#define __GSL_SPMATRIX_COMPLEX_DOUBLE_H__
+#ifndef GSL_SPMATRIX_COMPLEX_DOUBLE_H__
+#define GSL_SPMATRIX_COMPLEX_DOUBLE_H__
 
 #include <stdlib.h>
 #include <gsl/gsl_math.h>
@@ -176,4 +176,4 @@ int gsl_spmatrix_complex_transpose_memcpy (gsl_spmatrix_complex * dest, const gs
 
 __END_DECLS
 
-#endif /* __GSL_SPMATRIX_COMPLEX_DOUBLE_H__ */
+#endif /* GSL_SPMATRIX_COMPLEX_DOUBLE_H__ */

@@ -19,8 +19,8 @@
 
 /* Author:  G. Jungman, K. Griessinger */
 
-#ifndef __GSL_SF_SINCOS_PI_H__
-#define __GSL_SF_SINCOS_PI_H__
+#ifndef GSL_SF_SINCOS_PI_H__
+#define GSL_SF_SINCOS_PI_H__
 
 #include <gsl/gsl_sf_result.h>
 
@@ -54,4 +54,4 @@ double gsl_sf_cos_pi(const double x);
 
 __END_DECLS
 
-#endif /* __GSL_SF_SINCOS_PI_H__ */
+#endif /* GSL_SF_SINCOS_PI_H__ */

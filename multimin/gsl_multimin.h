@@ -20,8 +20,8 @@
 /* Modified by Tuomo Keskitalo to include fminimizer and 
    Nelder Mead related lines */
 
-#ifndef __GSL_MULTIMIN_H__
-#define __GSL_MULTIMIN_H__
+#ifndef GSL_MULTIMIN_H__
+#define GSL_MULTIMIN_H__
 
 #include <stdlib.h>
 #include <gsl/gsl_types.h>
@@ -224,4 +224,4 @@ GSL_VAR const gsl_multimin_fminimizer_type *gsl_multimin_fminimizer_quadratic;
 
 __END_DECLS
 
-#endif /* __GSL_MULTIMIN_H__ */
+#endif /* GSL_MULTIMIN_H__ */

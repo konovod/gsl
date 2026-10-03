@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GSL_SIMAN_H__
-#define __GSL_SIMAN_H__
+#ifndef GSL_SIMAN_H__
+#define GSL_SIMAN_H__
 #include <stdlib.h>
 #include <gsl/gsl_rng.h>
 
@@ -79,4 +79,4 @@ gsl_siman_solve_many (const gsl_rng * r, void *x0_p, gsl_siman_Efunc_t Ef,
 
 __END_DECLS
 
-#endif /* __GSL_SIMAN_H__ */
+#endif /* GSL_SIMAN_H__ */

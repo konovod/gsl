@@ -19,8 +19,8 @@
 
 /* Author:  G. Jungman */
 
-#ifndef __GSL_SF_TRIG_H__
-#define __GSL_SF_TRIG_H__
+#ifndef GSL_SF_TRIG_H__
+#define GSL_SF_TRIG_H__
 
 #include <gsl/gsl_sf_result.h>
 
@@ -149,4 +149,4 @@ int gsl_sf_angle_restrict_pos_err_e(const double theta, gsl_sf_result * result);
 
 __END_DECLS
 
-#endif /* __GSL_SF_TRIG_H__ */
+#endif /* GSL_SF_TRIG_H__ */

@@ -19,8 +19,8 @@
 
 /* Author:  G. Jungman */
 
-#ifndef __GSL_SF_DILOG_H__
-#define __GSL_SF_DILOG_H__
+#ifndef GSL_SF_DILOG_H__
+#define GSL_SF_DILOG_H__
 
 #include <gsl/gsl_sf_result.h>
 
@@ -127,4 +127,4 @@ gsl_sf_complex_spence_xy_e(
 
 __END_DECLS
 
-#endif /* __GSL_SF_DILOG_H__ */
+#endif /* GSL_SF_DILOG_H__ */

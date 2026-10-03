@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GSL_IEEE_UTILS_H__
-#define __GSL_IEEE_UTILS_H__
+#ifndef GSL_IEEE_UTILS_H__
+#define GSL_IEEE_UTILS_H__
 #include <stdio.h>
 
 #undef __BEGIN_DECLS
@@ -95,5 +95,5 @@ int gsl_ieee_set_mode (int precision, int rounding, int exception_mask) ;
 
 __END_DECLS
 
-#endif /* __GSL_IEEE_UTILS_H__ */
+#endif /* GSL_IEEE_UTILS_H__ */
 

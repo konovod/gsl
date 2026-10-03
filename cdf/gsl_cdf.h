@@ -19,8 +19,8 @@
 
 /* Author:  J. Stover */
 
-#ifndef __GSL_CDF_H__
-#define __GSL_CDF_H__
+#ifndef GSL_CDF_H__
+#define GSL_CDF_H__
 
 #undef __BEGIN_DECLS
 #undef __END_DECLS
@@ -167,4 +167,4 @@ double gsl_cdf_hypergeometric_Q (const unsigned int k, const unsigned int n1,
 
 __END_DECLS
 
-#endif /* __GSL_CDF_H__ */
+#endif /* GSL_CDF_H__ */

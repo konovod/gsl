@@ -1,5 +1,5 @@
-#ifndef __GSL_VERSION_H__
-#define __GSL_VERSION_H__
+#ifndef GSL_VERSION_H__
+#define GSL_VERSION_H__
 
 #include <gsl/gsl_types.h>
 
@@ -23,4 +23,4 @@ GSL_VAR const char * gsl_version;
 
 __END_DECLS
 
-#endif /* __GSL_VERSION_H__ */
+#endif /* GSL_VERSION_H__ */

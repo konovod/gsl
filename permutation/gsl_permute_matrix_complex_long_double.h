@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GSL_PERMUTE_MATRIX_COMPLEX_LONG_DOUBLE_H__
-#define __GSL_PERMUTE_MATRIX_COMPLEX_LONG_DOUBLE_H__
+#ifndef GSL_PERMUTE_MATRIX_COMPLEX_LONG_DOUBLE_H__
+#define GSL_PERMUTE_MATRIX_COMPLEX_LONG_DOUBLE_H__
 
 #include <stdlib.h>
 #include <gsl/gsl_errno.h>
@@ -41,4 +41,4 @@ int gsl_permute_matrix_complex_long_double (const gsl_permutation * p, gsl_matri
 
 __END_DECLS
 
-#endif /* __GSL_PERMUTE_MATRIX_COMPLEX_LONG_DOUBLE_H__ */
+#endif /* GSL_PERMUTE_MATRIX_COMPLEX_LONG_DOUBLE_H__ */

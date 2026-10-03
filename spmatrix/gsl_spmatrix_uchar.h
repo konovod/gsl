@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GSL_SPMATRIX_UCHAR_H__
-#define __GSL_SPMATRIX_UCHAR_H__
+#ifndef GSL_SPMATRIX_UCHAR_H__
+#define GSL_SPMATRIX_UCHAR_H__
 
 #include <stdlib.h>
 #include <gsl/gsl_math.h>
@@ -182,4 +182,4 @@ int gsl_spmatrix_uchar_transpose_memcpy (gsl_spmatrix_uchar * dest, const gsl_sp
 
 __END_DECLS
 
-#endif /* __GSL_SPMATRIX_UCHAR_H__ */
+#endif /* GSL_SPMATRIX_UCHAR_H__ */

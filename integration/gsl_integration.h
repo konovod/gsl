@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GSL_INTEGRATION_H__
-#define __GSL_INTEGRATION_H__
+#ifndef GSL_INTEGRATION_H__
+#define GSL_INTEGRATION_H__
 #include <stdlib.h>
 #include <gsl/gsl_math.h>
 
@@ -406,4 +406,4 @@ size_t gsl_integration_lebedev_n(const gsl_integration_lebedev_workspace * w);
 
 __END_DECLS
 
-#endif /* __GSL_INTEGRATION_H__ */
+#endif /* GSL_INTEGRATION_H__ */

@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GSL_PERMUTATION_H__
-#define __GSL_PERMUTATION_H__
+#ifndef GSL_PERMUTATION_H__
+#define GSL_PERMUTATION_H__
 
 #include <stdlib.h>
 #include <gsl/gsl_types.h>
@@ -97,4 +97,4 @@ gsl_permutation_get (const gsl_permutation * p, const size_t i)
 
 __END_DECLS
 
-#endif /* __GSL_PERMUTATION_H__ */
+#endif /* GSL_PERMUTATION_H__ */

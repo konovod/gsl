@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GSL_SPLINE_H__
-#define __GSL_SPLINE_H__
+#ifndef GSL_SPLINE_H__
+#define GSL_SPLINE_H__
 #include <stdlib.h>
 #include <gsl/gsl_interp.h>
 
@@ -98,4 +98,4 @@ gsl_spline_free(gsl_spline * spline);
 
 __END_DECLS
 
-#endif /* __GSL_SPLINE_H__ */
+#endif /* GSL_SPLINE_H__ */

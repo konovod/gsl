@@ -1,5 +1,5 @@
-#ifndef __GSL_PERMUTE_VECTOR_H__
-#define __GSL_PERMUTE_VECTOR_H__
+#ifndef GSL_PERMUTE_VECTOR_H__
+#define GSL_PERMUTE_VECTOR_H__
 
 #include <gsl/gsl_permute_vector_complex_long_double.h>
 #include <gsl/gsl_permute_vector_complex_double.h>
@@ -21,4 +21,4 @@
 #include <gsl/gsl_permute_vector_uchar.h>
 #include <gsl/gsl_permute_vector_char.h>
 
-#endif /* __GSL_PERMUTE_VECTOR_H__ */
+#endif /* GSL_PERMUTE_VECTOR_H__ */

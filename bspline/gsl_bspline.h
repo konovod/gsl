@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GSL_BSPLINE_H__
-#define __GSL_BSPLINE_H__
+#ifndef GSL_BSPLINE_H__
+#define GSL_BSPLINE_H__
 
 #include <stdlib.h>
 #include <gsl/gsl_math.h>
@@ -279,4 +279,4 @@ gsl_bspline_find_interval (const double x, int *flag, gsl_bspline_workspace * w)
 
 __END_DECLS
 
-#endif /* __GSL_BSPLINE_H__ */
+#endif /* GSL_BSPLINE_H__ */

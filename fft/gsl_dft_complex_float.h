@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GSL_DFT_COMPLEX_FLOAT_H__
-#define __GSL_DFT_COMPLEX_FLOAT_H__
+#ifndef GSL_DFT_COMPLEX_FLOAT_H__
+#define GSL_DFT_COMPLEX_FLOAT_H__
 
 #include <stddef.h>
 
@@ -52,4 +52,4 @@ int gsl_dft_complex_float_transform (const float data[], const size_t stride, co
 
 __END_DECLS
 
-#endif /* __GSL_DFT_COMPLEX_FLOAT_H__ */
+#endif /* GSL_DFT_COMPLEX_FLOAT_H__ */

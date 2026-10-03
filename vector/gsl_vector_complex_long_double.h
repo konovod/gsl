@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GSL_VECTOR_COMPLEX_LONG_DOUBLE_H__
-#define __GSL_VECTOR_COMPLEX_LONG_DOUBLE_H__
+#ifndef GSL_VECTOR_COMPLEX_LONG_DOUBLE_H__
+#define GSL_VECTOR_COMPLEX_LONG_DOUBLE_H__
 
 #include <stdlib.h>
 #include <gsl/gsl_types.h>
@@ -252,4 +252,4 @@ gsl_vector_complex_long_double_const_ptr (const gsl_vector_complex_long_double *
 
 __END_DECLS
 
-#endif /* __GSL_VECTOR_COMPLEX_LONG_DOUBLE_H__ */
+#endif /* GSL_VECTOR_COMPLEX_LONG_DOUBLE_H__ */

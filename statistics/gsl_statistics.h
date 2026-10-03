@@ -1,5 +1,5 @@
-#ifndef __GSL_STATISTICS_H__
-#define __GSL_STATISTICS_H__
+#ifndef GSL_STATISTICS_H__
+#define GSL_STATISTICS_H__
 
 #include <gsl/gsl_statistics_long_double.h>
 #include <gsl/gsl_statistics_double.h>
@@ -17,4 +17,4 @@
 #include <gsl/gsl_statistics_uchar.h>
 #include <gsl/gsl_statistics_char.h>
 
-#endif /* __GSL_STATISTICS_H__ */
+#endif /* GSL_STATISTICS_H__ */

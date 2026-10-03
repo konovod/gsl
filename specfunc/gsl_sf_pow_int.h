@@ -19,8 +19,8 @@
 
 /* Author:  G. Jungman */
 
-#ifndef __GSL_SF_POW_INT_H__
-#define __GSL_SF_POW_INT_H__
+#ifndef GSL_SF_POW_INT_H__
+#define GSL_SF_POW_INT_H__
 
 #include <gsl/gsl_sf_result.h>
 
@@ -46,4 +46,4 @@ double  gsl_sf_pow_int(const double x, const int n);
 
 __END_DECLS
 
-#endif /* __GSL_SF_POW_INT_H__ */
+#endif /* GSL_SF_POW_INT_H__ */

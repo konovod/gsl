@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GSL_PERMUTE_VECTOR_SHORT_H__
-#define __GSL_PERMUTE_VECTOR_SHORT_H__
+#ifndef GSL_PERMUTE_VECTOR_SHORT_H__
+#define GSL_PERMUTE_VECTOR_SHORT_H__
 
 #include <stdlib.h>
 #include <gsl/gsl_errno.h>
@@ -42,4 +42,4 @@ int gsl_permute_vector_short_inverse (const gsl_permutation * p, gsl_vector_shor
 
 __END_DECLS
 
-#endif /* __GSL_PERMUTE_VECTOR_SHORT_H__ */
+#endif /* GSL_PERMUTE_VECTOR_SHORT_H__ */

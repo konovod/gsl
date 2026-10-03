@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GSL_FFT_REAL_H__
-#define __GSL_FFT_REAL_H__
+#ifndef GSL_FFT_REAL_H__
+#define GSL_FFT_REAL_H__
 
 #include <stddef.h>
 
@@ -77,4 +77,4 @@ int gsl_fft_real_unpack (const double real_coefficient[],
 
 __END_DECLS
 
-#endif /* __GSL_FFT_REAL_H__ */
+#endif /* GSL_FFT_REAL_H__ */

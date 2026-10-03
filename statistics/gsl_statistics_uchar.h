@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GSL_STATISTICS_UCHAR_H__
-#define __GSL_STATISTICS_UCHAR_H__
+#ifndef GSL_STATISTICS_UCHAR_H__
+#define GSL_STATISTICS_UCHAR_H__
 
 #include <stddef.h>
 #include <stdlib.h>
@@ -93,4 +93,4 @@ double gsl_stats_uchar_Qn_from_sorted_data (const unsigned char sorted_data[], c
 
 __END_DECLS
 
-#endif /* __GSL_STATISTICS_UCHAR_H__ */
+#endif /* GSL_STATISTICS_UCHAR_H__ */

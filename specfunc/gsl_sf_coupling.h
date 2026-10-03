@@ -19,8 +19,8 @@
 
 /* Author:  G. Jungman */
 
-#ifndef __GSL_SF_COUPLING_H__
-#define __GSL_SF_COUPLING_H__
+#ifndef GSL_SF_COUPLING_H__
+#define GSL_SF_COUPLING_H__
 
 #include <gsl/gsl_sf_result.h>
 
@@ -122,4 +122,4 @@ double gsl_sf_coupling_6j_INCORRECT(int two_ja, int two_jb, int two_jc,
 
 __END_DECLS
 
-#endif /* __GSL_SF_COUPLING_H__ */
+#endif /* GSL_SF_COUPLING_H__ */

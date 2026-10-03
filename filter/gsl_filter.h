@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GSL_FILTER_H__
-#define __GSL_FILTER_H__
+#ifndef GSL_FILTER_H__
+#define GSL_FILTER_H__
 
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_vector.h>
@@ -105,4 +105,4 @@ int gsl_filter_impulse(const gsl_filter_end_t endtype, const gsl_filter_scale_t 
 
 __END_DECLS
 
-#endif /* __GSL_FILTER_H__ */
+#endif /* GSL_FILTER_H__ */

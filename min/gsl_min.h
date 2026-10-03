@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GSL_MIN_H__
-#define __GSL_MIN_H__
+#ifndef GSL_MIN_H__
+#define GSL_MIN_H__
 
 #include <stdlib.h>
 #include <gsl/gsl_types.h>
@@ -108,4 +108,4 @@ gsl_min_find_bracket(gsl_function *f,double *x_minimum,double * f_minimum,
 
 __END_DECLS
 
-#endif /* __GSL_MIN_H__ */
+#endif /* GSL_MIN_H__ */

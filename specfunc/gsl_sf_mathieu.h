@@ -19,8 +19,8 @@
 
 /* Author:  L. Johnson */
 
-#ifndef __GSL_SF_MATHIEU_H__
-#define __GSL_SF_MATHIEU_H__
+#ifndef GSL_SF_MATHIEU_H__
+#define GSL_SF_MATHIEU_H__
 
 #include <gsl/gsl_sf_result.h>
 #include <gsl/gsl_eigen.h>
@@ -110,4 +110,4 @@ int gsl_sf_mathieu_Ms_array(int kind, int nmin, int nmax, double qq,
 
 __END_DECLS
 
-#endif /* !__GSL_SF_MATHIEU_H__ */
+#endif /* !GSL_SF_MATHIEU_H__ */

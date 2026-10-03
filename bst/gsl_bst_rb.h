@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GSL_BST_RB_H__
-#define __GSL_BST_RB_H__
+#ifndef GSL_BST_RB_H__
+#define GSL_BST_RB_H__
 
 #include <stdlib.h>
 #include <gsl/gsl_bst_types.h>
@@ -71,4 +71,4 @@ typedef struct
 
 __END_DECLS
 
-#endif /* __GSL_BST_RB_H__ */
+#endif /* GSL_BST_RB_H__ */

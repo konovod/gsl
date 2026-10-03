@@ -18,8 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GSL_CONST_NUM__
-#define __GSL_CONST_NUM__
+#ifndef GSL_CONST_NUM__
+#define GSL_CONST_NUM__
 
 #define GSL_CONST_NUM_FINE_STRUCTURE (7.2973525643e-3) /* 1 */
 #define GSL_CONST_NUM_AVOGADRO (6.02214076e23) /* 1 / mol */
@@ -40,4 +40,4 @@
 #define GSL_CONST_NUM_ZEPTO (1e-21) /* 1 */
 #define GSL_CONST_NUM_YOCTO (1e-24) /* 1 */
 
-#endif /* __GSL_CONST_NUM__ */
+#endif /* GSL_CONST_NUM__ */

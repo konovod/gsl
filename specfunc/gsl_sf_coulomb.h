@@ -19,8 +19,8 @@
 
 /* Author:  G. Jungman */
 
-#ifndef __GSL_SF_COULOMB_H__
-#define __GSL_SF_COULOMB_H__
+#ifndef GSL_SF_COULOMB_H__
+#define GSL_SF_COULOMB_H__
 
 #include <gsl/gsl_mode.h>
 #include <gsl/gsl_sf_result.h>
@@ -125,4 +125,4 @@ int gsl_sf_coulomb_CL_array(double Lmin, int kmax, double eta, double * cl);
 
 __END_DECLS
 
-#endif /* __GSL_SF_COULOMB_H__ */
+#endif /* GSL_SF_COULOMB_H__ */

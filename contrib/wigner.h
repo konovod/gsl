@@ -16,8 +16,8 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#ifndef __GSL_SF_WIGNER_H__
-#define  __GSL_SF_WIGNER_H__ 1
+#ifndef GSL_SF_WIGNER_H__
+#define  GSL_SF_WIGNER_H__ 1
 #include <gsl/gsl_sf_result.h>
 
 #undef __BEGIN_DECLS
@@ -60,4 +60,4 @@ int gsl_sf_wigner_drot_e (const int two_j, const int two_m1, const int two_m2,
                           const double theta, gsl_sf_result * result);
 
 __END_DECLS
-#endif /* __GSL_SF_WIGNER_H__ */
+#endif /* GSL_SF_WIGNER_H__ */

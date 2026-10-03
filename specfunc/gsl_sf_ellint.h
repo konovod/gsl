@@ -19,8 +19,8 @@
 
 /* Author: G. Jungman */
 
-#ifndef __GSL_SF_ELLINT_H__
-#define __GSL_SF_ELLINT_H__
+#ifndef GSL_SF_ELLINT_H__
+#define GSL_SF_ELLINT_H__
 
 #include <gsl/gsl_mode.h>
 #include <gsl/gsl_sf_result.h>
@@ -109,4 +109,4 @@ double gsl_sf_ellint_RJ(double x, double y, double z, double p, gsl_mode_t mode)
 
 __END_DECLS
 
-#endif /* __GSL_SF_ELLINT_H__ */
+#endif /* GSL_SF_ELLINT_H__ */

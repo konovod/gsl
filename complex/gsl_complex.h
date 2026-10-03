@@ -18,8 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GSL_COMPLEX_H__
-#define __GSL_COMPLEX_H__
+#ifndef GSL_COMPLEX_H__
+#define GSL_COMPLEX_H__
 
 #undef __BEGIN_DECLS
 #undef __END_DECLS
@@ -143,4 +143,4 @@ GSL_COMPLEX_DEFINE(float, gsl_complex_float)
 
 __END_DECLS
 
-#endif /* __GSL_COMPLEX_H__ */
+#endif /* GSL_COMPLEX_H__ */

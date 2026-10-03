@@ -20,8 +20,8 @@
 /* Author:  G. Jungman */
 /* augmented by D_5(x) and D_6(x) by Richard J. Mathar, 2005-11-08 */
 
-#ifndef __GSL_SF_DEBYE_H__
-#define __GSL_SF_DEBYE_H__
+#ifndef GSL_SF_DEBYE_H__
+#define GSL_SF_DEBYE_H__
 
 #include <gsl/gsl_sf_result.h>
 
@@ -88,4 +88,4 @@ double     gsl_sf_debye_6(const double x);
 
 __END_DECLS
 
-#endif /* __GSL_SF_DEBYE_H__ */
+#endif /* GSL_SF_DEBYE_H__ */

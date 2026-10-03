@@ -19,8 +19,8 @@
 
 /* Author:  G. Jungman */
 
-#ifndef __GSL_SF_FERMI_DIRAC_H__
-#define __GSL_SF_FERMI_DIRAC_H__
+#ifndef GSL_SF_FERMI_DIRAC_H__
+#define GSL_SF_FERMI_DIRAC_H__
 
 #include <gsl/gsl_sf_result.h>
 
@@ -123,4 +123,4 @@ double     gsl_sf_fermi_dirac_inc_0(const double x, const double b);
 
 __END_DECLS
 
-#endif /* __GSL_SF_FERMI_DIRAC_H__ */
+#endif /* GSL_SF_FERMI_DIRAC_H__ */

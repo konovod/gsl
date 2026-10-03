@@ -23,8 +23,8 @@
 /* Low level tridiagonal solvers.
  * Used internally in other areas of GSL.
  */
-#ifndef __GSL_TRIDIAG_H__
-#define __GSL_TRIDIAG_H__
+#ifndef GSL_TRIDIAG_H__
+#define GSL_TRIDIAG_H__
 
 #include <stdlib.h>
 
@@ -64,4 +64,4 @@ int solve_cyc_tridiag_nonsym(
   double x[], size_t x_stride,
   size_t N);
 
-#endif /* __GSL_TRIDIAG_H__ */
+#endif /* GSL_TRIDIAG_H__ */

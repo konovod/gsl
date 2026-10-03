@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GSL_ROOTS_H__
-#define __GSL_ROOTS_H__
+#ifndef GSL_ROOTS_H__
+#define GSL_ROOTS_H__
 
 #include <stdlib.h>
 #include <gsl/gsl_types.h>
@@ -124,4 +124,4 @@ GSL_VAR const gsl_root_fdfsolver_type  * gsl_root_fdfsolver_steffenson;
 
 __END_DECLS
 
-#endif /* __GSL_ROOTS_H__ */
+#endif /* GSL_ROOTS_H__ */

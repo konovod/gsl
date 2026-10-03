@@ -20,8 +20,8 @@
 /* Author:  G. Jungman */
 
 
-#ifndef __GSL_SUM_H__
-#define __GSL_SUM_H__
+#ifndef GSL_SUM_H__
+#define GSL_SUM_H__
 
 #include <stdlib.h>
 
@@ -159,4 +159,4 @@ int gsl_sum_levin_utrunc_step (const double term,
 
 __END_DECLS
 
-#endif /* __GSL_SUM_H__ */
+#endif /* GSL_SUM_H__ */

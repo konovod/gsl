@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GSL_WRSTAT_H__
-#define __GSL_WRSTAT_H__
+#ifndef GSL_WRSTAT_H__
+#define GSL_WRSTAT_H__
 
 #include <stdlib.h>
 
@@ -59,4 +59,4 @@ int gsl_wrstat_reset(gsl_wrstat_workspace * w);
 
 __END_DECLS
 
-#endif /* __GSL_WRSTAT_H__ */
+#endif /* GSL_WRSTAT_H__ */

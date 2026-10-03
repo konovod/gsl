@@ -19,8 +19,8 @@
 
 /* Author:  B. Gough and G. Jungman */
 
-#ifndef __GSL_PRECISION_H__
-#define __GSL_PRECISION_H__
+#ifndef GSL_PRECISION_H__
+#define GSL_PRECISION_H__
 #include <gsl/gsl_types.h>
 
 #undef __BEGIN_DECLS
@@ -63,4 +63,4 @@ GSL_VAR const double gsl_prec_root6_eps[];
 
 __END_DECLS
 
-#endif /* __GSL_PRECISION_H__ */
+#endif /* GSL_PRECISION_H__ */

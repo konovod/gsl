@@ -1,7 +1,7 @@
 /* Author:  G. Jungman */
 
-#ifndef __GSL_SF_H__
-#define __GSL_SF_H__
+#ifndef GSL_SF_H__
+#define GSL_SF_H__
 
 #include <gsl/gsl_sf_result.h>
 
@@ -39,4 +39,4 @@
 #include <gsl/gsl_sf_zeta.h>
 
 
-#endif /* __GSL_SF_H__ */
+#endif /* GSL_SF_H__ */

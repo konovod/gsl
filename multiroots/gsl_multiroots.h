@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GSL_MULTIROOTS_H__
-#define __GSL_MULTIROOTS_H__
+#ifndef GSL_MULTIROOTS_H__
+#define GSL_MULTIROOTS_H__
 
 #include <stdlib.h>
 #include <gsl/gsl_types.h>
@@ -174,4 +174,4 @@ GSL_VAR const gsl_multiroot_fdfsolver_type * gsl_multiroot_fdfsolver_hybridsj;
 
 __END_DECLS
 
-#endif /* __GSL_MULTIROOTS_H__ */
+#endif /* GSL_MULTIROOTS_H__ */

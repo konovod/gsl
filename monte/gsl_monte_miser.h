@@ -20,8 +20,8 @@
 
 /* Author: MJB */
 
-#ifndef __GSL_MONTE_MISER_H__
-#define __GSL_MONTE_MISER_H__
+#ifndef GSL_MONTE_MISER_H__
+#define GSL_MONTE_MISER_H__
 
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_monte.h>
@@ -94,4 +94,4 @@ void gsl_monte_miser_params_set (gsl_monte_miser_state * state,
 
 __END_DECLS
 
-#endif /* __GSL_MONTE_MISER_H__ */
+#endif /* GSL_MONTE_MISER_H__ */

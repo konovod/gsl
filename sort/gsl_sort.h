@@ -1,5 +1,5 @@
-#ifndef __GSL_SORT_H__
-#define __GSL_SORT_H__
+#ifndef GSL_SORT_H__
+#define GSL_SORT_H__
 
 #include <gsl/gsl_sort_long_double.h>
 #include <gsl/gsl_sort_double.h>
@@ -17,4 +17,4 @@
 #include <gsl/gsl_sort_uchar.h>
 #include <gsl/gsl_sort_char.h>
 
-#endif /* __GSL_SORT_H__ */
+#endif /* GSL_SORT_H__ */

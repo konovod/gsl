@@ -22,8 +22,8 @@
  */
 /* Based on draft BLAST C interface specification  [Jul 7 1998]
  */
-#ifndef __GSL_BLAS_TYPES_H__
-#define __GSL_BLAS_TYPES_H__
+#ifndef GSL_BLAS_TYPES_H__
+#define GSL_BLAS_TYPES_H__
 
 #include <gsl/gsl_cblas.h>
 
@@ -51,4 +51,4 @@ typedef  enum CBLAS_SIDE        CBLAS_SIDE_t;
 __END_DECLS
 
 
-#endif /* __GSL_BLAS_TYPES_H__ */
+#endif /* GSL_BLAS_TYPES_H__ */

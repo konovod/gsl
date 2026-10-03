@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GSL_FFT_HALFCOMPLEX_H__
-#define __GSL_FFT_HALFCOMPLEX_H__
+#ifndef GSL_FFT_HALFCOMPLEX_H__
+#define GSL_FFT_HALFCOMPLEX_H__
 
 #include <stddef.h>
 
@@ -83,4 +83,4 @@ gsl_fft_halfcomplex_radix2_unpack (const double halfcomplex_coefficient[],
 
 __END_DECLS
 
-#endif /* __GSL_FFT_HALFCOMPLEX_H__ */
+#endif /* GSL_FFT_HALFCOMPLEX_H__ */

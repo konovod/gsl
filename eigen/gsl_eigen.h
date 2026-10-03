@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GSL_EIGEN_H__
-#define __GSL_EIGEN_H__
+#ifndef GSL_EIGEN_H__
+#define GSL_EIGEN_H__
 
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_matrix.h>
@@ -344,4 +344,4 @@ gsl_eigen_invert_jacobi(const gsl_matrix * matrix,
 
 __END_DECLS
 
-#endif /* __GSL_EIGEN_H__ */
+#endif /* GSL_EIGEN_H__ */

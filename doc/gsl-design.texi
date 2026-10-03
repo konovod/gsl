@@ -783,10 +783,10 @@ Installed header files should be idempotent, i.e. surround them by the
 preprocessor conditionals like the following,
 
 @example
-#ifndef __GSL_HISTOGRAM_H__
-#define __GSL_HISTOGRAM_H__
+#ifndef GSL_HISTOGRAM_H__
+#define GSL_HISTOGRAM_H__
 ...
-#endif /* __GSL_HISTOGRAM_H__ */
+#endif /* GSL_HISTOGRAM_H__ */
 @end example
 
 @node Target system, Function Names, Header files, Design

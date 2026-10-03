@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GSL_BLOCK_COMPLEX_LONG_DOUBLE_H__
-#define __GSL_BLOCK_COMPLEX_LONG_DOUBLE_H__
+#ifndef GSL_BLOCK_COMPLEX_LONG_DOUBLE_H__
+#define GSL_BLOCK_COMPLEX_LONG_DOUBLE_H__
 
 #include <stdlib.h>
 #include <gsl/gsl_errno.h>
@@ -62,4 +62,4 @@ long double * gsl_block_complex_long_double_data (const gsl_block_complex_long_d
 
 __END_DECLS
 
-#endif /* __GSL_BLOCK_COMPLEX_LONG_DOUBLE_H__ */
+#endif /* GSL_BLOCK_COMPLEX_LONG_DOUBLE_H__ */

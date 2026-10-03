@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GSL_HEAPSORT_H__
-#define __GSL_HEAPSORT_H__
+#ifndef GSL_HEAPSORT_H__
+#define GSL_HEAPSORT_H__
 
 #include <gsl/gsl_permutation.h>
 
@@ -41,4 +41,4 @@ int gsl_heapsort_index (size_t * p, const void * array, size_t count, size_t siz
 
 __END_DECLS
 
-#endif /* __GSL_HEAPSORT_H__ */
+#endif /* GSL_HEAPSORT_H__ */

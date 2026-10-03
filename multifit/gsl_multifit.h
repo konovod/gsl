@@ -18,8 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GSL_MULTIFIT_H__
-#define __GSL_MULTIFIT_H__
+#ifndef GSL_MULTIFIT_H__
+#define GSL_MULTIFIT_H__
 
 #include <stdlib.h>
 #include <gsl/gsl_math.h>
@@ -390,4 +390,4 @@ int gsl_multifit_robust_residuals(const gsl_matrix * X,
 
 __END_DECLS
 
-#endif /* __GSL_MULTIFIT_H__ */
+#endif /* GSL_MULTIFIT_H__ */

@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GSL_LINALG_H__
-#define __GSL_LINALG_H__
+#ifndef GSL_LINALG_H__
+#define GSL_LINALG_H__
 
 #include <stdlib.h>
 #include <gsl/gsl_mode.h>
@@ -977,4 +977,4 @@ gsl_linalg_givens_gv (gsl_vector * v, const size_t i, const size_t j,
 
 __END_DECLS
 
-#endif /* __GSL_LINALG_H__ */
+#endif /* GSL_LINALG_H__ */

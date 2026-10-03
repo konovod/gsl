@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GSL_DERIV_H__
-#define __GSL_DERIV_H__
+#ifndef GSL_DERIV_H__
+#define GSL_DERIV_H__
 #include <gsl/gsl_math.h>
 
 #undef __BEGIN_DECLS
@@ -47,4 +47,4 @@ int gsl_deriv_forward (const gsl_function *f,
 
 __END_DECLS
 
-#endif /* __GSL_DERIV_H__ */
+#endif /* GSL_DERIV_H__ */

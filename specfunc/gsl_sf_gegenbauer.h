@@ -19,8 +19,8 @@
 
 /* Author:  G. Jungman */
 
-#ifndef __GSL_SF_GEGENBAUER_H__
-#define __GSL_SF_GEGENBAUER_H__
+#ifndef GSL_SF_GEGENBAUER_H__
+#define GSL_SF_GEGENBAUER_H__
 
 #include <gsl/gsl_sf_result.h>
 
@@ -70,4 +70,4 @@ int gsl_sf_gegenpoly_array(int nmax, double lambda, double x, double * result_ar
 
 __END_DECLS
 
-#endif /* __GSL_SF_GEGENBAUER_H__ */
+#endif /* GSL_SF_GEGENBAUER_H__ */

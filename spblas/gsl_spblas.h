@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GSL_SPBLAS_H__
-#define __GSL_SPBLAS_H__
+#ifndef GSL_SPBLAS_H__
+#define GSL_SPBLAS_H__
 
 #include <stdlib.h>
 
@@ -55,4 +55,4 @@ size_t gsl_spblas_scatter(const gsl_spmatrix *A, const size_t j,
 
 __END_DECLS
 
-#endif /* __GSL_SPBLAS_H__ */
+#endif /* GSL_SPBLAS_H__ */

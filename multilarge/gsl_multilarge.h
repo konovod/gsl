@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GSL_MULTILARGE_H__
-#define __GSL_MULTILARGE_H__
+#ifndef GSL_MULTILARGE_H__
+#define GSL_MULTILARGE_H__
 
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_vector.h>
@@ -144,4 +144,4 @@ const gsl_vector * gsl_multilarge_linear_rhs_ptr (const gsl_multilarge_linear_wo
 
 __END_DECLS
 
-#endif /* __GSL_MULTILARGE_H__ */
+#endif /* GSL_MULTILARGE_H__ */

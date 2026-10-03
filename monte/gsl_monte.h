@@ -20,8 +20,8 @@
 /* Some things common to all the Monte-Carlo implementations */
 /* Author: MJB */
 
-#ifndef __GSL_MONTE_H__
-#define __GSL_MONTE_H__
+#ifndef GSL_MONTE_H__
+#define GSL_MONTE_H__
 
 #include <stdlib.h>
 
@@ -54,4 +54,4 @@ typedef struct gsl_monte_function_struct gsl_monte_function;
 
 __END_DECLS
 
-#endif /* __GSL_MONTE_H__ */
+#endif /* GSL_MONTE_H__ */

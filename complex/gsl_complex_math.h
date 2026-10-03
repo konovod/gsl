@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GSL_COMPLEX_MATH_H__
-#define __GSL_COMPLEX_MATH_H__
+#ifndef GSL_COMPLEX_MATH_H__
+#define GSL_COMPLEX_MATH_H__
 #include <gsl/gsl_inline.h>
 #include <gsl/gsl_complex.h>
 
@@ -139,4 +139,4 @@ gsl_complex gsl_complex_arccoth (gsl_complex a);  /* r=arccoth(a) */
 
 __END_DECLS
 
-#endif /* __GSL_COMPLEX_MATH_H__ */
+#endif /* GSL_COMPLEX_MATH_H__ */

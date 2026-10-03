@@ -19,8 +19,8 @@
 
 /* Author:  G. Jungman
  */
-#ifndef __GSL_DHT_H__
-#define __GSL_DHT_H__
+#ifndef GSL_DHT_H__
+#define GSL_DHT_H__
 
 #include <stdlib.h>
 
@@ -86,4 +86,4 @@ int gsl_dht_apply(const gsl_dht * t, double * f_in, double * f_out);
 
 __END_DECLS
 
-#endif /* __GSL_DHT_H__ */
+#endif /* GSL_DHT_H__ */

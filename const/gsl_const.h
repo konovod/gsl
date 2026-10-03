@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GSL_CONST__
-#define __GSL_CONST__
+#ifndef GSL_CONST__
+#define GSL_CONST__
 
 #include <gsl/gsl_const_num.h>
 
@@ -28,4 +28,4 @@
 #include <gsl/gsl_const_cgsm.h>
 #include <gsl/gsl_const_mksa.h>
 
-#endif /* __GSL_CONST__ */
+#endif /* GSL_CONST__ */

@@ -1,7 +1,7 @@
 /* Author: G. Jungman + modifications from O. Teytaud
  */
-#ifndef __GSL_QRNG_H__
-#define __GSL_QRNG_H__
+#ifndef GSL_QRNG_H__
+#define GSL_QRNG_H__
 
 #include <stdlib.h>
 #include <gsl/gsl_types.h>
@@ -108,4 +108,4 @@ INLINE_FUN int gsl_qrng_get (const gsl_qrng * q, double x[])
 __END_DECLS
 
 
-#endif /* !__GSL_QRNG_H__ */
+#endif /* !GSL_QRNG_H__ */

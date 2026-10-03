@@ -18,8 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GSL_CONST_CGSM__
-#define __GSL_CONST_CGSM__
+#ifndef GSL_CONST_CGSM__
+#define GSL_CONST_CGSM__
 
 /* The physical constants below are expressed in terms of their MKS
  * counterparts (GSL_CONST_MKS_*, from gsl_const_mks.h) so that the
@@ -132,4 +132,4 @@
 #define GSL_CONST_CGSM_EARTH_AUTHALIC_RADIUS_R2 (1e2 * GSL_CONST_MKS_EARTH_AUTHALIC_RADIUS_R2) /* cm */
 #define GSL_CONST_CGSM_EARTH_VOLUMETRIC_RADIUS_R3 (1e2 * GSL_CONST_MKS_EARTH_VOLUMETRIC_RADIUS_R3) /* cm */
 
-#endif /* __GSL_CONST_CGSM__ */
+#endif /* GSL_CONST_CGSM__ */

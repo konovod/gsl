@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GSL_SORT_UCHAR_H__
-#define __GSL_SORT_UCHAR_H__
+#ifndef GSL_SORT_UCHAR_H__
+#define GSL_SORT_UCHAR_H__
 
 #include <stdlib.h>
 #include <gsl/gsl_errno.h>
@@ -48,4 +48,4 @@ int gsl_sort_uchar_largest_index (size_t * p, const size_t k, const unsigned cha
 
 __END_DECLS
 
-#endif /* __GSL_SORT_UCHAR_H__ */
+#endif /* GSL_SORT_UCHAR_H__ */

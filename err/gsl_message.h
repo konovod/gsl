@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GSL_MESSAGE_H__
-#define __GSL_MESSAGE_H__
+#ifndef GSL_MESSAGE_H__
+#define GSL_MESSAGE_H__
 #include <gsl/gsl_types.h>
 
 #undef __BEGIN_DECLS
@@ -75,6 +75,6 @@ enum {
 
 __END_DECLS
 
-#endif /* __GSL_MESSAGE_H__ */
+#endif /* GSL_MESSAGE_H__ */
 
 

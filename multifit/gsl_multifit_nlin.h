@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GSL_MULTIFIT_NLIN_H__
-#define __GSL_MULTIFIT_NLIN_H__
+#ifndef GSL_MULTIFIT_NLIN_H__
+#define GSL_MULTIFIT_NLIN_H__
 
 #include <stdlib.h>
 #include <gsl/gsl_types.h>
@@ -272,4 +272,4 @@ GSL_VAR const gsl_multifit_fdfsolver_type * gsl_multifit_fdfsolver_lmniel;
 
 __END_DECLS
 
-#endif /* __GSL_MULTIFIT_NLIN_H__ */
+#endif /* GSL_MULTIFIT_NLIN_H__ */

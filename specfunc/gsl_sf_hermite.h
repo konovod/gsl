@@ -21,8 +21,8 @@
  * (konradg(at)gmx.net)                                                 *
  *----------------------------------------------------------------------*/
 
-#ifndef __GSL_SF_HERMITE_H__
-#define __GSL_SF_HERMITE_H__
+#ifndef GSL_SF_HERMITE_H__
+#define GSL_SF_HERMITE_H__
 
 #include <gsl/gsl_sf_result.h>
 
@@ -95,4 +95,4 @@ double gsl_sf_hermite_prob_der(const int m, const int n, const double x);
 
 __END_DECLS
 
-#endif /* __GSL_SF_HERMITE_H__ */
+#endif /* GSL_SF_HERMITE_H__ */

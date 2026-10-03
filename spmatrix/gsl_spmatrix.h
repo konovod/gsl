@@ -1,5 +1,5 @@
-#ifndef __GSL_SPMATRIX_H__
-#define __GSL_SPMATRIX_H__
+#ifndef GSL_SPMATRIX_H__
+#define GSL_SPMATRIX_H__
 
 enum
 {
@@ -59,4 +59,4 @@ void gsl_spmatrix_cumsum(const size_t n, int * c);
 #include <gsl/gsl_spmatrix_uchar.h>
 #include <gsl/gsl_spmatrix_char.h>
 
-#endif /* __GSL_SPMATRIX_H__ */
+#endif /* GSL_SPMATRIX_H__ */

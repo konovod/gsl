@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GSL_HISTOGRAM2D_H__
-#define __GSL_HISTOGRAM2D_H__
+#ifndef GSL_HISTOGRAM2D_H__
+#define GSL_HISTOGRAM2D_H__
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -168,5 +168,5 @@ int gsl_histogram2d_pdf_sample (const gsl_histogram2d_pdf * p,
 
 __END_DECLS
 
-#endif /* __GSL_HISTOGRAM2D_H__ */
+#endif /* GSL_HISTOGRAM2D_H__ */
 

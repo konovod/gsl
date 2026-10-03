@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GSL_INTERP2D_H__
-#define __GSL_INTERP2D_H__
+#ifndef GSL_INTERP2D_H__
+#define GSL_INTERP2D_H__
 
 #include <gsl/gsl_interp.h>
 
@@ -171,4 +171,4 @@ int gsl_interp2d_eval_deriv_xy_e(const gsl_interp2d * interp, const double xarr[
 
 __END_DECLS
 
-#endif /* __GSL_INTERP2D_H__ */
+#endif /* GSL_INTERP2D_H__ */

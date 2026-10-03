@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GSL_ERRNO_H__
-#define __GSL_ERRNO_H__
+#ifndef GSL_ERRNO_H__
+#define GSL_ERRNO_H__
 
 #include <stdio.h>
 #include <errno.h>
@@ -151,4 +151,4 @@ FILE * gsl_set_stream (FILE * new_stream);
 
 __END_DECLS
 
-#endif /* __GSL_ERRNO_H__ */
+#endif /* GSL_ERRNO_H__ */

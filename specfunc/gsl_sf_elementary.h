@@ -21,8 +21,8 @@
 
 /* Miscellaneous elementary functions and operations.
  */
-#ifndef __GSL_SF_ELEMENTARY_H__
-#define __GSL_SF_ELEMENTARY_H__
+#ifndef GSL_SF_ELEMENTARY_H__
+#define GSL_SF_ELEMENTARY_H__
 
 #include <gsl/gsl_sf_result.h>
 
@@ -54,4 +54,4 @@ int gsl_sf_multiply_err_e(const double x, const double dx, const double y, const
 
 __END_DECLS
 
-#endif /* __GSL_SF_ELEMENTARY_H__ */
+#endif /* GSL_SF_ELEMENTARY_H__ */

@@ -18,8 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GSL_CONST_MKS__
-#define __GSL_CONST_MKS__
+#ifndef GSL_CONST_MKS__
+#define GSL_CONST_MKS__
 
 /* The physical constants below are the CODATA 2022 recommended values
  * (https://physics.nist.gov/cuu/Constants/).  The constants which are
@@ -144,4 +144,4 @@
 #define GSL_CONST_MKS_EARTH_AUTHALIC_RADIUS_R2 (6371007.1809) /* m */
 #define GSL_CONST_MKS_EARTH_VOLUMETRIC_RADIUS_R3 (6371000.79) /* m */
 
-#endif /* __GSL_CONST_MKS__ */
+#endif /* GSL_CONST_MKS__ */

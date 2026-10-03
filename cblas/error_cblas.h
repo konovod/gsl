@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef __ERROR_CBLAS_H__
-#define __ERROR_CBLAS_H__
+#ifndef ERROR_CBLAS_H__
+#define ERROR_CBLAS_H__
 
 
 #define CHECK_ARGS_X(FUNCTION,VAR,ARGS) do { int VAR = 0 ;      \
@@ -84,4 +84,4 @@ if((dim)<0) \
 if((stride)==0) \
     pos = posIfError;
 
-#endif /* __ERROR_CBLAS_H__ */
+#endif /* ERROR_CBLAS_H__ */

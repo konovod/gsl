@@ -19,8 +19,8 @@
 
 /* Author:  G. Jungman */
 
-#ifndef __GSL_SF_PSI_H__
-#define __GSL_SF_PSI_H__
+#ifndef GSL_SF_PSI_H__
+#define GSL_SF_PSI_H__
 
 #include <gsl/gsl_sf_result.h>
 
@@ -110,4 +110,4 @@ double  gsl_sf_psi_n(const int n, const double x);
 
 __END_DECLS
 
-#endif /* __GSL_SF_PSI_H__ */
+#endif /* GSL_SF_PSI_H__ */

@@ -19,8 +19,8 @@
 
 /* Author:  G. Jungman */
 
-#ifndef __GSL_SF_SYNCHROTRON_H__
-#define __GSL_SF_SYNCHROTRON_H__
+#ifndef GSL_SF_SYNCHROTRON_H__
+#define GSL_SF_SYNCHROTRON_H__
 
 #include <gsl/gsl_sf_result.h>
 
@@ -57,4 +57,4 @@ double     gsl_sf_synchrotron_2(const double x);
 
 __END_DECLS
 
-#endif /* __GSL_SF_SYNCHROTRON_H__ */
+#endif /* GSL_SF_SYNCHROTRON_H__ */

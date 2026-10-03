@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GSL_MATRIX_INT_H__
-#define __GSL_MATRIX_INT_H__
+#ifndef GSL_MATRIX_INT_H__
+#define GSL_MATRIX_INT_H__
 
 #include <stdlib.h>
 #include <gsl/gsl_types.h>
@@ -355,4 +355,4 @@ gsl_matrix_int_const_ptr(const gsl_matrix_int * m, const size_t i, const size_t 
 
 __END_DECLS
 
-#endif /* __GSL_MATRIX_INT_H__ */
+#endif /* GSL_MATRIX_INT_H__ */

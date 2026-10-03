@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GSL_RANDIST_H__
-#define __GSL_RANDIST_H__
+#ifndef GSL_RANDIST_H__
+#define GSL_RANDIST_H__
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_matrix.h>
@@ -216,4 +216,4 @@ double gsl_ran_discrete_pdf (size_t k, const gsl_ran_discrete_t *g);
 
 __END_DECLS
 
-#endif /* __GSL_RANDIST_H__ */
+#endif /* GSL_RANDIST_H__ */

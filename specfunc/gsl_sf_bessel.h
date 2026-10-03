@@ -19,8 +19,8 @@
 
 /* Author:  G. Jungman */
 
-#ifndef __GSL_SF_BESSEL_H__
-#define __GSL_SF_BESSEL_H__
+#ifndef GSL_SF_BESSEL_H__
+#define GSL_SF_BESSEL_H__
 
 #include <stdlib.h>
 #include <gsl/gsl_mode.h>
@@ -546,4 +546,4 @@ double gsl_sf_bessel_zero_Jnu(double nu, unsigned int s);
 
 __END_DECLS
 
-#endif /* __GSL_SF_BESSEL_H__ */
+#endif /* GSL_SF_BESSEL_H__ */

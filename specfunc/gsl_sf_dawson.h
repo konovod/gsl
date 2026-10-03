@@ -19,8 +19,8 @@
 
 /* Author:  G. Jungman */
 
-#ifndef __GSL_SF_DAWSON_H__
-#define __GSL_SF_DAWSON_H__
+#ifndef GSL_SF_DAWSON_H__
+#define GSL_SF_DAWSON_H__
 
 #include <gsl/gsl_sf_result.h>
 
@@ -49,4 +49,4 @@ double     gsl_sf_dawson(double x);
 
 __END_DECLS
 
-#endif /* __GSL_SF_DAWSON_H__ */
+#endif /* GSL_SF_DAWSON_H__ */

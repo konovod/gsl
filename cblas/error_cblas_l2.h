@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef __ERROR_CBLAS_L2_H__
-#define __ERROR_CBLAS_L2_H__
+#ifndef ERROR_CBLAS_L2_H__
+#define ERROR_CBLAS_L2_H__
 #include <gsl/gsl_math.h>
 #include "error_cblas.h"
 /*
@@ -236,4 +236,4 @@ CBLAS_ERROR_SD_SYR2(pos,order,Uplo,N,alpha,X,incX,Y,incY,A,lda)
 #define CBLAS_ERROR_CZ_HPR2(pos,order,Uplo,N,alpha,X,incX,Y,incY,Ap) \
 CBLAS_ERROR_SD_SPR2(pos,order,Uplo,N,alpha,X,incX,Y,incY,Ap)
 
-#endif /* __ERROR_CBLAS_L2_H__ */
+#endif /* ERROR_CBLAS_L2_H__ */

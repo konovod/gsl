@@ -19,8 +19,8 @@
 
 /* Author:  G. Jungman
  */
-#ifndef __GSL_ODEIV_H__
-#define __GSL_ODEIV_H__
+#ifndef GSL_ODEIV_H__
+#define GSL_ODEIV_H__
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -227,4 +227,4 @@ void gsl_odeiv_evolve_free(gsl_odeiv_evolve * e);
 
 __END_DECLS
 
-#endif /* __GSL_ODEIV_H__ */
+#endif /* GSL_ODEIV_H__ */

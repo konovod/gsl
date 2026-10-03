@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GSL_SPLINALG_H__
-#define __GSL_SPLINALG_H__
+#ifndef GSL_SPLINALG_H__
+#define GSL_SPLINALG_H__
 
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_vector.h>
@@ -76,4 +76,4 @@ double gsl_splinalg_itersolve_normr(const gsl_splinalg_itersolve *w);
 
 __END_DECLS
 
-#endif /* __GSL_SPLINALG_H__ */
+#endif /* GSL_SPLINALG_H__ */

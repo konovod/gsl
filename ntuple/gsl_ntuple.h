@@ -20,8 +20,8 @@
 
 /* Jan/2001 Modified by Brian Gough. Minor changes for GSL */
 
-#ifndef __GSL_NTUPLE_H__
-#define __GSL_NTUPLE_H__
+#ifndef GSL_NTUPLE_H__
+#define GSL_NTUPLE_H__
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -75,7 +75,7 @@ int gsl_ntuple_close (gsl_ntuple * ntuple);
 
 __END_DECLS
 
-#endif /* __GSL_NTUPLE_H__ */
+#endif /* GSL_NTUPLE_H__ */
 
 
 

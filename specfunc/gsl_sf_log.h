@@ -19,8 +19,8 @@
 
 /* Author:  G. Jungman */
 
-#ifndef __GSL_SF_LOG_H__
-#define __GSL_SF_LOG_H__
+#ifndef GSL_SF_LOG_H__
+#define GSL_SF_LOG_H__
 
 #include <gsl/gsl_sf_result.h>
 
@@ -79,4 +79,4 @@ double gsl_sf_log_1plusx_mx(const double x);
 
 __END_DECLS
 
-#endif /* __GSL_SF_LOG_H__ */
+#endif /* GSL_SF_LOG_H__ */

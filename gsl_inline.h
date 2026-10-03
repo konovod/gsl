@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GSL_INLINE_H__
-#define __GSL_INLINE_H__
+#ifndef GSL_INLINE_H__
+#define GSL_INLINE_H__
 
 /* In recent versiions of GCC, the inline keyword has two different
    forms: GNU and C99.
@@ -64,4 +64,4 @@
    See also build.h. */
 #define GSL_RANGE_COND(x) (x)
 
-#endif /* __GSL_INLINE_H__ */
+#endif /* GSL_INLINE_H__ */

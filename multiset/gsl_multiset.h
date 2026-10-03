@@ -19,8 +19,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GSL_MULTISET_H__
-#define __GSL_MULTISET_H__
+#ifndef GSL_MULTISET_H__
+#define GSL_MULTISET_H__
 
 #include <stdlib.h>
 #include <gsl/gsl_errno.h>
@@ -90,4 +90,4 @@ gsl_multiset_get (const gsl_multiset * c, const size_t i)
 
 __END_DECLS
 
-#endif /* __GSL_MULTISET_H__ */
+#endif /* GSL_MULTISET_H__ */

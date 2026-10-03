@@ -1,5 +1,5 @@
-#ifndef __GSL_SORT_VECTOR_H__
-#define __GSL_SORT_VECTOR_H__
+#ifndef GSL_SORT_VECTOR_H__
+#define GSL_SORT_VECTOR_H__
 
 #include <gsl/gsl_sort_vector_long_double.h>
 #include <gsl/gsl_sort_vector_double.h>
@@ -17,4 +17,4 @@
 #include <gsl/gsl_sort_vector_uchar.h>
 #include <gsl/gsl_sort_vector_char.h>
 
-#endif /* __GSL_SORT_VECTOR_H__ */
+#endif /* GSL_SORT_VECTOR_H__ */

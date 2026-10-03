@@ -21,8 +21,8 @@
 
 /* Author: MJB */
 
-#ifndef __GSL_MONTE_PLAIN_H__
-#define __GSL_MONTE_PLAIN_H__
+#ifndef GSL_MONTE_PLAIN_H__
+#define GSL_MONTE_PLAIN_H__
 
 #include <stdio.h>
 #include <gsl/gsl_monte.h>
@@ -62,4 +62,4 @@ void gsl_monte_plain_free (gsl_monte_plain_state* state);
 
 __END_DECLS
 
-#endif /* __GSL_MONTE_PLAIN_H__ */
+#endif /* GSL_MONTE_PLAIN_H__ */

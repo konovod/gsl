@@ -1,6 +1,6 @@
 /* Author:  B. Gough and G. Jungman */
-#ifndef __GSL_MACHINE_H__
-#define __GSL_MACHINE_H__
+#ifndef GSL_MACHINE_H__
+#define GSL_MACHINE_H__
 
 #include <limits.h>
 #include <float.h>
@@ -101,4 +101,4 @@
 #define GSL_LOG_MACH_EPS       (-34.54)
 
 
-#endif /* __GSL_MACHINE_H__ */
+#endif /* GSL_MACHINE_H__ */

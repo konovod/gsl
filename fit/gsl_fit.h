@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GSL_FIT_H__
-#define __GSL_FIT_H__
+#ifndef GSL_FIT_H__
+#define GSL_FIT_H__
 
 #include <stdlib.h>
 #include <gsl/gsl_math.h>
@@ -82,4 +82,4 @@ gsl_fit_mul_est (const double x,
 
 __END_DECLS
 
-#endif /* __GSL_FIT_H__ */
+#endif /* GSL_FIT_H__ */

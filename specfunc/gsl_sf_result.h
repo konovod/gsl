@@ -19,8 +19,8 @@
 
 /* Author:  G. Jungman */
 
-#ifndef __GSL_SF_RESULT_H__
-#define __GSL_SF_RESULT_H__
+#ifndef GSL_SF_RESULT_H__
+#define GSL_SF_RESULT_H__
 
 #undef __BEGIN_DECLS
 #undef __END_DECLS
@@ -56,4 +56,4 @@ int gsl_sf_result_smash_e(const gsl_sf_result_e10 * re, gsl_sf_result * r);
 
 __END_DECLS
 
-#endif /* __GSL_SF_RESULT_H__ */
+#endif /* GSL_SF_RESULT_H__ */

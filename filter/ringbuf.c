@@ -19,8 +19,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GSL_RINGBUF_C__
-#define __GSL_RINGBUF_C__
+#ifndef GSL_RINGBUF_C__
+#define GSL_RINGBUF_C__
 
 /*typedef int ringbuf_type;*/
 
@@ -209,4 +209,4 @@ ringbuf_copy(double * dest, const ringbuf * b)
     }
 }
 
-#endif /* __GSL_RINGBUF_C__ */
+#endif /* GSL_RINGBUF_C__ */

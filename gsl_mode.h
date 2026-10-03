@@ -19,8 +19,8 @@
 
 /* Author:  B. Gough and G. Jungman */
 
-#ifndef __GSL_MODE_H__
-#define __GSL_MODE_H__
+#ifndef GSL_MODE_H__
+#define GSL_MODE_H__
 #include <gsl/gsl_inline.h>
 
 #undef __BEGIN_DECLS
@@ -85,4 +85,4 @@ GSL_MODE_PREC(gsl_mode_t mt)
 
 __END_DECLS
 
-#endif /* __GSL_MODE_H__ */
+#endif /* GSL_MODE_H__ */

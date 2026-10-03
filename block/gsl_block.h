@@ -1,5 +1,5 @@
-#ifndef __GSL_BLOCK_H__
-#define __GSL_BLOCK_H__
+#ifndef GSL_BLOCK_H__
+#define GSL_BLOCK_H__
 
 #include <gsl/gsl_block_complex_long_double.h>
 #include <gsl/gsl_block_complex_double.h>
@@ -21,4 +21,4 @@
 #include <gsl/gsl_block_uchar.h>
 #include <gsl/gsl_block_char.h>
 
-#endif /* __GSL_BLOCK_H__ */
+#endif /* GSL_BLOCK_H__ */

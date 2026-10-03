@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GSL_STATISTICS_INT_H__
-#define __GSL_STATISTICS_INT_H__
+#ifndef GSL_STATISTICS_INT_H__
+#define GSL_STATISTICS_INT_H__
 
 #include <stddef.h>
 #include <stdlib.h>
@@ -93,4 +93,4 @@ double gsl_stats_int_Qn_from_sorted_data (const int sorted_data[], const size_t 
 
 __END_DECLS
 
-#endif /* __GSL_STATISTICS_INT_H__ */
+#endif /* GSL_STATISTICS_INT_H__ */

@@ -19,8 +19,8 @@
 
 /* Author:  G. Jungman */
 
-#ifndef __GSL_SF_EXP_H__
-#define __GSL_SF_EXP_H__
+#ifndef GSL_SF_EXP_H__
+#define GSL_SF_EXP_H__
 
 #include <gsl/gsl_sf_result.h>
 #include <gsl/gsl_precision.h>
@@ -131,4 +131,4 @@ int gsl_sf_exp_mult_err_e10_e(const double x, const double dx, const double y, c
 
 __END_DECLS
 
-#endif /* __GSL_SF_EXP_H__ */
+#endif /* GSL_SF_EXP_H__ */
