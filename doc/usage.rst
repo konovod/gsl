@@ -474,6 +474,71 @@ statements in order to compile the files as standalone units. Reuse of
 the library code in this way is encouraged, subject to the terms of the
 GNU General Public License.
 
+Test Support Functions
+======================
+
+.. note::
+
+   This section was generated automatically (with AI assistance) as a
+   first draft and has not been reviewed by a human.  Check it against
+   :file:`gsl_test.h` and :file:`test/results.c` before relying on it.
+
+The functions declared in :file:`gsl_test.h` are the small harness that
+the library's own test programs use to report results.  The header is
+installed, so the same harness can be reused by other programs.  Every
+routine takes a :code:`test_description` string that may contain
+:code:`printf`-style conversions, whose arguments follow the string.
+
+.. function:: void gsl_test (int status, const char * test_description, ...)
+
+   Records one test as passed when :data:`status` is zero and as failed
+   otherwise.  A failure is always printed; a pass is printed only in
+   verbose mode.
+
+.. function:: void gsl_test_rel (double result, double expected, double relative_error, const char * test_description, ...)
+
+   Tests that :data:`result` and :data:`expected` agree to relative
+   accuracy :data:`relative_error`.  NaNs and infinities compare equal
+   only to a NaN or infinity of the same kind.  An :data:`expected` value
+   smaller than the smallest normal number is reported as a test error
+   rather than compared.
+
+.. function:: void gsl_test_abs (double result, double expected, double absolute_error, const char * test_description, ...)
+
+   As :func:`gsl_test_rel`, but comparing with absolute accuracy
+   :data:`absolute_error`.
+
+.. function:: void gsl_test_factor (double result, double expected, double factor, const char * test_description, ...)
+
+   Tests that :data:`result` and :data:`expected` agree to within the
+   multiplicative :data:`factor`; either may be the larger of the two.
+   When :data:`expected` is zero the test passes only if :data:`result` is
+   exactly zero as well.
+
+.. function:: void gsl_test_int (int result, int expected, const char * test_description, ...)
+
+   Tests that the two integers are equal.
+
+.. function:: void gsl_test_str (const char * result, const char * expected, const char * test_description, ...)
+
+   Tests that the two strings are equal.
+
+.. function:: void gsl_test_verbose (int verbose)
+
+   Selects whether passing tests are printed; a non-zero argument turns
+   them on.
+
+.. function:: int gsl_test_summary (void)
+
+   Prints a summary line when every test passed, and returns
+   :code:`EXIT_SUCCESS` if there were no failures or
+   :code:`EXIT_FAILURE` otherwise.  A test program conventionally
+   returns this value from :code:`main`.
+
+The environment variable :code:`GSL_TEST_VERBOSE`, if set and non-empty,
+provides the initial value for the verbose flag, read when the first test
+is recorded.
+
 .. rubric:: Footnotes
 
 .. [#f1] The last few digits may vary slightly depending on the compiler and platform used---this is normal

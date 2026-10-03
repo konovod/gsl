@@ -20,6 +20,7 @@ introduces its conventions.
 * Thread-safety::               
 * Deprecated Functions::        
 * Code Reuse::                  
+* Test Support Functions::      
 @end menu
 
 @node   An Example Program
@@ -523,3 +524,68 @@ certain macros such as @code{GSL_ERROR} and remove some @code{#include}
 statements in order to compile the files as standalone units. Reuse of
 the library code in this way is encouraged, subject to the terms of the
 GNU General Public License.
+
+@node Test Support Functions
+@section Test Support Functions
+@cindex test support functions
+
+@quotation Note
+This section was generated automatically (with AI assistance) as a first
+draft and has not been reviewed by a human.  Check it against
+@file{gsl_test.h} and @file{test/results.c} before relying on it.
+@end quotation
+
+The functions declared in @file{gsl_test.h} are the small harness that
+the library's own test programs use to report results.  The header is
+installed, so the same harness can be reused by other programs.  Every
+routine takes a @var{test_description} string that may contain
+@code{printf}-style conversions, whose arguments follow the string.
+
+@deftypefun void gsl_test (int @var{status}, const char * @var{test_description}, ...)
+Records one test as passed when @var{status} is zero and as failed
+otherwise.  A failure is always printed; a pass is printed only in
+verbose mode.
+@end deftypefun
+
+@deftypefun void gsl_test_rel (double @var{result}, double @var{expected}, double @var{relative_error}, const char * @var{test_description}, ...)
+Tests that @var{result} and @var{expected} agree to relative accuracy
+@var{relative_error}.  NaNs and infinities compare equal only to a NaN or
+infinity of the same kind.  An @var{expected} value smaller than the
+smallest normal number is reported as a test error rather than compared.
+@end deftypefun
+
+@deftypefun void gsl_test_abs (double @var{result}, double @var{expected}, double @var{absolute_error}, const char * @var{test_description}, ...)
+As @code{gsl_test_rel}, but comparing with absolute accuracy
+@var{absolute_error}.
+@end deftypefun
+
+@deftypefun void gsl_test_factor (double @var{result}, double @var{expected}, double @var{factor}, const char * @var{test_description}, ...)
+Tests that @var{result} and @var{expected} agree to within the
+multiplicative @var{factor}; either may be the larger of the two.  When
+@var{expected} is zero the test passes only if @var{result} is exactly
+zero as well.
+@end deftypefun
+
+@deftypefun void gsl_test_int (int @var{result}, int @var{expected}, const char * @var{test_description}, ...)
+Tests that the two integers are equal.
+@end deftypefun
+
+@deftypefun void gsl_test_str (const char * @var{result}, const char * @var{expected}, const char * @var{test_description}, ...)
+Tests that the two strings are equal.
+@end deftypefun
+
+@deftypefun void gsl_test_verbose (int @var{verbose})
+Selects whether passing tests are printed; a non-zero argument turns
+them on.
+@end deftypefun
+
+@deftypefun int gsl_test_summary (void)
+Prints a summary line when every test passed, and returns
+@code{EXIT_SUCCESS} if there were no failures or @code{EXIT_FAILURE}
+otherwise.  A test program conventionally returns this value from
+@code{main}.
+@end deftypefun
+
+The environment variable @code{GSL_TEST_VERBOSE}, if set and non-empty,
+provides the initial value for the verbose flag, read when the first test
+is recorded.
