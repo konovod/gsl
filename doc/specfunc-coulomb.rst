@@ -78,7 +78,11 @@ relations,
    the parameters F, G for the function values and :data:`Fp`,
    :data:`Gp` for the derivative values.  If an overflow occurs,
    :code:`GSL_EOVRFLW` is returned and scaling exponents are stored in
-   the modifiable parameters :data:`exp_F`, :data:`exp_G`.
+   the modifiable parameters :data:`exp_F`, :data:`exp_G`.  If
+   :math:`G'` alone exceeds the representable range while :math:`F`,
+   :math:`F'` and :math:`G` do not, :code:`GSL_EOVRFLW` is signalled
+   with :data:`exp_F` and :data:`exp_G` left at zero and the remaining
+   components are still stored.
 
 .. function:: int gsl_sf_coulomb_wave_F_array (double L_min, int kmax, double eta, double x, double fc_array[], double * F_exponent)
 

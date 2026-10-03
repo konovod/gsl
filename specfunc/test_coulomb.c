@@ -612,5 +612,19 @@ int test_coulomb(void)
   gsl_test(s, "  gsl_sf_coulomb_wave_FG_e(0.0, 1.2693881947287221e-07, lam_F=37, lam_G=36)");
   status += s;
 
+  /* Savannah #47027: eta = 340, x = 48.524525790349422, lam_F = 0.
+   * The WKB branch returns finite F, F' and G, but the true
+   * G' = -1.9248375400...e308 lies 7% beyond the double range.
+   * Evaluating G' = F'/F * G - 1/F forms inf - inf and used to
+   * return NaN with GSL_SUCCESS; it now signals GSL_EOVRFLW.  The
+   * reference value comes from the 1F1/U connection formulas at 60
+   * significant digits.
+   */
+  s = 0;
+  TEST_SF_RETURN(s, gsl_sf_coulomb_wave_FG_e,
+                 (340.0, 48.524525790349422, 0.0, 0,
+                  &F, &Fp, &G, &Gp, &Fe, &Ge), GSL_EOVRFLW);
+  status += s;
+
   return status;
 }

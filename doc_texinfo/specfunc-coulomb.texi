@@ -98,7 +98,11 @@ itself is not restricted to being an integer. The results are stored in
 the parameters @var{F}, @var{G} for the function values and @var{Fp},
 @var{Gp} for the derivative values.  If an overflow occurs,
 @code{GSL_EOVRFLW} is returned and scaling exponents are stored in
-the modifiable parameters @var{exp_F}, @var{exp_G}.
+the modifiable parameters @var{exp_F}, @var{exp_G}.  If
+@math{G'} alone exceeds the representable range while @math{F},
+@math{F'} and @math{G} do not, @code{GSL_EOVRFLW} is signalled with
+@var{exp_F} and @var{exp_G} left at zero and the remaining components
+are still stored.
 @end deftypefun
 
 @deftypefun int gsl_sf_coulomb_wave_F_array (double @var{L_min}, int @var{kmax}, double @var{eta}, double @var{x}, double @var{fc_array}[], double * @var{F_exponent})

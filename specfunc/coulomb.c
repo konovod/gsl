@@ -1147,14 +1147,20 @@ gsl_sf_coulomb_wave_FG_e(const double eta, const double x,
     Fp->err  = fabs(Fp_over_F_lam_F) * F_lam_F.err;
     Fp->err += 2.0*GSL_DBL_EPSILON*fabs(Fp->val);
 
-    Gp->val  = Fp_over_F_lam_G * G_lam_G.val - 1.0/F_lam_G.val;
+    /* Use the Wronskian form G' = (F'/F * G F - 1)/F.  The direct
+     * G' = F'/F * G - 1/F forms inf - inf and returns NaN when both
+     * terms overflow, even when the true value is merely large.  When
+     * the true value really is outside the double range the result is
+     * an infinity and is reported as an overflow below. */
+    Gp->val  = (Fp_over_F_lam_G * (G_lam_G.val * F_lam_G.val) - 1.0)/F_lam_G.val;
     Gp->err  = fabs(Fp_over_F_lam_G) * G_lam_G.err;
     Gp->err += fabs(1.0/F_lam_G.val) * fabs(F_lam_G.err/F_lam_G.val);
 
     *exp_F = exp_lam_F;
     *exp_G = exp_lam_G;
 
-    if(stat_lam_F == GSL_EOVRFLW || stat_lam_G == GSL_EOVRFLW) {
+    if(stat_lam_F == GSL_EOVRFLW || stat_lam_G == GSL_EOVRFLW
+       || gsl_isinf(Gp->val)) {
       GSL_ERROR ("overflow", GSL_EOVRFLW);
     }
     else {
