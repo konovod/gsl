@@ -270,8 +270,11 @@ function :func:`gsl_ieee_env_setup`.
    that the results of the program will be affected.
 
    If the requested modes are not supported by the platform being used then
-   the function calls the error handler and returns an error code of
-   :macro:`GSL_EUNSUP`.
+   the error handler is invoked with an error code of :macro:`GSL_EUNSUP`.
+   Since :func:`gsl_ieee_env_setup` returns :code:`void`, this code is not
+   passed back to the caller: with the default error handler the program is
+   aborted, while a user-installed handler that returns leaves the function
+   with no indication of the failure.
 
    When options are specified using this method, the resulting mode is
    based on a default setting of the highest available precision (double
