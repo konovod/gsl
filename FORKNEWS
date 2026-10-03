@@ -106,6 +106,7 @@ One line per change: date | tag | description | commit(s).
   2026-10-03 | [upstream] | specfunc: exact P + Q = 1 in the series region        | 6f23a4cb5
   2026-10-03 | [upstream] | doc: distinguish gamma_inc from the normalized P, Q   | 3cc1aaa54
   2026-10-03 | [rejected] | specfunc: "incomplete gamma functions flipped"        | - (see below)
+  2026-10-03 | [upstream] | specfunc: terminating 2F1 for non-positive integers  | 2aa89bae8
 
 
 ## [upstream] rng: make the random() generators produce the documented sequences
@@ -2670,3 +2671,50 @@ so the confusion does not recur.  Files: `doc/specfunc-gamma.rst`,
 `doc_texinfo/specfunc-gamma.texi`.
 
 Savannah bug #45925.
+
+
+## [upstream] specfunc: evaluate the terminating 2F1 for any non-positive integer
+
+Commit: 2aa89bae8
+
+`gsl_sf_hyperg_2F1_e()` reaches the terminating Gauss series only through
+the `fabs(a) < 10 && fabs(b) < 10` branch, and the series itself sits behind
+the `|x| < 1` convergence check.  When `a` or `b` is zero or a negative
+integer the Gauss series terminates and `2F1` is a *polynomial*, finite for
+every `x`; the value is well defined even where the infinite series does
+not converge.  Those calls were nevertheless rejected:
+
+    2F1(-1,-13,1,0.651439)   GSL_EUNIMPL      (Savannah #50711)
+    2F1(-10,2,0.5,0.5)       GSL_EUNIMPL      (Savannah #53905)
+    2F1(-1,-10,1,0.5)        GSL_EUNIMPL      (Savannah #39056, Wolpert)
+    2F1(-1,-1,-0.5,1.5)      GSL_EDOM         (Savannah #21835)
+    2F1(0,1,1,11)            GSL_EDOM         (Savannah #21835)
+
+The first two fail because `-13` and `-10` are outside the hard-coded
+magnitude gate; the `x >= 1` cases fail at the domain check.  The Wolpert
+and Hatef Monajemi vectors of #39056 were commented out of the tests when
+#39056 was opened; the Monajemi case was fixed with the integer-`d`
+reflection work (`e4c4ac326`), the Wolpert case is fixed here.
+
+The terminating case is now dispatched to `hyperg_2F1_series()` before the
+`|x| < 1` domain check and independently of the `|a|,|b| < 10` gate.  The
+negative-integer-`c` cancellation test is preserved, so the domain errors
+for an uncancelled pole in `c` are unchanged.
+
+References were computed independently, with mpmath at 50 digits
+(`hyp2f1`) or from elementary closed forms:
+
+    2F1(-1,-13,1,0.651439) = 9.4687069999999998737
+    2F1(-10,2,0.5,0.5)     = 0.077832384333932321548
+    2F1(-1,-1,-0.5,1.5)    = -2 exactly
+    2F1(-1,-10,1,0.5)      = 6 exactly
+
+Negative control: with the dispatch reverted, `specfunc_test` reports 11
+failures - the ten new vectors plus the summary line.  The `ldnlwm` vector
+that shared the `#if 0` block with the Wolpert one passes either way; it was
+enabled as well.  With the change the `specfunc` suite and the full CTest
+suite pass.
+
+Files: `specfunc/hyperg_2F1.c`, `specfunc/test_hyperg.c`.
+
+See Savannah bugs #21835, #39056, #50711 and #53905.
