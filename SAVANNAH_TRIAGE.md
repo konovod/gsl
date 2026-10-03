@@ -139,20 +139,20 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 54919 | 2018-10-30 | bug | Build | none | not reviewed | gsl 2.5+ test fails with icc (2016.4 and later) |
 | 54925 | 2018-10-31 | - | Performance | clean 0001-Reduce-cache-misses-for-source_gemm_r.patch | rejected — out-of-scope: performance-only loop reorder | Reduce cache misses for source_gemm_r |
 | 54998 | 2018-11-10 | - | Accuracy problem | none | **fixed** — same 2F1 integer-d fix (e4c4ac326, 882c8361d) | Bugs in gsl_sf_hyperg_2F1 |
-| 55687 | 2019-02-10 | bug | - | none | not reviewed | Bad error handling in gsl_sf_hyperg_1F1_e with NaN arguments |
+| 55687 | 2019-02-10 | bug | - | none | **fixed** — NaN propagates; the `b = NaN` recursion crashed (99a73dd36) | Bad error handling in gsl_sf_hyperg_1F1_e with NaN arguments |
 | 55965 | 2019-03-20 | feature | - | none | not reviewed | Implement PCG random number generator |
 | 56843 | 2019-08-31 | - | Accuracy problem | none | not reviewed | Unit Tests in linalg eigen fail on non-x86 hardware due to slight accuracy differences |
 | 57173 | 2019-11-05 | feature | Accuracy problem | none | not reviewed | Feature request: zeta function for complex arguments |
 | 57978 | 2020-03-09 | bug | Accuracy problem | clean sincos_pi.c.patch | **fixed** — sin_pi/cos_pi(inf) -> EDOM (7c27b358b) | Incorrect result from cosine function with inf input |
 | 57979 | 2020-03-09 | bug | - | none | **fixed** — gsl_sf_hypot: +Inf for infinite args, NaN propagation (1a470222a) | Incorrect Result from hypot function with NaN input |
-| 58031 | 2020-03-23 | - | Accuracy problem | none | not reviewed | gsl_sf_bessel_Kn_scaled incorrectly evaluating limit |
+| 58031 | 2020-03-23 | - | Accuracy problem | none | rejected — not-a-bug: `e^x K_0(x) -> 0` is the limit; value+vector added (fc4059b12) | gsl_sf_bessel_Kn_scaled incorrectly evaluating limit |
 | 58032 | 2020-03-23 | bug | Accuracy problem | none | **fixed** — 1F1 poles at x=0 (1f2607a0b) | gsl_sf_hyperg_1F1 returning incorrect result for nonpositive integers |
-| 58060 | 2020-03-28 | bug | Accuracy problem | none | not reviewed | Dropped NaN from gsl_sf_laguerre_n |
-| 58061 | 2020-03-28 | bug | Accuracy problem | none | not reviewed | Dropped NaN from gsl_sf_hyperg_U_int |
-| 58062 | 2020-03-28 | bug | Accuracy problem | none | not reviewed | Dropped NaN from gsl_sf_hyperg1F1_int |
-| 58063 | 2020-03-28 | - | Accuracy problem | none | not reviewed | Dropped NaNs in multiple cases |
-| 58064 | 2020-03-28 | - | Accuracy problem | none | not reviewed | Inconsistent evaluation of limits in special functions |
-| 58065 | 2020-03-28 | - | - | none | not reviewed | gsl_sf_gegenpoly_n returning unexpected values |
+| 58060 | 2020-03-28 | bug | Accuracy problem | none | rejected — not-a-bug: `L^a_0 = 1`; documented + NaN rule (fc4059b12) | Dropped NaN from gsl_sf_laguerre_n |
+| 58061 | 2020-03-28 | bug | Accuracy problem | none | rejected — not-a-bug: `U(0,1,x) = 1`; documented + NaN rule (fc4059b12) | Dropped NaN from gsl_sf_hyperg_U_int |
+| 58062 | 2020-03-28 | bug | Accuracy problem | none | rejected — not-a-bug: `1F1(0,1,x) = 1`; reporter conceded (fc4059b12) | Dropped NaN from gsl_sf_hyperg1F1_int |
+| 58063 | 2020-03-28 | - | Accuracy problem | none | rejected — not-a-bug: `hermite`/`gegenpoly` n=0 values correct; `bessel_zero_Jnu` s=0 documented (fc4059b12) | Dropped NaNs in multiple cases |
+| 58064 | 2020-03-28 | - | Accuracy problem | none | **fixed** — Si/Ci limits at inf; the rest already correct (3afec212b) | Inconsistent evaluation of limits in special functions |
+| 58065 | 2020-03-28 | - | - | none | **fixed** — `C_n^(0)(x) = 0` for n >= 1 (01d7e7609) | gsl_sf_gegenpoly_n returning unexpected values |
 | 58066 | 2020-03-28 | bug | Accuracy problem | clean psi.c.patch | **fixed** — psi poles at all non-positive integers (d53d00109) | Digamma function returning incorrect values for (most) negative integers |
 | 58067 | 2020-03-28 | - | Accuracy problem | none | rejected — not-a-bug: Ai(113) genuinely underflows; documented | Missing asymptotic behavior of the airy Ai function |
 | 58068 | 2020-03-28 | - | Documentation | none | not reviewed | gsl_sf_bessel_Jnu docs lacking important domain information |

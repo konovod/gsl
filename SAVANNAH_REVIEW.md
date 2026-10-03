@@ -1578,3 +1578,66 @@ control: 8 failures (7 vectors + summary) with the factor reverted.
 
 Files: `specfunc/hyperg_2F1.c`, `specfunc/test_hyperg.c`.  Commits
 `2aa89bae8`, `46b7c412e`.  Full CTest suite: 56/56.
+
+
+## Group E — the 2020 specfunc NaN/limit cluster: #55687, #58031, #58060–#58065
+
+All filed by Jackson Vanover, 2019–2020, none with a patch attached, so
+every item is a from-scratch reproduction.  The reports are grouped
+because they all concern the same question: what should a special
+function do with an argument that is non-finite, or a parameter at which
+the general formula is singular.
+
+The rule the fork applies, settled by `#57978` and `#57979`:
+
+* a **NaN** argument propagates; it is never a domain error;
+* a non-finite argument **with a finite limit** is in the domain
+  (`GSL_SUCCESS`);
+* a non-finite argument with no limit, or non-physical for that slot,
+  is a domain violation (`GSL_EDOM`);
+* a removing value (the parameter does not affect the result) is
+  returned, which is the same limit semantics the fork already gave
+  `1F1_e` in `#58032`.
+
+Reproduction used the built `gsl.dll` under ctypes, so each symptom was
+observed rather than inferred.
+
+**Fixed:**
+
+* `#55687` — `gsl_sf_hyperg_1F1_e(1, NaN, -1)` **crashed** with a stack
+  overflow.  With `b = NaN` nothing classifies, the `b < 0` branch calls
+  `hyperg_1F1_ab_neg()` → `hyperg_1F1_U()`, which re-enters
+  `gsl_sf_hyperg_1F1_e()` with the same `b`, and the mutual recursion has
+  no base case.  A NaN guard returns NaN/NaN, `GSL_SUCCESS`.  Negative
+  control: the test program aborts with `STATUS_STACK_OVERFLOW`
+  (`0xC00000FD`) without the guard.  Commit `99a73dd36`.
+
+* `#58064` — only the Si/Ci half is a code defect.  `Si(±inf)` and
+  `Ci(+inf)` returned NaN because the asymptotics evaluate `cos/sin(inf)`;
+  all three have finite limits (`±pi/2`, `0`) and are now returned.
+  `Ci(-inf)` stays `GSL_EDOM` (no limit, and `Ci` is undefined for
+  `x < 0`).  The other functions in the report (`gamma_inc_P/Q`,
+  `gamma_inc`, `erf`, `erfc`, `poch`) already return the correct finite
+  limits; they are documented, not changed.  Commit `3afec212b`.
+
+* `#58065` — `C_n^(lambda)(x)` is identically 0 at `lambda = 0` and
+  `n >= 1` (scipy and mpmath agree for `n = 1..5`).  GSL returned the
+  limit `2 T_n(x)/n`, including from explicit `lambda == 0` branches in
+  `_1_e`/`_2_e`/`_3_e`, and the recurrence in `_n_e` seeded from them.
+  All four, and the array form, now return 0.  Three existing vectors
+  encoded the old limit values and are corrected.  Commit `01d7e7609`.
+
+**Rejected as not-a-bug:** `#58060`, `#58061`, `#58062`, `#58063` and the
+`bessel_zero_Jnu` case, plus `#58031`.  These all report that a NaN is
+"dropped" where the function returns a value independent of that
+argument (`laguerre_n(0,a,x) = 1`, `U_int(0,1,x) = 1`,
+`1F1_int(0,1,x) = 1`, `hermite(0,x) = 1`, `gegenpoly_n(0,lambda,x) = 1`).
+Under the fork's rule that is correct propagation: the answer does not
+depend on the unknown, so inventing a NaN would be wrong.  `#58031`
+(`Kn_scaled(0,+inf) = 0`) is the finite limit `e^x K_0(x) -> 0`, also
+correct.  The one real gap was documentation, addressed in `fc4059b12`,
+which also adds the NaN rule to the relevant entries and a
+`Kn_scaled(0,+inf)` vector.
+
+Recorded in `FORKNEWS` under `[upstream]` (four changes) and `[rejected]`
+(one entry), commit `91bdc2d04`.  Full CTest suite 56/56 on MSVC.
