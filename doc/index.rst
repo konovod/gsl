@@ -51,6 +51,7 @@ GNU Scientific Library
    lls.rst
    nls.rst
    bspline.rst
+   bst.rst
    spmatrix.rst
    spblas.rst
    splinalg.rst

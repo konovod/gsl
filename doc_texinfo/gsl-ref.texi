@@ -276,6 +276,7 @@ project homepage thanks to Daisuke Tominaga.
 * Least-Squares Fitting::       
 * Nonlinear Least-Squares Fitting::  
 * Basis Splines::
+* Binary Search Trees::
 * Sparse Matrices::
 * Sparse BLAS Support::
 * Sparse Linear Algebra::
@@ -451,11 +452,15 @@ project homepage thanks to Daisuke Tominaga.
 @chapter Nonlinear Least-Squares Fitting
 @include multifit-nlinear.texi
 
-@node Basis Splines, Sparse Matrices, Nonlinear Least-Squares Fitting, Top
+@node Basis Splines, Binary Search Trees, Nonlinear Least-Squares Fitting, Top
 @chapter Basis Splines
 @include bspline.texi
 
-@node Sparse Matrices, Sparse BLAS Support, Basis Splines, Top
+@node Binary Search Trees, Sparse Matrices, Basis Splines, Top
+@chapter Binary Search Trees
+@include bst.texi
+
+@node Sparse Matrices, Sparse BLAS Support, Binary Search Trees, Top
 @chapter Sparse Matrices
 @include spmatrix.texi
 

@@ -1,0 +1,202 @@
+@cindex binary search trees
+@cindex AVL trees
+@cindex red-black trees
+
+@quotation Note
+This chapter was generated automatically (with AI assistance) as a first
+draft and has not been reviewed by a human.  Check it against
+@file{gsl_bst.h} and the sources under @file{bst/} before relying on it.
+@end quotation
+
+The functions described in this chapter create and manipulate binary
+search trees.  A binary search tree stores a set of items ordered by a
+user-supplied comparison function, and supports insertion, lookup and
+removal.  The module is derived from Ben Pfaff's GNU libavl and provides
+AVL trees and red-black trees, both of which keep the height of the tree
+logarithmic in the number of items.
+
+The functions are declared in the header files @file{gsl_bst.h},
+@file{gsl_bst_types.h}, @file{gsl_bst_avl.h} and @file{gsl_bst_rb.h}.
+
+@menu
+* Binary Search Trees Types::   
+* Binary Search Trees Allocation::  
+* Binary Search Trees Modifying::  
+* Binary Search Trees Traversal::  
+* Binary Search Trees References and Further Reading::  
+@end menu
+
+@node Binary Search Trees Types
+@section Types
+@cindex binary search trees, types
+
+@deftp {Data Type} {gsl_bst_type}
+A structure containing the function pointers and other properties that
+define one kind of tree.  The library provides two instances,
+@code{gsl_bst_avl} and @code{gsl_bst_rb}; the routines below take one of
+these as their @var{T} argument.
+@end deftp
+
+@deftp {Data Type} {gsl_bst_cmp_function}
+The type of the comparison function:
+
+@example
+int compare (const void * a, const void * b, void * params);
+@end example
+
+@noindent
+It must return a negative value if @var{a} orders before @var{b}, zero if
+the two are equal, and a positive value otherwise.
+@end deftp
+
+@deftp {Data Type} {gsl_bst_allocator}
+A replacement memory allocator:
+
+@example
+typedef struct
+@{
+  void * (*alloc) (size_t size, void * params);
+  void (*free) (void * block, void * params);
+@} gsl_bst_allocator;
+@end example
+
+@noindent
+A null pointer passed to @code{gsl_bst_alloc} selects the standard
+@code{malloc} and @code{free} functions.
+@end deftp
+
+@deftp {Data Type} {gsl_bst_workspace}
+A workspace holding a tree and its associated state.  It is created by
+@code{gsl_bst_alloc} and released with @code{gsl_bst_free}.
+@end deftp
+
+@deftp {Data Type} {gsl_bst_trav}
+A traverser, used to walk through a tree in order.
+@end deftp
+
+@node Binary Search Trees Allocation
+@section Allocation
+
+@deftypefun {gsl_bst_workspace *} gsl_bst_alloc (const gsl_bst_type * @var{T}, const gsl_bst_allocator * @var{allocator}, gsl_bst_cmp_function * @var{compare}, void * @var{params})
+This function allocates and initializes a tree of type @var{T}, which
+must be @code{gsl_bst_avl} or @code{gsl_bst_rb}.  The @var{compare}
+function defines the ordering, and @var{params} is passed unchanged to it
+and to the allocator.  On success the new workspace is returned; on
+failure a null pointer is returned and the error handler is invoked with
+@code{GSL_ENOMEM}.
+@end deftypefun
+
+@deftypefun void gsl_bst_free (gsl_bst_workspace * @var{w})
+This function frees every node in @var{w} and the workspace itself.  The
+items stored in the tree are not freed; if the tree owns them, the caller
+must free them first.
+@end deftypefun
+
+@node Binary Search Trees Modifying
+@section Modifying the tree
+
+@deftypefun int gsl_bst_empty (gsl_bst_workspace * @var{w})
+This function removes every item from @var{w}, leaving it empty.
+@end deftypefun
+
+@deftypefun void * gsl_bst_insert (void * @var{item}, gsl_bst_workspace * @var{w})
+This function inserts @var{item} into the tree.  If an equal item is
+already present, no insertion takes place and a pointer to the existing
+item is returned; otherwise @var{item} is stored and returned.  A null
+pointer is returned if memory for the new node cannot be obtained.  The
+library stores the pointer it is given and does not copy the item, so the
+item must stay valid while it is in the tree.
+@end deftypefun
+
+@deftypefun void * gsl_bst_find (const void * @var{item}, const gsl_bst_workspace * @var{w})
+This function returns a pointer to the item in the tree equal to
+@var{item}, or a null pointer if there is none.
+@end deftypefun
+
+@deftypefun void * gsl_bst_remove (const void * @var{item}, gsl_bst_workspace * @var{w})
+This function removes the item equal to @var{item} and returns a pointer
+to it.  If no matching item is present the tree is unchanged and a null
+pointer is returned.
+@end deftypefun
+
+@deftypefun size_t gsl_bst_nodes (const gsl_bst_workspace * @var{w})
+This function returns the number of items in the tree.
+@end deftypefun
+
+@deftypefun size_t gsl_bst_node_size (const gsl_bst_workspace * @var{w})
+This function returns the size in bytes of each node.
+@end deftypefun
+
+@deftypefun {const char *} gsl_bst_name (const gsl_bst_workspace * @var{w})
+This function returns a string naming the tree type, such as
+@code{"AVL"} or @code{"RB"}.
+@end deftypefun
+
+@node Binary Search Trees Traversal
+@section Traversal
+
+A traverser walks the items of a tree in their sorted order.  It must be
+initialized by @code{gsl_bst_trav_first}, @code{gsl_bst_trav_last},
+@code{gsl_bst_trav_find} or @code{gsl_bst_trav_init} before use, and it
+is invalidated by any modification of the tree.
+
+@deftypefun int gsl_bst_trav_init (gsl_bst_trav * @var{trav}, const gsl_bst_workspace * @var{w})
+This function initializes @var{trav} for the tree @var{w}.  The traverser
+is not positioned on any item.
+@end deftypefun
+
+@deftypefun void * gsl_bst_trav_first (gsl_bst_trav * @var{trav}, const gsl_bst_workspace * @var{w})
+This function initializes @var{trav} and returns the least-valued item in
+the tree, or a null pointer if the tree is empty.
+@end deftypefun
+
+@deftypefun void * gsl_bst_trav_last (gsl_bst_trav * @var{trav}, const gsl_bst_workspace * @var{w})
+This function initializes @var{trav} and returns the greatest-valued item
+in the tree, or a null pointer if the tree is empty.
+@end deftypefun
+
+@deftypefun void * gsl_bst_trav_find (const void * @var{item}, gsl_bst_trav * @var{trav}, const gsl_bst_workspace * @var{w})
+This function searches for @var{item}, positions @var{trav} on it and
+returns it, or returns a null pointer if the item is not present.
+@end deftypefun
+
+@deftypefun void * gsl_bst_trav_insert (void * @var{item}, gsl_bst_trav * @var{trav}, gsl_bst_workspace * @var{w})
+This function behaves as @code{gsl_bst_insert}, but also positions
+@var{trav} on the inserted item (or on the existing duplicate).
+@end deftypefun
+
+@deftypefun void * gsl_bst_trav_copy (gsl_bst_trav * @var{dest}, const gsl_bst_trav * @var{src})
+This function copies the traverser @var{src} into @var{dest} and returns
+a pointer to the current item.
+@end deftypefun
+
+@deftypefun void * gsl_bst_trav_next (gsl_bst_trav * @var{trav})
+This function advances @var{trav} to the next item in order and returns
+it, or returns a null pointer if there is none.
+@end deftypefun
+
+@deftypefun void * gsl_bst_trav_prev (gsl_bst_trav * @var{trav})
+This function moves @var{trav} to the previous item in order and returns
+it, or returns a null pointer if there is none.
+@end deftypefun
+
+@deftypefun void * gsl_bst_trav_cur (const gsl_bst_trav * @var{trav})
+This function returns the current item without moving the traverser.
+@end deftypefun
+
+@deftypefun void * gsl_bst_trav_replace (gsl_bst_trav * @var{trav}, void * @var{new_item})
+This function replaces the current item with @var{new_item} and returns
+the item it replaced.  The replacement must compare equal to the item it
+replaces, so that the ordering of the tree is unchanged.
+@end deftypefun
+
+@node Binary Search Trees References and Further Reading
+@section References and Further Reading
+
+The algorithms are those of the GNU libavl library:
+
+@itemize @w{}
+@item
+Ben Pfaff, @cite{An Introduction to Binary Search Trees and Balanced
+Trees}, Free Software Foundation, 2004.
+@end itemize
