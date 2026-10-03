@@ -439,6 +439,11 @@ int test_coupling(void)
   TEST_SF(s, gsl_sf_coupling_3j_e, (2*249.0, 2*248.0, 2*2.0, 2*5.0, 2*(-6.0), 2*1.0, &r), 0.0228787564223517967033998, TEST_TOL3, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_coupling_3j_e, (2*248.0, 2*247.0, 2*2.0, 2*5.0, 2*(-6.0), 2*1.0, &r), -0.022926660587726369939271424097, TEST_TOL3, GSL_SUCCESS);
 
+  /* Test 3j large j: (j j j; 0 0 0) at j = 100 has the closed form
+     (-1)^J sqrt((2J-2j)!^3/(2J+1)!) J!/(J-j)!^3 with J = 3j/2 */
+
+  TEST_SF(s, gsl_sf_coupling_3j_e, (200, 200, 200, 0, 0, 0, &r), 6.03239131346568400665080552055e-3, TEST_TOL2, GSL_SUCCESS);
+
   /* Test 6j */
 
   TEST_SF(s, gsl_sf_coupling_6j_e, (2, 2, 4, 2, 2, 2, &r),  1.0/6.0, TEST_TOL0, GSL_SUCCESS);
@@ -450,6 +455,19 @@ int test_coupling(void)
   TEST_SF(s, gsl_sf_coupling_6j_e, (6, 6, 6, 4, 4, 2, &r), -sqrt(3.0/5.0)/7.0, TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_coupling_6j_e, (1, 0, 1, 0, 1, 0, &r), -sqrt(1.0/2.0), TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_coupling_6j_e, (1, 0, 1, 1, 0, 1, &r), -1.0/2.0, TEST_TOL0, GSL_SUCCESS);
+
+  /* Test 6j for large j: the factorial overflow of bug #43256 and the
+     cancellation of bug #68312.  Independent references from sympy and
+     the exact Racah formula, checked at 40 significant digits. */
+
+  TEST_SF(s, gsl_sf_coupling_6j_e, (28, 32, 32, 156, 124, 152, &r), 3.60285887003211998154021789910e-4, TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_coupling_6j_e, (100, 100, 100, 100, 100, 100, &r), -1.12137492362641992871376162796e-4, TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_coupling_6j_e, (200, 200, 200, 200, 200, 200, &r), -4.69841623298744208135307670340e-4, TEST_TOL2, GSL_SUCCESS);
+  /* Degenerate case: a single allowed value, 1/(2j+1) with j = 100 */
+  TEST_SF(s, gsl_sf_coupling_6j_e, (200, 200, 0, 200, 200, 0, &r), 1.0/201.0, TEST_TOL2, GSL_SUCCESS);
+  /* Half-integer angular momenta, including large j */
+  TEST_SF(s, gsl_sf_coupling_6j_e, (1, 3, 2, 1, 3, 2, &r), -1.0/12.0, TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_coupling_6j_e, (199, 201, 2, 199, 201, 2, &r), -2.46293286045022412689030097040e-7, TEST_TOL2, GSL_SUCCESS);
 
   /* Test 6j error checking */
 
@@ -480,6 +498,12 @@ int test_coupling(void)
 
   TEST_SF(s, gsl_sf_coupling_9j_e, (4, 2,  4, 3, 3, 2, 1, 1, 2, &r), -sqrt(1.0/6.0)/10.0, TEST_TOL2, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_coupling_9j_e, (8, 4, 10, 7, 3, 8, 1, 1, 2, &r),  sqrt(7.0/3.0)/60.0, TEST_TOL2, GSL_SUCCESS);
+
+  /* Test 9j for large j, which inherits the stable 6j (bug #68312);
+     independent references from sympy and the exact Racah formula. */
+
+  TEST_SF(s, gsl_sf_coupling_9j_e, (100, 100, 100, 100, 100, 100, 100, 100, 100, &r), 5.10641080337977029996849210837e-6, TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_coupling_9j_e, (200, 200, 200, 200, 200, 200, 200, 200, 200, &r), 8.09666386879291383890464392044e-7, TEST_TOL2, GSL_SUCCESS);
 
   /* Test 9j error checking */
 

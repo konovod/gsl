@@ -47,34 +47,254 @@ int locMin3(const int a, const int b, const int c)
   return GSL_MIN(d, c);
 }
 
-inline
-static
-int locMin5(const int a, const int b, const int c, const int d, const int e)
-{
-  int f = GSL_MIN(a, b);
-  int g = GSL_MIN(c, d);
-  int h = GSL_MIN(f, g);
-  return GSL_MIN(e, h);
-}
-
-
-/* See: [Thompson, Atlas for Computing Mathematical Functions] */
+/* Calculation of the 6j symbol by the Schulten-Gordon three-term
+ * recurrence in the first angular momentum, with a forward and a
+ * backward recursion matched in the interior.  This avoids both the
+ * factorial overflow of the Racah sum and the catastrophic cancellation
+ * it suffers for large angular momenta.
+ *
+ * Adapted from the public-domain SLATEC routine DRC6J, which implements
+ * Schulten & Gordon, J. Math. Phys. 16 (1975) 1961 and
+ * Comput. Phys. Commun. 11 (1976) 269.  The recurrence variable is
+ * two_ja; the other five arguments are held fixed.
+ */
 
 static
 int
-delta(int ta, int tb, int tc, gsl_sf_result * d)
+coupling_6j_recurrence(int two_ja, int two_jb, int two_jc,
+                       int two_jd, int two_je, int two_jf,
+                       gsl_sf_result * result)
 {
-  gsl_sf_result f1, f2, f3, f4;
-  int status = 0;
-  status += gsl_sf_fact_e((ta + tb - tc)/2, &f1);
-  status += gsl_sf_fact_e((ta + tc - tb)/2, &f2);
-  status += gsl_sf_fact_e((tb + tc - ta)/2, &f3);
-  status += gsl_sf_fact_e((ta + tb + tc)/2 + 1, &f4);
-  if(status != 0) {
-    OVERFLOW_ERROR(d);
+  const double L2 = 0.5 * two_jb;
+  const double L3 = 0.5 * two_jc;
+  const double L4 = 0.5 * two_jd;
+  const double L5 = 0.5 * two_je;
+  const double L6 = 0.5 * two_jf;
+  const double L1 = 0.5 * two_ja;
+  const double huge = sqrt(GSL_DBL_MAX / 20.0);
+  const double srhuge = sqrt(huge);
+  const double tiny = 1.0 / huge;
+  const double srtiny = 1.0 / srhuge;
+  const double l1min = GSL_MAX(fabs(L2 - L3), fabs(L5 - L6));
+  const double l1max = GSL_MIN(L2 + L3, L5 + L6);
+  const int nfin = (int)(l1max - l1min + 1.01);
+  double stack[64];
+  double * six;
+  double l1, newfac, oldfac, c1, c1old, c2 = 0.0, dv, denom, x = 0.0, y = 0.0;
+  double x1 = 0.0, x2 = 0.0, x3 = 0.0, y1 = 0.0, y2 = 0.0, y3 = 0.0;
+  double sum1 = 0.0, sum2 = 0.0, sumfor = 0.0, sumbac = 0.0, sumuni = 0.0;
+  double ratio, cnorm, sign1, sign2;
+  int lstep, nstep2, nfinp2, nfinp3, nlim, n, have_sumuni;
+  const int lsum = (two_jb + two_jc + two_je + two_jf) / 2;
+
+  if(nfin <= 0) {
+    result->val = 0.0;
+    result->err = 0.0;
+    return GSL_SUCCESS;
   }
-  d->val = f1.val * f2.val * f3.val / f4.val;
-  d->err = 4.0 * GSL_DBL_EPSILON * fabs(d->val);
+
+  if(nfin <= 1) {
+    /* The triangle conditions leave a single value for two_ja. */
+    result->val = (GSL_IS_ODD(lsum) ? -1.0 : 1.0)
+                  / sqrt((l1min + l1min + 1.0) * (L4 + L4 + 1.0));
+    result->err = 2.0 * GSL_DBL_EPSILON * fabs(result->val);
+    return GSL_SUCCESS;
+  }
+
+  if(nfin <= (int)(sizeof(stack) / sizeof(stack[0]))) {
+    six = stack;
+  }
+  else {
+    six = (double *) malloc(nfin * sizeof(double));
+    if(six == NULL) {
+      result->val = GSL_NAN;
+      result->err = GSL_NAN;
+      GSL_ERROR("allocation failed", GSL_ENOMEM);
+    }
+  }
+
+  /* Forward recursion from l1min. */
+  l1 = l1min;
+  newfac = 0.0;
+  c1 = 0.0;
+  c1old = 0.0;
+  denom = 0.0;
+  x = 0.0;
+  have_sumuni = 0;
+  six[0] = srtiny;
+  sum1 = (l1 + l1 + 1.0) * tiny;
+  lstep = 1;
+
+  for(;;) {
+    lstep++;
+    l1 += 1.0;
+    oldfac = newfac;
+    {
+      double a1 = (l1 + L2 + L3 + 1.0) * (l1 - L2 + L3)
+                * (l1 + L2 - L3) * (-l1 + L2 + L3 + 1.0);
+      double a2 = (l1 + L5 + L6 + 1.0) * (l1 - L5 + L6)
+                * (l1 + L5 - L6) * (-l1 + L5 + L6 + 1.0);
+      newfac = sqrt(a1 * a2);
+    }
+
+    if(l1 < 1.01) {
+      c1 = -2.0 * (L2 * (L2 + 1.0) + L5 * (L5 + 1.0) - L4 * (L4 + 1.0))
+           / newfac;
+    }
+    else {
+      dv = 2.0 * (L2 * (L2 + 1.0) * L5 * (L5 + 1.0)
+                  + L3 * (L3 + 1.0) * L6 * (L6 + 1.0)
+                  - l1 * (l1 - 1.0) * L4 * (L4 + 1.0))
+         - (L2 * (L2 + 1.0) + L3 * (L3 + 1.0) - l1 * (l1 - 1.0))
+           * (L5 * (L5 + 1.0) + L6 * (L6 + 1.0) - l1 * (l1 - 1.0));
+      denom = (l1 - 1.0) * newfac;
+      if(lstep > 2)
+        c1old = fabs(c1);
+      c1 = -(l1 + l1 - 1.0) * dv / denom;
+    }
+
+    if(lstep <= 2) {
+      x = srtiny * c1;
+      six[1] = x;
+      sum1 += tiny * (l1 + l1 + 1.0) * c1 * c1;
+      if(lstep == nfin) {
+        sumuni = sum1;
+        have_sumuni = 1;
+        break;
+      }
+      continue;
+    }
+
+    c2 = -l1 * oldfac / denom;
+    x = c1 * six[lstep - 2] + c2 * six[lstep - 3];
+    six[lstep - 1] = x;
+    sumfor = sum1;
+    sum1 += (l1 + l1 + 1.0) * x * x;
+    if(lstep == nfin)
+      break;
+
+    if(fabs(x) >= srhuge) {
+      for(n = 0; n < lstep; n++) {
+        if(fabs(six[n]) < srtiny)
+          six[n] = 0.0;
+        six[n] /= srhuge;
+      }
+      sum1 /= huge;
+      sumfor /= huge;
+      x /= srhuge;
+    }
+
+    /* Continue only while |c1| decreases; the recurrence is stable in
+     * the downhill direction. */
+    if(c1old - fabs(c1) <= 0.0)
+      break;
+  }
+
+  x1 = x;
+  x2 = six[lstep - 2];
+  x3 = six[lstep - 3];
+
+  if(!have_sumuni) {
+    /* Backward recursion from l1max, matched to the forward one. */
+    nfinp2 = nfin + 2;
+    nfinp3 = nfin + 3;
+    nstep2 = nfin - lstep + 3;
+    l1 = l1max;
+    six[nfin - 1] = srtiny;
+    sum2 = (l1 + l1 + 1.0) * tiny;
+    l1 += 2.0;
+    lstep = 1;
+    y = 0.0;
+
+    for(;;) {
+      lstep++;
+      l1 -= 1.0;
+      oldfac = newfac;
+      {
+        double a1s = (l1 + L2 + L3) * (l1 - L2 + L3 - 1.0)
+                   * (l1 + L2 - L3 - 1.0) * (-l1 + L2 + L3 + 2.0);
+        double a2s = (l1 + L5 + L6) * (l1 - L5 + L6 - 1.0)
+                   * (l1 + L5 - L6 - 1.0) * (-l1 + L5 + L6 + 2.0);
+        newfac = sqrt(a1s * a2s);
+      }
+      dv = 2.0 * (L2 * (L2 + 1.0) * L5 * (L5 + 1.0)
+                  + L3 * (L3 + 1.0) * L6 * (L6 + 1.0)
+                  - l1 * (l1 - 1.0) * L4 * (L4 + 1.0))
+         - (L2 * (L2 + 1.0) + L3 * (L3 + 1.0) - l1 * (l1 - 1.0))
+           * (L5 * (L5 + 1.0) + L6 * (L6 + 1.0) - l1 * (l1 - 1.0));
+      denom = l1 * newfac;
+      c1 = -(l1 + l1 - 1.0) * dv / denom;
+
+      if(lstep <= 2) {
+        y = srtiny * c1;
+        six[nfin - 2] = y;
+        if(lstep == nstep2)
+          break;
+        sumbac = sum2;
+        sum2 += tiny * (l1 + l1 - 3.0) * c1 * c1;
+        continue;
+      }
+
+      c2 = -(l1 - 1.0) * oldfac / denom;
+      y = c1 * six[nfinp2 - lstep - 1] + c2 * six[nfinp3 - lstep - 1];
+      if(lstep == nstep2)
+        break;
+      six[nfin - lstep] = y;
+      sumbac = sum2;
+      sum2 += (l1 + l1 - 3.0) * y * y;
+
+      if(fabs(y) >= srhuge) {
+        for(n = 0; n < lstep; n++) {
+          int index = nfin - n;
+          if(fabs(six[index - 1]) < srtiny)
+            six[index - 1] = 0.0;
+          six[index - 1] /= srhuge;
+        }
+        sumbac /= huge;
+        sum2 /= huge;
+      }
+    }
+
+    y3 = y;
+    y2 = six[nfinp2 - lstep - 1];
+    y1 = six[nfinp3 - lstep - 1];
+
+    ratio = (x1 * y1 + x2 * y2 + x3 * y3)
+            / (x1 * x1 + x2 * x2 + x3 * x3);
+    nlim = nfin - nstep2 + 1;
+
+    if(fabs(ratio) >= 1.0) {
+      for(n = 0; n < nlim; n++)
+        six[n] *= ratio;
+      sumuni = ratio * ratio * sumfor + sumbac;
+    }
+    else {
+      nlim += 1;
+      ratio = 1.0 / ratio;
+      for(n = nlim - 1; n < nfin; n++)
+        six[n] *= ratio;
+      sumuni = sumfor + ratio * ratio * sumbac;
+    }
+  }
+
+  /* Normalise to (2 L4 + 1) sum (2 L1 + 1) {6j}^2 = 1 and fix the
+   * overall sign by the phase of the last coefficient. */
+  cnorm = 1.0 / sqrt((L4 + L4 + 1.0) * sumuni);
+  sign1 = (six[nfin - 1] >= 0.0) ? 1.0 : -1.0;
+  sign2 = GSL_IS_ODD(lsum) ? -1.0 : 1.0;
+  if(sign1 * sign2 <= 0.0)
+    cnorm = -cnorm;
+
+  {
+    int index = (int)(L1 - l1min + 0.5);
+    const double val = cnorm * six[index];
+    result->val = val;
+    result->err = (8.0 + 2.0 * nfin) * GSL_DBL_EPSILON * fabs(val);
+  }
+
+  if(six != stack)
+    free(six);
+
   return GSL_SUCCESS;
 }
 
@@ -403,93 +623,8 @@ gsl_sf_coupling_6j_e(int two_ja, int two_jb, int two_jc,
     return GSL_SUCCESS;
   }
   else {
-    gsl_sf_result n1;
-    gsl_sf_result d1, d2, d3, d4, d5, d6;
-    double norm;
-    int tk, tkmin, tkmax;
-    double phase;
-    double sum_pos = 0.0;
-    double sum_neg = 0.0;
-    double sumsq_err = 0.0;
-    int status = 0;
-    status += delta(two_ja, two_jb, two_jc, &d1);
-    status += delta(two_ja, two_je, two_jf, &d2);
-    status += delta(two_jb, two_jd, two_jf, &d3);
-    status += delta(two_je, two_jd, two_jc, &d4);
-    if(status != GSL_SUCCESS) {
-      OVERFLOW_ERROR(result);
-    }
-    norm = sqrt(d1.val) * sqrt(d2.val) * sqrt(d3.val) * sqrt(d4.val);
-    
-    tkmin = locMax3(0,
-                   two_ja + two_jd - two_jc - two_jf,
-                   two_jb + two_je - two_jc - two_jf);
-
-    tkmax = locMin5(two_ja + two_jb + two_je + two_jd + 2,
-                    two_ja + two_jb - two_jc,
-                    two_je + two_jd - two_jc,
-                    two_ja + two_je - two_jf,
-                    two_jb + two_jd - two_jf);
-
-    phase = GSL_IS_ODD((two_ja + two_jb + two_je + two_jd + tkmin)/2)
-            ? -1.0
-            :  1.0;
-
-    for(tk=tkmin; tk<=tkmax; tk += 2) {
-      double term;
-      double term_err;
-      gsl_sf_result den_1, den_2;
-      gsl_sf_result d1_a, d1_b;
-      status = 0;
-
-      status += gsl_sf_fact_e((two_ja + two_jb + two_je + two_jd - tk)/2 + 1, &n1);
-      status += gsl_sf_fact_e(tk/2, &d1_a);
-      status += gsl_sf_fact_e((two_jc + two_jf - two_ja - two_jd + tk)/2, &d1_b);
-      status += gsl_sf_fact_e((two_jc + two_jf - two_jb - two_je + tk)/2, &d2);
-      status += gsl_sf_fact_e((two_ja + two_jb - two_jc - tk)/2, &d3);
-      status += gsl_sf_fact_e((two_je + two_jd - two_jc - tk)/2, &d4);
-      status += gsl_sf_fact_e((two_ja + two_je - two_jf - tk)/2, &d5);
-      status += gsl_sf_fact_e((two_jb + two_jd - two_jf - tk)/2, &d6);
-
-      if(status != GSL_SUCCESS) {
-        OVERFLOW_ERROR(result);
-      }
-
-      d1.val = d1_a.val * d1_b.val;
-      d1.err = d1_a.err * fabs(d1_b.val) + fabs(d1_a.val) * d1_b.err;
-
-      den_1.val  = d1.val*d2.val*d3.val;
-      den_1.err  = d1.err * fabs(d2.val*d3.val);
-      den_1.err += d2.err * fabs(d1.val*d3.val);
-      den_1.err += d3.err * fabs(d1.val*d2.val);
-
-      den_2.val  = d4.val*d5.val*d6.val;
-      den_2.err  = d4.err * fabs(d5.val*d6.val);
-      den_2.err += d5.err * fabs(d4.val*d6.val);
-      den_2.err += d6.err * fabs(d4.val*d5.val);
-
-      term  = phase * n1.val / den_1.val / den_2.val;
-      phase = -phase;
-      term_err  = n1.err / fabs(den_1.val) / fabs(den_2.val);
-      term_err += fabs(term / den_1.val) * den_1.err;
-      term_err += fabs(term / den_2.val) * den_2.err;
-
-      if(term >= 0.0) {
-        sum_pos += norm*term;
-      }
-      else {
-        sum_neg -= norm*term;
-      }
-
-      sumsq_err += norm*norm * term_err*term_err;
-    }
-
-    result->val  = sum_pos - sum_neg;
-    result->err  = 2.0 * GSL_DBL_EPSILON * (sum_pos + sum_neg);
-    result->err += sqrt(sumsq_err / (0.5*(tkmax-tkmin)+1.0));
-    result->err += 2.0 * GSL_DBL_EPSILON * (tkmax - tkmin + 2.0) * fabs(result->val);
-
-    return GSL_SUCCESS;
+    return coupling_6j_recurrence(two_ja, two_jb, two_jc,
+                                  two_jd, two_je, two_jf, result);
   }
 }
 
