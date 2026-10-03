@@ -97,6 +97,9 @@ has to be tested against the built library.  See `#52321` below.
 | `#39057` | **fixed 2026-10-02** (commit 9befdae95): the reported call is real but its expected value, `0.99477710813146`, is `gsl_cdf_chisq_P(0.5, 0.01)`, not the inverse.  The gamma inverse's branch heuristic is only valid for `a >= 1`; with `a = 0.005` the fixed-step iteration cannot reach `3.51e-61`, and `gsl_cdf_gamma_Qinv` returned wrong values silently.  The solver is reworked around a bracketed Pegasus iteration on `log x`, and both entry points delegate to the smaller tail.  No patch was posted |
 | `#53451` | **fixed 2026-10-02** (commit 2673ce0d8): the title says `Pcomp` but the report's numbers are the *incomplete* `gsl_sf_ellint_P`.  Both it and `Pcomp` evaluate `Pi` through `RJ(..., 1 + n sin^2(phi))`, which rejected `p < 0` with `GSL_EDOM`; that is exactly the case where the integrand has a pole and the value is the Cauchy principal value.  `gsl_sf_ellint_RJ_e` now applies the DLMF 19.20.14 / Boost.Math transformation for `p < 0` (`p = 0` still `GSL_EDOM`), and `gsl_sf_ellint_P_e`'s error estimate no longer propagates a signed `n/3`.  Five vectors added; manual updated in both trees |
 | `#43256` + `#68312` | **fixed 2026-10-03** (commit 59fc479e2): the direct Racah 6j sum overflowed at about `171!` (the report's `(14,16,16;78,62,76)` is the doubled form of `(28,32,32;156,124,152)`) and, below that, cancelled catastrophically - at `j = 100` the largest term is `~3e14` times the result.  Replaced by the Schulten-Gordon recurrence (public-domain SLATEC `DRC6J`), with backward/forward matching and orthogonal normalisation; 9j and Racah W inherit it.  References from sympy and an exact Racah evaluation; negative control fails with `val = inf`, `GSL_EOVRFLW` |
+| `#45924` | **fixed 2026-10-03** (commit 51a63cbd5): the beta inverse bisected to an absolute `Ptol = 0.01` and then ran an unsafeguarded Newton iteration, so large `a,b` at any tail away from one half (and `a << 1`, and `Qinv`'s `1 - Pinv` complement) returned `NaN`.  Reworked on `t = logit(x)` with a maintained bracket, safeguarded Newton and direct upper-tail evaluation.  Verified against scipy `betaincinv`/`betainccinv` over 173000 points, worst relative error `7.4e-11`.  Ten report vectors plus fdist delegation vectors added |
+| `#67058` | **fixed 2026-10-03** (commit 68fc3c752): `gsl_stats_mean` returned 0.0 for an empty data set (the recurrence leaves the accumulator at zero) and the variance/sd family returned 0.0 through it; R and numpy return `NaN`.  `gsl_stats_mean` and `compute_variance` now raise `GSL_EBADLEN`, returning `NaN` with the handler off; `tss` is left at 0.  Both manuals updated.  99 new failures with the guards reverted |
+| `#42502` | **rejected** (not a bug): `gsl_cdf_ugaussian_Pinv(0.5)` returns exactly 0.0 on the built DLL and is covered by `cdf/test.c:498`.  The reporter's program omits `<gsl/gsl_cdf.h>`, so the function is implicitly declared `int` and `printf`'s second `%f` reads a stale vararg slot (the `1.000000`) |
 
 ## Resolved
 
@@ -1881,3 +1884,104 @@ to the system `sin`/`cos` for large `x` (by design, matching the *j*
 functions), so they inherit the MinGW defect.  MinGW is not one of the
 fork's build targets (MSVC, Linux, macOS), so this is recorded but not
 acted on here.
+
+
+## Group J - distribution inverse / quantile bugs: #42502, #45924, #67058
+
+Reviewed 2026-10-03.  Three reports of the same shape as the applied
+`#39057` (gamma inverse): a quantile or aggregate that returns a wrong
+value or `NaN` for a corner of its parameter space.  Two were real
+defects, fixed; one was a false report.  All three were reproduced
+against the built `gsl.dll` through ctypes before anything was changed,
+and only reads of the built library were used as references - scipy
+1.15 for the beta inverses and the R/numpy convention for the empty
+aggregate.
+
+### `#45924` - `gsl_cdf_beta_Pinv` "inverse failed to converge" - fixed
+
+All ten cases in the report (`a = 8000, b = 2000`; `a = 630, b = 9370`;
+`a = 5000, b = 5000` at `P = 0.005, 0.995, 5e-5, 0.99995`) returned
+`NaN` on the built DLL.  scipy agrees with the Boost values quoted in
+the report.
+
+Three defects, one root cause.  `gsl_cdf_beta_Pinv` bisected to an
+absolute tolerance in `P` (`xtol = Ptol = 0.01`) and then ran an
+unsafeguarded Newton iteration.  For large `a,b` the initial small-x
+approximation already satisfies `|Px - P| < 0.01` while being nowhere
+near the root (for `a = 8000, b = 2000`, `|Px-P| = 0.005` on the first
+probe), so `bisect` returned it immediately and the Newton iteration
+could not recover.  Second, for `a << 1` the quantile lies hundreds of
+decades below the mean; a bisection on `x` cannot cross that in 64
+steps.  Third, `gsl_cdf_beta_Qinv` formed the upper tail as
+`1 - gsl_cdf_beta_Pinv(Q, b, a)`, which loses every digit by
+cancellation when the result is small - measured relative errors up to
+`3e292` on the random grid.
+
+The solver is reworked around `t = logit(x)`, the analogue of the
+`log x` used for the gamma inverse.  In both the lower-tail
+(`F = P(x) - target`) and upper-tail (`F = target - Q(x)`) forms `F` is
+monotone increasing in `t`, so `[log(DBL_MIN), -log(DBL_MIN)]` is
+always a bracket.  A Newton step from the density is accepted when it
+stays inside the bracket and changes `x`; otherwise the bracket is
+halved.  Convergence is accepted when the bracket closes, when the
+Newton step is below the resolution of `t`, or when `x` can no longer
+change (many `t` map to the same double `x` near 0 and 1).  A root
+below `GSL_DBL_MIN` returns zero, matching `gammainv.c`.  Both entry
+points now invert whichever tail is no larger than one half, so `Qinv`
+never subtracts from one.
+
+The iteration needed four tries to get right, all caught by the random
+grid rather than by reading: the first `x`-based tolerance stalled when
+a stale bracket endpoint kept `xhi - xlo` above the threshold; a pure
+`t`-width tolerance stalled when `x` was pinned but `t` was not; an
+`xnew == x` break fired prematurely in the middle of the search; and a
+small Newton step with a stale endpoint needed an explicit acceptance
+test.  The final rule accepts any of the three conditions.
+
+Verification: 73085 `Pinv` and 99658 `Qinv` random points (`a,b` in
+`[1e-4, 1e4]`, tail probability from `1e-12` to `1/2`) have no
+non-finite results and a worst relative error of `7.4e-11`, against
+`TEST_TOL6 = 2.3e-10`.  The ten report cases agree with scipy to about
+`4e-14`.  `gsl_cdf_fdist_Pinv/Qinv` delegate here and inherit the fix;
+two large-`nu` fdist vectors are added.  Negative control: with
+`betainv.c` reverted, `cdf_test` aborts at the first new vector
+("inverse failed to converge", exit `0xc0000409`), and with the error
+handler off all ten report cases return `NaN`.  Full suite 56/56.
+Files: `cdf/betainv.c`, `cdf/test.c`.  Commit `51a63cbd5`.
+
+### `#67058` - empty `gsl_stats_mean` / `gsl_stats_sd` return 0.0 - fixed
+
+Measured: `gsl_stats_mean`, `gsl_stats_variance` and `gsl_stats_sd` of
+a zero-length array all returned `0.0`.  The manual defines the mean as
+`(1/N) sum x_i`, undefined at `N = 0`; R and numpy return `NaN`.  The
+cause is the recurrence `mean += (x_i - mean)/(i+1)`, which leaves the
+accumulator at zero when the loop never runs; the variance family
+inherits the zero and the `1/(N-1)` factor cannot correct it.
+
+`gsl_stats_mean` and the shared `compute_variance` helper (so
+`variance_m`, `sd_m`, the fixed-mean pair, and `variance`/`sd` through
+them) now raise `GSL_EBADLEN` for `size == 0`, returning `NaN` with the
+error handler disabled.  `gsl_stats_tss` is deliberately unchanged: the
+empty sum is genuinely zero.  The behaviour is recorded in both
+manuals.  Negative control: with the two guards reverted,
+`statistics_test` reports 99 new failures ("... empty"), all in the
+empty-array checks; with them applied the suite is clean.  Files:
+`statistics/mean_source.c`, `statistics/variance_source.c`,
+`statistics/mean.c`, `statistics/variance.c`, `statistics/test.c`,
+`statistics/test_float_source.c`, `statistics/test_int_source.c`,
+`doc/statistics.rst`, `doc_texinfo/statistics.texi`.  Commit
+`68fc3c752`.
+
+### `#42502` - `gsl_cdf_ugaussian_Pinv(0.5)` "returns 1" - not a bug
+
+The report's program includes only `<gsl/gsl_math.h>` and `<stdio.h>`,
+not `<gsl/gsl_cdf.h>`, so `gsl_cdf_ugaussian_Pinv` is implicitly
+declared as returning `int`.  The function does return the double `0.0`
+(it is in `xmm0`); the `1.000000` is the second `%f` reading a stale
+vararg slot.  On the built DLL `Pinv(0.5)` is exactly `0.0`, and the
+call is already covered by `cdf/test.c:498`
+(`TEST (gsl_cdf_ugaussian_Pinv, (0.5), 0.0, TEST_TOL0)`), so no code
+change is made.  Recorded in `FORKNEWS` as `[rejected]`.
+
+Recorded in `FORKNEWS` under `[upstream]` (two changes) and `[rejected]`
+(one entry).  Full CTest suite 56/56 on MSVC x64.

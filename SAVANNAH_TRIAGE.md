@@ -78,7 +78,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 42219 | 2014-04-28 | - | Runtime error | source bug_gnewton.c | not reviewed | Division by zero in "gnewton" when "f" and "fdf" differ |
 | 42220 | 2014-04-28 | - | Runtime error | source bug_hybrid.c | not reviewed | Division by zero in "hybrid*" when initial guess is root |
 | 42472 | 2014-05-31 | - | Runtime error | partial gsl_hh_test.c +1 | **fixed** — HH_solve/HH_svx shared tall QR (1f84bed77) | gsl_linalg_HH_solve bugs |
-| 42502 | 2014-06-03 | bug | Runtime error | none | not reviewed | wrong results of the function gsl_cdf_ugaussian_Pinv |
+| 42502 | 2014-06-03 | bug | Runtime error | none | **rejected** — reporter's program omits `gsl_cdf.h`, so the function is implicitly `int`; `Pinv(0.5) = 0.0` on the built DLL and is already tested | wrong results of the function gsl_cdf_ugaussian_Pinv |
 | 42830 | 2014-07-23 | bug | - | none | not reviewed | Bug in gsl_bspline_knot constructor |
 | 43256 | 2014-09-19 | - | Runtime error | source sixjsymbols.c | **fixed** — stable 6j by Schulten-Gordon recurrence (59fc479e2) | gsl_sf_coupling_6j overflows |
 | 43259 | 2014-09-19 | - | - | none | not reviewed | accuracy problems in specfunc |
@@ -97,7 +97,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 45746 | 2015-08-13 | bug | Accuracy problem | source gsltrigtest.c | **fixed** - exact argument reduction (8a46ec7cf, 5639c380f) | Incorrect results of trigonometric functions gsl_sf_sin and gsl_sf_cos |
 | 45782 | 2015-08-17 | feature | Accuracy problem | none | not reviewed | Feature request: Make derivative epsilon configurable |
 | 45797 | 2015-08-19 | - | Accuracy problem | none | not reviewed | Possible problem with LAPACK Fortran routine ZGESVD |
-| 45924 | 2015-09-11 | bug | Runtime error | none | not reviewed | Bug in the inverse beta function gsl_cdf_beta_Pinv, and suggested fix |
+| 45924 | 2015-09-11 | bug | Runtime error | none | **fixed** — beta inverse reworked around `t = logit(x)` with a bracketed solver (51a63cbd5) | Bug in the inverse beta function gsl_cdf_beta_Pinv, and suggested fix |
 | 45925 | 2015-09-11 | - | Runtime error | none | **rejected** — not-a-bug: report confused Gamma(a,x) with P; Q matches (3cc1aaa54 docs) | Incomplete Gamma Functions flipped? |
 | 46593 | 2015-12-02 | bug | Accuracy problem | none | rejected — 32-bit multifit; passes on x64 | multifit test failure in 32 bit mode |
 | 46677 | 2015-12-12 | - | - | none | **deferred** — feature request: port the Wigner d-matrix (gsl_sf_wigner_drot) from contrib/wigner.c; new API, out of scope | Wigner d-matrix |
@@ -211,7 +211,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 66922 | 2025-03-17 | feature | Build | clean specfunc_trig.diff | not reviewed (feature-shaped) — skipped in first pass as feature-shaped | Feature: special case for special functin logsin() |
 | 66949 | 2025-03-25 | feature | Build | source erlang.c | not reviewed (feature-shaped) — skipped in first pass as feature-shaped | Feature: Erlang cumulative distribution |
 | 66993 | 2025-04-05 | bug | Accuracy problem | none | not reviewed | Bug: pow_int issues |
-| 67058 | 2025-04-28 | - | Accuracy problem | none | not reviewed | gsl_stats_mean and gsl_stats_sd result to 0.0 when array with zero length |
+| 67058 | 2025-04-28 | - | Accuracy problem | none | **fixed** — empty data sets raise `GSL_EBADLEN` (NaN with the handler off) (68fc3c752) | gsl_stats_mean and gsl_stats_sd result to 0.0 when array with zero length |
 | 67301 | 2025-07-10 | bug | - | none | not reviewed | Bug: Test for existence of uniform random variate in histogram |
 | 67359 | 2025-07-27 | feature | - | clean hyperg_2F0.c.patch +1 | not reviewed (feature-shaped) — skipped in first pass as feature-shaped | Feature: Add special case for gsl_sf_hyperg_2F0 |
 | 67445 | 2025-08-20 | - | Build | clean 0001-linalg-increase-cholesky_invert-Hilbert-test-toleran.patch | **fixed** — cholesky_invert Hilbert tolerance (f84a57a0f) | linalg test failures under gcc 14.2.1 |
