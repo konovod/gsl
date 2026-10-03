@@ -310,6 +310,8 @@ set(includedir "\${prefix}/${CMAKE_INSTALL_INCLUDEDIR}")
 
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/gsl.pc.in"
                "${CMAKE_CURRENT_BINARY_DIR}/gsl.pc" @ONLY)
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/gsl-without-cblas.pc.in"
+               "${CMAKE_CURRENT_BINARY_DIR}/gsl-without-cblas.pc" @ONLY)
 
 # gsl-config has no ${...} indirection, so substitute concrete paths.
 set(prefix "${CMAKE_INSTALL_PREFIX}")
@@ -320,6 +322,7 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/gsl-config.in"
                "${CMAKE_CURRENT_BINARY_DIR}/gsl-config" @ONLY)
 
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/gsl.pc"
+              "${CMAKE_CURRENT_BINARY_DIR}/gsl-without-cblas.pc"
         DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig")
 install(PROGRAMS "${CMAKE_CURRENT_BINARY_DIR}/gsl-config"
         DESTINATION "${CMAKE_INSTALL_BINDIR}")
