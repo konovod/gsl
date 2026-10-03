@@ -1985,3 +1985,98 @@ change is made.  Recorded in `FORKNEWS` as `[rejected]`.
 
 Recorded in `FORKNEWS` under `[upstream]` (two changes) and `[rejected]`
 (one entry).  Full CTest suite 56/56 on MSVC x64.
+
+
+## Group L - non-termination / domain handling: #21837, #31426, #40176, #52351, #59911, #59913
+
+Reviewed 2026-10-03.  Six reports with a non-termination, array-index,
+domain or error-code theme.  Four were real and are fixed or corrected;
+one was already fixed upstream; one is a property of the caller's
+integrand.  All were reproduced against the built DLL before any
+change, in a `group-l` worktree branched from `b999b7e05`.
+
+### `#52351` - "akima.c array indexing" - real, fixed
+
+There is no out-of-bounds access.  The defect is the handling of the
+Akima weight denominator in `akima_calc()`: when the two neighbouring
+differences are equal the weight is indeterminate and GSL substituted
+one of the adjacent slopes (`m[i]` for both tangents), which makes the
+spline non-C1.  The correct limit is the average of the two adjacent
+slopes.  The reporter's proposed `m[i+1]` is also wrong: it removes the
+corner but overshoots the minimum.
+
+Method: transcribed the routine into Python and compared with the
+independent scipy `Akima1DInterpolator(method="akima")`.  The fixed
+code matches to `4.4e-16` on the demo2 data; the old code and the
+reporter's variant are off by `0.140625`.  Negative control: with
+`akima.c` reverted the six new vectors in `interpolation/test.c` all
+fail (`-1.5` vs `-1.625` at `x = 4.5`).  Full suite 56/56.
+Files: `interpolation/akima.c`, `interpolation/test.c`.  Commit
+`0efb5f87f`.
+
+### `#31426` - infinite loop in `gsl_eigen_symm` - real, fixed
+
+The 1024x1024 `mat.bin` attachment is no longer reachable, but the
+failure class is reproducible: a tridiagonal matrix whose entries are
+subnormal makes the chopping threshold
+`GSL_DBL_EPSILON*(|d_i|+|d_{i+1}|)` underflow to zero, so
+`chop_small_elements()` never removes the subdiagonal, the QR sweep
+reaches an exact fixed point and `b` never decrements.  For `N = 16`
+with all entries `GSL_DBL_MIN`, `d` and `sd` are unchanged after the
+first sweep.
+
+Fixed by rescaling the referenced triangle by a power of two (exact;
+the Householder and QR steps are scale-equivariant) and adding a
+per-block sweep bound that returns `GSL_EMAXITER`.  Verified with a
+faithful Python transcription, `numpy.linalg.eigvalsh` and the closed
+form `1 + 2 cos(k pi/(N+1))`.  Negative control: with
+`symm.c`/`symmv.c` reverted `eigen_test` hangs (12 s timeout); with
+them it passes, and the standalone reproducer returns `GSL_SUCCESS`.
+`GSL_EMAXITER` is documented in both manuals.  Full suite 56/56.
+Files: `eigen/symm.c`, `eigen/symmv.c`, `eigen/test.c`,
+`doc/eigen.rst`, `doc_texinfo/eigen.texi`.  Commit `7d586d89b`.
+
+### `#21837` - `solve_symm_tridiag` on a zero diagonal - documented, request rejected
+
+Reproduced the report with a returning handler: the zero-diagonal
+example returns `GSL_EZERODIV` (12), not a solution.  The maintainer's
+2007 reply stands: a solution needs a permutation (`slatec/dgtsl.f`),
+a new algorithm and out of scope.  The report did expose a
+documentation defect - both manuals claimed `GSL_ESING` while the code
+returns `GSL_EZERODIV` - which is corrected.  Files: `doc/linalg.rst`,
+`doc_texinfo/linalg.texi`.  Commit `9418afa5f`; the permutation request
+is recorded `[rejected]`.
+
+### `#40176` - "possible error in poly test suite" - already fixed
+
+The 15th-order polynomial failure (conjugate pair interchanged) is
+#39055.  `poly/test.c` is identical to `savannah/master`, which
+contains `9cc12d037` (sort by real then imaginary part, negative
+imaginary root listed first) and `0466df866` (relative check).  The
+vector passes on the build; nothing to do.  Recorded `[rejected]`.
+
+### `#59911` - qagiu on `cosh(x) exp(-cosh(x))` - not a bug
+
+The `qagiu` transform probes `x = (1-t)/t` as `t -> 0`.  For
+`x > ~710.5` the caller's `cosh(x)` overflows to `+Inf`, `exp(-...)`
+underflows to 0 and the product is `NaN`.  The built library returns
+`GSL_EMAXITER` with a NaN result (the report saw "bad integrand
+behavior").  Not something the library can rescue; the thread's own
+advice (substitute `u = sinh x`) is right.  Recorded `[rejected]`.
+
+### `#59913` - cquad SIGFPE - latent defect fixed
+
+The original program is unavailable and a 2025 follow-up could not
+reproduce it, but `cquad.c` computes `ncdiff / nc` unguarded at the
+initial error estimate (the later, identical test is guarded by
+`nc > 0`).  For `f(x) = 0`, `nc = 0` and the quotient is `0/0`
+(`FE_INVALID`), which kills the process if that trap is enabled (MSVC
+exit `0xc0000090`).  Added the `nc > 0` guard and a trap-based
+regression test.  Negative control: with `cquad.c` reverted
+`integration_test` is killed by the trap; with it the test passes and
+the standalone reproducer returns `GSL_SUCCESS`.  Full suite 56/56.
+Files: `integration/cquad.c`, `integration/test.c`.  Commit
+`f20496de6`.
+
+Recorded in `FORKNEWS` under `[upstream]` (four changes) and
+`[rejected]` (three entries).  Full CTest suite 56/56 on MSVC x64.
