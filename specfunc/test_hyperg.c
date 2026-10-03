@@ -143,6 +143,13 @@ int test_hyperg(void)
   TEST_SF(s, gsl_sf_hyperg_1F1_e, (-1.0, -3.0, 0.0, &r), 1.0, TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_hyperg_1F1_e, (0.0, -5.0, 0.0, &r), 1.0, TEST_TOL0, GSL_SUCCESS);
 
+  /* A NaN argument propagates.  A NaN b in particular used to drive
+   * the 1F1_U <-> 1F1_e mutual recursion until the stack overflowed.
+   * See Savannah bug #55687. */
+  TEST_SF(s, gsl_sf_hyperg_1F1_e, (1.0, GSL_NAN, -1.0, &r), GSL_NAN, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_1F1_e, (GSL_NAN, 1.0, -1.0, &r), GSL_NAN, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_1F1_e, (1.0, 2.0, GSL_NAN, &r), GSL_NAN, TEST_TOL0, GSL_SUCCESS);
+
 
   /* 1F1 */
 

@@ -23,6 +23,7 @@
 #include <config.h>
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_errno.h>
+#include <gsl/gsl_sys.h>
 #include <gsl/gsl_sf_elementary.h>
 #include <gsl/gsl_sf_exp.h>
 #include <gsl/gsl_sf_bessel.h>
@@ -1869,7 +1870,18 @@ gsl_sf_hyperg_1F1_e(const double a, const double b, const double x,
 
   /* CHECK_POINTER(result) */
 
-  if(x == 0.0) {
+  /* A non-finite b falls through to the generic evaluation below, which
+   * uses the transformation M(a,b,x) = e^x M(b-a,b,-x); with b = NaN the
+   * transformed call in hyperg_1F1_U() recurses back into this function
+   * with the same b and overflows the stack.  A NaN propagates, as it
+   * does elsewhere in specfunc.  See Savannah bug #55687.
+   */
+  if(gsl_isnan(a) || gsl_isnan(b) || gsl_isnan(x)) {
+    result->val = GSL_NAN;
+    result->err = GSL_NAN;
+    return GSL_SUCCESS;
+  }
+  else if(x == 0.0) {
     /* 1F1(a,b,0) = 1, except at the poles of the function, where b is
      * a nonpositive integer and the numerator does not cancel the
      * singularity.  Classify the parameters exactly as the x != 0
