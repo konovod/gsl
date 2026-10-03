@@ -386,26 +386,37 @@ int gsl_sf_exprel_e(const double x, gsl_sf_result * result)
 
 int gsl_sf_exprel_2_e(double x, gsl_sf_result * result)
 {
-  const double cut = 0.002;
+  const double cut = 0.5;
 
   if(x < GSL_LOG_DBL_MIN) {
     result->val = -2.0/x*(1.0 + 1.0/x);
     result->err = 2.0 * GSL_DBL_EPSILON * fabs(result->val);
     return GSL_SUCCESS;
   }
-  else if(x < -cut) {
-    result->val = 2.0*(exp(x) - 1.0 - x)/(x*x);
-    result->err = 2.0 * GSL_DBL_EPSILON * fabs(result->val);
+  else if(fabs(x) < cut) {
+    /* Taylor series
+     *   exprel_2(x) = 2 (exp(x) - 1 - x)/x^2
+     *               = 2 sum_{k=0} x^k/(k+2)!.
+     * The direct form loses accuracy to cancellation in
+     * exp(x) - 1 - x for small |x| (Savannah bug #43259). */
+    double sum  = 1.0;
+    double term = 1.0;
+    int k;
+    for(k = 0; k < 100; k++) {
+      term *= x/(k + 3.0);
+      sum  += term;
+      if(fabs(term) < fabs(sum) * GSL_DBL_EPSILON) break;
+    }
+    result->val = sum;
+    result->err = (k + 1.0) * GSL_DBL_EPSILON * fabs(sum);
     return GSL_SUCCESS;
   }
-  else if(x < cut) {
-    result->val = (1.0 + 1.0/3.0*x*(1.0 + 0.25*x*(1.0 + 0.2*x*(1.0 + 1.0/6.0*x))));
-    result->err = 2.0 * GSL_DBL_EPSILON * fabs(result->val);
-    return GSL_SUCCESS;
-  } 
   else if(x < GSL_LOG_DBL_MAX) {
-    result->val = 2.0*(exp(x) - 1.0 - x)/(x*x);
-    result->err = 2.0 * GSL_DBL_EPSILON * fabs(result->val);
+    const double ex = exp(x);
+    result->val = 2.0*(ex - 1.0 - x)/(x*x);
+    /* account for the cancellation in ex - 1 - x */
+    result->err  = 2.0 * GSL_DBL_EPSILON * (fabs(ex) + fabs(1.0 + x))/(x*x);
+    result->err += 2.0 * GSL_DBL_EPSILON * fabs(result->val);
     return GSL_SUCCESS;
   }
   else {

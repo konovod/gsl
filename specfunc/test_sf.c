@@ -1162,6 +1162,9 @@ int test_exp(void)
   TEST_SF(s,  gsl_sf_exprel_2_e, ( 1.0e-8, &r), 1.0000000033333333417, TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s,  gsl_sf_exprel_2_e, ( 0.001, &r), 1.0003334166833361115, TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s,  gsl_sf_exprel_2_e, ( 10.0, &r), 440.3093158961343303, TEST_TOL0, GSL_SUCCESS);
+  /* small |x|: the direct form exp(x)-1-x cancels (Savannah bug #43259);
+     reference from mpmath at 50 digits */
+  TEST_SF(s,  gsl_sf_exprel_2_e, (-0.027721015164127259, &r), 0.9908233460969039787, TEST_TOL0, GSL_SUCCESS);
 
   TEST_SF(s,  gsl_sf_exprel_n_e, (3, -1000.0, &r), 0.00299400600000000000, TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s,  gsl_sf_exprel_n_e, (3, -100.0, &r), 0.02940600000000000000, TEST_TOL0, GSL_SUCCESS);
