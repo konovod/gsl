@@ -45,33 +45,188 @@
 
 #include "error.h"
 
-static double 
-bisect (double x, double P, double a, double b, double xtol, double Ptol)
+/* First approximation to the lower quantile, P(x;a,b) = P, for P <= 1/2.
+   For small P the leading term P(x) ~ x^a / (a B(a,b)) is inverted and a
+   correction factor is applied; otherwise the mean is used.  This is a
+   starting point only: the solver below no longer relies on its accuracy. */
+
+static double
+beta_initial (const double P, const double a, const double b)
 {
-  double x0 = 0, x1 = 1, Px;
+  double mean = a / (a + b);
+  double x;
 
-  while (fabs(x1 - x0) > xtol) {
-    Px = gsl_cdf_beta_P (x, a, b);
-    if (fabs(Px - P) < Ptol) {
-      /* return as soon as approximation is good enough, including on
-         the first iteration */
-      return x;  
-    } else if (Px < P) {
-      x0 = x;
-    } else if (Px > P) {
-      x1 = x;
+  if (P < 0.1)
+    {
+      /* small x */
+
+      double lg_ab = gsl_sf_lngamma (a + b);
+      double lg_a = gsl_sf_lngamma (a);
+      double lg_b = gsl_sf_lngamma (b);
+
+      double lx = (log (a) + lg_a + lg_b - lg_ab + log (P)) / a;
+      if (lx <= 0)
+        {
+          x = exp (lx);                     /* first approximation */
+          x *= pow (1 - x, -(b - 1) / a);   /* second approximation */
+        }
+      else
+        {
+          x = mean;
+        }
+
+      if (x > mean)
+        x = mean;
     }
-    x = 0.5 * (x0 + x1);
-  }
-  return x;
-}  
+  else
+    {
+      /* Use expected value as first guess */
+      x = mean;
+    }
 
+  if (!(x > 0.0) || !(x < 1.0))
+    x = 0.5;
+
+  return x;
+}
+
+/* Invert the regularized incomplete beta function.
+
+   beta_inverse solves P(x;a,b) = target when upper is zero and
+   Q(x;a,b) = target when upper is non-zero, for 0 < target <= 1/2.  The
+   iteration is carried out on t = logit(x), so that the many orders of
+   magnitude a quantile can span when a or b is small are all reached.
+
+   The residual is increasing in t in both cases:
+
+     upper == 0 :  F(t) = P(x(t);a,b) - target,   F -> -target,     1-target
+     upper == 1 :  F(t) = target - Q(x(t);a,b),   F -> target - 1, target
+
+   so [log(DBL_MIN), -log(DBL_MIN)] is always a bracket.  A Newton step
+   from the density is taken when it stays inside the bracket, otherwise
+   the bracket is halved; convergence is guaranteed for every a,b > 0.
+
+   The earlier implementation bisected to an absolute tolerance in P and
+   then ran an unsafeguarded Newton iteration in x.  For large a and b
+   the initial approximation can already satisfy that tolerance while
+   still being far from the root, and for a << 1 the quantile can lie
+   hundreds of decades below the mean, so the routine reported failure
+   (NaN) for much of the parameter space. */
+
+static double
+beta_inverse (const double target, const double a, const double b,
+              const int upper, double x)
+{
+  const double tmin = log (GSL_DBL_MIN);
+  const double tmax = -tmin;
+  const double ltarget = upper ? 1.0 - target : target;
+  double t, tlo, thi;
+  int converged = 0;
+  unsigned int n;
+
+  /* The quantile is below the smallest normal number: zero is the only
+     representable answer. */
+  if (gsl_cdf_beta_P (GSL_DBL_MIN, a, b) > ltarget)
+    return 0.0;
+
+  if (!(x > 0.0))
+    x = GSL_DBL_MIN;
+  else if (!(x < 1.0))
+    x = 1.0;
+
+  t = log (x / (1.0 - x));
+  if (!(t > tmin))
+    t = tmin;
+  else if (t > tmax)
+    t = tmax;
+  x = 1.0 / (1.0 + exp (-t));
+
+  tlo = tmin;
+  thi = tmax;
+
+  for (n = 0; n < 200; n++)
+    {
+      const double xlo = 1.0 / (1.0 + exp (-tlo));
+      const double xhi = 1.0 / (1.0 + exp (-thi));
+      const double F = upper ? target - gsl_cdf_beta_Q (x, a, b)
+                             : gsl_cdf_beta_P (x, a, b) - target;
+
+      /* Stop when the bracket has closed in x.  Near x = 1 (or 0) many
+         values of t map to the same double x, so the t-bracket alone can
+         stall while x is already the representable root. */
+      if (F == 0.0 || xhi <= xlo
+          || thi - tlo <= 4.0 * GSL_DBL_EPSILON * GSL_MAX (1.0, fabs (t)))
+        {
+          converged = 1;
+          break;
+        }
+
+      if (F < 0.0)
+        tlo = t;
+      else
+        thi = t;
+
+      {
+        const double dpdt = gsl_ran_beta_pdf (x, a, b) * x * (1.0 - x);
+        const double tn = t - F / dpdt;
+        const double dtol = 4.0 * GSL_DBL_EPSILON * GSL_MAX (1.0, fabs (t));
+        int bisect = 1;
+
+        if (gsl_finite (tn) && tn > tlo && tn < thi)
+          {
+            /* A Newton step smaller than the resolution of t means the
+               root has been reached, even if the opposite end of the
+               bracket was set many iterations ago. */
+            if (fabs (tn - t) <= dtol)
+              {
+                t = tn;
+                converged = 1;
+                break;
+              }
+
+            /* Otherwise take the step only if it moves x: once x is at
+               the resolution of a double a further step in t cannot
+               change it, so fall back to bisection. */
+            if (1.0 / (1.0 + exp (-tn)) != x)
+              {
+                t = tn;
+                x = 1.0 / (1.0 + exp (-t));
+                bisect = 0;
+              }
+          }
+
+        if (bisect)
+          {
+            const double tm = 0.5 * (tlo + thi);
+
+            /* The bracket cannot be narrowed further. */
+            if (tm <= tlo || tm >= thi)
+              {
+                converged = 1;
+                break;
+              }
+
+            t = tm;
+            x = 1.0 / (1.0 + exp (-t));
+          }
+      }
+    }
+
+  if (!converged)
+    {
+      GSL_ERROR_VAL ("inverse failed to converge", GSL_EFAILED, GSL_NAN);
+    }
+
+  x = 1.0 / (1.0 + exp (-t));
+  if (x < GSL_DBL_MIN)
+    return 0.0;
+
+  return x;
+}
 
 double
 gsl_cdf_beta_Pinv (const double P, const double a, const double b)
 {
-  double x, mean;
-
   if (P < 0.0 || P > 1.0)
     {
       CDF_ERROR ("P must be in range 0 < P < 1", GSL_EDOM);
@@ -97,98 +252,20 @@ gsl_cdf_beta_Pinv (const double P, const double a, const double b)
       return 1.0;
     }
 
+  /* Work with whichever tail is no larger than one half, so that the
+     inverted function is evaluated where it is relatively accurate. */
   if (P > 0.5)
     {
-      return gsl_cdf_beta_Qinv (1 - P, a, b);
+      return beta_inverse (1.0 - P, a, b, 1,
+                           1.0 - beta_initial (1.0 - P, b, a));
     }
 
-  mean = a / (a + b);
-
-  if (P < 0.1)
-    {
-      /* small x */
-
-      double lg_ab = gsl_sf_lngamma (a + b);
-      double lg_a = gsl_sf_lngamma (a);
-      double lg_b = gsl_sf_lngamma (b);
-
-      double lx = (log (a) + lg_a + lg_b - lg_ab + log (P)) / a;
-      if (lx <= 0) {
-        x = exp (lx);             /* first approximation */
-        x *= pow (1 - x, -(b - 1) / a);   /* second approximation */
-      } else {
-        x = mean;
-      }
-
-      if (x > mean)
-        x = mean;
-    }
-  else
-    {
-      /* Use expected value as first guess */
-      x = mean;
-    }
-
-  /* Do bisection to get closer */
-  x = bisect (x, P, a, b, 0.01, 0.01);
-
-  {
-    double lambda, dP, phi;
-    unsigned int n = 0;
-
-  start:
-    dP = P - gsl_cdf_beta_P (x, a, b);
-    phi = gsl_ran_beta_pdf (x, a, b);
-
-    if (dP == 0.0 || n++ > 64)
-      goto end;
-
-    lambda = dP / GSL_MAX (2 * fabs (dP / x), phi);
-
-    {
-      double step0 = lambda;
-      double step1 = -((a - 1) / x - (b - 1) / (1 - x)) * lambda * lambda / 2;
-
-      double step = step0;
-
-      if (fabs (step1) < fabs (step0))
-        {
-          step += step1;
-        }
-      else
-        {
-          /* scale back step to a reasonable size when too large */
-          step *= 2 * fabs (step0 / step1);
-        };
-
-      if (x + step > 0 && x + step < 1)
-        {
-          x += step;
-        }
-      else
-        {
-          x = sqrt (x) * sqrt (mean);   /* try a new starting point */
-        }
-
-      if (fabs (step0) > 1e-10 * x)
-        goto start;
-    }
-
-  end:
-
-    if (fabs(dP) > GSL_SQRT_DBL_EPSILON * P)
-      {
-        GSL_ERROR_VAL("inverse failed to converge", GSL_EFAILED, GSL_NAN);
-      }
-
-    return x;
-  }
+  return beta_inverse (P, a, b, 0, beta_initial (P, a, b));
 }
 
 double
 gsl_cdf_beta_Qinv (const double Q, const double a, const double b)
 {
-
   if (Q < 0.0 || Q > 1.0)
     {
       CDF_ERROR ("Q must be inside range 0 < Q < 1", GSL_EDOM);
@@ -214,12 +291,12 @@ gsl_cdf_beta_Qinv (const double Q, const double a, const double b)
       return 0.0;
     }
 
+  /* Work with whichever tail is no larger than one half. */
   if (Q > 0.5)
     {
-      return gsl_cdf_beta_Pinv (1 - Q, a, b);
+      return beta_inverse (1.0 - Q, a, b, 0,
+                           beta_initial (1.0 - Q, a, b));
     }
-  else
-    {
-      return 1 - gsl_cdf_beta_Pinv (Q, b, a);
-    };
+
+  return beta_inverse (Q, a, b, 1, 1.0 - beta_initial (Q, b, a));
 }

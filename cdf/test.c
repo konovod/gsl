@@ -1032,6 +1032,11 @@ void test_finv (void) {
   TEST (gsl_cdf_fdist_Qinv, ( 0.0, 200.0, 500.0), GSL_POSINF, 0.0);
 
   TEST (gsl_cdf_fdist_Pinv, (0.95,1.0,261.0), 3.8773340322508720313e+00, TEST_TOL3);
+
+  /* Large degrees of freedom, via the beta inverse (Savannah bug #45924).
+     References from scipy.stats.f.ppf / f.isf. */
+  TEST (gsl_cdf_fdist_Pinv, ( 5e-05, 6000.0, 2000.0), 0.86915040939756338, TEST_TOL6);
+  TEST (gsl_cdf_fdist_Qinv, ( 5e-05, 6000.0, 2000.0), 1.1549418011805193, TEST_TOL6);
 }
 
   /* Tests for gamma distribution */
@@ -1218,6 +1223,34 @@ void test_betainv (void) {
   TEST (gsl_cdf_beta_Qinv, ( 0.0, 1.2, 1.3), 1.0, TEST_TOL6);
 
   TEST (gsl_cdf_beta_Pinv, ( 0.025, 2133.0, 7868.0),  0.20530562929915865457928654, TEST_TOL6);
+
+  /* Large a and b with a tail probability far from one half.  The old
+     bisection returned the small-x approximation before narrowing, after
+     which the Newton iteration never converged and the routine reported
+     NaN; see Savannah bug #45924.  References from scipy 1.15
+     (betaincinv / betainccinv at double precision), agreeing with the
+     Boost values quoted in the report to the figures given there. */
+  TEST (gsl_cdf_beta_Pinv, ( 0.005, 8000.0, 2000.0), 0.7895854722623119, TEST_TOL6);
+  TEST (gsl_cdf_beta_Pinv, ( 5e-05, 8000.0, 2000.0), 0.78415971702826959, TEST_TOL6);
+  TEST (gsl_cdf_beta_Pinv, ( 0.995, 8000.0, 2000.0), 0.81018915721922502, TEST_TOL6);
+  TEST (gsl_cdf_beta_Pinv, ( 0.99995, 8000.0, 2000.0), 0.81527503848433003, TEST_TOL6);
+  TEST (gsl_cdf_beta_Pinv, ( 0.995, 630.0, 9370.0), 0.069421474360167934, TEST_TOL6);
+  TEST (gsl_cdf_beta_Pinv, ( 0.99995, 630.0, 9370.0), 0.072863721986715077, TEST_TOL6);
+  TEST (gsl_cdf_beta_Pinv, ( 0.005, 5000.0, 5000.0), 0.48712266767742823, TEST_TOL6);
+  TEST (gsl_cdf_beta_Pinv, ( 0.995, 5000.0, 5000.0), 0.51287733232257171, TEST_TOL6);
+  TEST (gsl_cdf_beta_Pinv, ( 5e-05, 5000.0, 5000.0), 0.48055391387294416, TEST_TOL6);
+  TEST (gsl_cdf_beta_Pinv, ( 0.99995, 5000.0, 5000.0), 0.51944608612705601, TEST_TOL6);
+
+  TEST (gsl_cdf_beta_Qinv, ( 0.005, 8000.0, 2000.0), 0.81018915721922502, TEST_TOL6);
+  TEST (gsl_cdf_beta_Qinv, ( 5e-05, 8000.0, 2000.0), 0.81527503848433003, TEST_TOL6);
+  TEST (gsl_cdf_beta_Qinv, ( 0.995, 8000.0, 2000.0), 0.7895854722623119, TEST_TOL6);
+  TEST (gsl_cdf_beta_Qinv, ( 0.99995, 8000.0, 2000.0), 0.78415971702826959, TEST_TOL6);
+  TEST (gsl_cdf_beta_Qinv, ( 0.005, 630.0, 9370.0), 0.069421474360167934, TEST_TOL6);
+  TEST (gsl_cdf_beta_Qinv, ( 5e-05, 630.0, 9370.0), 0.072863721986715077, TEST_TOL6);
+  TEST (gsl_cdf_beta_Qinv, ( 0.005, 5000.0, 5000.0), 0.51287733232257171, TEST_TOL6);
+  TEST (gsl_cdf_beta_Qinv, ( 0.995, 5000.0, 5000.0), 0.48712266767742823, TEST_TOL6);
+  TEST (gsl_cdf_beta_Qinv, ( 5e-05, 5000.0, 5000.0), 0.51944608612705601, TEST_TOL6);
+  TEST (gsl_cdf_beta_Qinv, ( 0.99995, 5000.0, 5000.0), 0.48055391387294416, TEST_TOL6);
 }
 
 void test_gammainv (void) {
