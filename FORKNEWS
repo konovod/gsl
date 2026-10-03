@@ -101,6 +101,11 @@ One line per change: date | tag | description | commit(s).
   2026-10-03 | [upstream] | specfunc: 6j symbol by the Schulten-Gordon recurrence  | 59fc479e2
   2026-10-03 | [upstream] | specfunc: drop unreachable GSL_EOVRFLW from docs     | 8cce813ef
   2026-10-03 | [rejected] | specfunc: port the Wigner d-matrix (wigner_drot)       | - (see below)
+  2026-10-03 | [upstream] | specfunc: reject NaN in the complete elliptic integrals | 14d595eb8
+  2026-10-03 | [upstream] | specfunc: terminate gamma_inc for large negative a    | 932087bcd
+  2026-10-03 | [upstream] | specfunc: exact P + Q = 1 in the series region        | 6f23a4cb5
+  2026-10-03 | [upstream] | doc: distinguish gamma_inc from the normalized P, Q   | 3cc1aaa54
+  2026-10-03 | [rejected] | specfunc: "incomplete gamma functions flipped"        | - (see below)
 
 
 ## [upstream] rng: make the random() generators produce the documented sequences
@@ -2513,3 +2518,155 @@ Follow-up to Savannah bugs #43256 and #68312.
 
 
 
+
+
+## [upstream] specfunc: reject a NaN argument in the complete elliptic integrals
+
+Commit: 14d595eb8
+
+`gsl_sf_ellint_Kcomp_e(GSL_NAN)` and `_Ecomp_e(GSL_NAN)` were reported
+(Savannah bug #31362, 2010, Will M. Farr) to loop forever, because the
+Carlson recurrences RC/RD/RF/RJ had no iteration limit and the convergence
+test `epslon < errtol` is never satisfied for a NaN.  Upstream commit
+`9a7cf12e0` added the `nmax` counters, so the loop now stops and reports
+`GSL_EMAXITER`; the same symptom was re-reported as Savannah bug #48702
+(2016) as an OS-dependent "stall" - on some systems the loop ran the full
+10000 iterations, on others the floating-point behaviour differed.  What
+was left was the `FIXME` in `specfunc/test_sf.c`: "we are accepting
+MAXITER as the return code, but really this should be changed to EINVAL".
+
+A NaN argument is not a convergence failure, so it is now rejected before
+any iteration starts.  `gsl_sf_ellint_Kcomp_e`, `_Ecomp_e`, `_Dcomp_e` and
+`_Pcomp_e` test `gsl_isnan(k)` (and `gsl_isnan(n)` for `Pcomp`) as their
+first statement and return `GSL_EDOM` with NaN through `DOMAIN_ERROR`.
+The test is deliberately `isnan` and not `isfinite`: `k = +-inf` already
+satisfies the existing `k*k >= 1.0` domain test and must keep returning
+`GSL_EDOM`, and `k*k` for a NaN is NaN so the old comparison silently fell
+through.  This is the same treatment the rest of `specfunc` gives a
+non-finite argument.
+
+This reverses a policy recorded earlier in this file (the `sin_pi`/`cos_pi`
+entry, Savannah bug #57978), where NaN was deliberately left to propagate
+and surface as `GSL_EMAXITER`.  That reasoning was written for functions
+with no natural domain bound; a *bounded-domain* function such as these -
+defined only for `|k| < 1` - should reject a NaN as out of domain, and the
+form `k*k >= 1.0` that made `inf` a domain error but let NaN through was an
+accident of the comparison, not a decision.
+
+The vectors in `specfunc/test_sf.c` for bug #31362 now assert `GSL_EDOM`
+for `Kcomp`, `Ecomp`, `Dcomp` and `Pcomp`.  With the guard removed they
+assert `GSL_EMAXITER` (and, before upstream `9a7cf12e0`, the call did not
+return at all).  The `#48702` report is the same defect by its second
+symptom and is closed with it.
+
+Files: `specfunc/ellint.c`, `specfunc/test_sf.c`,
+`doc/specfunc-ellint.rst`, `doc_texinfo/specfunc-ellint.texi`.
+
+Savannah bugs #31362 and #48702.
+
+
+## [upstream] specfunc: terminate the incomplete gamma function for large negative a
+
+Commit: 932087bcd
+
+`gsl_sf_gamma_inc_e(a, x)` builds `Gamma(a,x)` for negative `a` by
+starting from the half-integer value `Gamma(da,x)` and stepping the order
+down one unit at a time:
+
+    do {
+      shift = exp(-x + (alpha-1)*log(x));
+      gax   = (gax - shift) / (alpha - 1);
+      alpha -= 1;
+    } while (alpha > a);
+
+For `a < -2^53` the loop reaches an `alpha` of magnitude at least `2^53`,
+where the spacing of doubles has grown to 2 and `alpha - 1.0` rounds back
+to `alpha`.  The decrement then stops advancing, `alpha > a` is never
+satisfied, and the call hangs (Savannah bug #50459, Fonenantsoa Maurica).
+Reproduced here: `gsl_sf_gamma_inc_e(-1.0e25, 0.1)` was still spinning
+after eight seconds.
+
+For `a < -2^53` with `x` small enough to reach this branch (the caller
+only arrives for `x <= 0.25`), `x` is negligible against `|a|` and
+`Gamma(a,x)` is far below the smallest normal number - `|x|^(|a|)` is
+`1e-250` for the reported case - so the function now returns zero directly
+with `GSL_EUNDRFLW`, before the recurrence begins.  The threshold is the
+exact double `9007199254740992.0` (`2^53`); at or below it the decrement
+still changes `alpha`, so the existing branch is left untouched.
+
+An equivalent fix would be to break the loop when `alpha - 1 == alpha`,
+but the underflow is genuine in this range and returning zero is the
+correct answer, so the guard is simpler and does not rely on the loop
+detecting its own lack of progress.
+
+Verified: the reported call now returns `val = 0`, `GSL_EUNDRFLW` in
+microseconds.  The new vector in `specfunc/test_gamma.c` fails (hangs)
+with the guard removed.  Full suite 56/56.
+
+Files: `specfunc/gamma_inc.c`, `specfunc/test_gamma.c`.
+
+Savannah bug #50459.
+
+
+## [upstream] specfunc: exact P + Q = 1 in the incomplete gamma series region
+
+Commit: 6f23a4cb5
+
+The regularized incomplete gamma functions satisfy `P(a,x) + Q(a,x) = 1`,
+but the two were computed independently and on different branch conditions
+(Brian Gough, Savannah bug #21836): for `(a, x) = (0.3, 1.0)` the sum was
+`1 - 1.44e-15` rather than exactly 1, and over a coarse grid the residual
+reached `1.9e-12`.
+
+`gsl_sf_gamma_inc_Q_e` now returns the exact complement `1 - P` in the
+region where `gsl_sf_gamma_inc_P_e` evaluates its series *and* forming the
+complement costs no accuracy:
+
+    a >= 0.2  and  x < 20  and  x <= a + 2 sqrt(a)
+
+There `P` is at most about `1 - 1e-3`, so `1 - P` reproduces `Q` to full
+precision (checked against `Q`'s own continued fraction: the relative
+difference stays below `1e-13`), and `P + Q == 1` bit for bit.  Outside
+that window the subtraction would lose digits - at `x = 10`, `a = 1`,
+`1 - P` is wrong in the 10th significant figure - so `Q`'s own continued
+fraction is kept, and for `a < 0.2` the dedicated small-`a` cancellation
+series in `gamma_inc_Q_series` is kept, because it exists precisely to
+avoid that cancellation there.
+
+The reported case `(0.3, 1.0)` is in the window and now gives
+`P + Q == 1` exactly; `Q(1, 10)` and `Q(0.001, 0.001)` are outside it and
+return their previous values unchanged.  A grid assertion in
+`specfunc/test_gamma.c` covers the window and counts 0 failures; with the
+new branch removed it reports 1099 failures.  Full suite 56/56.
+
+Files: `specfunc/gamma_inc.c`, `specfunc/test_gamma.c`.
+
+Savannah bug #21836.
+
+
+## [rejected] specfunc: "incomplete gamma functions flipped"
+
+Savannah bug #45925 reported that `gsl_sf_gamma_inc(1, 3)` returns
+`0.0497871` while `gsl_sf_gamma_inc_P(1, 3)` returns `0.950213`, and asked
+whether the two are "flipped".  They are not.  `gsl_sf_gamma_inc` is the
+*unnormalized* upper incomplete gamma `Gamma(a,x)`, which for `a > 0`
+equals `Gamma(a) Q(a,x) = Gamma(a)(1 - P(a,x))`; the complement of `P` is
+`Q`, not `Gamma(a,x)`.  The reported numbers confirm it:
+`Gamma(1,3) = Q(1,3) = e^-3 = 0.049787...` and `P(1,3) = 1 - e^-3 =
+0.950212...`, which is exactly what the library returns.  The tracker
+comment by Bill Maier reached the same conclusion.
+
+The report also asserted "you have such a bug in the beta as well",
+comparing `beta_inc(a,b,x)` with `beta_inc(b,a,1-x)`.  That comparison has
+the same shape: `gsl_sf_beta_inc` is the regularized incomplete beta
+`I_x(a,b)`, whose complement `1 - I_x(a,b)` equals `I_{1-x}(b,a)` as a
+mathematical identity but is not reproduced bit for bit by two separate
+continued-fraction evaluations, exactly as for `P`/`Q` above.  No defect.
+
+Rather than change correct code, the naming is clarified: the
+`gsl_sf_gamma_inc` entry of both manuals now states the relation to
+`Q(a,x)` and `P(a,x)` explicitly, with the `Gamma(1,3) = e^-3` example,
+so the confusion does not recur.  Files: `doc/specfunc-gamma.rst`,
+`doc_texinfo/specfunc-gamma.texi`.
+
+Savannah bug #45925.
