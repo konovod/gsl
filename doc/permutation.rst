@@ -21,8 +21,10 @@ correspond to the exchange of matrix columns, and so should be considered
 as applying to row-vectors in the form :math:`v' = v P` rather than
 column-vectors, when permuting the elements of a vector.
 
-The functions described in this chapter are defined in the header file
-:file:`gsl_permutation.h`.
+The functions described in this chapter are declared in the header
+file :file:`gsl_permutation.h`.  The functions that apply a permutation to
+a vector or a matrix are declared separately in :file:`gsl_permute.h`,
+:file:`gsl_permute_vector.h` and :file:`gsl_permute_matrix.h`.
 
 The Permutation struct
 ======================
@@ -153,8 +155,8 @@ Permutation functions
 Applying Permutations
 =====================
 
-The following functions are defined in the header files :file:`gsl_permute.h`
-and :file:`gsl_permute_vector.h`.
+The following functions are defined in the header files :file:`gsl_permute.h`,
+:file:`gsl_permute_vector.h` and :file:`gsl_permute_matrix.h`.
 
 .. function:: int gsl_permute (const size_t * p, double * data, size_t stride, size_t n)
 
