@@ -99,6 +99,7 @@ One line per change: date | tag | description | commit(s).
   2026-10-03 | [upstream] | specfunc: Coulomb G' overflow is signalled             | 8031f18bf
   2026-10-03 | [upstream] | specfunc: F_array recurrence regression vector         | 861de2adc
   2026-10-03 | [upstream] | specfunc: 6j symbol by the Schulten-Gordon recurrence  | 59fc479e2
+  2026-10-03 | [upstream] | specfunc: drop unreachable GSL_EOVRFLW from docs     | 8cce813ef
   2026-10-03 | [rejected] | specfunc: port the Wigner d-matrix (wigner_drot)       | - (see below)
 
 
@@ -2488,6 +2489,27 @@ suite still passes; all 56 `ctest` tests pass with the change.
 Files: `specfunc/coupling.c`, `specfunc/test_sf.c`.
 
 See Savannah bugs #43256 and #68312.
+
+
+## [upstream] specfunc: drop the unreachable GSL_EOVRFLW from the coupling symbols
+
+Commit: 8cce813ef
+
+The 3j symbol is bounded by 1, and the 6j after the recurrence in the
+preceding entry is normalised by an orthogonal sum; neither can overflow.
+The 9j still converted any failure of its 6j calls into
+`OVERFLOW_ERROR`, which would have reported `GSL_EOVRFLW` for the
+allocation failure the 6j can return, so it now propagates the status it
+was given.  `GSL_EOVRFLW` is dropped from the documented exceptional
+return values of `gsl_sf_coupling_3j_e`, `_6j_e` and `_9j_e`, which now
+list `GSL_EDOM` alone.  `GSL_ENOMEM` is not added: the 6j is the only one
+that allocates and GSL does not list it for the other allocating
+specfunc routine (`mathieu`) either.  Both manuals are updated.
+
+Files: `specfunc/coupling.c`, `doc/specfunc-coupling.rst`,
+`doc_texinfo/specfunc-coupling.texi`.
+
+Follow-up to Savannah bugs #43256 and #68312.
 
 
 
