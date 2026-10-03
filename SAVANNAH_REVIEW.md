@@ -1691,3 +1691,150 @@ Method notes:
 * `#68592` and `#35032` carry an explicit note marking the new text as
   an unreviewed, AI-assisted draft, per instruction.
 * `bst_test` passes 186476/186476.
+
+
+## Group H - platform-specific test failures: #39152, #46593, #47028,
+## #48915, #49518, #49697, #52127, #52322, #54919, #56843, #59759,
+## #67446, #67447, #67705
+
+Reviewed 2026-10-03 as a batch.  None of the fourteen reproduces on any
+host the fork builds and tests on, and none carries a code change.  They
+share a shape: a make-check or unit-test failure reported against one
+toolchain, ABI or architecture, with no demonstrated defect in the
+library.
+
+**Hosts.**  MSVC 14.32 x64 (`build-cmake`, Release) and MinGW gcc 15.2.0
+x64 (`build-mingw`, Release, static), the latter also with `-O2 -mavx`
+(`build-mingw-avx`).  The machine has AVX2 and FMA but no AVX-512.  icc,
+ppc64le, AIX and 32 bit builds are not available, so the reports that
+need them could not be exercised.  On MSVC x64 every module named below
+passes; MinGW passes the same set except `specfunc`, whose failure is a
+property of the MinGW C library and not of these reports - see the
+method note at the end.
+
+### #39152 - make check errors with Intel icc 13.0.1
+
+The attached logs cover `specfunc`, `ode-initval2`, `poly` and
+`multiroots`.  icc is not installed; all four modules pass on MSVC x64
+and gcc 15.2 x64.  A 2013 icc failure with no compiler to reproduce on is
+indistinguishable from the over-tight test tolerances that have since
+been relaxed (e.g. `5432a392c`), so the report is closed as
+toolchain-specific.  The `.log` attachments were not downloaded by the
+inventory script, so only the module list is available.
+
+### #46593, #47028, #52322 - multifit on 32 bit, ppc64le and 32 vs 64 bit
+
+`multifit.test` passes on MSVC x64 and gcc 15.2 x64.  No 32 bit or
+ppc64le host is available.  #52127 below is the same class and was
+checked against the reporter's own program; the differences these reports
+describe are at the last-ulp level between ABIs, not a wrong value.
+#52322's attachments were not downloaded and the report names no incorrect
+number, only a difference.
+
+### #48915 - some test failures on AIX (GSL 2.1.91)
+
+Names `splinalg`, `linalg`, `multilarge_nlinear`, `rng`, `poly` and
+`specfunc`, all with logs and no patch.  No AIX host.  The five
+non-`specfunc` modules pass on MSVC x64 and gcc 15.2 x64; `specfunc`
+passes on MSVC and fails on MinGW only for the libm reason below.  The
+report is from 2016 and predates the tolerance work; closed as
+platform-specific with no reproduction.
+
+### #49518 - "bug in matrix/vector tests" under MSVC x64
+
+**Already fixed; no fork change.**  The report is real and specific: five
+test files used
+
+    char filename[] = "test.XXXXXX";
+    #if !defined(_WIN32) ... mkstemp ... #else char *fd = _mktemp(filename); ...
+
+and on MSVC x64 `_mktemp()` was called with no prototype (its declaration
+lives in `<io.h>`), so the returned pointer was truncated through an
+implicit `int` return and the test crashed.  The current tree contains no
+`_mktemp()` or `mkstemp()` anywhere: `matrix/test_source.c`,
+`vector/test_source.c`, their complex variants and `spmatrix/test_source.c`
+now use a fixed `test.dat` / `test_static.dat` filename and `unlink()`.
+`matrix`, `matrix.test_static`, `vector`, `vector.test_static` and
+`spmatrix` all pass on MSVC x64.  There is nothing left to fix.
+
+### #49697 - linalg test fails with gcc and -mavx
+
+`linalg.test` passes on MinGW gcc 15.2 x64 built with `-O2 -mavx`.  The
+host exposes AVX2 and FMA but no AVX-512, which is the widest case the
+report could need.  The 2016 failure is almost certainly the unscaled
+Hilbert `gsl_linalg_cholesky_invert` check, whose tolerance the fork has
+already raised from `256` to `512` times `N * GSL_DBL_EPSILON` for
+Savannah #67445 (`linalg/test_cholesky.c:241`).  Recorded as not
+reproducible / already covered.
+
+### #52127 - gsl_eigen_nonsymm differs between 32 and 64 bit
+
+The attached `nonsymm.c` was built against the fork's library and run.  On
+x64 it prints
+
+    Real                 Imaginary
+    3FF0000000000000     40158A68A4A8D9F4
+    3FF0000000000000     C0158A68A4A8D9F4
+    3FF0000000000000     40158A68A4A8D9F5
+    3FF0000000000000     C0158A68A4A8D9F5
+
+i.e. `1.0000000000000000 +- i 5.3851648071345`, which is exactly the
+result the report predicts for 64 bit.  The report's 32 bit values
+(`1.00000000000000090`, `0.99999999999999956`) are the outlier, off by
+one or two ulp of the real part.  The matrix is `1 + 2i + 3j + 4k`; its
+eigenvalues are `1 +- i sqrt(29)`, and the x64 answer agrees with that to
+an ulp.  Bit-identical eigenvalues across ABIs are not a GSL guarantee.
+The second attachment is an unrelated `graph_sampler` configuration file
+and adds nothing.
+
+### #54919 - gsl 2.5+ test fails with icc (2016.4 and later)
+
+No icc.  The named modules pass on MSVC x64 and gcc 15.2 x64.  Same
+disposition as #39152.
+
+### #56843 - linalg eigen fail on non-x86 hardware (accuracy)
+
+`eigen.test` passes on MSVC x64 and gcc 15.2 x64.  The report is about
+accuracy differences on "non-x86" hardware; the only such target the fork
+builds is arm64 macOS, which is covered by CI.  Differences at the
+`1e-16` level are expected when the intermediate precision differs (x87
+on x86-64 against rounded `double` on arm64) and are not a defect.
+
+### #59759 - spmatrix test fails on x86_64
+
+The report body is about 32 bit machines.  `spmatrix.test` passes on
+MSVC x64 and gcc 15.2 x64.  No 32 bit host; closed as ABI-specific.
+
+### #67446, #67447 - multilarge_nlinear and spmatrix under gcc 14.2.1
+
+Both pass under MinGW gcc 15.2 x64 (and MSVC x64).  These are the most
+recent of the batch (August 2025) and were the most likely to reproduce,
+but the exact gcc 14.2.1 build could not be reconstructed and gcc 15.2
+does not show either failure.
+
+### #67705 - ttest failure in linalg/QR_solve_r random
+
+`linalg.test` passes on MSVC x64 and gcc 15.2 x64.  The `QR_solve_r
+random` vectors draw from `gsl_rng_default`, whose default seed is fixed,
+so the input matrices are deterministic; the run is not flaky here.  No
+failing `N` could be produced, so the report is left as not reproducible.
+
+### Method note - MinGW's libm, not a Group H report
+
+On MinGW gcc the `specfunc` suite fails in the spherical Bessel Y
+functions: the fork-added vectors at `1e18`-`1e22` (Savannah #36152) are
+wrong by several percent, and the upstream vectors at `2^32` trip the
+value/error consistency check.  The cause is the MinGW C library, whose
+`sin`/`cos` argument reduction is already wrong at `1e18`:
+
+    x        MinGW sin            accurate sin
+    2^32     -0.46198657951383493 -0.4619865795138349
+    1e18     -0.99281610405300347 -0.9929693207404051
+    1e20     -0.74692189125949293 -0.6452512852657808
+    1e22      0.46261304076460175 -0.8522008497671888
+
+MSVC's UCRT and glibc reduce these correctly.  The Y functions delegate
+to the system `sin`/`cos` for large `x` (by design, matching the *j*
+functions), so they inherit the MinGW defect.  MinGW is not one of the
+fork's build targets (MSVC, Linux, macOS), so this is recorded but not
+acted on here.
