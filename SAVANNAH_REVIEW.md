@@ -1452,8 +1452,9 @@ Full CTest suite: 56/56 after the changes.
 Reviewed 2026-10-03 against the built `build-cmake/gsl.dll` (values read
 through ctypes) with independent references from mpmath at 40-60 digits.
 The reports were retrieved through the Wayback Machine, as the tracker was
-not reachable directly.  Two of the group are code fixes, two are deferrals
-and one was already fixed.
+not reachable directly.  Three of the reports are fixed by code changes, one
+is partial, one is deferred, one was already fixed and one is not
+reproducible.
 
 ### #50711, #53905, #21835 (x >= 1 half), #39056 (Wolpert) — one defect, fixed
 
@@ -1499,23 +1500,37 @@ which GSL rejects at `hyperg_2F1.c` (`x < -1.0`).  The manual promises only
 `|x| < 1`, so this adds a new domain and a new evaluation path: a feature,
 outside the eligibility rule for this review.  Deferred, no code change.
 
-### #30510 — `hyperg_U(a,b,x)` for x < 0 — deferred
+### #30510 — `hyperg_U(a,b,x)` for x < 0 — fixed
 
-The central case is real: when `a` is not an integer and `b` is an integer
-with `x < 0`, the A&S 13.1.3 reduction used by `hyperg_U_negx()` is
-degenerate.  Measured on the current build:
+When `a` is not an integer and `b` is a positive integer with `x < 0`, the
+A&S 13.1.3 reduction used by `hyperg_U_negx()` is degenerate: its two terms
+carry `1/Gamma(1-b)` and `1/Gamma(2-b)`, which are poles at `b = 1` and
+`b = 2, 3, ...`.  Measured before the fix:
 
-    U(-0.5, 1, -1)   GSL_EDOM          poch(a,-a) is a Gamma(0) pole at b=1
+    U(-0.5, 1, -1)   GSL_EDOM          poch(a,-a) = Gamma(0)/Gamma(a)
     U(-0.5, 2, -1)   GSL_EUNIMPL       b >= 2 integer limit unimplemented
-    U(-0.5, 2.7, -1) GSL_SUCCESS, NaN  (silent; non-integer b)
+    U(-0.5, 3, -1)   GSL_EUNIMPL
 
-The reporter's own fix is the DLMF 13.2.41 limit for `b = 1`, which needs
-`U(1-a,1,-x)`, `M(1-a,1,-x)` and a complex exponential `exp(i pi (1-a))`;
-GSL's `specfunc` has no complex confluent/`1F1` machinery, and the branch
-choice for `x^(1-b)` at integer `b` is delicate.  A wrong special-function
-implementation would be worse than the current explicit error, so the case
-is deferred rather than attempted.  Note this is broader than the reported
-`b = 1` hole: the whole `x < 0`, non-integer-`a` region is affected.
+The integer-`b` case `b = n+1` is now evaluated with the DLMF 13.2.9 limit
+(the reporter used 13.2.41, the `b`-recurrence route; the direct limit is
+simpler), with `ln x` replaced by `ln|x|`.  For `x < 0` the principal value
+of `U` is complex - it has a branch cut on the negative real axis - and
+`ln|x|` selects its real part, the real continuous solution of Kummer's
+equation, which is what a real-valued routine must return.  Fixed in commit
+`00859f816`; the new path is limited to `|x| <= 100` and `n <= 170`, outside
+which the previous `GSL_EDOM`/`GSL_EUNIMPL` behaviour is kept.
+
+Validation: the formula (with the `1/(n! Gamma(a-n))` prefactor, which is
+easy to misread) matches `mpmath.hyperu` at 50 digits for `x > 0`, and for
+`x < 0` the `ln|x|` value equals the real part of the principal value,
+confirmed by integrating Kummer's ODE analytically from `x > 0` to `x < 0`.
+Over a 660-point grid the worst ratio of true error to reported error is
+0.61.  Negative control: 13 failures (12 vectors + summary) with the branch
+removed.
+
+Not addressed: the non-integer-`b` part of the same region,
+`U(-0.5, 2.7, -1)`, still returns `NaN` with `GSL_SUCCESS`; that is a
+separate silent-NaN defect.
 
 ### #41837 — "bugs in gsl_sf_hyperg_U" — not reproducible on the current build
 

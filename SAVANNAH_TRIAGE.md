@@ -9,10 +9,10 @@ Scratch index, not part of the fork's record of changes. Verdicts are curated fr
 
 | status | count |
 |---|---:|
-| fixed | 64 |
+| fixed | 65 |
 | partial | 3 |
 | rejected | 14 |
-| deferred | 4 |
+| deferred | 3 |
 | superseded | 1 |
 | not reviewed (feature-shaped) | 21 |
 | not reviewed | 112 |
@@ -34,7 +34,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 28267 | 2009-12-11 | - | Accuracy problem | source hyperg1F1.c | **partial** — same defect as #43809 (52505315d); transition region `x ~ a^2` still loses digits | poor convergence region for gsl_sf_hyperg_1F1 |
 | 29834 | 2010-05-09 | - | Runtime error | source error_cblas_v2.h | not reviewed | insufficient argument checking in blas wrapper |
 | 30324 | 2010-07-02 | - | Accuracy problem | none | **deferred** — feature: extend 2F1 to x < -1 by transformation; new domain/algorithm, out of eligibility | improve range of 2F1 |
-| 30510 | 2010-07-21 | - | Runtime error | none | **deferred** — U(a,b,x) for x < 0 with non-integer a needs the DLMF 13.2.41 limit at integer b (b=1 throws GSL_EDOM, b >= 2 GSL_EUNIMPL); not attempted | problems with hyperg_U(a,b,x) for x<0 |
+| 30510 | 2010-07-21 | - | Runtime error | none | **fixed** — U(a,b,x) for x < 0, integer b, non-integer a, via the DLMF 13.2.9 limit (00859f816) | problems with hyperg_U(a,b,x) for x<0 |
 | 30540 | 2010-07-24 | feature | Accuracy problem | partial bug-ode2.c +2 | not reviewed | please, add convergence checks in rk4imp/rk2imp |
 | 30583 | 2010-07-28 | doc | Documentation | none | not reviewed | improve documentation for Elliptic functions |
 | 30885 | 2010-08-27 | - | Runtime error | none | not reviewed | nans from gsl_sf_coulomb_wave_FG_e(1.2693881947287221e-07, 0.0, lam_F=37, lam_G=36) |
