@@ -259,6 +259,65 @@ double test_weibull_pdf (double x);
 double test_weibull1 (void);
 double test_weibull1_pdf (double x);
 
+/* A generator that always returns a fixed uniform variate, used to probe
+   the exact threshold in the binomial BINV branch (Savannah bug #68479).
+   gsl_ran_binomial reads one uniform per attempt, so a constant lets the
+   test sit in the gap between the inaccurate and the accurate seed. */
+static void
+fixed_set (void *state, unsigned long int seed)
+{
+  (void) state;
+  (void) seed;
+}
+
+static unsigned long int
+fixed_get (void *state)
+{
+  (void) state;
+  return 0;
+}
+
+static double
+fixed_get_double (void *state)
+{
+  return * (double *) state;
+}
+
+static const gsl_rng_type fixed_rng_type = {
+  "fixed", (unsigned long int) -1, 0, sizeof (double),
+  &fixed_set, &fixed_get, &fixed_get_double
+};
+
+static void
+test_binomial_seed (void)
+{
+  /* (1-p)^n computed as gsl_pow_uint(1-p,n) loses about n*eps relative
+     accuracy; exp(n log1p(-p)) is exact to a few ulp.  Each fixed u
+     below lies between the two seeds, so the implementations return
+     different values. */
+  struct { double p; unsigned int n; double u; unsigned int k; } cases[] = {
+    { 1.0e-9, 1000000000u, 0.367879445,    1u },
+    { 1.0e-8, 1000000000u, 4.539992666e-5, 0u }
+  };
+  size_t i;
+
+  for (i = 0; i < sizeof (cases) / sizeof (cases[0]); ++i)
+    {
+      gsl_rng rng;
+      double u = cases[i].u;
+      unsigned int k;
+
+      rng.type  = &fixed_rng_type;
+      rng.state = &u;
+
+      k = gsl_ran_binomial (&rng, cases[i].p, cases[i].n);
+
+      gsl_test_int (k, cases[i].k,
+                    "gsl_ran_binomial BINV seed p=%.3g n=%u",
+                    cases[i].p, cases[i].n);
+    }
+}
+
 gsl_rng *r_global;
 
 static gsl_ran_discrete_t *g1 = NULL;
@@ -422,6 +481,8 @@ main (void)
 
   testMoments (FUNC (beta_small), -0.5, 0.5, 0.5);
   testMoments (FUNC (beta_small),  0.5, 1.5, 0.5);
+
+  test_binomial_seed ();
 
   gsl_rng_free (r_global);
   gsl_ran_discrete_free (g1);

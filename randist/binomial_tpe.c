@@ -117,7 +117,11 @@ gsl_ran_binomial (const gsl_rng * rng, double p, unsigned int n)
 
   if (np < SMALL_MEAN)
     {
-      double f0 = gsl_pow_uint (q, n);   /* f(x), starting with x=0 */
+      /* f(x), starting with x=0.  Computing (1-p)^n as
+       * exp(n log1p(-p)) avoids the rounding of q = 1-p, whose
+       * relative error is amplified by n in the repeated squaring
+       * (Savannah bug #68479). */
+      double f0 = exp (n * log1p (-p));
 
       while (1)
         {
