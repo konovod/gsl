@@ -964,6 +964,39 @@ test_akima (void)
 }
 
 static int
+test_akima_ties (void)
+{
+  /* Data for which two neighbouring slopes are equal, so that Akima's
+     weight denominator vanishes at x = 5.  The slope there is the
+     average of the adjacent slopes; the reference values come from the
+     scipy Akima1DInterpolator (method "akima").  See Savannah bug
+     #52351. */
+
+  double x[8] = { 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0 };
+  double y[8] = { 0.0, 0.0, 2.0, 0.0, -1.0, -2.0, -1.0, 0.0 };
+  double xs[6] = { 4.25, 4.5, 4.75, 5.25, 5.5, 5.75 };
+  double expected[6] = { -1.296875, -1.625, -1.890625,
+                         -1.890625, -1.625, -1.296875 };
+  size_t i;
+
+  gsl_interp_accel *acc = gsl_interp_accel_alloc ();
+  gsl_interp *interp = gsl_interp_alloc (gsl_interp_akima, 8);
+
+  gsl_interp_init (interp, x, y, 8);
+
+  for (i = 0; i < 6; i++)
+    {
+      double yi = gsl_interp_eval (interp, x, y, xs[i], acc);
+      gsl_test_rel (yi, expected[i], 1e-12, "akima ties, x=%g", xs[i]);
+    }
+
+  gsl_interp_free (interp);
+  gsl_interp_accel_free (acc);
+
+  return 0;
+}
+
+static int
 test_steffen1 (void)
 {
   int s;
@@ -1224,6 +1257,7 @@ main (int argc, char **argv)
   status += test_csplinep();
   status += test_csplinep2();
   status += test_akima();
+  status += test_akima_ties();
   status += test_steffen1();
   status += test_steffen2();
 

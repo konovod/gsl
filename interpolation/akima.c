@@ -96,33 +96,41 @@ akima_calc (const double x_array[], double b[],  double c[],  double d[], size_t
 
   for (i = 0; i < (size - 1); i++)
     {
+      const double h_i = x_array[i + 1] - x_array[i];
       const double NE = fabs (m[i + 1] - m[i]) + fabs (m[i - 1] - m[i - 2]);
+      const double NE_next = fabs (m[i + 2] - m[i + 1]) + fabs (m[i] - m[i - 1]);
+      double b_i;
+      double tL_ip1;
+
+      /* The slope at x_i.  When the two neighbouring differences are
+         both zero the weight is indeterminate; Akima's rule then takes
+         the average of the two adjacent slopes, not one of them. */
+
       if (NE == 0.0)
         {
-          b[i] = m[i];
-          c[i] = 0.0;
-          d[i] = 0.0;
+          b_i = 0.5 * (m[i - 1] + m[i]);
         }
       else
         {
-          const double h_i = x_array[i + 1] - x_array[i];
-          const double NE_next = fabs (m[i + 2] - m[i + 1]) + fabs (m[i] - m[i - 1]);
           const double alpha_i = fabs (m[i - 1] - m[i - 2]) / NE;
-          double alpha_ip1;
-          double tL_ip1;
-          if (NE_next == 0.0)
-            {
-              tL_ip1 = m[i];
-            }
-          else
-            {
-              alpha_ip1 = fabs (m[i] - m[i - 1]) / NE_next;
-              tL_ip1 = (1.0 - alpha_ip1) * m[i] + alpha_ip1 * m[i + 1];
-            }
-          b[i] = (1.0 - alpha_i) * m[i - 1] + alpha_i * m[i];
-          c[i] = (3.0 * m[i] - 2.0 * b[i] - tL_ip1) / h_i;
-          d[i] = (b[i] + tL_ip1 - 2.0 * m[i]) / (h_i * h_i);
+          b_i = (1.0 - alpha_i) * m[i - 1] + alpha_i * m[i];
         }
+
+      /* The slope at x_{i+1}, with the same rule. */
+
+      if (NE_next == 0.0)
+        {
+          tL_ip1 = 0.5 * (m[i] + m[i + 1]);
+        }
+      else
+        {
+          const double alpha_ip1 = fabs (m[i] - m[i - 1]) / NE_next;
+          tL_ip1 = (1.0 - alpha_ip1) * m[i] + alpha_ip1 * m[i + 1];
+        }
+
+      b[i] = b_i;
+      c[i] = (3.0 * m[i] - 2.0 * b_i - tL_ip1) / h_i;
+      d[i] = (b_i + tL_ip1 - 2.0 * m[i]) / (h_i * h_i);
     }
 }
 
