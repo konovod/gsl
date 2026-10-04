@@ -165,6 +165,7 @@ One line per change: date | tag | description | commit(s).
   2026-10-04 | [upstream] | ode: keep the final step within the interval        | dda917296
   2026-10-04 | [rejected] | roots/ode: the Group O reports needing no code change | - (see below)
   2026-10-04 | [rejected] | meta: the Group P off-track reports                   | - (see below)
+  2026-10-04 | [rejected] | meta: the last open-bug reports (51104, 53903, 53904) | - (see below)
 
 
 ## [upstream] rng: make the random() generators produce the documented sequences
@@ -4237,3 +4238,51 @@ bug (the Signal package's `specgram()`), closed as a duplicate of
 Octave #42043, and is not part of the GSL tracker.  It is dropped.
 
 Savannah bugs #42058, #45797, #59914, #60026 and #65728.
+
+
+## [rejected] meta: the last open-bug reports (51104, 53903, 53904)
+
+Not applied.  Three reports that were the last open items without a
+recorded verdict; each has an offline dossier under
+`temp/savannah-store/dossiers/` (the reason they had been held over),
+and each was checked before being set aside.  No source, test or
+documentation file is touched.
+
+* **#51104, `gsl_permutation_next` efficiency** - categorised
+  Performance.  The submitter offers a more literal translation of
+  Algorithm L in Knuth's AoCP volume 4, page 319, and reports a
+  speed-up; the follow-up adds only that the second comparison in the
+  selection loop is redundant (`p->data[j] < p->data[k]` is already
+  implied by the loop that finds `i`).  No defect is alleged and the
+  current code is correct - `permutation/test.c` exercises it - so this
+  is a performance-only change, which the eligibility rule excludes.
+  Same disposition as the rejected cache-miss loop reorder, #54925.
+  Rejected.
+
+* **#53903, `gsl_sf_synchrotron_1_e` on x86** - the report is that
+  `gsl_sf_synchrotron_1_e(0.01)` fails its test on a Pentium MMX build
+  (`-march=pentium-mmx`, musl i386).  The reported output pins the fault
+  to the toolchain, not to GSL: `-1.8137993642342178e-02` is exactly
+  `-c0*x` with `c0 = M_PI/M_SQRT3`, and the reported error
+  `1.2082330897339797e-17` is exactly `3*eps*c0*x`.  That is what the
+  `x <= 4` branch returns only when `px = pow(x, 1.0/3.0)` is zero,
+  which removes both Chebyshev terms; the Chebyshev coefficients
+  themselves are correct.  Evaluated independently the series gives
+  `0.4449725041...` at `x = 0.01`, and the specfunc suite passes on
+  MSVC x64.  The 32-bit x87 target's libm `pow` is at fault (compare the
+  MinGW libm finding in the Group H entry), not `synchrotron.c`; there is
+  no 32-bit x87 host here to reproduce on, and correct code is not
+  changed for an unreproducible libm fault.  Rejected as a toolchain
+  defect.
+
+* **#53904, `gsl_matrix_complex_set`** - the submitter sets only element
+  `[1][1]` of an *uninitialized* 4x4 complex matrix (there is no
+  `set_zero`), runs `gsl_eigen_herm` on it, and prints neither the matrix
+  nor the eigenvalues; the "wrong data array" printed is the program's
+  own input.  Passing `gsl_complex_rect(1., 0.)` directly and storing it
+  in a variable first are equivalent: `gsl_complex_rect` is an inline
+  function returning `gsl_complex`, and `gsl_matrix_complex_set` takes
+  the value by argument.  The difference the reporter saw is
+  uninitialized-memory UB, not a library defect.  Rejected as not a bug.
+
+Savannah bugs #51104, #53903 and #53904.
