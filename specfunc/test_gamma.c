@@ -319,6 +319,24 @@ int test_gamma(void)
   TEST_SF(s, gsl_sf_gamma_inc_e, ( 10.0,   100.0, &r), 4.0836606309106112723e-26, TEST_TOL2, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_gamma_inc_e, (100.0,   100.0, &r), 4.5421981208626694294e+155, TEST_TOL1, GSL_SUCCESS);
 
+  /* Savannah bug #66834: Gamma(a,0) = Gamma(a); at a = 0 the pole gives
+     +Inf, previously reported with a NaN error estimate. */
+  TEST_SF(s, gsl_sf_gamma_inc_e, (0.0, 0.0, &r), GSL_POSINF, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_gamma_inc_e, (1.0, 0.0, &r), 1.0, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_gamma_inc_e, (2.0, 0.0, &r), 1.0, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_gamma_inc_e, (3.0, 0.0, &r), 2.0, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_gamma_inc_e, (-1.0, 4.0, &r), 7.9955731233463776e-04, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_gamma_inc_e, (0.0, 4.0, &r), 3.7793524098489058e-03, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_gamma_inc_e, (1.0, 4.0, &r), 1.8315638888734182e-02, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_gamma_inc_e, (2.0, 4.0, &r), 9.1578194443670810e-02, TEST_TOL1, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_gamma_inc_e, (3.0, 4.0, &r), 4.7620661110709284e-01, TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_gamma_inc_e, (0.0, 8.0, &r), 3.7665622843924906e-05, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_gamma_inc_e, (1.0, 8.0, &r), 3.3546262790251191e-04, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_gamma_inc_e, (2.0, 8.0, &r), 3.0191636511226021e-03, TEST_TOL1, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_gamma_inc_e, (3.0, 8.0, &r), 2.7507935488005879e-02, TEST_TOL1, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_gamma_inc_e, (2.0, 12.0, &r), 7.9874760593266661e-05, TEST_TOL1, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_gamma_inc_e, (3.0, 12.0, &r), 1.0445161000657936e-03, TEST_TOL1, GSL_SUCCESS);
+
 
   TEST_SF(s, gsl_sf_lnbeta_e, (1.0e-8, 1.0e-8, &r),  19.113827924512310617 , TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_lnbeta_e, (1.0e-8, 0.01, &r),  18.420681743788563403 , TEST_TOL0, GSL_SUCCESS);

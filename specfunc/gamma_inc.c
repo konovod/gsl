@@ -670,6 +670,14 @@ gsl_sf_gamma_inc_e(const double a, const double x, gsl_sf_result * result)
   if(x < 0.0) {
     DOMAIN_ERROR(result);
   }
+  else if(x == 0.0 && a == 0.0) {
+    /* Gamma(0,0) diverges to +Infinity; Gamma(a) has a pole there and
+     * gsl_sf_gamma_e(0) returns +Inf, but with a NaN error estimate.
+     * Report the limit with zero error.  See Savannah bug #66834. */
+    result->val = GSL_POSINF;
+    result->err = 0.0;
+    return GSL_SUCCESS;
+  }
   else if(x == 0.0) {
     return gsl_sf_gamma_e(a, result);
   }
