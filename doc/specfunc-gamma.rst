@@ -245,7 +245,10 @@ Incomplete Gamma Functions
    :math:`P(1,3) = 1 - e^{-3}`.
 
    The limit :math:`\Gamma(a,+\infty) = 0` is returned for
-   :math:`x = +\infty`.
+   :math:`x = +\infty`.  At :math:`x = 0` the value is
+   :math:`\Gamma(a,0) = \Gamma(a)`; in particular
+   :math:`\Gamma(0,0) = +\infty`, returned as :data:`GSL_POSINF` with
+   zero error.
 .. exceptions: GSL_EDOM
 
 .. index:: incomplete Gamma function

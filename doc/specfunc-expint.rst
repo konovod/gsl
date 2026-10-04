@@ -17,8 +17,11 @@ Exponential Integral
 
    .. math:: E_1(x) := \Re \int_1^\infty dt \exp(-xt)/t.
 
+   The function diverges to :math:`+\infty` as :math:`x \to 0`
+   (from either side), and :math:`E_1(0)` is returned as
+   :data:`GSL_POSINF` with zero error.
 .. Domain: x != 0.0
-.. Exceptional Return Values: GSL_EDOM, GSL_EOVRFLW, GSL_EUNDRFLW
+.. Exceptional Return Values: GSL_EOVRFLW, GSL_EUNDRFLW
 
 .. function:: double gsl_sf_expint_E2 (double x)
               int gsl_sf_expint_E2_e (double x, gsl_sf_result * result)
@@ -37,8 +40,11 @@ Exponential Integral
 
    .. math:: E_n(x) := \Re \int_1^\infty dt \exp(-xt)/t^n.
 
+   For :math:`n > 0` the function is finite at :math:`x = 0`.  For
+   :math:`n = 0`, :math:`E_0(0)` diverges to :math:`+\infty` and is
+   returned as :data:`GSL_POSINF` with zero error.
 .. Domain: x != 0.0
-.. Exceptional Return Values: GSL_EDOM, GSL_EOVRFLW, GSL_EUNDRFLW
+.. Exceptional Return Values: GSL_EOVRFLW, GSL_EUNDRFLW
 
 Ei(x)
 -----
@@ -59,8 +65,10 @@ Ei(x)
          Ei(x) = - PV(\int_{-x}^\infty dt \exp(-t)/t)
 
    where :math:`PV` denotes the principal value of the integral.
+   :math:`Ei(x)` diverges to :math:`-\infty` as :math:`x \to 0`, and
+   :math:`Ei(0)` is returned as :data:`GSL_NEGINF` with zero error.
 .. Domain: x != 0.0
-.. Exceptional Return Values: GSL_EDOM, GSL_EOVRFLW, GSL_EUNDRFLW
+.. Exceptional Return Values: GSL_EOVRFLW, GSL_EUNDRFLW
 
 Hyperbolic Integrals
 --------------------

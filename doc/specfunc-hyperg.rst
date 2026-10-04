@@ -117,6 +117,14 @@ Hypergeometric functions are described in Abramowitz & Stegun, Chapters
    the function can return the error code :macro:`GSL_EMAXITER` when the
    series approximation converges too slowly.  This occurs in the region of
    :math:`x = 1`, :math:`c - a - b = m` for integer m.
+
+   The contiguous cases :math:`c = a - 1` and :math:`c = b - 1` are
+   evaluated from the closed forms
+
+   .. math:: {}_2F_1(a,b,a-1,x) = {a - 1 + (b + 1 - a)x \over (a-1)(1-x)^{b+1}},
+
+   .. math:: {}_2F_1(a,b,b-1,x) = {b - 1 + (a + 1 - b)x \over (b-1)(1-x)^{a+1}}.
+
 .. exceptions:
 
 .. function:: double gsl_sf_hyperg_2F1_conj (double aR, double aI, double c, double x)
@@ -189,5 +197,8 @@ Hypergeometric functions are described in Abramowitz & Stegun, Chapters
    .. only:: texinfo
 
       .. math:: 2F0(a,b,x) = (-1/x)^a U(a,1+a-b,-1/x)
+
+   For :math:`x = 0`, or for :math:`a = 0` or :math:`b = 0` with any
+   :math:`x`, the value is :math:`1`.
 
 .. exceptions: GSL_EDOM

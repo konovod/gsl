@@ -74,7 +74,9 @@ the real and imaginary parts in @var{czr}, @var{czi}.
 @cindex complex log sine function, special functions
 This function computes the logarithm of the complex sine,
 @math{\log(\sin(z_r + i z_i))} storing the real and imaginary parts in
-@var{lszr}, @var{lszi}.
+@var{lszr}, @var{lszi}.  At a real zero of the sine
+(@math{z_i = 0} and @math{z_r} a multiple of @math{\pi}) the real part
+diverges to @math{-\infty} and both parts are returned with zero error.
 @comment Exceptional Return Values: GSL_EDOM, GSL_ELOSS
 @end deftypefun
 

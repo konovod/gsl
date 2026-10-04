@@ -36,8 +36,10 @@ E_1(x) := \Re \int_1^\infty dt \exp(-xt)/t.
 
 @end ifinfo
 @noindent
+The function diverges to @math{+\infty} as @math{x \to 0} (from either
+side); @math{E_1(0)} is returned as @code{GSL_POSINF} with zero error.
 @comment Domain: x != 0.0
-@comment Exceptional Return Values: GSL_EDOM, GSL_EOVRFLW, GSL_EUNDRFLW
+@comment Exceptional Return Values: GSL_EOVRFLW, GSL_EUNDRFLW
 @end deftypefun
 
 @deftypefun double gsl_sf_expint_E2 (double @var{x})
@@ -80,8 +82,11 @@ E_n(x) := \Re \int_1^\infty dt \exp(-xt)/t^n.
 
 @end ifinfo
 @noindent
+For @math{n > 0} the function is finite at @math{x = 0}.  For
+@math{n = 0}, @math{E_0(0)} diverges to @math{+\infty} and is returned
+as @code{GSL_POSINF} with zero error.
 @comment Domain: x != 0.0
-@comment Exceptional Return Values: GSL_EDOM, GSL_EOVRFLW, GSL_EUNDRFLW
+@comment Exceptional Return Values: GSL_EOVRFLW, GSL_EUNDRFLW
 @end deftypefun
 
 
@@ -108,8 +113,10 @@ Ei(x) := - PV(\int_@{-x@}^\infty dt \exp(-t)/t)
 @end ifinfo
 @noindent
 where @math{PV} denotes the principal value of the integral.
+@math{Ei(x)} diverges to @math{-\infty} as @math{x \to 0};
+@math{Ei(0)} is returned as @code{GSL_NEGINF} with zero error.
 @comment Domain: x != 0.0
-@comment Exceptional Return Values: GSL_EDOM, GSL_EOVRFLW, GSL_EUNDRFLW
+@comment Exceptional Return Values: GSL_EOVRFLW, GSL_EUNDRFLW
 @end deftypefun
 
 

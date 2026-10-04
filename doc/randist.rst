@@ -1519,7 +1519,9 @@ The Negative Binomial Distribution
 
    This function computes the probability :math:`p(k)` of obtaining :data:`k`
    from a negative binomial distribution with parameters :data:`p` and
-   :data:`n`, using the formula given above.
+   :data:`n`, using the formula given above.  For :math:`p = 1` or
+   :math:`p = 0` the distribution degenerates to a point mass at
+   :math:`k = 0`.
 
    .. image:: /images/rand-nbinomial.png
 

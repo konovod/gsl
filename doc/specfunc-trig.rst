@@ -80,7 +80,10 @@ Trigonometric Functions for Complex Arguments
 
    This function computes the logarithm of the complex sine,
    :math:`\log(\sin(z_r + i z_i))` storing the real and imaginary parts in
-   :data:`lszr`, :data:`lszi`.
+   :data:`lszr`, :data:`lszi`.  At a real zero of the sine
+   (:math:`z_i = 0` and :math:`z_r` a multiple of :math:`\pi`) the real
+   part diverges to :math:`-\infty` and both parts are returned with zero
+   error.
 .. Exceptional Return Values: GSL_EDOM, GSL_ELOSS
 
 Hyperbolic Trigonometric Functions

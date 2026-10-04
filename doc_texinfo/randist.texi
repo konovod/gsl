@@ -1966,7 +1966,9 @@ Note that @math{n} is not required to be an integer.
 @deftypefun double gsl_ran_negative_binomial_pdf (unsigned int @var{k}, double @var{p}, double  @var{n})
 This function computes the probability @math{p(k)} of obtaining @var{k}
 from a negative binomial distribution with parameters @var{p} and
-@var{n}, using the formula given above.
+@var{n}, using the formula given above.  For @math{p = 1} or
+@math{p = 0} the distribution degenerates to a point mass at
+@math{k = 0}.
 @end deftypefun
 
 @sp 1
