@@ -50,6 +50,10 @@ int test_dilog(void)
   TEST_SF(s, gsl_sf_dilog_e, (150.0, &r),  -9.270042702348657270,      TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_dilog_e, (1100.0, &r), -21.232504073931749553,     TEST_TOL0, GSL_SUCCESS);
 
+  /* exact endpoint values (Savannah bug #66844) */
+  TEST_SF(s, gsl_sf_dilog_e, (0.0, &r),    0.0,                       TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_dilog_e, (-1.0, &r), -M_PI*M_PI/12.0,            TEST_TOL0, GSL_SUCCESS);
+
 
   /* complex dilog */
 
