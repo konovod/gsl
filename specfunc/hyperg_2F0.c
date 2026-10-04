@@ -30,7 +30,16 @@
 int
 gsl_sf_hyperg_2F0_e(const double a, const double b, const double x, gsl_sf_result * result)
 {
-  if(x < 0.0) {
+  if(a == 0.0 || b == 0.0) {
+    /* 2F0(0,b,x) = 2F0(a,0,x) = 1 for every x.  Taken before the x < 0
+     * route, where U(a,1+a-b,-1/x) loses the vanishing parameter by
+     * cancellation (e.g. 2F0(200,0,-0.001) returned NaN).
+     * See Savannah bug #67359. */
+    result->val = 1.0;
+    result->err = 0.0;
+    return GSL_SUCCESS;
+  }
+  else if(x < 0.0) {
     /* Use "definition" 2F0(a,b,x) = (-1/x)^a U(a,1+a-b,-1/x).
      */
     gsl_sf_result U;

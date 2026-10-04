@@ -1012,6 +1012,14 @@ TEST_SF(s, gsl_sf_hyperg_U_e, (2, -6.4, 1, &r),1.2141502795806162484648638e-02
   TEST_SF(s, gsl_sf_hyperg_2F0_e, (200.0, 0.0, -0.001, &r), 1.0, TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_hyperg_2F0_e, (0.0, 100.0, -0.01, &r), 1.0, TEST_TOL0, GSL_SUCCESS);
 
+  /* 2F0(a,b,0) = 2F0(0,b,x) = 2F0(a,0,x) = 1 (Savannah bug #67359).
+     The high-order cases used to return NaN through U(a,1+a-b,-1/x). */
+  TEST_SF(s, gsl_sf_hyperg_2F0_e, (0.0,  1.0, -0.02, &r), 1.0, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_2F0_e, (10.0, 0.0, -0.2,  &r), 1.0, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_2F0_e, (0.0,  0.0,  0.0,  &r), 1.0, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_2F0_e, (200.0, 0.0, -0.001, &r), 1.0, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_2F0_e, (0.0, 100.0, -0.01, &r), 1.0, TEST_TOL0, GSL_SUCCESS);
+
 
   /* 2F1 renorm */
 
