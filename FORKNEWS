@@ -178,6 +178,12 @@ One line per change: date | tag | description | commit(s).
   2026-10-04 | [upstream] | cblas: reorder the gemm loops to reuse a row of C   | 39cde03e2
   2026-10-04 | [upstream] | permutation: one backward scan for next and prev    | c382ed86e
   2026-10-04 | [upstream] | roots: skip the redundant false-position evaluation | 0697ba772
+  2026-10-04 | [upstream] | specfunc: test the dilogarithm at 0 and -1      | 25a16f928
+  2026-10-04 | [upstream] | specfunc: test 1F1 at integer special values     | 728206d82
+  2026-10-04 | [upstream] | specfunc: exact zero error for 0F1 at x = 0      | fe7285909
+  2026-10-04 | [upstream] | specfunc: test 0F1 at x = 0 and half-integer b   | 2d6cf433c
+  2026-10-04 | [upstream] | specfunc: test U at the special parameter values | 153a149d4
+  2026-10-04 | [upstream] | interpolation: test the plain eval wrappers      | 7b6979126
 
 
 ## [upstream] rng: make the random() generators produce the documented sequences
@@ -4774,3 +4780,150 @@ with the skip removed the count is 98 and the test fails.
 Files: `roots/falsepos.c`, `roots/test.c`.
 
 See Savannah bug #40092.
+
+
+## [upstream] specfunc: test the dilogarithm at 0 and -1
+
+Commit: 25a16f928
+
+Two exact endpoint identities from Savannah bug #66844 added to
+`specfunc/test_dilog.c`:
+
+    Li_2(0)  = 0
+    Li_2(-1) = -pi^2/12
+
+Both are exact closed forms; the expected values were checked with
+exact rational arithmetic and with mpmath at 60 digits, and
+`gsl_sf_dilog_e` returns them within its reported error at `TEST_TOL0`.
+
+Files: `specfunc/test_dilog.c`.
+
+See Savannah bug #66844.
+
+
+## [upstream] specfunc: test 1F1 at integer special values
+
+Commit: 728206d82
+
+Test vectors from Savannah bug #66826.  The report contributes the
+terminating integer cases (closed forms in `e`, `4/3`, `13*e/6`, ...)
+and a check that `gsl_sf_hyperg_1F1_e` agrees with
+`gsl_sf_hyperg_1F1_int_e` for integer arguments.  All expected values
+were checked independently, with exact rational arithmetic and with
+mpmath at 60 digits, and pass at `TEST_TOL0`.  The report's sign
+correction, `1F1(-2,2,2) = -1/3`, is taken.
+
+Not taken, and the reason the change is test-only:
+
+* The report also lists four terminating cases with a negative integer
+  `b` that the library gets wrong.  `gsl_sf_hyperg_1F1_int_e` returns
+  `exp(x)` when `a == b`, and otherwise applies the Kummer
+  transformation `exp(x) M(b-a,b,-x)` in `hyperg_1F1_ab_negint`, which
+  is not valid for the terminating branch.  Correct values from the
+  terminating series (DLMF 13.2.2) are
+
+      1F1(-2,-2, 2) = 5          library  exp(2)  = 7.389
+      1F1(-2,-2, 1) = 2.5        library  exp(1)  = 2.718
+      1F1(-2,-2,-1) = 0.5        library  exp(-1) = 0.368
+      1F1(-1,-2,-1) = 0.5        library  0.551819161757...
+
+  These are recorded as a comment rather than enabled.
+
+* The same defect makes three existing vectors in
+  `specfunc/test_hyperg.c` assert the wrong value:
+
+      (-10,-20,-10)   test 0.00357079636732993491  true 0.00357201182794578047
+      (-10,-20,-100)  test 1.64284868563391159e-35 true 49303272.262405369733
+      (-10,-100,-100) test 8.19512187960476424e-09 true 4.4148250205403363517e-7
+
+  They are left as they are because correcting them without fixing the
+  library would fail the suite.
+
+Fixing the library is a separate piece of work.  A simple switch to the
+direct terminating polynomial is not safe: for large degree and `|x|`
+the polynomial suffers catastrophic cancellation (`1F1(-100,-200,-100)`
+evaluates to `58.6` in double against a true value of `4.34e-25`), and
+the Kummer map is not an identity there either, so no clean validity
+test exists.  The full analysis is in `SAVANNAH_REVIEW.md`.
+
+Files: `specfunc/test_hyperg.c`.
+
+See Savannah bug #66826.
+
+
+## [upstream] specfunc: report an exact zero error for 0F1 at x = 0
+
+Commit: fe7285909
+
+`gsl_sf_hyperg_0F1_e(c,0)` is exactly 1 for every admissible `c`, but
+the `x == 0` branch reported `result->err = 1.0` (Savannah bug #66877).
+It now reports zero, and `specfunc/test_hyperg.c` checks the error
+directly, because `TEST_SF` only compares the value against the reported
+error and cannot see the magnitude by itself.
+
+Negative control: with `err = 1.0` restored, the new assertion fails
+with "reported error at x = 0".
+
+Files: `specfunc/hyperg_0F1.c`, `specfunc/test_hyperg.c`.
+
+See Savannah bug #66877.
+
+
+## [upstream] specfunc: test 0F1 at x = 0 and half-integer b
+
+Commit: 2d6cf433c
+
+The special cases from Savannah bug #66877: `0F1(c,0) = 1` for a range
+of `c` including negative and large values, and the half-integer `b`
+family.  The `x = 0` values are exact and use `TEST_TOL0`.  The
+half-integer values were checked with mpmath at 60 digits and use
+`TEST_TOL2`: on a development build (`TEST_FACTOR = 1.0`) the worst
+fractional difference is `3.3e-15`, about 15 epsilon, so `TEST_TOL1`
+(16 epsilon) would leave no headroom across compilers.
+
+Files: `specfunc/test_hyperg.c`.
+
+See Savannah bug #66877.
+
+
+## [upstream] specfunc: test U at the special parameter values
+
+Commit: 153a149d4
+
+The special-case vectors from Savannah bug #66880: `U(0,b,x) = 1`,
+`U(a,b,0) = Gamma(1-b)/Gamma(a-b+1)` for `|b| < 1`,
+`U(a,a,x) = exp(x) Gamma(1-a,x)` and `U(a,a+1,x) = x^(-a)`, for both
+`gsl_sf_hyperg_U_e` and `gsl_sf_hyperg_U_int_e`.  Expected values were
+checked with mpmath at 60 digits.
+
+Three changes to the posted patch: `M_CUBEROOT2` does not exist in this
+tree, so the cube root of two is written out; `U(1/500,1/500,1)` and
+`U(1/500,1/500,10)` are enabled because they do pass (the report had
+them disabled); and `U(+/-1/500,0.9999999,0)` is left out because the
+library is only accurate to about `1e-10` there.  The small-`a`
+`U(a,a,x)` vectors use `TEST_TOL1` where the library loses a ulp.
+
+Files: `specfunc/test_hyperg.c`.
+
+See Savannah bug #66880.
+
+
+## [upstream] interpolation: test the plain evaluation wrappers
+
+Commit: 7b6979126
+
+Savannah bug #64549 posts four tests of `gsl_interp_eval_integ` over the
+same `y = x` data.  They are near-duplicates of the integral already
+checked by `test_linear`, and each leaks its accelerator and
+interpolant.  They are replaced by one test that exercises the plain
+`gsl_interp_eval`, `gsl_interp_eval_deriv` and `gsl_interp_eval_integ`
+wrappers, which nothing else calls, frees both objects, and integrates a
+partial interval with a non-zero lower bound so that it is not redundant.
+
+The posted test #2 integrates an empty interval and expects zero, and
+tests #1, #3 and #4 all integrate the full range; only the wrapper
+coverage is kept.
+
+Files: `interpolation/test.c`.
+
+See Savannah bug #64549.
