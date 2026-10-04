@@ -172,6 +172,7 @@ One line per change: date | tag | description | commit(s).
   2026-10-04 | [upstream] | specfunc: eta_int leading term via ldexp            | f774247e7
   2026-10-04 | [upstream] | specfunc: floor(x+0.5) -> rint                      | b681165e1
   2026-10-04 | [rejected] | Group R: 40116, 45099, 68663, 68704                 | - (see below)
+  2026-10-04 | [rejected] | meta: the remaining feature/perf/API requests (35)    | - (see below)
 
 
 ## [upstream] rng: make the random() generators produce the documented sequences
@@ -4508,3 +4509,69 @@ the existing name; `histogram/stat.c` is numerically correct as it
 stands.  Out of scope.  Not a bug.
 
 Savannah bugs #40116, #45099, #68663 and #68704.
+
+
+## [rejected] meta: the remaining feature, performance and API requests
+
+Not applied.  Thirty-five open reports ask for a new algorithm, a new
+public function or object, a breaking signature change, a performance
+change, or a bare test/refactor with no attached patch.  The eligibility
+rule admitted bug fixes, documentation corrections and test-quality
+improvements only; every one of these falls outside it, so they are
+recorded here and closed out of the review rather than left un-triaged.
+No code, test or documentation change follows from any of them.  The
+four reports that are genuine numerical defects (#21831, #25320, #29834,
+#34361) are *not* in this entry; they are still under review.
+
+New distributions and generators (new public API):
+
+  * `#24252` gamma-tail distribution, `#24871` exponential integrals
+    E_n, `#59900` truncated normal, `#66816` Nakagami, `#66949` Erlang
+    CDF, `#66767` inverse binomial, `#66775` inverse Poisson - each adds
+    a routine the library does not have.
+  * `#57173` zeta for complex arguments, `#68367` inverse Jacobi
+    elliptic integrals - new algorithms and API.
+
+New algorithms or solvers:
+
+  * `#66695` Feagin/Verner high-order ODE solvers (+5866 lines),
+    `#32257` quadrule integrators, `#66573` `gsl_vector_complex_conjugate`.
+
+New special cases or API extensions:
+
+  * `#66800` `negative_binomial_pdf` at p = 1, `#66834` `gamma_inc(0,0)`,
+    `#66842` exponential integrals at the origin, `#66850` 2F1 parameter
+    shifts, `#66922` `logsin` special case, `#67359` `hyperg_2F0`,
+    `#67774` arctan integral extended to negative inputs, `#41527`
+    multimin error codes, `#45782` configurable derivative epsilon,
+    `#68098` correlation division-by-zero behaviour.
+
+Breaking or behaviour changes:
+
+  * `#68549` a uniform argument list across the distribution functions -
+    it renames/repacks existing parameters, so it cannot be a fork fix.
+
+Documentation, test and refactor requests with no attached patch, or
+patches that only reorganise:
+
+  * `#66742` GAMS classification (a 177-file documentation sweep, not a
+    correction), `#66826`/`#66844`/`#66877` test-case requests with no
+    patch, `#66880` hyperg_0F1 tests, `#66886` `specfunc/trig.c`
+    refactor, `#66874` bst documentation (already documented in the fork
+    by `20eda0316`).
+
+Performance-only:
+
+  * `#21828` `lmsder`, `#21833`/`#51104` `permutation_next`, `#31109`
+    `bsimp`, `#40092` false-position - a different algorithm or loop
+    order would change the floating-point result, and none alleges a
+    wrong value.
+
+  * `#47402` Mathieu functions - a library/test design discussion, not a
+    defect.
+
+Savannah bugs #21828, #21833, #24252, #24871, #31109, #32257, #40092,
+#41527, #45782, #47402, #51104, #57173, #59900, #66573, #66695, #66742,
+#66767, #66775, #66800, #66816, #66826, #66834, #66842, #66844, #66850,
+#66874, #66877, #66880, #66886, #66922, #66949, #67359, #67774, #68098,
+#68367 and #68549.

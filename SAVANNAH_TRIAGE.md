@@ -5,31 +5,30 @@ Generated 2026-10-02 from the `scripts/savannah_bugs.py` sweep (`inventory.tsv`)
 Scratch index, not part of the fork's record of changes. Verdicts are curated from
 `FORKNEWS`, `SAVANNAH_REVIEW.md` and the git history; every other row is un-triaged.
 
-**219 open items: 180 reviewed/handled, 39 remaining.**
+**219 open items: 215 reviewed/handled, 4 remaining.**
 
 | status | count |
 |---|---:|
 | fixed | 105 |
 | partial | 5 |
-| rejected | 65 |
+| rejected | 100 |
 | deferred | 4 |
 | superseded | 1 |
-| not reviewed (feature-shaped) | 17 |
-| not reviewed | 22 |
+| not reviewed | 4 |
 
 Legend for the *Patch* column: the sweep's `git apply` verdict (`clean` / `partial` / `dirty`), `source` for a whole
 replacement file, `inline` for a patch pasted into the bug text, `none` for no patch.
 
 | # | Date | Kind | Cat | Patch | Fork status | Notes |
 |---|---|---|---|---|---|---|
-| 21828 | 2007-12-18 | - | Performance | none | not reviewed | suboptimal performance of gsl_fdfsolver_lmsder |
+| 21828 | 2007-12-18 | - | Performance | none | rejected — performance-only; netlib minpack comparison, no defect | suboptimal performance of gsl_fdfsolver_lmsder |
 | 21831 | 2007-12-18 | - | Accuracy problem | source levy.c | not reviewed | Levý random number generator for alpha < 1 |
-| 21833 | 2007-12-18 | - | Performance | none | not reviewed | suboptimal performance of gsl permutation? |
+| 21833 | 2007-12-18 | - | Performance | none | rejected — performance-only; no defect in permutation_next | suboptimal performance of gsl permutation? |
 | 21835 | 2007-12-18 | - | Accuracy problem | clean test_hyperg.diff +1 | **partial** — non-positive-integer termination for x >= 1 fixed (2aa89bae8); c = a+b near x = 1 still returns GSL_EMAXITER | gsl_sf_hyperg_2F1 problematic arguments |
 | 21836 | 2007-12-18 | - | Accuracy problem | none | **fixed** — Q returns exact complement of P in the series window (6f23a4cb5) | gamma_inc_P and gamma_inc_Q only satisfy P+Q=1 within errors |
 | 21837 | 2007-12-18 | - | Runtime error | none | rejected — permutation for a zero diagonal is a new algorithm; docs corrected (9418afa5f) | gsl_linalg_solve_symm_tridiag requires positive definite matrix |
-| 24252 | 2008-09-12 | feature | - | source gamma_tail_jpl_080908.c | not reviewed | suggestion: add gamma tail distribution |
-| 24871 | 2008-11-18 | feature | - | none | not reviewed | suggestion, add support for E_n |
+| 24252 | 2008-09-12 | feature | - | source gamma_tail_jpl_080908.c | rejected — new distribution/API; out of scope | suggestion: add gamma tail distribution |
+| 24871 | 2008-11-18 | feature | - | none | rejected — new function/API (exponential integrals E_n); out of scope | suggestion, add support for E_n |
 | 25320 | 2009-01-14 | - | Accuracy problem | none | not reviewed | Import fresnel, bugs on GSL Extension Fresnel |
 | 28267 | 2009-12-11 | - | Accuracy problem | source hyperg1F1.c | **partial** — same defect as #43809 (52505315d); transition region `x ~ a^2` still loses digits | poor convergence region for gsl_sf_hyperg_1F1 |
 | 29834 | 2010-05-09 | - | Runtime error | source error_cblas_v2.h | not reviewed | insufficient argument checking in blas wrapper |
@@ -39,10 +38,10 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 30583 | 2010-07-28 | doc | Documentation | none | **fixed** — Legendre/Carlson relations and the negative-parameter (imaginary-modulus) transformation documented (b0eec8bc6) | improve documentation for Elliptic functions |
 | 30885 | 2010-08-27 | - | Runtime error | none | **fixed** — Coulomb F recurrence rescaled, no overflow (25841970e) | nans from gsl_sf_coulomb_wave_FG_e(1.2693881947287221e-07, 0.0, lam_F=37, lam_G=36) |
 | 30947 | 2010-09-02 | - | - | clean 0001-Fixed-step-size-control-object.patch | rejected — new public API for the legacy v1 interface; v2 already provides evolve_apply_fixed_step/driver_apply_fixed_step | Please, include fixed step size control object for ode suite |
-| 31109 | 2010-09-23 | - | Performance | none | not reviewed | ode-initval/bsimp is always high order |
+| 31109 | 2010-09-23 | - | Performance | none | rejected — performance-only; bsimp order is by design | ode-initval/bsimp is always high order |
 | 31362 | 2010-10-18 | bug | Runtime error | none | **fixed** — NaN rejected as GSL_EDOM in the complete elliptic integrals (14d595eb8) | The Complete Elliptic Integrals (gsl_sf_ellint_Ecomp and _Kcomp) Loop Forever with NaN Argument |
 | 31426 | 2010-10-23 | - | Runtime error | none | **fixed** — rescaled/bounded symmetric QR iteration (7d586d89b) | infinite loop in gsl_eigen_symm |
-| 32257 | 2011-01-26 | - | - | none | not reviewed | RFE: Import integration routines from quadrule |
+| 32257 | 2011-01-26 | - | - | none | rejected — new algorithms/API (quadrule integrators); out of scope | RFE: Import integration routines from quadrule |
 | 32306 | 2011-01-31 | bug | Accuracy problem | source hyp.c | **fixed** — integer-d 2F1 series and error estimate (e4c4ac326, 882c8361d) | sign error in gsl_sf_hyperg_2F1 |
 | 32776 | 2011-03-14 | feature | - | source quadratic.c | **fixed** — multimin quadratic minimiser (53cd0d098) | RFE: Add brute-force quadratic numerical multidimensional minimizer |
 | 34361 | 2011-09-22 | - | Runtime error | none | not reviewed | gsl_bspline_knots_greville needs inequality constrained linear least squares |
@@ -64,13 +63,13 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 39372 | 2013-06-30 | bug | Runtime error | none | **fixed** — gsl_hypot3 returns +Inf for any infinite argument (c1df353ae) | add check for inf/nan in gsl_hypot3 |
 | 39473 | 2013-07-12 | - | Performance | clean coupling3j.patch | **fixed** — 3j symbol by edge recursion (1b2c8ff98) | more efficient algorithm for 3j,6j,9j calculations (gsl_sf_coupling_{3j,6j,9j}_e |
 | 39713 | 2013-08-07 | - | Runtime error | source gsl-secant.c +3 | **fixed** — inherited upstream d50dc70e5/eaaae349d; test vector added by ce90a6b91; posted patches are pre-2013 | roots/secant.c "derivative value is not finite" for a good guess |
-| 40092 | 2013-09-23 | - | Performance | source gsl-falsepos64.c | not reviewed | false position root finding requires too many function evals |
+| 40092 | 2013-09-23 | - | Performance | source gsl-falsepos64.c | rejected — performance-only; more evals than a better algorithm, no defect | false position root finding requires too many function evals |
 | 40116 | 2013-09-26 | bug | Runtime error | none | rejected - faithful QUADPACK port; `large_interval`/`increase_nrmax` map to `go to 90`, no failing case | possible error in integration routines |
 | 40176 | 2013-10-04 | bug | Runtime error | none | rejected — already fixed upstream (9cc12d037, 0466df866); duplicate of #39055 | possible error in poly test suite |
 | 40196 | 2013-10-07 | - | Documentation | none | **fixed** — the out-of-range key coercion (< 1 -> GAUSS15, > 6 -> GAUSS61) documented (6feb963d3) | Document gsl_integration_qag behavior on key out-of-range |
 | 40755 | 2013-11-30 | bug | Accuracy problem | none | **fixed** — double cast in the Jn/Yn asymptotics test (a43fc0055) | Sporadic nan's from gsl_sf_bessel_Jn an related functions |
 | 41457 | 2014-02-04 | - | Runtime error | none | rejected — already fixed upstream by 6ed874986 (memset covers the padding bytes) | valgrind finds errors in matrix/test.c |
-| 41527 | 2014-02-09 | bug | - | none | not reviewed | Change/add multimin functions to return error codes |
+| 41527 | 2014-02-09 | bug | - | none | rejected — API/contract change (error codes from multimin); out of scope | Change/add multimin functions to return error codes |
 | 41605 | 2014-02-15 | - | Documentation | none | **fixed** — already complete in both manuals (histogram.rst / histogram.texi); no fork change needed | gsl_histogram_pdf docs |
 | 41837 | 2014-03-11 | - | Runtime error | none | **fixed** (inherited) — the three reported values are correct on the current build; the finite-sum-skip concern does not reproduce | bugs in gsl_sf_hyperg_U |
 | 42042 | 2014-04-03 | bug | Runtime error | none | **fixed** — non-vanishing half-integer Jnu endpoint (e6e34279a) | nan bug in bessel_Jnu |
@@ -95,7 +94,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 45265 | 2015-06-06 | bug | Accuracy problem | none | rejected — not reproducible on MSVC x64 (true/err ≤ 0.57 over x in [4,1000]) | gsl_sf_bessel_J0_e underestimates error for x>4 |
 | 45726 | 2015-08-10 | bug | Accuracy problem | source gslbesselytest.c | **fixed** — Y family libm sin/cos (a08ef2f7f) | Incorrect results of functions bessel_y0, y1 and y2 |
 | 45746 | 2015-08-13 | bug | Accuracy problem | source gsltrigtest.c | **fixed** - exact argument reduction (8a46ec7cf, 5639c380f) | Incorrect results of trigonometric functions gsl_sf_sin and gsl_sf_cos |
-| 45782 | 2015-08-17 | feature | Accuracy problem | none | not reviewed | Feature request: Make derivative epsilon configurable |
+| 45782 | 2015-08-17 | feature | Accuracy problem | none | rejected — new API (configurable derivative epsilon); out of scope | Feature request: Make derivative epsilon configurable |
 | 45797 | 2015-08-19 | - | Accuracy problem | none | rejected — external LAPACK/distribution report: the program links LAPACK `ZGESVD`; GSL has no complex SVD and no GSL code path exists | Possible problem with LAPACK Fortran routine ZGESVD |
 | 45924 | 2015-09-11 | bug | Runtime error | none | **fixed** — beta inverse reworked around `t = logit(x)` with a bracketed solver (51a63cbd5) | Bug in the inverse beta function gsl_cdf_beta_Pinv, and suggested fix |
 | 45925 | 2015-09-11 | - | Runtime error | none | **rejected** — not-a-bug: report confused Gamma(a,x) with P; Q matches (3cc1aaa54 docs) | Incomplete Gamma Functions flipped? |
@@ -107,7 +106,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 47193 | 2016-02-18 | - | - | none | **fixed** — duplicate of #43326 (4f9f4f4fc); regression test 5346bba43 | gsl_ran_poisson_pdf with mu=0 |
 | 47345 | 2016-03-05 | bug | Accuracy problem | partial gsl_complex_arccosh.diff +1 | **fixed** — complex arccosh returns +0 (d6ec47d87) | arccosh(1) wrong sign |
 | 47348 | 2016-03-05 | bug | - | none | **fixed** - floor(x+0.5) -> rint; hyperg_1F1 integer test also missing fabs (b681165e1); coulomb keeps deliberate round-half-up | Use of incorrect ideom floor(x+0.5) |
-| 47402 | 2016-03-13 | - | - | none | not reviewed | Mathieu functions |
+| 47402 | 2016-03-13 | - | - | none | rejected — Mathieu library/test design discussion, not a defect | Mathieu functions |
 | 47646 | 2016-04-07 | bug | Accuracy problem | partial test_beta_small.c +2 | **fixed** — code fix upstream (05c5b5179); regression test added (d64cc4d93) | gsl_ran_beta returns NaN for small arguments |
 | 48702 | 2016-08-04 | - | Runtime error | none | **fixed** — same NaN rejection as #31362 (14d595eb8) | gsl_sf_ellint_Kcomp stalls on GSL_NAN |
 | 48915 | 2016-08-26 | - | Runtime error | none | rejected — AIX-only; modules pass on x64 | some test failures on AIX system for GSL 2.1.91 |
@@ -142,7 +141,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 55687 | 2019-02-10 | bug | - | none | **fixed** — NaN propagates; the `b = NaN` recursion crashed (99a73dd36) | Bad error handling in gsl_sf_hyperg_1F1_e with NaN arguments |
 | 55965 | 2019-03-20 | feature | - | none | rejected — feature: PCG is a new algorithm and API, out of scope | Implement PCG random number generator |
 | 56843 | 2019-08-31 | - | Accuracy problem | none | rejected — non-x86 eigen accuracy; x64 passes | Unit Tests in linalg eigen fail on non-x86 hardware due to slight accuracy differences |
-| 57173 | 2019-11-05 | feature | Accuracy problem | none | not reviewed | Feature request: zeta function for complex arguments |
+| 57173 | 2019-11-05 | feature | Accuracy problem | none | rejected — new API (complex-argument zeta); out of scope | Feature request: zeta function for complex arguments |
 | 57978 | 2020-03-09 | bug | Accuracy problem | clean sincos_pi.c.patch | **fixed** — sin_pi/cos_pi(inf) -> EDOM (7c27b358b) | Incorrect result from cosine function with inf input |
 | 57979 | 2020-03-09 | bug | - | none | **fixed** — gsl_sf_hypot: +Inf for infinite args, NaN propagation (1a470222a) | Incorrect Result from hypot function with NaN input |
 | 58031 | 2020-03-23 | - | Accuracy problem | none | rejected — not-a-bug: `e^x K_0(x) -> 0` is the limit; value+vector added (fc4059b12) | gsl_sf_bessel_Kn_scaled incorrectly evaluating limit |
@@ -161,7 +160,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 59759 | 2020-12-23 | bug | Runtime error | none | rejected — report is about 32-bit; spmatrix passes on x64 | spmatrix test fails on x86_64 |
 | 59834 | 2021-01-06 | bug | Runtime error | clean mmacc.c.patch | **fixed** — movstat accumulator alignment (4e4a88242) | Misaligned memory access error in deque.c |
 | 59845 | 2021-01-08 | - | Performance | clean 0001-initialize-newton-steffenson-solvers-with-GSL_FN_FDF.patch | **fixed** — same fix as #49465 (4eac6584f) | Initialize newton, steffenson solvers with GSL_FN_FDF_EVAL_F_DF |
-| 59900 | 2021-01-17 | feature | - | inline | not reviewed | Add truncated normal distribution |
+| 59900 | 2021-01-17 | feature | - | inline | rejected — new distribution/API (truncated normal); out of scope | Add truncated normal distribution |
 | 59911 | 2021-01-20 | - | - | none | rejected — caller's cosh(x) overflows; library returns GSL_EMAXITER | Problem with qagui 1D integrator |
 | 59912 | 2021-01-20 | - | Documentation | none | **fixed** — gsl_permute/vector/matrix header files named in the permutation chapter (aa796e20b) | gsl_permutation header files |
 | 59913 | 2021-01-20 | - | - | none | **fixed** — cquad error estimate guarded against nc == 0 (f20496de6) | gsl 2.3.0 problem in gsl_integration_cquad |
@@ -185,35 +184,35 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 65932 | 2024-06-30 | - | - | none | **deferred** — duplicate of feature #60457 (complex tridiagonal solvers); new API out of scope | Complex tridiagonal solvers - patch ignored? |
 | 66026 | 2024-07-26 | - | Runtime error | partial bug_66026.patch +1 | **fixed** — LU_decomp_L3 identity-initialises ipiv (d73ba5300) | gsl_linalg_LU_decomp using uninitialized memory |
 | 66128 | 2024-08-27 | doc | Documentation | clean specfunc.rst.patch | **fixed** — specfunc.rst result/val typo (066f5b747) | documentation of type gsl_sf_result: confused result and val |
-| 66573 | 2024-12-18 | feature | - | clean vector_complex_conjugate.patch | not reviewed (feature-shaped) — skipped in first pass as feature-shaped | Feature: gsl_vector_complex_conjugate() |
+| 66573 | 2024-12-18 | feature | - | clean vector_complex_conjugate.patch | rejected — new API (gsl_vector_complex_conjugate); out of scope | Feature: gsl_vector_complex_conjugate() |
 | 66574 | 2024-12-18 | feature | - | clean 2_givens_cmplx.patch +3 | rejected — complex SVD/QR suite is new API/algorithm | Feature: complex singular value decomposition |
 | 66575 | 2024-12-18 | feature | - | clean 5_svd_SV_solve_cmplx.patch +1 | rejected — complex SVD is new API/algorithm | Feature: Extension to complex SVD |
 | 66576 | 2024-12-18 | feature | - | clean fsolver_set_with_values.patch | rejected — new API; docs record the GSL_EINVAL return (aaecb86e6) | Feature: gsl_root_fsolver_set_with_values() |
-| 66695 | 2025-01-22 | feature | - | clean feagin_verner.patch | not reviewed (feature-shaped) — skipped in first pass as feature-shaped | Feature: additional high order ODE solvers (Feagin, Verner) |
-| 66742 | 2025-01-31 | - | Documentation | clean gams.diff | not reviewed (feature-shaped) — skipped in first pass as feature-shaped | GAMS classification |
-| 66767 | 2025-02-08 | feature | Build | source binomialinv.c +1 | not reviewed (feature-shaped) — skipped in first pass as feature-shaped | Feature: inverse of binomial distribution |
-| 66775 | 2025-02-10 | feature | Build | source poissoninv.c +1 | not reviewed (feature-shaped) — skipped in first pass as feature-shaped | Feature: inverse poisson distribution |
-| 66800 | 2025-02-15 | feature | Accuracy problem | partial nbinomial-2.diff +1 | not reviewed (feature-shaped) — skipped in first pass as feature-shaped | Feature: gsl_ran_negative_binomial_pdf with p = 1 |
+| 66695 | 2025-01-22 | feature | - | clean feagin_verner.patch | rejected — new algorithms/API (Feagin/Verner ODE solvers); out of scope | Feature: additional high order ODE solvers (Feagin, Verner) |
+| 66742 | 2025-01-31 | - | Documentation | clean gams.diff | rejected — large doc-only classification diff; not a correction, out of scope | GAMS classification |
+| 66767 | 2025-02-08 | feature | Build | source binomialinv.c +1 | rejected — new API (inverse binomial); out of scope | Feature: inverse of binomial distribution |
+| 66775 | 2025-02-10 | feature | Build | source poissoninv.c +1 | rejected — new API (inverse Poisson); out of scope | Feature: inverse poisson distribution |
+| 66800 | 2025-02-15 | feature | Accuracy problem | partial nbinomial-2.diff +1 | rejected — new special-case/API (negative_binomial_pdf at p=1); out of scope | Feature: gsl_ran_negative_binomial_pdf with p = 1 |
 | 66808 | 2025-02-17 | bug | Accuracy problem | source test_airy_zeroes_derivs.c | **partial** — Airy accuracy not improved; sub-defects fixed (ac5f72d98) | Bug: Airy Ai function values inaccurate |
-| 66816 | 2025-02-19 | feature | Build | source nakagami_.c | not reviewed (feature-shaped) — skipped in first pass as feature-shaped | Feature: Nakagami random distribution |
-| 66826 | 2025-02-21 | feature | Build | none | not reviewed | Feature: test cases for function hyperg_1F1() |
-| 66834 | 2025-02-23 | feature | Build | clean specfunc_gamma_test.diff | not reviewed (feature-shaped) — skipped in first pass as feature-shaped | Feature: gamma_inc(0, 0) handling and test cases |
-| 66842 | 2025-02-24 | feature | Build | clean expint_infinity.diff | not reviewed (feature-shaped) — skipped in first pass as feature-shaped | Feature: exponential integrals at origin |
-| 66844 | 2025-02-25 | feature | Build | none | not reviewed | Feature: test cases for dilogarithm function |
+| 66816 | 2025-02-19 | feature | Build | source nakagami_.c | rejected — new distribution/API (Nakagami); out of scope | Feature: Nakagami random distribution |
+| 66826 | 2025-02-21 | feature | Build | none | rejected — test-coverage request, no attached patch; out of scope | Feature: test cases for function hyperg_1F1() |
+| 66834 | 2025-02-23 | feature | Build | clean specfunc_gamma_test.diff | rejected — new special-case (gamma_inc(0,0)) plus tests; out of scope | Feature: gamma_inc(0, 0) handling and test cases |
+| 66842 | 2025-02-24 | feature | Build | clean expint_infinity.diff | rejected — new special-case (exponential integrals at origin); out of scope | Feature: exponential integrals at origin |
+| 66844 | 2025-02-25 | feature | Build | none | rejected — test-coverage request, no attached patch; out of scope | Feature: test cases for dilogarithm function |
 | 66849 | 2025-02-26 | - | - | none | **fixed** — final step clamped and backed off; bsimp sub-step times computed directly (dda917296); RHS-records-the-time regression test | gsl_odeiv2_evolve_apply() may exceed final time |
-| 66850 | 2025-02-26 | feature | Build | clean specfunc_hyperg_2F1.diff | not reviewed (feature-shaped) — skipped in first pass as feature-shaped | Feature: special cases hypergeometric2F1(a+1, b, a, x) and hypergeometric2F1(a, b+1, b, x) |
+| 66850 | 2025-02-26 | feature | Build | clean specfunc_hyperg_2F1.diff | rejected — new special-cases (2F1 parameter shifts); out of scope | Feature: special cases hypergeometric2F1(a+1, b, a, x) and hypergeometric2F1(a, b+1, b, x) |
 | 66862 | 2025-03-02 | bug | - | partial specfunc_test_sf.diff +1 | rejected — not-a-bug: duplicate complex sin/cos; submitter withdrew | Bug: duplicate functions in GSL produce differing results |
-| 66874 | 2025-03-05 | feature | - | source doc_bst.rst | not reviewed | Feature: documentation for binary search trees (bst module) |
-| 66877 | 2025-03-06 | feature | Build | none | not reviewed (feature-shaped) — skipped in first pass as feature-shaped | Feature: test cases for hyperg_0F1() |
-| 66880 | 2025-03-07 | feature | Build | clean test_hyperg_U.diff | not reviewed (feature-shaped) — skipped in first pass as feature-shaped | Feature: test cases for function hyperg_0F1() |
-| 66886 | 2025-03-09 | feature | Build | clean specfunc_trig_.diff | not reviewed (feature-shaped) — skipped in first pass as feature-shaped | Feature: refactoring of specfunc/trig.c |
+| 66874 | 2025-03-05 | feature | - | source doc_bst.rst | rejected — superseded: the bst module is documented in the fork (20eda0316) | Feature: documentation for binary search trees (bst module) |
+| 66877 | 2025-03-06 | feature | Build | none | rejected — test-coverage request, no attached patch; out of scope | Feature: test cases for hyperg_0F1() |
+| 66880 | 2025-03-07 | feature | Build | clean test_hyperg_U.diff | rejected — test-coverage request; out of scope | Feature: test cases for function hyperg_0F1() |
+| 66886 | 2025-03-09 | feature | Build | clean specfunc_trig_.diff | rejected — refactor, not a bug fix; out of scope | Feature: refactoring of specfunc/trig.c |
 | 66894 | 2025-03-11 | - | Documentation | none | **fixed** — chapter introduction notes that randist does not validate distribution parameters (dbe316d49) | Domain value checking for random number distributions |
-| 66922 | 2025-03-17 | feature | Build | clean specfunc_trig.diff | not reviewed (feature-shaped) — skipped in first pass as feature-shaped | Feature: special case for special functin logsin() |
-| 66949 | 2025-03-25 | feature | Build | source erlang.c | not reviewed (feature-shaped) — skipped in first pass as feature-shaped | Feature: Erlang cumulative distribution |
+| 66922 | 2025-03-17 | feature | Build | clean specfunc_trig.diff | rejected — new special-case (logsin); out of scope | Feature: special case for special functin logsin() |
+| 66949 | 2025-03-25 | feature | Build | source erlang.c | rejected — new distribution/API (Erlang CDF); out of scope | Feature: Erlang cumulative distribution |
 | 66993 | 2025-04-05 | bug | Accuracy problem | none | **partial** — zero-base overflow documented (afd7f7d6c); the other claims do not reproduce | Bug: pow_int issues |
 | 67058 | 2025-04-28 | - | Accuracy problem | none | **fixed** — empty data sets raise `GSL_EBADLEN` (NaN with the handler off) (68fc3c752) | gsl_stats_mean and gsl_stats_sd result to 0.0 when array with zero length |
 | 67301 | 2025-07-10 | bug | - | none | rejected — not-a-bug: r2 is a within-bin fraction, a second find() would pick the wrong bin; documented 2b15efbff | Bug: Test for existence of uniform random variate in histogram |
-| 67359 | 2025-07-27 | feature | - | clean hyperg_2F0.c.patch +1 | not reviewed (feature-shaped) — skipped in first pass as feature-shaped | Feature: Add special case for gsl_sf_hyperg_2F0 |
+| 67359 | 2025-07-27 | feature | - | clean hyperg_2F0.c.patch +1 | rejected — new special-case (hyperg_2F0); out of scope | Feature: Add special case for gsl_sf_hyperg_2F0 |
 | 67445 | 2025-08-20 | - | Build | clean 0001-linalg-increase-cholesky_invert-Hilbert-test-toleran.patch | **fixed** — cholesky_invert Hilbert tolerance (f84a57a0f) | linalg test failures under gcc 14.2.1 |
 | 67446 | 2025-08-20 | - | Build | none | rejected — gcc 14.2.1; passes on gcc 15.2 x64 | multilarge_nlinear test failures under gcc 14.2.1 |
 | 67447 | 2025-08-20 | - | Build | none | rejected — gcc 14.2.1; passes on gcc 15.2 x64 | spmatrix test failures under gcc 14.2.1 |
@@ -222,20 +221,20 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 67689 | 2025-11-10 | doc | Documentation | clean specfunc-psi.rst.patch | **fixed** — gsl_sf_complex_psi_e documented (345883172) | Incomplete documentation of digamma functions in GSL specfunc |
 | 67705 | 2025-11-15 | bug | Build | none | rejected — not reproducible; linalg passes with a fixed seed | ttest failure in linalg/QR_solve_r random |
 | 67728 | 2025-11-23 | bug | Accuracy problem | source psi_dropin.c | **fixed** — polygamma at negative arguments (e9f69933a) | gsl_sf_psi_n_e yields domain error |
-| 67774 | 2025-12-05 | feature | Accuracy problem | none | not reviewed | Feature: arctan integral is also defined for negative inputs |
+| 67774 | 2025-12-05 | feature | Accuracy problem | none | rejected — extended domain/API (arctan integral for negative inputs); out of scope | Feature: arctan integral is also defined for negative inputs |
 | 68068 | 2026-02-19 | bug | Accuracy problem | none | **fixed** - quad_golden stored f_m in f_upper instead of f_lower (4260778fe) | Bug: incorrect straddling of area of convergence in quad_golden |
 | 68073 | 2026-02-20 | bug | Documentation | none | **fixed** — gsl_stats_select comment corrected from "k-th largest" to "k-th smallest" (521bed61d) | Bug: incorrect inline code comment on BASE FUNCTION(gsl_stats,select) |
-| 68098 | 2026-02-27 | feature | - | none | not reviewed | Feature: division by zero when data is perfectly correlated |
+| 68098 | 2026-02-27 | feature | - | none | rejected — new behaviour/API (correlation div-by-zero handling); out of scope | Feature: division by zero when data is perfectly correlated |
 | 68283 | 2026-04-26 | - | - | none | rejected — proposed guards break the `gsl_stats` equivalence in `rstat_test` | Correction to gsl_rstat_skew and gsl_rstat_kurtosis |
 | 68312 | 2026-05-07 | bug | Accuracy problem | none | **fixed** — same recurrence as #43256 (59fc479e2) | Wigner symbols inaccurate for large j |
-| 68367 | 2026-05-19 | feature | - | source invelljac.c | not reviewed (feature-shaped) — skipped in first pass as feature-shaped | Feature: inverse Jacobi elliptic integrals |
+| 68367 | 2026-05-19 | feature | - | source invelljac.c | rejected — new API (inverse Jacobi elliptic integrals); out of scope | Feature: inverse Jacobi elliptic integrals |
 | 68379 | 2026-05-21 | - | - | none | **fixed** — size_t for the accessor index (ae60e2883) | Histogram: expand scope of internal variables |
 | 68398 | 2026-05-26 | feature | - | none | **fixed** - eta_int leading term via gsl_ldexp, value correctly rounded, error halved (f774247e7) | Feature: use GSL native gsl_ldexp in eta fuction for integer argument |
 | 68415 | 2026-06-02 | bug | - | none | rejected — not-a-bug: variance/covariance/pvariance all return NaN at n=1; n >= 2 documented (65bc71664) | Bug: inconsistency in variance error handling in statictics module |
 | 68479 | 2026-06-25 | bug | Accuracy problem | none | **fixed** — BINV seed as `exp(n log1p(-p))` (7376dc316) | Bug: gsl_ran_binomial is not accurate |
 | 68495 | 2026-07-03 | bug | Build | inline | **fixed** — pow_int INT_MIN overflow (41b1e2c00) | Undefined behavior in gsl_pow_int: signed int overflow |
 | 68518 | 2026-07-13 | - | Build | none | **fixed** — DISCARD_POINTER replaced by void casts and the macro dropped from both configs (46fa69ae1, 2afdbb721) | Remove stale construct in configure.ac |
-| 68549 | 2026-07-23 | - | - | none | not reviewed | Breaking change: match argument list among distribution functions |
+| 68549 | 2026-07-23 | - | - | none | rejected — breaking API change (uniform argument lists); out of scope | Breaking change: match argument list among distribution functions |
 | 68592 | 2026-08-03 | doc | Documentation | none | **fixed** — new BST chapter added to both manuals and to the index/menu, marked as an unreviewed AI draft (20eda0316) | Documentation: missing Binary search tree documentation from index |
 | 68611 | 2026-08-13 | feature | - | none | **fixed** - all-empty histogram raises GSL_EDOM in pdf_init (b60a47106) | Feature: guard against degenerate histogram input |
 | 68625 | 2026-08-21 | bug | Accuracy problem | none | **fixed** — hermite_func_der at n=0,1 (5d36e1999) | Bug: incorrect derivative of the Hermite function of order 0 or 1 |
