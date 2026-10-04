@@ -150,11 +150,12 @@ gsl_permutation_next (gsl_permutation * p)
 
   k = i + 1;
 
-  for (j = i + 2; j < size; j++ )
+  for (j = size - 1; j > i; j--)
     {
-      if ((p->data[j] > p->data[i]) && (p->data[j] < p->data[k]))
+      if (p->data[j] > p->data[i])
         {
           k = j;
+          break;
         }
     }
 
@@ -201,11 +202,12 @@ gsl_permutation_prev (gsl_permutation * p)
 
   k = i + 1;
 
-  for (j = i + 2; j < size; j++ )
+  for (j = size - 1; j > i; j--)
     {
-      if ((p->data[j] < p->data[i]) && (p->data[j] > p->data[k]))
+      if (p->data[j] < p->data[i])
         {
           k = j;
+          break;
         }
     }
 

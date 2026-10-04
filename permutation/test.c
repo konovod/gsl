@@ -122,6 +122,74 @@ unsigned int inversions[120] = {
   7, 8, 8, 9, 7, 8, 8, 9, 9, 10
 } ;
 
+static void
+swap_sz (size_t * x, size_t * y)
+{
+  size_t tmp = *x ;
+  *x = *y ;
+  *y = tmp ;
+}
+
+/* Reference lexicographic successor / predecessor, written independently
+   of the library implementation.  Returns 0 when there is no next /
+   previous permutation. */
+
+static int
+next_lex (size_t * a, size_t n)
+{
+  size_t i, j, l, r;
+
+  if (n < 2)
+    return 0;
+
+  i = n - 1;
+
+  while (i > 0 && a[i - 1] >= a[i])
+    i--;
+
+  if (i == 0)
+    return 0;
+
+  j = n - 1;
+  while (a[j] <= a[i - 1])
+    j--;
+
+  swap_sz (&a[i - 1], &a[j]);
+
+  for (l = i, r = n - 1; l < r; l++, r--)
+    swap_sz (&a[l], &a[r]);
+
+  return 1;
+}
+
+static int
+prev_lex (size_t * a, size_t n)
+{
+  size_t i, j, l, r;
+
+  if (n < 2)
+    return 0;
+
+  i = n - 1;
+
+  while (i > 0 && a[i - 1] <= a[i])
+    i--;
+
+  if (i == 0)
+    return 0;
+
+  j = n - 1;
+  while (a[j] >= a[i - 1])
+    j--;
+
+  swap_sz (&a[i - 1], &a[j]);
+
+  for (l = i, r = n - 1; l < r; l++, r--)
+    swap_sz (&a[l], &a[r]);
+
+  return 1;
+}
+
 int 
 main (void)
 {
@@ -162,6 +230,78 @@ main (void)
     
     gsl_test(status, "gsl_permutation_prev, 5-th order permutation, 120 steps");
     
+    gsl_permutation_free (p);
+  }
+
+  /* Exhaustive check of the selection loops on a larger permutation:
+     walk all 8! = 40320 permutations in both directions and compare
+     against an independent reference implementation. */
+
+  {
+    const size_t n = 8;
+    size_t ref[8], i, count;
+    int status = 0;
+    gsl_permutation * p = gsl_permutation_alloc (n);
+
+    gsl_permutation_init (p);
+
+    for (i = 0; i < n; i++)
+      ref[i] = p->data[i];
+
+    count = 1;
+
+    while (gsl_permutation_next (p) == GSL_SUCCESS)
+      {
+        if (! next_lex (ref, n))
+          {
+            status = 1;
+            break;
+          }
+
+        for (i = 0; i < n; i++)
+          {
+            if (p->data[i] != ref[i])
+              status = 1;
+          }
+
+        count++;
+      }
+
+    if (count != 40320 || next_lex (ref, n) != 0)
+      status = 1;
+
+    gsl_test (status, "gsl_permutation_next, 8-th order permutation, 40320 steps");
+
+    /* After the failure above, p is the last (descending) permutation,
+       which is the correct starting point for the reverse walk. */
+
+    for (i = 0; i < n; i++)
+      ref[i] = p->data[i];
+
+    count = 1;
+
+    while (gsl_permutation_prev (p) == GSL_SUCCESS)
+      {
+        if (! prev_lex (ref, n))
+          {
+            status = 1;
+            break;
+          }
+
+        for (i = 0; i < n; i++)
+          {
+            if (p->data[i] != ref[i])
+              status = 1;
+          }
+
+        count++;
+      }
+
+    if (count != 40320 || prev_lex (ref, n) != 0)
+      status = 1;
+
+    gsl_test (status, "gsl_permutation_prev, 8-th order permutation, 40320 steps");
+
     gsl_permutation_free (p);
   }
 
