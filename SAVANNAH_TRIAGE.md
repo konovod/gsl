@@ -173,7 +173,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 61342 | 2021-10-16 | bug | Runtime error | inline | rejected — not-a-bug: test_c11 under -ffast-math | test_c11 test fails on ppc64 and sparc |
 | 63519 | 2022-12-13 | - | Performance | none | rejected — not-a-bug: GSL_ERROR returns the code and invokes the handler; documented aaecb86e6. Per-call API is feature #66576 | gsl_root_fsolver_set "endpoints do not straddle y=0" |
 | 63927 | 2023-03-14 | feature | Build | none | **fixed** — gsl-without-cblas.pc installed by both builds (442b7cbd2, 9ad4ed051) | Please add a gsl-without-cblas.pc |
-| 64549 | 2023-08-12 | test | Performance | clean testcases.patch | deferred — interpolation tests: leaks/dupes, low value as posted | diff patch containing new testcases for the interpolation module |
+| 64549 | 2023-08-12 | test | Performance | clean testcases.patch | **fixed** — one clean wrapper test replaces the four leaky near-duplicates (7b6979126) | diff patch containing new testcases for the interpolation module |
 | 64613 | 2023-08-30 | - | Accuracy problem | inline | **fixed** — cdf beta_inc: 3 defects under fp-contract (1b1d94ee9) | fp-contract=fast stops convergence in beta_inc_AXPY/beta_cont_frac |
 | 64777 | 2023-10-14 | bug | Runtime error | inline | rejected — not-a-bug: reporter's matrix is singular | gsl_linalg_complex_LU_decomp returns incorrect results |
 | 64851 | 2023-11-03 | bug | - | clean inline gsl-config.in.patch | superseded — gsl-config exit status already done in the fork | gsl-config does not set correct status code |
@@ -195,16 +195,16 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 66800 | 2025-02-15 | feature | Accuracy problem | partial nbinomial-2.diff +1 | rejected — new special-case/API (negative_binomial_pdf at p=1); out of scope | Feature: gsl_ran_negative_binomial_pdf with p = 1 |
 | 66808 | 2025-02-17 | bug | Accuracy problem | source test_airy_zeroes_derivs.c | **partial** — Airy accuracy not improved; sub-defects fixed (ac5f72d98) | Bug: Airy Ai function values inaccurate |
 | 66816 | 2025-02-19 | feature | Build | source nakagami_.c | rejected — new distribution/API (Nakagami); out of scope | Feature: Nakagami random distribution |
-| 66826 | 2025-02-21 | feature | Build | none | rejected — test-coverage request, no attached patch; out of scope | Feature: test cases for function hyperg_1F1() |
+| 66826 | 2025-02-21 | feature | Build | none | **fixed** — test vectors added (728206d82); the negative-integer-`b` library defect the report exposes is open, see `SAVANNAH_REVIEW.md` | Feature: test cases for function hyperg_1F1() |
 | 66834 | 2025-02-23 | feature | Build | clean specfunc_gamma_test.diff | rejected — new special-case (gamma_inc(0,0)) plus tests; out of scope | Feature: gamma_inc(0, 0) handling and test cases |
 | 66842 | 2025-02-24 | feature | Build | clean expint_infinity.diff | rejected — new special-case (exponential integrals at origin); out of scope | Feature: exponential integrals at origin |
-| 66844 | 2025-02-25 | feature | Build | none | rejected — test-coverage request, no attached patch; out of scope | Feature: test cases for dilogarithm function |
+| 66844 | 2025-02-25 | feature | Build | none | **fixed** — dilog endpoint identities tested (25a16f928) | Feature: test cases for dilogarithm function |
 | 66849 | 2025-02-26 | - | - | none | **fixed** — final step clamped and backed off; bsimp sub-step times computed directly (dda917296); RHS-records-the-time regression test | gsl_odeiv2_evolve_apply() may exceed final time |
 | 66850 | 2025-02-26 | feature | Build | clean specfunc_hyperg_2F1.diff | rejected — new special-cases (2F1 parameter shifts); out of scope | Feature: special cases hypergeometric2F1(a+1, b, a, x) and hypergeometric2F1(a, b+1, b, x) |
 | 66862 | 2025-03-02 | bug | - | partial specfunc_test_sf.diff +1 | rejected — not-a-bug: duplicate complex sin/cos; submitter withdrew | Bug: duplicate functions in GSL produce differing results |
 | 66874 | 2025-03-05 | feature | - | source doc_bst.rst | rejected — superseded: the bst module is documented in the fork (20eda0316) | Feature: documentation for binary search trees (bst module) |
-| 66877 | 2025-03-06 | feature | Build | none | rejected — test-coverage request, no attached patch; out of scope | Feature: test cases for hyperg_0F1() |
-| 66880 | 2025-03-07 | feature | Build | clean test_hyperg_U.diff | rejected — test-coverage request; out of scope | Feature: test cases for function hyperg_0F1() |
+| 66877 | 2025-03-06 | feature | Build | none | **fixed** — exact zero error at x = 0 (fe7285909) and the special-case vectors (2d6cf433c) | Feature: test cases for hyperg_0F1() |
+| 66880 | 2025-03-07 | feature | Build | clean test_hyperg_U.diff | **fixed** — U special-case vectors, with corrections (153a149d4) | Feature: test cases for function hyperg_0F1() |
 | 66886 | 2025-03-09 | feature | Build | clean specfunc_trig_.diff | rejected — refactor, not a bug fix; out of scope | Feature: refactoring of specfunc/trig.c |
 | 66894 | 2025-03-11 | - | Documentation | none | **fixed** — chapter introduction notes that randist does not validate distribution parameters (dbe316d49) | Domain value checking for random number distributions |
 | 66922 | 2025-03-17 | feature | Build | clean specfunc_trig.diff | rejected — new special-case (logsin); out of scope | Feature: special case for special functin logsin() |
@@ -244,7 +244,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 
 ## Future work backlog
 
-The first stage is complete: every open item is classified.  The 46 items
+The first stage is complete: every open item is classified.  The 41 items
 below were **rejected or deferred under the eligibility rule that admitted
 only bug fixes, documentation corrections and test-quality improvements** -
 they are not defects, and most are wanted work nonetheless.  They are kept
@@ -256,6 +256,12 @@ result-preserving fixes once the filter was widened: `#54925` (cblas gemm
 loop reorder), `#51104` and `#21833` (`gsl_permutation_next`) and `#40092`
 (false-position redundant evaluation).  See `FORKNEWS`; they are no longer
 listed in the table.
+
+Five test-quality items have also been taken: `#66826`, `#66844`, `#66877`,
+`#66880` and `#64549`.  See `FORKNEWS`; they are no longer listed in the
+table.  One of them, `#66826`, exposed a separate library defect in
+`gsl_sf_hyperg_1F1_int_e` for negative integer `b`, recorded as an open item
+in `SAVANNAH_REVIEW.md`; the fix is not part of the test change.
 
 `kind`: `feat` = new feature/API, `perf` = performance only, `test` =
 test-quality request, `doc` = documentation matter.  `patch`: `clean`/
@@ -303,11 +309,6 @@ test-quality request, `doc` = documentation matter.  `patch`: `clean`/
 | 30324 | feat | - | extend 2F1 to `x < -1` by transformation |
 | 21828 | perf | - | `gsl_fdfsolver_lmsder` - close the gap to netlib minpack |
 | 31109 | perf | - | `ode-initval/bsimp` order control |
-| 66826 | test | - | test cases for `hyperg_1F1` |
-| 66844 | test | - | test cases for the dilogarithm |
-| 66877 | test | - | test cases for `hyperg_0F1` |
-| 66880 | test | clean | test cases for `hyperg_0F1` (U variant) |
-| 64549 | test | clean | interpolation test cases (leaks/dupes as posted; one clean test better) |
 | 66742 | doc | clean | GAMS classification across 177 files |
 | 66886 | doc | clean | refactor of `specfunc/trig.c` |
 
@@ -315,5 +316,5 @@ Already superseded by fork work, so **not** carried in the backlog:
 `66874` (bst documentation - the fork documents the module in `20eda0316`)
 and `68663` (the `GAMMA_INC_A_0` macro removal is a one-line alias, no value).
 
-The remaining 169 classified items are fixes, corrections, or rejections
+The remaining 174 classified items are fixes, corrections, or rejections
 that need no future action; see the main table above and `FORKNEWS`.
