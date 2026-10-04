@@ -280,6 +280,26 @@ gsl_bspline_init_augment (const gsl_vector * tau, gsl_bspline_workspace * w)
       const double bn = gsl_vector_get(tau, w->nbreak - 1);
       size_t i;
 
+      /* The breakpoints define the polynomial pieces and must be
+         non-decreasing; a decreasing vector produces a non-monotone
+         knot sequence and meaningless (even negative) basis functions.
+         Adjacent values reversed by a few ulps are tolerated because
+         gsl_bspline_init_greville constructs its breakpoints from a
+         least-squares solve whose rounding can leave them reversed at
+         that level; repeated breakpoints are legitimate.  The negation
+         form also rejects NaN. */
+      for (i = 0; i + 1 < w->nbreak; i++)
+        {
+          const double a = gsl_vector_get (tau, i);
+          const double b = gsl_vector_get (tau, i + 1);
+          const double tol = 16.0 * GSL_DBL_EPSILON * (fabs (a) + fabs (b));
+
+          if (!(a <= b + tol))
+            {
+              GSL_ERROR ("breakpoints must be non-decreasing", GSL_EDOM);
+            }
+        }
+
       for (i = 0; i < w->spline_order; i++)
         gsl_vector_set (w->knots, i, b1);
 

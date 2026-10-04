@@ -295,6 +295,36 @@ main(void)
   gsl_test(test_LS(rng_p),            "Least Squares");
   gsl_test(test_PLS(rng_p),           "Periodic Least Squares");
 
+  /* Savannah bug #42830: non-increasing breakpoints must be rejected
+     rather than producing a non-monotone knot vector and meaningless
+     (even negative) basis functions. */
+  {
+    gsl_bspline_workspace *w = gsl_bspline_alloc (3, 4);
+    gsl_vector *k = gsl_vector_alloc (4);
+    gsl_error_handler_t *old_handler = gsl_set_error_handler_off ();
+    int status;
+
+    gsl_vector_set (k, 0, 0.0);
+    gsl_vector_set (k, 1, 1.0);
+    gsl_vector_set (k, 2, 0.5);       /* decreasing */
+    gsl_vector_set (k, 3, 2.0);
+
+    status = gsl_bspline_init_augment (k, w);
+    gsl_test (status != GSL_EDOM,
+              "gsl_bspline_init_augment rejects non-increasing breakpoints"
+              " (status = %d)", status);
+
+    gsl_vector_set (k, 2, 1.0);       /* repeated is allowed */
+    status = gsl_bspline_init_augment (k, w);
+    gsl_test (status != GSL_SUCCESS,
+              "gsl_bspline_init_augment accepts repeated breakpoints"
+              " (status = %d)", status);
+
+    gsl_set_error_handler (old_handler);
+    gsl_vector_free (k);
+    gsl_bspline_free (w);
+  }
+
   gsl_rng_free(rng_p);
 
   exit(gsl_test_summary());

@@ -167,8 +167,8 @@ Initializing the knots vector
 
    where :math:`\tau_i` is specified by the :math:`i`-th element of :data:`tau`.
 
-   This function does not verify that the :data:`tau` vector is non-decreasing, so
-   the user must ensure this.
+   The function returns :macro:`GSL_EDOM` if :data:`tau` is not
+   non-decreasing.
 
 .. function:: int gsl_bspline_init_uniform (const double a, const double b, gsl_bspline_workspace * w)
 

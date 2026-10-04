@@ -110,6 +110,8 @@ This function frees the memory associated with the workspace @var{w}.
 @deftypefun int gsl_bspline_knots (const gsl_vector * @var{breakpts}, gsl_bspline_workspace * @var{w})
 This function computes the knots associated with the given breakpoints
 and stores them internally in @code{w->knots}.
+The function returns @code{GSL_EDOM} if @var{breakpts} is not
+non-decreasing.
 @end deftypefun
 
 @deftypefun int gsl_bspline_knots_uniform (const double @var{a}, const double @var{b}, gsl_bspline_workspace * @var{w})
