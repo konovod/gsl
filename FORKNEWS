@@ -166,6 +166,12 @@ One line per change: date | tag | description | commit(s).
   2026-10-04 | [rejected] | roots/ode: the Group O reports needing no code change | - (see below)
   2026-10-04 | [rejected] | meta: the Group P off-track reports                   | - (see below)
   2026-10-04 | [rejected] | meta: the last open-bug reports (51104, 53903, 53904) | - (see below)
+  2026-10-04 | [upstream] | bspline: reject non-monotone breakpoints            | 74cace84f
+  2026-10-04 | [upstream] | min: correct the quad-golden cached lower bound     | 4260778fe
+  2026-10-04 | [upstream] | histogram: reject an all-empty histogram pdf        | b60a47106
+  2026-10-04 | [upstream] | specfunc: eta_int leading term via ldexp            | f774247e7
+  2026-10-04 | [upstream] | specfunc: floor(x+0.5) -> rint                      | b681165e1
+  2026-10-04 | [rejected] | Group R: 40116, 45099, 68663, 68704                 | - (see below)
 
 
 ## [upstream] rng: make the random() generators produce the documented sequences
@@ -4286,3 +4292,219 @@ documentation file is touched.
   uninitialized-memory UB, not a library defect.  Rejected as not a bug.
 
 Savannah bugs #51104, #53903 and #53904.
+
+
+## [upstream] bspline: reject non-monotone breakpoints in init_augment
+
+Commit: 74cace84f
+
+`gsl_bspline_init_augment()` wrote the caller's breakpoint vector `tau`
+straight into the augmented knot vector without checking that it is
+monotone.  `gsl_bspline_init_interp()` has always enforced
+`"x must be non-decreasing"`; the same requirement applies here.  With a
+decreasing `tau` the knot sequence is no longer monotone and the basis
+functions become meaningless - the report's symptom was negative
+`B_i(x)`.
+
+The guard rejects a pair that is decreasing by more than a few ulps.
+The tolerance is deliberate: `gsl_bspline_init_greville()` derives its
+breakpoints from a least-squares solve, and for `k = 4, nbreak = 5` the
+interior pair comes out `4.0000000000000018, 3.9999999999999978` - a
+reversal at the rounding level that must not be treated as user error.
+Repeated breakpoints are legitimate (the Greville tests rely on them)
+and are accepted.
+
+The check is written in negation form (`!(a <= b + tol)`) so that a NaN
+breakpoint is also rejected.
+
+Regression: `bspline/test.c` adds a decreasing and a repeated
+breakpoint case; the decreasing one must return `GSL_EDOM`.  With the
+guard removed the call returns `GSL_SUCCESS` and the test fails.
+
+Files: `bspline/bspline.c`, `bspline/test.c`, `doc/bspline.rst`,
+`doc_texinfo/bspline.texi`.
+
+See Savannah bug #42830.
+
+
+## [upstream] min: correct the quad-golden cached lower bound
+
+Commit: 4260778fe
+
+In `quad_golden_iterate()`, when the trial point `x_eval` lies above the
+current minimum and reduces the function value, the routine moves
+`x_lower` up to `x_m` but stored the function value in `*f_upper`
+instead of `*f_lower`:
+
+    *x_lower = x_m;
+    *f_upper = f_m;     /* should be *f_lower */
+
+The mirrored branch (`x_eval < x_m`) is correct.  The iteration only
+reads `x_lower`/`x_upper` for the stopping test, so convergence was
+unaffected, but `gsl_min_fminimizer_f_lower()` then reported a value
+outside the interval: on the existing `func4` vector it returned 0.65
+while `f(x_lower) = -0.116`, and `f_upper` picked up a stale value from
+the previous step.
+
+Regression: the per-iteration loop in `min/test.c` now checks the
+invariant `f_lower == f(x_lower)` and `f_upper == f(x_upper)`.  With the
+typo present the quad-golden run reports dozens of mismatches; the other
+minimisers are unaffected.
+
+Files: `min/quad_golden.c`, `min/test.c`.
+
+See Savannah bug #68068.
+
+
+## [upstream] histogram: reject an all-empty histogram in pdf_init
+
+Commit: b60a47106
+
+`gsl_histogram_pdf_init()` normalised the bins by their mean.  For an
+all-empty histogram the mean is zero, so every cumulative sum became
+`0/0 = NaN` and `gsl_histogram_pdf_sample()` silently returned `NaN`.
+An empty histogram has no probability distribution to normalise, so the
+routine now raises `GSL_EDOM`, matching the existing negative-bin check.
+
+Regression: `histogram/test1d_trap.c` requires the error flag for an
+empty histogram and its absence for a non-empty one.  Without the guard
+the first check fails (no error, and the sample is NaN).
+
+Files: `histogram/pdf.c`, `histogram/test1d_trap.c`,
+`doc/histogram.rst`, `doc_texinfo/histogram.texi`.
+
+See Savannah bug #68611.
+
+
+## [upstream] specfunc: form the eta_int leading term with gsl_ldexp
+
+Commit: f774247e7
+
+`gsl_sf_eta_int_e(n)` for `n <= -99` evaluates
+`eta(n) = -(2^(1-n) - 1) zeta(n)` and built the leading factor `2^(1-n)`
+with `gsl_sf_exp_e()`, which returns a non-zero error estimate.  The
+factor is a power of two and is exactly representable, so
+`gsl_ldexp(1.0, 1-n)` removes the rounding error - and with it the
+dominant term of the reported error.  At `n = -101` the estimate drops
+from 5.56e-14 to 2.42e-14 relative (a factor 2.3), and the value itself
+becomes correctly rounded: 2.75e-16 against a 40-digit reference, down
+from 5.6e-14.
+
+Two details: the exponent test is formed in `double` so that
+`n = INT_MIN` cannot overflow the `int` subtraction, and beyond the
+representable range (`1-n >= 1024`) the exponential path is kept, so the
+`GSL_EOVRFLW` status is unchanged.
+
+Regression: `specfunc/test_sf.c` now asserts that the reported error at
+`n = -101` is below `3e-14` relative.  With the exponential restored it
+is 5.56e-14 and the check fails.
+
+Files: `specfunc/zeta.c`, `specfunc/test_sf.c`.
+
+See Savannah bug #68398.
+
+
+## [upstream] specfunc: replace the floor(x+0.5) rounding idiom with rint
+
+Commit: b681165e1
+
+`floor(x + 0.5)`, used to round a double to the nearest integer, is wrong
+for two classes of argument: the largest double below 0.5 (the addition
+rounds up to 1, so the result is 1 instead of 0) and odd integers in
+`[2^52, 2^53)` (adding 0.5 rounds up to the next even integer).  The
+live uses are replaced by `rint()`, which rounds to nearest with ties to
+even without an explicit addition:
+
+* `bessel.c`, `bessel_{Inu,Jnu,Knu,Ynu}.c`, `gamma.c` - integer-order
+  splits;
+* `fermi_dirac.c`, `hyperg_{0F1,2F1,U}.c` - "is this parameter an
+  integer" tests;
+* `ellint.c` - the number of half periods in the angular reduction;
+* `hermite.c` - the `RND()` scaling-exponent macro;
+* `hyperg_1F1.c` - the `b-a`-is-an-integer test and the integer-order
+  helpers used by `hyperg_1F1_ab_negint`.
+
+The `hyperg_1F1.c` site had a second defect: it was missing its `fabs()`
+and so accepted *any* `b-a` whose fractional part exceeded 0.5 as an
+integer.  The reconstruction was checked against a 14950-point sweep
+(`a` in `[-50, 0]`, `b` in `[0.5, 6]`, `x` in `[1, 110]`) and produced no
+value change anywhere: the affected range takes the same `hyperg_1F1_U`
+fallback either way, so the fix is a latent-correctness one.
+
+`specfunc/coulomb.c` deliberately keeps `floor(lam_F + 0.5)`.  That is a
+round-half-up, not round-to-nearest, chosen so that
+`lam_min = lam_F - N` lands on the well-conditioned `-1/2` branch;
+`rint(1/2) = 0` would leave `lam_min = +1/2`, which the code declares
+impossible and which returns `GSL_EDIVERGE`.  It is left as-is with a
+comment explaining the requirement.
+
+Observed effect: one sub-ulp result correction and one error estimate.
+`gsl_sf_bessel_Ynu_e(0.5, 1.0)` moves from 3.3e-16 to 7.5e-16 relative
+error, so it is added as a vector with the closed-form reference
+`-sqrt(2/(pi x)) cos(x)`; and
+`gsl_sf_coulomb_wave_FG_e(1, 0.5, 0.5, 0)` pins the round-half-up
+branch.  No other tested value moved outside its tolerance.
+
+Files: the `specfunc` sources listed above, `specfunc/test_bessel.c`,
+`specfunc/test_coulomb.c`.
+
+See Savannah bug #47348.
+
+
+## [rejected] Group R: 40116, 45099, 68663, 68704
+
+Commits: none.
+
+Four reports from the remaining open list were examined and deliberately
+left unchanged.  Recorded here so they are not re-investigated.
+
+### #40116 - "possible error in integration routines"
+
+The report questions `integration/qpsrt2.c` (`large_interval()`,
+`increase_nrmax()`) against the QUADPACK original `dqagse`, specifically
+the comment "test whether the interval to be bisected next is the
+smallest interval".  GSL is a faithful restructuring of the Fortran:
+
+* `large_interval(i)` is QUADPACK's `if(|b(maxerr)-a(maxerr)| > small)
+  go to 90`; because every bisection halves the interval, the exact test
+  `level[i] < maximum_level` is equivalent to the length comparison and
+  avoids QUADPACK's lagging `small`;
+* the `do 50 k = id, jupbnd` scan is `increase_nrmax()`.  `increase_nrmax()`
+  returning 1 corresponds to `go to 90` - i.e. it *does* cycle the loop -
+  and returning 0 corresponds to falling through to the extrapolation.
+
+The report itself says "I don't have a buggy case to report", and none
+was found: the loop does not stall.  Substituted QUADPACK's parallel
+structure by inspection of the source, not a patch.  Not a bug.
+
+### #45099 - "wrong formula for BFGS update in gsl_multimin?"
+
+The concern is that the approximate Hessian is never stored, and is
+therefore treated as the identity.  It is not stored - it is implicit in
+the search direction `p`.  Expanding the dense BFGS inverse-Hessian
+update with `H0 = I`,
+
+    H = (I - rho s y^T)(I - rho y s^T) + rho s s^T
+
+gives `H g = g - A s - B y` with `B = s.g / s.y` and
+`A = -(1 + |y|^2 / s.y) B + y.g / s.y`.  That is *verbatim* the update in
+`multimin/vector_bfgs.c` (the `p' = g1 - A dx - B dg` block) and in
+`multimin/vector_bfgs2.c`.  The formula is the standard one; the concern
+is a misunderstanding.  Not a bug.
+
+### #68663 - remove the GAMMA_INC_A_0 macro
+
+`GAMMA_INC_A_0(x, result)` is a one-line alias for
+`gsl_sf_expint_E1_e(x, result)` used in two places.  Removing it adds no
+correctness; it is a pure readability refactor, outside the eligibility
+rule for this review.  Not a bug.
+
+### #68704 - introduce gsl_histogram_variance
+
+A feature request for a new public function `gsl_histogram_variance`,
+proposing that `gsl_histogram_sigma` be renamed and a square-rooting
+wrapper kept for compatibility.  New API, and the proposed rename breaks
+the existing name; `histogram/stat.c` is numerically correct as it
+stands.  Out of scope.  Not a bug.
+
+Savannah bugs #40116, #45099, #68663 and #68704.
