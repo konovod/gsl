@@ -326,7 +326,12 @@ int expint_E1_impl(const double x, gsl_sf_result * result, const int scale)
     return GSL_SUCCESS;
   }
   else if(x == 0.0) {
-    DOMAIN_ERROR(result);
+    /* E1(0) diverges to +Infinity.  This is the limit from both sides
+     * (E1(x) ~ -log|x| for x -> 0), so it is not a domain error; report
+     * the limit with zero error.  See Savannah bug #66842. */
+    result->val = GSL_POSINF;
+    result->err = 0.0;
+    return GSL_SUCCESS;
   }
   else if(x <= 1.0) {
     const double ln_term = -log(fabs(x));
@@ -426,7 +431,12 @@ int expint_En_impl(const int n, const double x, gsl_sf_result * result, const in
     DOMAIN_ERROR(result);
   } else if (n == 0) {
     if (x == 0) {
-      DOMAIN_ERROR(result);
+      /* E_0(x) = exp(-x)/x, which diverges to +Infinity at the origin
+       * (scale does not change that, since the scaled value is 1/x).
+       * See Savannah bug #66842. */
+      result->val = GSL_POSINF;
+      result->err = 0.0;
+      return GSL_SUCCESS;
     } else {
       result->val = (scale ? 1.0 : exp(-x)) / x;
       result->err = 2 * GSL_DBL_EPSILON * fabs(result->val);

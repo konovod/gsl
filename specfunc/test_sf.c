@@ -1221,6 +1221,7 @@ int test_expint(void)
   int s = 0;
 
   TEST_SF(s,  gsl_sf_expint_E1_e, (-1.0, &r), -1.8951178163559367555, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s,  gsl_sf_expint_E1_e, (0.0, &r), GSL_POSINF, TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s,  gsl_sf_expint_E1_e, (1.0e-10, &r), 22.448635265138923980, TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s,  gsl_sf_expint_E1_e, (1.0e-05, &r), 10.935719800043695615, TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s,  gsl_sf_expint_E1_e, (0.1, &r), 1.82292395841939066610, TEST_TOL0, GSL_SUCCESS);
@@ -1241,6 +1242,7 @@ int test_expint(void)
 
   /* Tests for E_n(x) */
 
+  TEST_SF(s,  gsl_sf_expint_En_e, (0,0.0, &r), GSL_POSINF, TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s,  gsl_sf_expint_En_e, (1,-1.0, &r), -1.8951178163559367555, TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s,  gsl_sf_expint_En_e, (1,1.0e-10, &r), 22.448635265138923980, TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s,  gsl_sf_expint_En_e, (1,1.0e-05, &r), 10.935719800043695615, TEST_TOL0, GSL_SUCCESS);
@@ -1281,8 +1283,16 @@ int test_expint(void)
   /* Tests for Ei(x) */
 
   TEST_SF(s,  gsl_sf_expint_Ei_e, (-1.0, &r), -0.21938393439552027368, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s,  gsl_sf_expint_Ei_e, (-0.001, &r), -6.331539364136149332002, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s,  gsl_sf_expint_Ei_e, (0.0, &r), GSL_NEGINF, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s,  gsl_sf_expint_Ei_e, (0.001, &r), -6.3295393640250382175583, TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s,  gsl_sf_expint_Ei_e, (1.0/4294967296.0, &r), -21.603494112783886397, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s,  gsl_sf_expint_Ei_e, (0.5, &r), 0.4542199048631735799205, TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s,  gsl_sf_expint_Ei_e, (1.0, &r), 1.8951178163559367555, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s,  gsl_sf_expint_Ei_e, (1.5, &r), 3.3012854491297978379574, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s,  gsl_sf_expint_Ei_e, (3.0, &r), 9.93383257062541655800, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s,  gsl_sf_expint_Ei_e, (4.0, &r), 19.6308744700562200226, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s,  gsl_sf_expint_Ei_e, (5.0, &r), 40.1852753558031774550, TEST_TOL0, GSL_SUCCESS);
 
   TEST_SF(s,  gsl_sf_expint_E1_scaled_e, (-10000.0, &r), -0.00010001000200060024012, TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s,  gsl_sf_expint_E1_scaled_e, (-1000.0, &r), -0.0010010020060241207251, TEST_TOL0, GSL_SUCCESS);
@@ -2811,6 +2821,13 @@ int test_trig(void)
   TEST_SF_2(s, gsl_sf_complex_logsin_e, (5.0, 5.0, &r1, &r2),
             4.3068909128079757420, TEST_TOL0,
             2.8540063315538773952, TEST_TOL0,
+            GSL_SUCCESS);
+
+  /* At a real zero of sin the logarithm diverges to -Infinity
+     (Savannah bug #66922). */
+  TEST_SF_2(s, gsl_sf_complex_logsin_e, (0.0, 0.0, &r1, &r2),
+            GSL_NEGINF, TEST_TOL0,
+            0.0, TEST_TOL0,
             GSL_SUCCESS);
 
   TEST_SF(s,  gsl_sf_lnsinh_e, (0.1, &r),  -2.3009189815304652235,  TEST_TOL0, GSL_SUCCESS);
