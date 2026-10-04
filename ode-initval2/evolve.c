@@ -160,10 +160,21 @@ gsl_odeiv2_evolve_apply (gsl_odeiv2_evolve * e,
 
 try_step:
 
-  if ((dt >= 0.0 && h0 > dt) || (dt < 0.0 && h0 < dt))
+  if ((dt >= 0.0 && h0 >= dt) || (dt < 0.0 && h0 <= dt))
     {
       h0 = dt;
       final_step = 1;
+
+      /* The stepper evaluates its last stage at t0 + h0.  Since
+         t0 + (t1 - t0) is not in general equal to t1 in floating point,
+         back the step off until it can no longer pass t1. */
+
+      while ((dt >= 0.0 && GSL_COERCE_DBL (t0 + h0) > GSL_COERCE_DBL (t1))
+             || (dt < 0.0
+                 && GSL_COERCE_DBL (t0 + h0) < GSL_COERCE_DBL (t1)))
+        {
+          h0 = nextafter (h0, 0.0);
+        }
     }
   else
     {

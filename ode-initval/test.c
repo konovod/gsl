@@ -1160,6 +1160,31 @@ int jac_cos (double t, const double y[], double *dfdy, double dfdt[],
   return GSL_SUCCESS;
 }
 
+/* System whose right-hand side records the range of times at which it
+   is evaluated, for the final-time regression test (Savannah #66849).
+ */
+
+static double final_tmin, final_tmax;
+
+int rhs_final_time (double t, const double * y, double * dydt, void * params) {
+  if (t < final_tmin)
+    final_tmin = t;
+  if (t > final_tmax)
+    final_tmax = t;
+
+  dydt[0] = -y[0];
+  return GSL_SUCCESS;
+}
+
+int jac_final_time (double t, const double y[], double *dfdy, double dfdt[],
+                    void *params)
+{
+  dfdy[0] = -1.0;
+  dfdt[0] = 0.0;
+
+  return GSL_SUCCESS;
+}
+
 /* Test evolution in negative direction */
 
 void
@@ -1196,6 +1221,54 @@ test_evolve_negative_h (const gsl_odeiv_step_type * T, double h, double err)
   gsl_test_abs (y, yfin, factor * e->count * err,
 		"evolution with negative h (using %s)", 
                 gsl_odeiv_step_name (step));
+
+  gsl_odeiv_evolve_free (e);
+  gsl_odeiv_control_free (c);
+  gsl_odeiv_step_free (step);
+}
+
+void
+test_evolve_final_time (const gsl_odeiv_step_type * T, double h)
+{
+  /* The stepper must not evaluate the right-hand side past the final
+     time t1 (Savannah bug #66849).  Integrating backwards from 1 to
+     1e-12, t0 + (t1 - t0) rounds below t1, so the last stage of the
+     final step used to fall outside the interval. */
+
+  const double t0 = 1.0;
+  const double t1 = 1e-12;
+
+  gsl_odeiv_step * step = gsl_odeiv_step_alloc (T, 1);
+  gsl_odeiv_control * c = gsl_odeiv_control_standard_new (1e-10, 1e-10,
+                                                          1.0, 0.0);
+  gsl_odeiv_evolve * e = gsl_odeiv_evolve_alloc (1);
+  gsl_odeiv_system sys = {rhs_final_time, jac_final_time, 1, 0};
+
+  double t = t0;
+  double y = exp (-t0);
+  int status = GSL_SUCCESS;
+
+  h = -fabs (h);
+
+  final_tmin = t0;
+  final_tmax = t0;
+
+  while (t > t1)
+    {
+      status = gsl_odeiv_evolve_apply (e, c, step, &sys, &t, t1, &h, &y);
+
+      if (status != GSL_SUCCESS)
+        {
+          break;
+        }
+    }
+
+  gsl_test (status, "%s final-time evolution status",
+            gsl_odeiv_step_name (step));
+  gsl_test_abs (t, t1, 0.0, "%s final time reached exactly",
+                gsl_odeiv_step_name (step));
+  gsl_test (final_tmin < t1, "%s RHS evaluated before the final time",
+            gsl_odeiv_step_name (step));
 
   gsl_odeiv_evolve_free (e);
   gsl_odeiv_control_free (c);
@@ -1255,6 +1328,7 @@ main (void)
       test_evolve_stiff1 (p[i].type, p[i].h, 1e-7);
       test_evolve_stiff5 (p[i].type, p[i].h, 1e-7);
       test_evolve_negative_h (p[i].type, p[i].h, 1e-7);
+      test_evolve_final_time (p[i].type, p[i].h);
     }
 
   test_compare_vanderpol();

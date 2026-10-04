@@ -309,7 +309,11 @@ bsimp_step_local (void *vstate,
           return GSL_EFAILED ;
         }
 
-      t += h;
+      /* Compute the sub-step time directly from t0 and h_total so that
+         the final evaluation lands exactly on t0 + h_total.  Repeated
+         addition of h can otherwise drift past the requested interval. */
+
+      t = t0 + h_total * ((double) (n_inter + 1) / (double) n_step);
 
       status = GSL_ODEIV_FN_EVAL (sys, t, y_temp, y_out);
 

@@ -356,6 +356,40 @@ gsl_odeiv2_system rhs_func_broken = {
   0
 };
 
+/* System whose right-hand side records the range of times at which it
+   is evaluated, for the final-time regression test (Savannah #66849).
+ */
+
+static double final_tmin, final_tmax;
+
+int
+rhs_final_time (double t, const double y[], double f[], void *params)
+{
+  if (t < final_tmin)
+    final_tmin = t;
+  if (t > final_tmax)
+    final_tmax = t;
+
+  f[0] = -y[0];
+  return GSL_SUCCESS;
+}
+
+int
+jac_final_time (double t, const double y[], double *dfdy, double dfdt[],
+                void *params)
+{
+  dfdy[0] = -1.0;
+  dfdt[0] = 0.0;
+  return GSL_SUCCESS;
+}
+
+gsl_odeiv2_system rhs_func_final_time = {
+  rhs_final_time,
+  jac_final_time,
+  1,
+  0
+};
+
 /* Immediate user break (at t > 1.5) test sine system */
 
 int
@@ -1446,6 +1480,48 @@ test_evolve_negative_h (const gsl_odeiv2_step_type * T, double h, double err)
 }
 
 void
+test_evolve_final_time (const gsl_odeiv2_step_type * T)
+{
+  /* The stepper must not evaluate the right-hand side past the final
+     time t1 (Savannah bug #66849).  Integrating backwards from 1 to
+     1e-12, t0 + (t1 - t0) rounds below t1, so the last stage of the
+     final step used to fall outside the interval. */
+
+  const double t0 = 1.0;
+  const double t1 = 1e-12;
+  double h = -1e-3;
+  double t = t0;
+  double y = exp (-t0);
+  int status = GSL_SUCCESS;
+
+  gsl_odeiv2_driver *d =
+    gsl_odeiv2_driver_alloc_y_new (&rhs_func_final_time, T, h, 1e-10, 1e-10);
+
+  final_tmin = t0;
+  final_tmax = t0;
+
+  while (t > t1)
+    {
+      status = gsl_odeiv2_evolve_apply (d->e, d->c, d->s,
+                                        &rhs_func_final_time, &t, t1, &h, &y);
+
+      if (status != GSL_SUCCESS)
+        {
+          break;
+        }
+    }
+
+  gsl_test (status, "%s final-time evolution status",
+            gsl_odeiv2_step_name (d->s));
+  gsl_test_abs (t, t1, 0.0, "%s final time reached exactly",
+                gsl_odeiv2_step_name (d->s));
+  gsl_test (final_tmin < t1, "%s RHS evaluated before the final time",
+            gsl_odeiv2_step_name (d->s));
+
+  gsl_odeiv2_driver_free (d);
+}
+
+void
 test_broken (const gsl_odeiv2_step_type * T, double h, double err)
 {
   /* Check for gsl_odeiv2_evolve_apply. The user function fails at
@@ -2498,6 +2574,7 @@ main (void)
       test_evolve_stiff1 (p[i].type, p[i].h, 1e-7);
       test_evolve_stiff5 (p[i].type, p[i].h, 1e-7);
       test_evolve_negative_h (p[i].type, p[i].h, 1e-7);
+      test_evolve_final_time (p[i].type);
       test_broken (p[i].type, p[i].h, 1e-8);
       test_stepsize_fail (p[i].type, p[i].h);
       test_user_break (p[i].type, p[i].h);
