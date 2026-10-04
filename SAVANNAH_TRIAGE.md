@@ -5,17 +5,17 @@ Generated 2026-10-02 from the `scripts/savannah_bugs.py` sweep (`inventory.tsv`)
 Scratch index, not part of the fork's record of changes. Verdicts are curated from
 `FORKNEWS`, `SAVANNAH_REVIEW.md` and the git history; every other row is un-triaged.
 
-**219 open items: 171 reviewed/handled, 48 remaining.**
+**219 open items: 180 reviewed/handled, 39 remaining.**
 
 | status | count |
 |---|---:|
-| fixed | 100 |
+| fixed | 105 |
 | partial | 5 |
-| rejected | 61 |
+| rejected | 65 |
 | deferred | 4 |
 | superseded | 1 |
 | not reviewed (feature-shaped) | 17 |
-| not reviewed | 31 |
+| not reviewed | 22 |
 
 Legend for the *Patch* column: the sweep's `git apply` verdict (`clean` / `partial` / `dirty`), `source` for a whole
 replacement file, `inline` for a patch pasted into the bug text, `none` for no patch.
@@ -65,7 +65,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 39473 | 2013-07-12 | - | Performance | clean coupling3j.patch | **fixed** — 3j symbol by edge recursion (1b2c8ff98) | more efficient algorithm for 3j,6j,9j calculations (gsl_sf_coupling_{3j,6j,9j}_e |
 | 39713 | 2013-08-07 | - | Runtime error | source gsl-secant.c +3 | **fixed** — inherited upstream d50dc70e5/eaaae349d; test vector added by ce90a6b91; posted patches are pre-2013 | roots/secant.c "derivative value is not finite" for a good guess |
 | 40092 | 2013-09-23 | - | Performance | source gsl-falsepos64.c | not reviewed | false position root finding requires too many function evals |
-| 40116 | 2013-09-26 | bug | Runtime error | none | not reviewed | possible error in integration routines |
+| 40116 | 2013-09-26 | bug | Runtime error | none | rejected - faithful QUADPACK port; `large_interval`/`increase_nrmax` map to `go to 90`, no failing case | possible error in integration routines |
 | 40176 | 2013-10-04 | bug | Runtime error | none | rejected — already fixed upstream (9cc12d037, 0466df866); duplicate of #39055 | possible error in poly test suite |
 | 40196 | 2013-10-07 | - | Documentation | none | **fixed** — the out-of-range key coercion (< 1 -> GAUSS15, > 6 -> GAUSS61) documented (6feb963d3) | Document gsl_integration_qag behavior on key out-of-range |
 | 40755 | 2013-11-30 | bug | Accuracy problem | none | **fixed** — double cast in the Jn/Yn asymptotics test (a43fc0055) | Sporadic nan's from gsl_sf_bessel_Jn an related functions |
@@ -79,7 +79,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 42220 | 2014-04-28 | - | Runtime error | source bug_hybrid.c | **fixed** — hybrid/hybridj return at fnorm = 0 and compute_wv guards pnorm = 0 (8640b846e); trap-enabled regression test | Division by zero in "hybrid*" when initial guess is root |
 | 42472 | 2014-05-31 | - | Runtime error | partial gsl_hh_test.c +1 | **fixed** — HH_solve/HH_svx shared tall QR (1f84bed77) | gsl_linalg_HH_solve bugs |
 | 42502 | 2014-06-03 | bug | Runtime error | none | **rejected** — reporter's program omits `gsl_cdf.h`, so the function is implicitly `int`; `Pinv(0.5) = 0.0` on the built DLL and is already tested | wrong results of the function gsl_cdf_ugaussian_Pinv |
-| 42830 | 2014-07-23 | bug | - | none | not reviewed | Bug in gsl_bspline_knot constructor |
+| 42830 | 2014-07-23 | bug | - | none | **fixed** - non-monotone breakpoints rejected in init_augment (74cace84f) | Bug in gsl_bspline_knot constructor |
 | 43256 | 2014-09-19 | - | Runtime error | source sixjsymbols.c | **fixed** — stable 6j by Schulten-Gordon recurrence (59fc479e2) | gsl_sf_coupling_6j overflows |
 | 43259 | 2014-09-19 | - | - | none | **partial** — `hyperg_0F1` (5fafddc63), `exprel_2` (c2ba2e271) and `gamma_inc_Q` (18652f8c1) fixed; clausen/zeta/eta already fixed; psi_1/pochrel/ellint_P degenerate | accuracy problems in specfunc |
 | 43326 | 2014-09-29 | bug | Runtime error | clean bug43326.diff | **fixed** — poisson_pdf at mu=0 (4f9f4f4fc) | Bug in gsl_ran_poisson_pdf() for mu = 0.0 |
@@ -90,7 +90,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 44865 | 2015-04-17 | - | Accuracy problem | inline | rejected — patch shortens the interval; FMA failure not reproducible here | bsimp/msbdf e5_bigt in ode-initval2/test.c is FMA-sensitive |
 | 44952 | 2015-04-28 | - | Build | clean stdarg.patch | **fixed** — test/results.c uses stdarg.h (e2354de55) | test/results.c uses outdated header file name varargs.h |
 | 45053 | 2015-05-07 | - | Runtime error | source gsl_bug.c +1 | rejected — bracketing patch collapses interval; 3 min tests fail | gsl_min_find_bracket is most likely incorrectly implemented |
-| 45099 | 2015-05-13 | bug | - | none | not reviewed | wrong formula for BFGS update in gsl_multimin? |
+| 45099 | 2015-05-13 | bug | - | none | rejected - not-a-bug: the BFGS update is the standard dense update, H implicit in p | wrong formula for BFGS update in gsl_multimin? |
 | 45234 | 2015-06-02 | doc | Documentation | none | **fixed** — specfunc-mathieu.{rst,texi} already use the SF API (_e variants, int returns); no fork change needed | Mathieu function documentation hasn't been updated after switching to SF API conventions |
 | 45265 | 2015-06-06 | bug | Accuracy problem | none | rejected — not reproducible on MSVC x64 (true/err ≤ 0.57 over x in [4,1000]) | gsl_sf_bessel_J0_e underestimates error for x>4 |
 | 45726 | 2015-08-10 | bug | Accuracy problem | source gslbesselytest.c | **fixed** — Y family libm sin/cos (a08ef2f7f) | Incorrect results of functions bessel_y0, y1 and y2 |
@@ -106,7 +106,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 47028 | 2016-01-31 | bug | Runtime error | none | rejected — ppc64le multifit; passes on x64 | multifit testsuite failure on ppc64le |
 | 47193 | 2016-02-18 | - | - | none | **fixed** — duplicate of #43326 (4f9f4f4fc); regression test 5346bba43 | gsl_ran_poisson_pdf with mu=0 |
 | 47345 | 2016-03-05 | bug | Accuracy problem | partial gsl_complex_arccosh.diff +1 | **fixed** — complex arccosh returns +0 (d6ec47d87) | arccosh(1) wrong sign |
-| 47348 | 2016-03-05 | bug | - | none | not reviewed | Use of incorrect ideom floor(x+0.5) |
+| 47348 | 2016-03-05 | bug | - | none | **fixed** - floor(x+0.5) -> rint; hyperg_1F1 integer test also missing fabs (b681165e1); coulomb keeps deliberate round-half-up | Use of incorrect ideom floor(x+0.5) |
 | 47402 | 2016-03-13 | - | - | none | not reviewed | Mathieu functions |
 | 47646 | 2016-04-07 | bug | Accuracy problem | partial test_beta_small.c +2 | **fixed** — code fix upstream (05c5b5179); regression test added (d64cc4d93) | gsl_ran_beta returns NaN for small arguments |
 | 48702 | 2016-08-04 | - | Runtime error | none | **fixed** — same NaN rejection as #31362 (14d595eb8) | gsl_sf_ellint_Kcomp stalls on GSL_NAN |
@@ -223,21 +223,21 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 67705 | 2025-11-15 | bug | Build | none | rejected — not reproducible; linalg passes with a fixed seed | ttest failure in linalg/QR_solve_r random |
 | 67728 | 2025-11-23 | bug | Accuracy problem | source psi_dropin.c | **fixed** — polygamma at negative arguments (e9f69933a) | gsl_sf_psi_n_e yields domain error |
 | 67774 | 2025-12-05 | feature | Accuracy problem | none | not reviewed | Feature: arctan integral is also defined for negative inputs |
-| 68068 | 2026-02-19 | bug | Accuracy problem | none | not reviewed | Bug: incorrect straddling of area of convergence in quad_golden |
+| 68068 | 2026-02-19 | bug | Accuracy problem | none | **fixed** - quad_golden stored f_m in f_upper instead of f_lower (4260778fe) | Bug: incorrect straddling of area of convergence in quad_golden |
 | 68073 | 2026-02-20 | bug | Documentation | none | **fixed** — gsl_stats_select comment corrected from "k-th largest" to "k-th smallest" (521bed61d) | Bug: incorrect inline code comment on BASE FUNCTION(gsl_stats,select) |
 | 68098 | 2026-02-27 | feature | - | none | not reviewed | Feature: division by zero when data is perfectly correlated |
 | 68283 | 2026-04-26 | - | - | none | rejected — proposed guards break the `gsl_stats` equivalence in `rstat_test` | Correction to gsl_rstat_skew and gsl_rstat_kurtosis |
 | 68312 | 2026-05-07 | bug | Accuracy problem | none | **fixed** — same recurrence as #43256 (59fc479e2) | Wigner symbols inaccurate for large j |
 | 68367 | 2026-05-19 | feature | - | source invelljac.c | not reviewed (feature-shaped) — skipped in first pass as feature-shaped | Feature: inverse Jacobi elliptic integrals |
 | 68379 | 2026-05-21 | - | - | none | **fixed** — size_t for the accessor index (ae60e2883) | Histogram: expand scope of internal variables |
-| 68398 | 2026-05-26 | feature | - | none | not reviewed | Feature: use GSL native gsl_ldexp in eta fuction for integer argument |
+| 68398 | 2026-05-26 | feature | - | none | **fixed** - eta_int leading term via gsl_ldexp, value correctly rounded, error halved (f774247e7) | Feature: use GSL native gsl_ldexp in eta fuction for integer argument |
 | 68415 | 2026-06-02 | bug | - | none | rejected — not-a-bug: variance/covariance/pvariance all return NaN at n=1; n >= 2 documented (65bc71664) | Bug: inconsistency in variance error handling in statictics module |
 | 68479 | 2026-06-25 | bug | Accuracy problem | none | **fixed** — BINV seed as `exp(n log1p(-p))` (7376dc316) | Bug: gsl_ran_binomial is not accurate |
 | 68495 | 2026-07-03 | bug | Build | inline | **fixed** — pow_int INT_MIN overflow (41b1e2c00) | Undefined behavior in gsl_pow_int: signed int overflow |
 | 68518 | 2026-07-13 | - | Build | none | **fixed** — DISCARD_POINTER replaced by void casts and the macro dropped from both configs (46fa69ae1, 2afdbb721) | Remove stale construct in configure.ac |
 | 68549 | 2026-07-23 | - | - | none | not reviewed | Breaking change: match argument list among distribution functions |
 | 68592 | 2026-08-03 | doc | Documentation | none | **fixed** — new BST chapter added to both manuals and to the index/menu, marked as an unreviewed AI draft (20eda0316) | Documentation: missing Binary search tree documentation from index |
-| 68611 | 2026-08-13 | feature | - | none | not reviewed | Feature: guard against degenerate histogram input |
+| 68611 | 2026-08-13 | feature | - | none | **fixed** - all-empty histogram raises GSL_EDOM in pdf_init (b60a47106) | Feature: guard against degenerate histogram input |
 | 68625 | 2026-08-21 | bug | Accuracy problem | none | **fixed** — hermite_func_der at n=0,1 (5d36e1999) | Bug: incorrect derivative of the Hermite function of order 0 or 1 |
-| 68663 | 2026-08-31 | feature | - | none | not reviewed | Feature: remove GAMM_INC macro in favor of direct call |
-| 68704 | 2026-09-18 | feature | - | none | not reviewed | Feature: introduce variance of a histogram gsl_histogram_variance |
+| 68663 | 2026-08-31 | feature | - | none | rejected - pure refactor (one-line alias for gsl_sf_expint_E1_e); no correctness case | Feature: remove GAMM_INC macro in favor of direct call |
+| 68704 | 2026-09-18 | feature | - | none | rejected - new API; proposed rename of gsl_histogram_sigma is a breaking change | Feature: introduce variance of a histogram gsl_histogram_variance |

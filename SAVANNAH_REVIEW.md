@@ -2711,3 +2711,92 @@ the uninitialized remainder of the matrix making the eigenvalues
 garbage.  Rejected - not a bug.
 
 Savannah bugs #51104, #53903 and #53904.
+
+
+## Group R - the last bug-shaped reports: #42830, #68068, #47348,
+## #68398, #68611 (fixed) and #40116, #45099, #68663, #68704 (rejected)
+
+Reviewed 2026-10-04 against the built `build-cmake` library.  Nine
+reports; five are genuine defects and are fixed, four need no code
+change.
+
+### Fixed
+
+* **#42830 - bspline breakpoint validation.**  `gsl_bspline_init_augment`
+  wrote the caller's `tau` straight into the knots with no monotonicity
+  check, so a decreasing breakpoint vector gave a non-monotone knot
+  sequence and meaningless (negative) basis functions.  The guard is
+  non-decreasing rather than strictly increasing, because
+  `gsl_bspline_init_greville` legitimately produces repeated interior
+  breakpoints; a few-ulp reversal from its least-squares solve is
+  tolerated (observed `4.0000000000000018, 3.9999999999999978` at
+  `k=4, nbreak=5`).  Commit `74cace84f`.  Negative control: the new
+  `bspline/test.c` vector reports `GSL_SUCCESS` with the guard removed.
+
+* **#68068 - quad_golden `*f_upper` typo.**  In the branch that moves
+  `x_lower` up to `x_m`, the routine stored `f_m` in `*f_upper` instead
+  of `*f_lower`.  Iteration was unaffected (it reads only the `x`
+  bounds) but `gsl_min_fminimizer_f_lower` returned 0.65 where
+  `f(x_lower) = -0.116` on the `func4` vector.  Commit `4260778fe`.
+  Negative control: an added per-iteration invariant check in
+  `min/test.c` fails with dozens of mismatches without the fix.
+
+* **#47348 - floor(x+0.5).**  Swept all 31 live sites to `rint`.  The
+  `hyperg_1F1.c` "b-a is an integer" test was additionally missing its
+  `fabs()`, so it accepted any `b-a` with fractional part > 0.5; a
+  14950-point sweep showed the affected range takes the same
+  `hyperg_1F1_U` fallback either way, so no value changed.  Two sites
+  are deliberately *not* rounded to nearest:
+  `specfunc/coulomb.c`'s `lam_F` reduction is a round-half-up (keeps
+  `lam_min` on the well-conditioned `-1/2` branch; `rint(0.5)=0` would
+  leave `lam_min=+1/2` and return `GSL_EDIVERGE`), left as-is with a
+  comment and pinned by a new vector.  Commit `b681165e1`.  Observed
+  effect: `gsl_sf_bessel_Ynu_e(0.5, 1.0)` moved by less than an ulp
+  (both accurate), added as a vector; no other tested value changed.
+
+* **#68398 - eta_int leading term.**  `2^(1-n)` is exactly
+  representable, so `gsl_ldexp` beats `gsl_sf_exp_e`: at `n = -101` the
+  value is correctly rounded (2.75e-16 vs a 40-digit reference, from
+  5.6e-14) and the reported error halves.  Commit `f774247e7`.
+  Negative control: the new error-bound check reads 5.56e-14 with the
+  exponential restored.
+
+* **#68611 - all-empty histogram pdf.**  Zero mean made every cumulative
+  sum `NaN`, so `gsl_histogram_pdf_sample` returned `NaN` silently.
+  Now `GSL_EDOM`, matching the existing negative-bin check.  Commit
+  `b60a47106`.  Negative control: the trap test fails without the guard.
+
+### Rejected
+
+* **#40116 - "possible error in integration routines".**  Faithful
+  QUADPACK restructuring: `large_interval` is `if(|b-a|>small) go to
+  90` with `level[i] < maximum_level` as the exact equivalent, and
+  `increase_nrmax()` returning 1 is the `go to 90` (so the loop does
+  cycle).  No buggy case.  Not a bug.
+
+* **#45099 - "wrong BFGS update".**  Expanding the dense update with
+  `H0 = I` gives `Hg = g - A s - B y`, `B = s.g/s.y`,
+  `A = -(1+|y|^2/s.y)B + y.g/s.y` - exactly the code.  The Hessian is
+  implicit in `p`, not stored.  Not a bug.
+
+* **#68663 - remove `GAMMA_INC_A_0`.**  One-line alias for
+  `gsl_sf_expint_E1_e`; pure refactor, out of scope.
+
+* **#68704 - `gsl_histogram_variance`.**  New public API; the proposed
+  rename of `gsl_histogram_sigma` is a breaking change.  Out of scope.
+
+Method notes:
+
+* Two negative controls were checked per new vector: reverting the
+  source fix (the vector fails) and reverting the test (the suite
+  passes), to be sure a failure came from the change under test and not
+  from a neighbouring test-vector edit.
+* A new Coulomb vector briefly corrupted the existing
+  `gsl_sf_coulomb_wave_FG_e(-50, 1000, 0, 0)` test by leaving `lam_F`
+  set from a preceding case; the fix restored the `lam_F = 0` and `k_G
+  = 0` assignments the block had relied on, and the full `specfunc`
+  suite then reported `59621340/59621340`.
+* Full `ctest` after all changes: 56/56 on MSVC x64.
+
+Savannah bugs #40116, #42830, #45099, #47348, #68068, #68398, #68611,
+#68663 and #68704.
