@@ -235,6 +235,7 @@ double test_poisson_pdf (unsigned int x);
 double test_poisson_large (void);
 double test_poisson_large_pdf (unsigned int x);
 void test_poisson_pdf_zero (void);
+void test_negative_binomial_pdf_p1 (void);
 double test_dir2d (void);
 double test_dir2d_pdf (double x);
 double test_dir2d_trig_method (void);
@@ -450,6 +451,7 @@ main (void)
   testDiscretePDF (FUNC2 (poisson));
   testDiscretePDF (FUNC2 (poisson_large));
   test_poisson_pdf_zero ();
+  test_negative_binomial_pdf_p1 ();
   testDiscretePDF (FUNC2 (bernoulli));
   testDiscretePDF (FUNC2 (binomial));
   testDiscretePDF (FUNC2 (binomial0));
@@ -2528,6 +2530,25 @@ test_poisson_pdf_zero (void)
   status |= (gsl_ran_poisson_pdf (10, 0.0) != 0.0);
 
   gsl_test (status, "gsl_ran_poisson_pdf at mu = 0");
+}
+
+
+void
+test_negative_binomial_pdf_p1 (void)
+{
+  /* At p = 1 (and p = 0) the negative binomial degenerates to a point
+     mass at k = 0.  The general formula evaluated 0 * log(0) as NaN at
+     k = 0.  Savannah bug #66800. */
+  int status = 0;
+
+  status |= (gsl_ran_negative_binomial_pdf (0, 1.0, 5.0) != 1.0);
+  status |= (gsl_ran_negative_binomial_pdf (1, 1.0, 5.0) != 0.0);
+  status |= (gsl_ran_negative_binomial_pdf (10, 1.0, 5.0) != 0.0);
+  status |= (gsl_ran_negative_binomial_pdf (0, 1.0, 0.5) != 1.0);
+  status |= (gsl_ran_negative_binomial_pdf (0, 0.0, 5.0) != 1.0);
+  status |= (gsl_ran_negative_binomial_pdf (3, 0.0, 5.0) != 0.0);
+
+  gsl_test (status, "gsl_ran_negative_binomial_pdf at p = 1 and p = 0");
 }
 
 

@@ -43,13 +43,26 @@ gsl_ran_negative_binomial (const gsl_rng * r, double p, double n)
 double
 gsl_ran_negative_binomial_pdf (const unsigned int k, const double p, double n)
 {
-  double P;
+  if (p == 1.0)
+    {
+      /* The distribution degenerates to k == 0: p^n (1-p)^k -> 1 for
+         k = 0 and 0 for k > 0.  Taken before the general formula, where
+         n * log(p) = 0 and k * log1p(-p) = -inf give NaN at k = 0.
+         Savannah bug #66800. */
+      return (k == 0) ? 1.0 : 0.0;
+    }
+  else if (p == 0.0)
+    {
+      /* Here (1-p)^k = 1 and p^n = 0, so everything collapses to k == 0
+         as well (the 0^0 weight at k = 0 is taken as 1). */
+      return (k == 0) ? 1.0 : 0.0;
+    }
+  else
+    {
+      double f = gsl_sf_lngamma (k + n) ;
+      double a = gsl_sf_lngamma (n) ;
+      double b = gsl_sf_lngamma (k + 1.0) ;
 
-  double f = gsl_sf_lngamma (k + n) ;
-  double a = gsl_sf_lngamma (n) ;
-  double b = gsl_sf_lngamma (k + 1.0) ;
-
-  P = exp(f - a - b + n * log(p) + k * log1p(-p));
-
-  return P;
+      return exp(f - a - b + n * log(p) + k * log1p(-p));
+    }
 }
