@@ -65,6 +65,13 @@ test_sf_check_result(char * message_buff, gsl_sf_result r, double val, double to
   else if (gsl_isinf(r.val) || gsl_isinf(val)) 
     {
       s = (gsl_isinf(r.val) != gsl_isinf(val)) ? TEST_SF_INCONS : s; 
+      /* An infinite (or finite) result must carry a usable error bar:
+         a NaN error is as much a failure as a wrong value.  Previously
+         the infinite branch skipped the error checks, so an infinite
+         result with a NaN error (e.g. erf_Z(inf)) passed.  An infinite
+         error is a legitimate overflow signal and is left alone. */
+      if (gsl_isnan(r.err))                           s |= TEST_SF_ERRBAD;
+      if (r.err < 0.0)                                s |= TEST_SF_ERRNEG;
     }
   else
     {
