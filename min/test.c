@@ -131,6 +131,25 @@ test_f (const gsl_min_fminimizer_type * T,
       if (m < a || m > b)
         gsl_test (GSL_FAILURE, "m lies outside interval %g (%g,%g)", m, a, b);
 
+      /* the cached bracket values must agree with the function at the
+         bracket endpoints (Savannah bug #68068) */
+      {
+        double fl = gsl_min_fminimizer_f_lower (s);
+        double fu = gsl_min_fminimizer_f_upper (s);
+        double fl_ref = GSL_FN_EVAL (f, a);
+        double fu_ref = GSL_FN_EVAL (f, b);
+
+        if (fabs (fl - fl_ref) > 1e-12 * (1.0 + fabs (fl_ref)))
+          gsl_test (GSL_FAILURE,
+                    "%s, %s: f_lower (%g) does not match f(x_lower) (%g)",
+                    gsl_min_fminimizer_name (s), description, fl, fl_ref);
+
+        if (fabs (fu - fu_ref) > 1e-12 * (1.0 + fabs (fu_ref)))
+          gsl_test (GSL_FAILURE,
+                    "%s, %s: f_upper (%g) does not match f(x_upper) (%g)",
+                    gsl_min_fminimizer_name (s), description, fu, fu_ref);
+      }
+
       if (status) break ;
 
       status = gsl_min_test_interval (a, b, EPSABS, EPSREL);
