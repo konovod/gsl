@@ -100,6 +100,11 @@ has to be tested against the built library.  See `#52321` below.
 | `#45924` | **fixed 2026-10-03** (commit 51a63cbd5): the beta inverse bisected to an absolute `Ptol = 0.01` and then ran an unsafeguarded Newton iteration, so large `a,b` at any tail away from one half (and `a << 1`, and `Qinv`'s `1 - Pinv` complement) returned `NaN`.  Reworked on `t = logit(x)` with a maintained bracket, safeguarded Newton and direct upper-tail evaluation.  Verified against scipy `betaincinv`/`betainccinv` over 173000 points, worst relative error `7.4e-11`.  Ten report vectors plus fdist delegation vectors added |
 | `#67058` | **fixed 2026-10-03** (commit 68fc3c752): `gsl_stats_mean` returned 0.0 for an empty data set (the recurrence leaves the accumulator at zero) and the variance/sd family returned 0.0 through it; R and numpy return `NaN`.  `gsl_stats_mean` and `compute_variance` now raise `GSL_EBADLEN`, returning `NaN` with the handler off; `tss` is left at 0.  Both manuals updated.  99 new failures with the guards reverted |
 | `#42502` | **rejected** (not a bug): `gsl_cdf_ugaussian_Pinv(0.5)` returns exactly 0.0 on the built DLL and is covered by `cdf/test.c:498`.  The reporter's program omits `<gsl/gsl_cdf.h>`, so the function is implicitly declared `int` and `printf`'s second `%f` reads a stale vararg slot (the `1.000000`) |
+| `#66844` | applied - two exact dilog endpoint identities added at `TEST_TOL0` (commit 25a16f928) |
+| `#66826` | test vectors applied (commit 728206d82); the negative-integer-`b` defect the report exposes is **open**, see the section below |
+| `#66877` | applied - `gsl_sf_hyperg_0F1_e` now reports an exact zero error at `x = 0` (commit fe7285909), and the `x = 0` / half-integer-`b` vectors are added (commit 2d6cf433c) |
+| `#66880` | applied with corrections - `M_CUBEROOT2` written out, two vectors the reporter disabled are enabled, two inaccurate ones left out (commit 153a149d4) |
+| `#64549` | applied as a single clean wrapper test instead of the four leaky near-duplicates (commit 7b6979126) |
 
 ## Resolved
 
@@ -1167,12 +1172,17 @@ omitted `c`/`fc`.  No change made.
 
 ### `#64549` — interpolation test cases
 
-Adds four `test_hstaxe_1..4` functions to `interpolation/test.c`.  Two of
-the four are near-duplicates of the others, all four leak the `gsl_interp`
-and `gsl_interp_accel` they allocate, two declare unused variables
-(`test_table`, `min_size`, `wav_min`, `wav_max`), and `test_hstaxe_2`
-asserts the result is 0.0.  Low value as posted; if the coverage is
-wanted, one clean test is better than four.
+**Applied 2026-10-04** as one clean test rather than the four posted:
+`test_eval_wrappers()` in `interpolation/test.c` (commit 7b6979126).
+See `Applied` above and the `FORKNEWS` entry.
+
+The posted patch adds four `test_hstaxe_1..4` functions to
+`interpolation/test.c`.  Two of the four are near-duplicates of the
+others, all four leak the `gsl_interp` and `gsl_interp_accel` they
+allocate, two declare unused variables (`test_table`, `min_size`,
+`wav_min`, `wav_max`), and `test_hstaxe_2` asserts the result is 0.0.
+Low value as posted; the one clean test covers the plain wrappers and a
+partial interval instead.
 
 ### `#64851` — gsl-config exit status
 
@@ -1187,18 +1197,18 @@ Everything on the curated list has now been reviewed; what remains are
 feature-shaped patches excluded by choice (see the eligibility rule in the
 discussion): `#66573`, `#66574`, `#66575` (complex SVD suite), `#66695`
 (Feagin high-order ODE solvers, +5866/-35), `#66576`, `#67359`, `#66922`,
-`#66886`, `#66880`, `#66850`, `#66842`, `#66834`, `#66742`, `#66767`,
+`#66886`, `#66850`, `#66842`, `#66834`, `#66742`, `#66767`,
 `#66775`, `#66949`, `#66816`, `#68367`, `#60457`.
 
 Everything else from the earlier list is in `Applied` or `Rejected` above.
 
 The `source` rows (whole replacement files rather than diffs) are mostly
 the 2025 specfunc/randist series from one contributor: `#66816`,
-`#66834`, `#66842`, `#66850`, `#66862`, `#66877`, `#66880`, `#66886`,
+`#66834`, `#66842`, `#66850`, `#66886`,
 `#66922`, `#66949`, `#67359`, `#67728`, `#66767`, `#66775`, `#66800`,
 `#67621`, `#42472`.  These need the patch to be reconstructed by
-hand; `#47345`, `#60371`, `#67621`, `#42472` and `#47646` came out of this
-group and are now applied.
+hand; `#47345`, `#60371`, `#67621`, `#42472`, `#47646`, `#66862`, `#66877`
+and `#66880` came out of this group and are now applied.
 
 
 ## Offline source: working without Savannah (2026-10-03)
@@ -3049,3 +3059,65 @@ Neither admits a result-preserving change from the current source:
   on.  Left as a design item.
 
 Savannah bugs #54925, #51104 and #21833, and #40092.
+
+
+## Open defect: `gsl_sf_hyperg_1F1_int_e` for negative integer b
+
+Reported through Savannah bug #66826 but not fixed there (the change for
+that bug is test-only; see `FORKNEWS`).  Recorded here with the full
+analysis so the next reader does not have to re-derive it.
+
+For a nonpositive integer `a` and a negative integer `b` with `b <= a`,
+`1F1(a,b,x)` is the terminating polynomial of DLMF 13.2.2,
+`sum_{k=0}^{-a} (a)_k/(b)_k x^k/k!`.  The library disagrees:
+
+* `gsl_sf_hyperg_1F1_int_e` returns `exp(x)` when `a == b` (line 1810);
+  for `a` a negative integer the true value is the truncated
+  exponential, not `e^x`.
+* otherwise `hyperg_1F1_ab_negint` maps `x < 0` to `x > 0` with the
+  Kummer transformation `exp(x) M(b-a,b,-x)`.  That map is not the
+  terminating polynomial and disagrees with it by an amount that grows
+  without bound with `|x|`; e.g. at `(-10,-20,-100)` the map gives
+  `1.64e-35` against a true `4.93e7`.
+
+### Why the obvious fixes fail
+
+* **Direct terminating polynomial (Horner).**  Correct in principle but
+  catastrophically ill-conditioned for large degree and `|x|`.  In the
+  same double recurrence the library uses:
+
+      M(-100,-200,-100) = 58.6      (true 4.34e-25)
+      M(-1000,-2000,-100) = 1.93e4  (true 1.03e-22)
+      M(-10,-100,-100)    rel 6.9e-9
+
+  This is genuine cancellation, not a coding error; some values cannot
+  be recovered in double by this route at all.
+
+* **Kummer to positive argument.**  Not an identity for the terminating
+  branch.  Agreement is coincidental and parameter-specific:
+
+      (-10,-20,-1)     rel diff 1e-25
+      (-10,-20,-10)    rel diff 3.4e-4
+      (-10,-20,-100)   rel diff 1.0
+      (-100,-200,-100) rel diff 1e-29
+      (-10,-100,-100)  rel diff 0.98
+      (-3,-5,-1)       rel diff 1.7e-4
+
+  There is no simple validity test to key a fallback on.
+
+### Consequence for the existing tests
+
+Three vectors in `specfunc/test_hyperg.c` assert the Kummer value, which
+equals the terminating series for some parameters and not others:
+
+    (-10,-20,-10)   0.00357079636732993491  vs true 0.00357201182794578047
+    (-10,-20,-100)  1.64284868563391159e-35 vs true 49303272.262405369733
+    (-10,-100,-100) 8.19512187960476424e-09 vs true 4.4148250205403363517e-7
+
+They pass today because the library returns the same wrong number, and
+must be corrected when the library is fixed.
+
+A correct fix needs a stable evaluation for these polynomials (a scaled
+recurrence, a Laguerre/Whittaker route that handles the negative integer
+parameters, or an error-bounded series), plus re-derived expected values
+and an independent cross-check over a grid.  That is a separate task.
