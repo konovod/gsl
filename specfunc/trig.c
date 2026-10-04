@@ -741,6 +741,21 @@ gsl_sf_complex_logsin_e(const double zr, const double zi,
   /* CHECK_POINTER(lszr) */
   /* CHECK_POINTER(lszi) */
 
+  /* On the real axis at a zero of sin, log(sin z) has its logarithmic
+   * branch point: the limit is -Infinity along the real line.  Reaching
+   * it through gsl_sf_complex_log_e(sin zr, 0) with sin zr == 0 gives a
+   * 0/0 domain error instead, so take the limit explicitly.  The test is
+   * on the library's own sin so that it fires exactly where sin(zr)
+   * vanishes and not on floating-point slop around it.  See Savannah
+   * bug #66922. */
+  if(zi == 0.0 && gsl_sf_sin(zr) == 0.0) {
+    lszr->val = GSL_NEGINF;
+    lszr->err = 0.0;
+    lszi->val = 0.0;
+    lszi->err = 0.0;
+    return GSL_SUCCESS;
+  }
+
   if(zi > 60.0) {
     lszr->val = -M_LN2 + zi;
     lszi->val =  0.5*M_PI - zr;
