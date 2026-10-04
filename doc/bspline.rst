@@ -764,23 +764,28 @@ collocation applications and may also be called Marsden-Schoenberg points.
    B-spline basis.  For the ill-defined case when :math:`k = 1`, the implementation
    chooses to return breakpoint interval midpoints.
 
-.. See https://savannah.gnu.org/bugs/index.php?34361
-.. @deftypefun int gsl_bspline_knots_greville (const gsl_vector * abscissae, gsl_bspline_workspace * w, double * abserr);
-.. Given target Greville abscissae values in :data:`abscissae` and a workspace
-.. :data:`w` where @code{abscissae->size == gsl_bspline_ncontrol(w)}, this functions
-.. computes and stores the knots required for the workspace to best approximate
-.. the target abscissae.  The approximation is optimal in that the first and last
-.. values in :data:`abscissae` are preserved exactly while the 2-norm of the error
-.. in any other abscissae is minimized.  If not-@code{NULL}, the sum of the
-.. absolute approximation errors over each abscissa is returned in :data:`abserr`.
-..
-.. The workspace order must satisfy :math:`k > 1` and :data:`abscissae` should be
-.. monotonically increasing.  Beware that when @code{w->nbreak} is small relative
-.. to @code{w->k} the best approximation may still be of poor quality for
-.. non-uniformly spaced :data:`abscissae`.  This function has memory and runtime
-.. overhead that scales like a QR-based linear least squares solution on a
-.. @code{(abscissae->size - 2)} by @code{(w->nbreak - 2)} problem.
-.. @end deftypefun
+.. function:: int gsl_bspline_init_greville (const gsl_vector * abscissae, gsl_bspline_workspace * w, double * abserr)
+
+   Given target Greville abscissae values in :data:`abscissae` and a workspace
+   :data:`w` where :code:`abscissae->size == gsl_bspline_ncontrol(w)`, this
+   function computes and stores the knots required for the workspace to best
+   approximate the target abscissae.  The approximation is optimal in that the
+   first and last values in :data:`abscissae` are preserved exactly while the
+   2-norm of the error in any other abscissa is minimized.  If not
+   :code:`NULL`, the sum of the absolute approximation errors over each
+   abscissa is returned in :data:`abserr`.
+
+   The workspace order must satisfy :math:`k > 1` and :data:`abscissae` must be
+   monotonically increasing.  The breakpoints are obtained from a linear least
+   squares solve that does not enforce the requirement that they be
+   non-decreasing, so for a poor combination of :data:`abscissae` and workspace
+   dimensions the computed breakpoints can fail to be monotone; in that case
+   the function returns :macro:`GSL_EDOM` and the workspace is left unchanged.
+   Beware that when :code:`w->nbreak` is small relative to :code:`w->k` the
+   best approximation may be of poor quality for non-uniformly spaced
+   :data:`abscissae`.  This function has memory and runtime overhead that
+   scales like a QR-based linear least squares solution on an
+   :code:`(abscissae->size - 2)` by :code:`(w->nbreak - 2)` problem.
 
 .. index::
    single: basis splines, examples

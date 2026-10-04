@@ -294,5 +294,36 @@ test_greville()
     gsl_bspline_free(w);
   }
 
+  /* Savannah bug #34361: the unconstrained least-squares solve used by
+   * gsl_bspline_init_greville() does not enforce that the breakpoints be
+   * non-decreasing.  For a poor combination of abscissae and workspace
+   * dimensions the computed breakpoints can be wildly non-monotone; the
+   * monotonicity guard in gsl_bspline_init_augment() must reject them
+   * rather than store a broken knot vector.  With that guard removed this
+   * call returns GSL_SUCCESS and the breakpoints come out
+   * { 0.0, 1.0611, 0.6091, 0.6767, 1.0 }. */
+  {
+    const size_t k = 4;
+    const double abscissae_data[] = {
+      0.0, sqrt(1.0 / 6.0), sqrt(2.0 / 6.0), sqrt(3.0 / 6.0),
+      sqrt(4.0 / 6.0), sqrt(5.0 / 6.0), 1.0
+    };
+    const size_t nabscissae = sizeof(abscissae_data)/sizeof(abscissae_data[0]);
+    const size_t nbreak     = 5;
+    gsl_vector_const_view abscissae
+        = gsl_vector_const_view_array(abscissae_data, nabscissae);
+    gsl_bspline_workspace *w = gsl_bspline_alloc(k, nbreak);
+    gsl_error_handler_t *old_handler = gsl_set_error_handler_off();
+    double abserr;
+    int ret = gsl_bspline_init_greville(&abscissae.vector, w, &abserr);
+    gsl_set_error_handler(old_handler);
+
+    gsl_test(ret != GSL_EDOM,
+             "b-spline k=%d init_greville rejects non-monotone breakpoints"
+             " (status = %d)", k, ret);
+
+    gsl_bspline_free(w);
+  }
+
   return status;
 }
