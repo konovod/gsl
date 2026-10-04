@@ -175,6 +175,9 @@ One line per change: date | tag | description | commit(s).
   2026-10-04 | [rejected] | meta: the remaining feature/perf/API requests (35)    | - (see below)
   2026-10-04 | [upstream] | bspline: test and document the Greville rejection    | c8543330d
   2026-10-04 | [rejected] | randist/specfunc/cblas: the Group C non-bugs         | - (see below)
+  2026-10-04 | [upstream] | cblas: reorder the gemm loops to reuse a row of C   | 39cde03e2
+  2026-10-04 | [upstream] | permutation: one backward scan for next and prev    | c382ed86e
+  2026-10-04 | [upstream] | roots: skip the redundant false-position evaluation | 0697ba772
 
 
 ## [upstream] rng: make the random() generators produce the documented sequences
@@ -4570,6 +4573,13 @@ Performance-only:
     order would change the floating-point result, and none alleges a
     wrong value.
 
+    **Partly reversed.**  `#51104` and `#21833` (`permutation_next`) and
+    `#40092` (false-position) were taken later as result-preserving
+    fixes once the fork's scope was extended to admit numerically
+    neutral performance work; see the three entries appended at the end
+    of this file.  `#21828` and `#31109` remain rejected: the first has
+    no proposed fix and the second needs an interface change.
+
   * `#47402` Mathieu functions - a library/test design discussion, not a
     defect.
 
@@ -4667,3 +4677,100 @@ wish to share the checking macros between the two layers has no reported
 failing case and is an open-ended refactor.
 
 Savannah bugs #21831, #25320 and #29834.
+
+
+## [upstream] cblas: reorder the gemm loops to reuse a row of C
+
+Commit: 39cde03e2
+
+`gsl_blas_dgemm()` reaches the reference kernels in
+`cblas/source_gemm_r.h`, which accumulated the product with the `k`
+index outermost.  That streams the whole `C` matrix once per term of
+the inner product, so no row of `C` stays resident across the `k` loop
+and the `F`/`G` access pattern is poor.  The `i` and `k` loops are
+swapped in the two `NoTrans` branches and the `i` and `j` loops in the
+two `Trans` branches, so a row of `C` is visited once and kept in cache
+while `F` and `G` are traversed.
+
+The reordering is numerically neutral.  For every `C(i,j)` the terms are
+still accumulated in ascending `k` order; only the traversal order of
+the independent `(i,j)` pairs changes, so the result is bit-for-bit
+identical to the previous code.  The existing `cblas` gemm cases already
+covered all four transpositions in both orders, and a new test,
+`cblas/test_gemm_loops.c`, additionally compares `cblas_dgemm()` against
+a straightforward triple-loop evaluation of the same mapping, which is
+what pins the loop swap to the correct indexing.
+
+This is performance-only work.  It was taken after the fork's scope was
+extended to admit numerically neutral performance fixes; the earlier
+verdict in `SAVANNAH_REVIEW.md` had set it aside as out of scope.
+
+Files: `cblas/source_gemm_r.h`, `cblas/test_gemm_loops.c`,
+`cblas/tests.c`, `cblas/tests.h`, `cblas/Makefile.am`,
+`cmake/gsl_tests.cmake`.
+
+See Savannah bug #54925.
+
+
+## [upstream] permutation: pick the successor with a single backward scan
+
+Commit: c382ed86e
+
+`gsl_permutation_next()` and `gsl_permutation_prev()` searched the whole
+descending (respectively ascending) suffix for the element to exchange,
+keeping the smallest candidate and re-testing it with a comparison that
+is implied by the loop that located `i`.  Both routines now scan the
+suffix from the right and take the first element that exceeds
+(respectively falls below) `p->data[i]`, which is step L3 of Knuth's
+Algorithm L.  The suffix is monotone, so the same `k` is chosen and the
+generated permutations are unchanged, but the scan usually stops after
+one or two steps rather than walking the entire suffix on every call.
+
+The existing vectors only cover 120 permutations of five elements.  A
+new block in `permutation/test.c` walks all `8! = 40320` permutations in
+both directions and compares each step against an independent reference
+implementation of the lexicographic successor and predecessor.
+
+`#21833`, filed ten years earlier against the same function, alleged
+quadratic worst-case behaviour for the enumeration.  The reversal work
+summed over all `n!` permutations is amortised `O(1)` per call, not
+quadratic, so nothing further was needed and the exhaustive forward and
+backward walk is the record of that.
+
+Performance-only work, taken under the same extended scope as the cblas
+loop reorder above.  The earlier "no defect" verdict in
+`SAVANNAH_REVIEW.md` stands for the algorithm; this only removes the
+constant factor.
+
+Files: `permutation/permutation.c`, `permutation/test.c`.
+
+See Savannah bugs #51104 and #21833.
+
+
+## [upstream] roots: skip the redundant false-position evaluation
+
+Commit: 0697ba772
+
+`falsepos_iterate()` evaluated `f` at the linear interpolation point and
+then, when that step failed to halve the bracket, evaluated it again at
+the bisection point.  On an almost linear function the interpolation
+collapses onto an endpoint once that endpoint is within rounding of the
+root, so the first evaluation repeats a value the solver already holds
+and every iteration costs two evaluations instead of one.
+
+The routine now reuses `f_lower` / `f_upper` when `x_linear` equals
+`x_left` / `x_right`, and evaluates `f` only when the interpolated point
+is distinct.  No interface changes are involved: the value skipped is
+exactly the one the endpoint already carries, so the sign test below
+sees the same input as before.  The report also asked for the user's
+tolerance to be passed into the iteration routine, which is the complete
+fix but needs an interface change; it is deliberately not done.
+
+On the report's 64-bit test function the number of evaluations falls
+from 98 to 52.  A regression test in `roots/test.c` wraps the same
+almost linear function in an evaluation counter and requires at most 60;
+with the skip removed the count is 98 and the test fails.
+
+Files: `roots/falsepos.c`, `roots/test.c`.
+
+See Savannah bug #40092.
