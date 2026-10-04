@@ -1238,6 +1238,43 @@ test_steffen2 (void)
   return s;
 }
 
+/* The plain (non-underscore-e) wrappers are not exercised anywhere
+ * else.  Evaluate y = x^2 through the linear interpolant: on
+ * [0,1] it is y = x, on [1,2] y = 3x - 2 and on [2,3] y = 5x - 6.
+ * Savannah bug #64549. */
+
+static int
+test_eval_wrappers (void)
+{
+  double xa[4] = { 0.0, 1.0, 2.0, 3.0 };
+  double ya[4] = { 0.0, 1.0, 4.0, 9.0 };
+  gsl_interp_accel *a = gsl_interp_accel_alloc ();
+  gsl_interp *interp = gsl_interp_alloc (gsl_interp_linear, 4);
+  double y, d, integ;
+
+  gsl_interp_init (interp, xa, ya, 4);
+
+  y = gsl_interp_eval (interp, xa, ya, 0.5, a);
+  gsl_test_abs (y, 0.5, 1e-10, "gsl_interp_eval linear (x = 0.5)");
+
+  d = gsl_interp_eval_deriv (interp, xa, ya, 0.5, a);
+  gsl_test_abs (d, 1.0, 1e-10, "gsl_interp_eval_deriv linear (x = 0.5)");
+
+  /* full range [0,3]: (0+1)/2 + (1+4)/2 + (4+9)/2 = 9.5 */
+  integ = gsl_interp_eval_integ (interp, xa, ya, 0.0, 3.0, a);
+  gsl_test_abs (integ, 9.5, 1e-10, "gsl_interp_eval_integ linear (0, 3)");
+
+  /* partial range [0.5,2.5] that starts inside the first panel:
+     0.375 + 2.5 + 2.625 = 5.5 */
+  integ = gsl_interp_eval_integ (interp, xa, ya, 0.5, 2.5, a);
+  gsl_test_abs (integ, 5.5, 1e-10, "gsl_interp_eval_integ linear (0.5, 2.5)");
+
+  gsl_interp_accel_free (a);
+  gsl_interp_free (interp);
+
+  return 0;
+}
+
 int 
 main (int argc, char **argv)
 {
@@ -1249,6 +1286,7 @@ main (int argc, char **argv)
   argv = 0;
 
   status += test_bsearch();
+  status += test_eval_wrappers();
   status += test_linear();
   status += test_polynomial();
   status += test_cspline();
