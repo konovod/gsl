@@ -30,6 +30,112 @@
 int test_fdf (const char * desc, gsl_multiroot_function_fdf * function, initpt_function initpt, double factor, const gsl_multiroot_fdfsolver_type * T);
 int test_f (const char * desc, gsl_multiroot_function_fdf * fdf, initpt_function initpt, double factor, const gsl_multiroot_fsolver_type * T);
 
+#if defined(_MSC_VER)
+#include <float.h>
+#elif defined(__GLIBC__)
+#include <fenv.h>
+extern int feenableexcept (int excepts);
+#endif
+
+/* Regression tests for the division by zero when the initial point is
+   already a root (Savannah bugs #42219 and #42220).
+
+   #42219: gnewton takes phi0 from the fdf callback.  When that returns
+   an exact zero residual while the plain f callback returns a nonzero
+   one, the relative step reduction divides by phi0.
+
+   #42220: the hybrid methods take a zero dogleg step at a root, and the
+   rank-1 update then divides by the zero step norm.  This need not
+   change the returned root, so the invalid-operation trap is enabled
+   while these cases run to make a regression observable. */
+
+static int
+root_point_f (const gsl_vector * x, void *params, gsl_vector * f)
+{
+  gsl_vector_set (f, 0, gsl_vector_get (x, 0) - 1.0);
+  (void) params;
+  return GSL_SUCCESS;
+}
+
+static int
+root_point_df (const gsl_vector * x, void *params, gsl_matrix * df)
+{
+  gsl_matrix_set (df, 0, 0, 1.0);
+  (void) x;
+  (void) params;
+  return GSL_SUCCESS;
+}
+
+static int
+root_point_fdf (const gsl_vector * x, void *params,
+                gsl_vector * f, gsl_matrix * df)
+{
+  root_point_f (x, params, f);
+  root_point_df (x, params, df);
+  return GSL_SUCCESS;
+}
+
+static void
+root_point_initpt (gsl_vector * x)
+{
+  gsl_vector_set (x, 0, 1.0);
+}
+
+static gsl_multiroot_function_fdf root_point =
+  { &root_point_f, &root_point_df, &root_point_fdf, 1, 0 };
+
+static int
+gnewton_mismatch_f (const gsl_vector * x, void *params, gsl_vector * f)
+{
+  gsl_vector_set (f, 0, gsl_vector_get (x, 0) - 1.0 + GSL_DBL_EPSILON);
+  (void) params;
+  return GSL_SUCCESS;
+}
+
+static int
+gnewton_mismatch_df (const gsl_vector * x, void *params, gsl_matrix * df)
+{
+  gsl_matrix_set (df, 0, 0, 1.0);
+  (void) x;
+  (void) params;
+  return GSL_SUCCESS;
+}
+
+static int
+gnewton_mismatch_fdf (const gsl_vector * x, void *params,
+                      gsl_vector * f, gsl_matrix * df)
+{
+  gsl_vector_set (f, 0, gsl_vector_get (x, 0) - 1.0);
+  gsl_matrix_set (df, 0, 0, 1.0);
+  (void) params;
+  return GSL_SUCCESS;
+}
+
+static void
+gnewton_mismatch_initpt (gsl_vector * x)
+{
+  gsl_vector_set (x, 0, 1.0);
+}
+
+static gsl_multiroot_function_fdf gnewton_mismatch =
+  { &gnewton_mismatch_f, &gnewton_mismatch_df, &gnewton_mismatch_fdf, 1, 0 };
+
+static void
+test_root_point (void)
+{
+  test_fdf ("mismatched f and fdf", &gnewton_mismatch,
+            gnewton_mismatch_initpt, 1.0, gsl_multiroot_fdfsolver_gnewton);
+
+  test_f ("initial point is root", &root_point, root_point_initpt, 1.0,
+          gsl_multiroot_fsolver_hybrid);
+  test_f ("initial point is root", &root_point, root_point_initpt, 1.0,
+          gsl_multiroot_fsolver_hybrids);
+  test_fdf ("initial point is root", &root_point, root_point_initpt, 1.0,
+            gsl_multiroot_fdfsolver_hybridj);
+  test_fdf ("initial point is root", &root_point, root_point_initpt, 1.0,
+            gsl_multiroot_fdfsolver_hybridsj);
+}
+
 
 int 
 main (void)
@@ -90,6 +196,30 @@ main (void)
       test_fdf ("Trig", &trig, trig_initpt, f, *T2);
       T2++;
     }
+
+  /* Savannah #42219 and #42220: the solvers must not raise an invalid
+     operation when the initial point is already a root.  Enable the
+     trap so that the division by zero is observable. */
+
+#if defined(_MSC_VER)
+  {
+    unsigned int old_cw;
+    _controlfp_s (&old_cw, 0, _EM_INVALID | _EM_ZERODIVIDE);
+    test_root_point ();
+    _controlfp_s (&old_cw, old_cw, _MCW_EM);
+  }
+#elif defined(__GLIBC__)
+  {
+    fenv_t env;
+    fegetenv (&env);
+    feclearexcept (FE_ALL_EXCEPT);
+    feenableexcept (FE_INVALID | FE_DIVBYZERO);
+    test_root_point ();
+    fesetenv (&env);
+  }
+#else
+  test_root_point ();
+#endif
 
   exit (gsl_test_summary ());
 }

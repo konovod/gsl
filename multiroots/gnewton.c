@@ -170,9 +170,11 @@ new_step:
   
   phi1 = enorm (f);
 
-  if (phi1 > phi0 && t > GSL_DBL_EPSILON)  
+  if (phi1 > phi0 && phi0 > 0.0 && t > GSL_DBL_EPSILON)  
     {
-      /* full step goes uphill, take a reduced step instead */
+      /* full step goes uphill, take a reduced step instead.
+         phi0 == 0 means the current point is already a root, and the
+         relative reduction factor below is undefined. */
 
       double theta = phi1 / phi0;
       double u = (sqrt(1.0 + 6.0 * theta) - 1.0) / (3.0 * theta);

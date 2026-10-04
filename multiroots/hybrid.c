@@ -442,6 +442,14 @@ hybrid_iterate_impl (void *vstate, gsl_multiroot_function * func,
 
   const double fnorm = state->fnorm;
 
+  /* If the current point is already a root there is no step to take,
+     and the rank-1 update below would divide by zero. */
+
+  if (fnorm == 0.0)
+    {
+      return GSL_SUCCESS;
+    }
+
   gsl_matrix *J = state->J;
   gsl_matrix *q = state->q;
   gsl_matrix *r = state->r;

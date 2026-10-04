@@ -58,6 +58,16 @@ compute_wv (const gsl_vector * qtdf, const gsl_vector *rdx, const gsl_vector *dx
 {
   size_t i, n = qtdf->size;
 
+  /* A zero step carries no rank-1 information; leave the update
+     vectors at zero rather than dividing by zero. */
+
+  if (pnorm == 0.0)
+    {
+      gsl_vector_set_zero (w);
+      gsl_vector_set_zero (v);
+      return;
+    }
+
   for (i = 0; i < n; i++)
     {
       double qtdfi = gsl_vector_get (qtdf, i);
