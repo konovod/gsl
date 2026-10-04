@@ -192,27 +192,27 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 66742 | 2025-01-31 | - | Documentation | clean gams.diff | rejected — large doc-only classification diff; not a correction, out of scope | GAMS classification |
 | 66767 | 2025-02-08 | feature | Build | source binomialinv.c +1 | rejected — new API (inverse binomial); out of scope | Feature: inverse of binomial distribution |
 | 66775 | 2025-02-10 | feature | Build | source poissoninv.c +1 | rejected — new API (inverse Poisson); out of scope | Feature: inverse poisson distribution |
-| 66800 | 2025-02-15 | feature | Accuracy problem | partial nbinomial-2.diff +1 | rejected — new special-case/API (negative_binomial_pdf at p=1); out of scope | Feature: gsl_ran_negative_binomial_pdf with p = 1 |
+| 66800 | 2025-02-15 | feature | Accuracy problem | partial nbinomial-2.diff +1 | **fixed** — negative_binomial_pdf degenerate at p = 1 and p = 0 (957708351) | Feature: gsl_ran_negative_binomial_pdf with p = 1 |
 | 66808 | 2025-02-17 | bug | Accuracy problem | source test_airy_zeroes_derivs.c | **partial** — Airy accuracy not improved; sub-defects fixed (ac5f72d98) | Bug: Airy Ai function values inaccurate |
 | 66816 | 2025-02-19 | feature | Build | source nakagami_.c | rejected — new distribution/API (Nakagami); out of scope | Feature: Nakagami random distribution |
 | 66826 | 2025-02-21 | feature | Build | none | **fixed** — test vectors added (728206d82); the negative-integer-`b` library defect the report exposes is open, see `SAVANNAH_REVIEW.md` | Feature: test cases for function hyperg_1F1() |
-| 66834 | 2025-02-23 | feature | Build | clean specfunc_gamma_test.diff | rejected — new special-case (gamma_inc(0,0)) plus tests; out of scope | Feature: gamma_inc(0, 0) handling and test cases |
-| 66842 | 2025-02-24 | feature | Build | clean expint_infinity.diff | rejected — new special-case (exponential integrals at origin); out of scope | Feature: exponential integrals at origin |
+| 66834 | 2025-02-23 | feature | Build | clean specfunc_gamma_test.diff | **fixed** — gamma_inc(0,0) = +Inf (062b15fc3) | Feature: gamma_inc(0, 0) handling and test cases |
+| 66842 | 2025-02-24 | feature | Build | clean expint_infinity.diff | **fixed** — exponential integrals at the origin (9a00ba0ed) | Feature: exponential integrals at origin |
 | 66844 | 2025-02-25 | feature | Build | none | **fixed** — dilog endpoint identities tested (25a16f928) | Feature: test cases for dilogarithm function |
 | 66849 | 2025-02-26 | - | - | none | **fixed** — final step clamped and backed off; bsimp sub-step times computed directly (dda917296); RHS-records-the-time regression test | gsl_odeiv2_evolve_apply() may exceed final time |
-| 66850 | 2025-02-26 | feature | Build | clean specfunc_hyperg_2F1.diff | rejected — new special-cases (2F1 parameter shifts); out of scope | Feature: special cases hypergeometric2F1(a+1, b, a, x) and hypergeometric2F1(a, b+1, b, x) |
+| 66850 | 2025-02-26 | feature | Build | clean specfunc_hyperg_2F1.diff | **fixed** — 2F1 at c = a-1 and c = b-1 with the corrected relation (adc9389a4); the posted patch is mathematically wrong | Feature: special cases hypergeometric2F1(a+1, b, a, x) and hypergeometric2F1(a, b+1, b, x) |
 | 66862 | 2025-03-02 | bug | - | partial specfunc_test_sf.diff +1 | rejected — not-a-bug: duplicate complex sin/cos; submitter withdrew | Bug: duplicate functions in GSL produce differing results |
 | 66874 | 2025-03-05 | feature | - | source doc_bst.rst | rejected — superseded: the bst module is documented in the fork (20eda0316) | Feature: documentation for binary search trees (bst module) |
 | 66877 | 2025-03-06 | feature | Build | none | **fixed** — exact zero error at x = 0 (fe7285909) and the special-case vectors (2d6cf433c) | Feature: test cases for hyperg_0F1() |
 | 66880 | 2025-03-07 | feature | Build | clean test_hyperg_U.diff | **fixed** — U special-case vectors, with corrections (153a149d4) | Feature: test cases for function hyperg_0F1() |
 | 66886 | 2025-03-09 | feature | Build | clean specfunc_trig_.diff | rejected — refactor, not a bug fix; out of scope | Feature: refactoring of specfunc/trig.c |
 | 66894 | 2025-03-11 | - | Documentation | none | **fixed** — chapter introduction notes that randist does not validate distribution parameters (dbe316d49) | Domain value checking for random number distributions |
-| 66922 | 2025-03-17 | feature | Build | clean specfunc_trig.diff | rejected — new special-case (logsin); out of scope | Feature: special case for special functin logsin() |
+| 66922 | 2025-03-17 | feature | Build | clean specfunc_trig.diff | **fixed** — complex_logsin at a real zero of sin (10d64fb15) | Feature: special case for special functin logsin() |
 | 66949 | 2025-03-25 | feature | Build | source erlang.c | rejected — new distribution/API (Erlang CDF); out of scope | Feature: Erlang cumulative distribution |
 | 66993 | 2025-04-05 | bug | Accuracy problem | none | **partial** — zero-base overflow documented (afd7f7d6c); the other claims do not reproduce | Bug: pow_int issues |
 | 67058 | 2025-04-28 | - | Accuracy problem | none | **fixed** — empty data sets raise `GSL_EBADLEN` (NaN with the handler off) (68fc3c752) | gsl_stats_mean and gsl_stats_sd result to 0.0 when array with zero length |
 | 67301 | 2025-07-10 | bug | - | none | rejected — not-a-bug: r2 is a within-bin fraction, a second find() would pick the wrong bin; documented 2b15efbff | Bug: Test for existence of uniform random variate in histogram |
-| 67359 | 2025-07-27 | feature | - | clean hyperg_2F0.c.patch +1 | rejected — new special-case (hyperg_2F0); out of scope | Feature: Add special case for gsl_sf_hyperg_2F0 |
+| 67359 | 2025-07-27 | feature | - | clean hyperg_2F0.c.patch +1 | **fixed** — 2F0 with a zero parameter (1d99544d9) | Feature: Add special case for gsl_sf_hyperg_2F0 |
 | 67445 | 2025-08-20 | - | Build | clean 0001-linalg-increase-cholesky_invert-Hilbert-test-toleran.patch | **fixed** — cholesky_invert Hilbert tolerance (f84a57a0f) | linalg test failures under gcc 14.2.1 |
 | 67446 | 2025-08-20 | - | Build | none | rejected — gcc 14.2.1; passes on gcc 15.2 x64 | multilarge_nlinear test failures under gcc 14.2.1 |
 | 67447 | 2025-08-20 | - | Build | none | rejected — gcc 14.2.1; passes on gcc 15.2 x64 | spmatrix test failures under gcc 14.2.1 |
@@ -263,6 +263,13 @@ table.  One of them, `#66826`, exposed a separate library defect in
 `gsl_sf_hyperg_1F1_int_e` for negative integer `b`, recorded as an open item
 in `SAVANNAH_REVIEW.md`; the fix is not part of the test change.
 
+Six items previously rejected here as "new special cases" were taken once
+the eligibility filter was widened to admit correctness fixes to existing
+API that add no new symbol: `#66800`, `#66834`, `#66842`, `#66850`,
+`#66922` and `#67359`.  Each is a defect for inputs the library already
+claimed to handle, so all six are now fixed; they are no longer listed in
+the table.  See `FORKNEWS`.
+
 `kind`: `feat` = new feature/API, `perf` = performance only, `test` =
 test-quality request, `doc` = documentation matter.  `patch`: `clean`/
 `partial`/`source` if an attachment was collected by the sweep, `-` if none;
@@ -285,12 +292,6 @@ test-quality request, `doc` = documentation matter.  `patch`: `clean`/
 | 66575 | feat | clean | extension of the complex SVD |
 | 66695 | feat | clean | Feagin and Verner high-order ODE solvers |
 | 32257 | feat | - | integration routines imported from quadrule |
-| 66834 | feat | clean | `gamma_inc(0,0)` handling |
-| 66842 | feat | clean | exponential integrals at the origin |
-| 66850 | feat | clean | 2F1 parameter-shift special cases |
-| 66922 | feat | clean | `logsin` special case |
-| 67359 | feat | clean | `gsl_sf_hyperg_2F0` special case |
-| 66800 | feat | partial | `negative_binomial_pdf` at p = 1 |
 | 67774 | feat | - | arctan integral extended to negative inputs |
 | 68098 | feat | - | correlation division-by-zero handling |
 | 41527 | feat | - | multimin functions return error codes |
