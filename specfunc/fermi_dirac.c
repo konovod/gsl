@@ -979,7 +979,7 @@ static
 int
 fd_asymp(const double j, const double x, gsl_sf_result * result)
 {
-  const int j_integer = ( fabs(j - floor(j+0.5)) < 100.0*GSL_DBL_EPSILON );
+  const int j_integer = ( fabs(j - rint(j)) < 100.0*GSL_DBL_EPSILON );
   const int itmax = 200;
   gsl_sf_result lg;
   int stat_lg = gsl_sf_lngamma_e(j + 2.0, &lg);

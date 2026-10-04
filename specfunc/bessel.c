@@ -130,7 +130,7 @@ gsl_sf_bessel_IJ_taylor_e(const double nu, const double x,
        * y^nu / Gamma(nu+1) = y^N /N! y^f / (N+1)_f,
        * to control the error.
        */
-      const int    N = (int)floor(nu + 0.5);
+      const int    N = (int)rint(nu);
       const double f = nu - N;
       gsl_sf_result poch_factor;
       gsl_sf_result tc_factor;

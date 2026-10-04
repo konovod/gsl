@@ -74,7 +74,7 @@ gsl_sf_bessel_Ynupos_e(double nu, double x, gsl_sf_result * result)
   }
   else {
     /* -1/2 <= mu <= 1/2 */
-    int N = (int)(nu + 0.5);
+    int N = (int)rint(nu);
     double mu = nu - N;
 
     gsl_sf_result Y_mu, Y_mup1;

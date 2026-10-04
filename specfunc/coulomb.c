@@ -973,7 +973,13 @@ gsl_sf_coulomb_wave_FG_e(const double eta, const double x,
      * Note that large negative eta is ok however.
      */
     const double SMALL = GSL_SQRT_DBL_EPSILON;
-    const int N    = (int)(lam_F + 0.5);
+    /* Round lam_F to an integer with halves rounded up.  This is a
+       deliberate round-half-up, not round-to-nearest: it keeps
+       lam_min = lam_F - N on the -1/2 side, where coulomb_FG_series
+       is well conditioned, and makes lam_F = 1/2 land exactly on the
+       lam_min == -1/2 special case below.  rint(1/2) = 0 would leave
+       lam_min = 1/2, which the code declares impossible. */
+    const int N    = (int)floor(lam_F + 0.5);
     const int span = GSL_MAX(k_lam_G, N);
     const double lam_min = lam_F - N;    /* -1/2 <= lam_min < 1/2 */
     double F_lam_F, Fp_lam_F;

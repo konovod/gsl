@@ -374,7 +374,7 @@ gsl_sf_ellint_F_e(double phi, double k, gsl_mode_t mode, gsl_sf_result * result)
   /* Angular reduction to -pi/2 < phi < pi/2 (we should really use an
      exact reduction but this will have to do for now) BJG */
 
-  double nc = floor(phi/M_PI + 0.5);
+  double nc = rint(phi/M_PI);
   double phi_red = phi - nc * M_PI;
   phi = phi_red;
   
@@ -407,7 +407,7 @@ gsl_sf_ellint_E_e(double phi, double k, gsl_mode_t mode, gsl_sf_result * result)
   /* Angular reduction to -pi/2 < phi < pi/2 (we should really use an
      exact reduction but this will have to do for now) BJG */
 
-  double nc = floor(phi/M_PI + 0.5);
+  double nc = rint(phi/M_PI);
   double phi_red = phi - nc * M_PI;
   phi = phi_red;
 
@@ -456,7 +456,7 @@ gsl_sf_ellint_P_e(double phi, double k, double n, gsl_mode_t mode, gsl_sf_result
   /* Angular reduction to -pi/2 < phi < pi/2 (we should really use an
      exact reduction but this will have to do for now) BJG */
 
-  double nc = floor(phi/M_PI + 0.5);
+  double nc = rint(phi/M_PI);
   double phi_red = phi - nc * M_PI;
   phi = phi_red;
 
@@ -497,7 +497,7 @@ gsl_sf_ellint_D_e(double phi, double k, gsl_mode_t mode, gsl_sf_result * result)
   /* Angular reduction to -pi/2 < phi < pi/2 (we should really use an
      exact reduction but this will have to do for now) BJG */
 
-  double nc = floor(phi/M_PI + 0.5);
+  double nc = rint(phi/M_PI);
   double phi_red = phi - nc * M_PI;
   phi = phi_red;
 

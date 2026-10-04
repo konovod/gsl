@@ -137,7 +137,27 @@ int test_coulomb(void)
   gsl_test(s, "  gsl_sf_coulomb_wave_FG_e(-50.0, 5.0, lam_F=0, lam_G=0)");
   status += s;
 
+  /* Regression vector for Savannah bug #47348: lam_F is an exact
+     half-integer, so the round-half-up reduction must send
+     lam_min = lam_F - N to the well-conditioned lam_min = -1/2 branch
+     (this also guards against a naive floor(x+0.5) -> rint(x) sweep,
+     which would leave lam_min = +1/2 and take the GSL_EDIVERGE path).
+     Reference from mpmath.coulombf(1/2, 1, 1/2) at 40 digits. */
+  lam_F = 0.5;
+  k_G   = 0;
+  eta = 1.0;
+  x = 0.5;
+  gsl_sf_coulomb_wave_FG_e(eta, x, lam_F, k_G, &F, &Fp, &G, &Gp, &Fe, &Ge);
+  s = 0;
+  message_buff[0] = 0;
+  s += test_sf_check_result(message_buff,  F,  4.0490780738292909351e-02, TEST_TOL3);
+  printf("%s", message_buff);
+  gsl_test(s, "  gsl_sf_coulomb_wave_FG_e(1.0, 0.5, lam_F=0.5, lam_G=0.5)");
+  status += s;
+
   lam_min = 0.0;
+  lam_F = 0.0;
+  k_G = 0;
   eta = -50.0;
   x = 1000.0;
   gsl_sf_coulomb_wave_FG_e(eta, x, lam_F, k_G, &F, &Fp, &G, &Gp, &Fe, &Ge);

@@ -55,7 +55,7 @@ gsl_sf_bessel_Inu_scaled_e(double nu, double x, gsl_sf_result * result)
     return gsl_sf_bessel_Inu_scaled_asymp_unif_e(nu, x, result);
   }
   else {
-    int N = (int)(nu + 0.5);
+    int N = (int)rint(nu);
     double mu = nu - N;      /* -1/2 <= mu <= 1/2 */ 
     double K_mu, K_mup1, Kp_mu;
     double K_nu, K_nup1, K_num1;

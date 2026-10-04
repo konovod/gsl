@@ -286,7 +286,7 @@ coupling_6j_recurrence(int two_ja, int two_jb, int two_jc,
     cnorm = -cnorm;
 
   {
-    int index = (int)(L1 - l1min + 0.5);
+    int index = (int)rint(L1 - l1min);
     const double val = cnorm * six[index];
     result->val = val;
     result->err = (8.0 + 2.0 * nfin) * GSL_DBL_EPSILON * fabs(val);

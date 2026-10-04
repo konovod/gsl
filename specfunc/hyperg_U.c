@@ -219,8 +219,8 @@ hyperg_zaU_asymp(const double a, const double b, const double x, gsl_sf_result *
 {
   const double ap = a;
   const double bp = 1.0 + a - b;
-  const double rintap = floor(ap + 0.5);
-  const double rintbp = floor(bp + 0.5);
+  const double rintap = rint(ap);
+  const double rintbp = rint(bp);
   const int ap_neg_int = ( ap < 0.0 && fabs(ap - rintap) < INT_THRESHOLD );
   const int bp_neg_int = ( bp < 0.0 && fabs(bp - rintbp) < INT_THRESHOLD );
 
@@ -682,13 +682,13 @@ int
 hyperg_U_series(const double a, const double b, const double x, gsl_sf_result * result)
 {
   const double SQRT_EPS = M_SQRT2 * GSL_SQRT_DBL_EPSILON;
-double bint = ( b < 0.0 ? ceil(b-0.5) : floor(b+0.5) );
+double bint = rint(b);
   double beps  = b - bint;
   double a_beps = a - beps;
-  double r_a_beps = floor(a_beps + 0.5);
+  double r_a_beps = rint(a_beps);
   double a_beps_int = ( fabs(a_beps - r_a_beps) < INT_THRESHOLD );
 /*  double a_b_1 = a-b+1;
-  double r_a_b_1 = floor(a_b_1+0.5);
+  double r_a_b_1 = rint(a_b_1);
   double r_a_b_1_int = (fabs(a_b_1-r_a_b_1)< INT_THRESHOLD);
   Check for (a-beps) being a member of -N; N being 0,1,... */
   if (a_beps_int && a_beps <= 0)
@@ -1158,7 +1158,7 @@ int
 hyperg_U_bge1(const double a, const double b, const double x,
               gsl_sf_result_e10 * result)
 {
-  const double rinta = floor(a+0.5);
+  const double rinta = rint(a);
   const int a_neg_integer = (a < 0.0 && fabs(a - rinta) < INT_THRESHOLD);
 
   if(a == 0.0) {
@@ -1823,8 +1823,8 @@ int
 gsl_sf_hyperg_U_e10_e(const double a, const double b, const double x,
                          gsl_sf_result_e10 * result)
 {
-  const double rinta = floor(a + 0.5);
-  const double rintb = floor(b + 0.5);
+  const double rinta = rint(a);
+  const double rintb = rint(b);
   const int a_integer = ( fabs(a - rinta) < INT_THRESHOLD );
   const int b_integer = ( fabs(b - rintb) < INT_THRESHOLD );
 

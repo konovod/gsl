@@ -381,7 +381,7 @@ hyperg_2F1_reflect(const double a, const double b, const double c,
                    const double x, gsl_sf_result * result)
 {
   const double d = c - a - b;
-  const int intd  = floor(d+0.5);
+  const int intd  = rint(d);
   const int d_integer = ( fabs(d - intd) < locEPS );
 
   if(d_integer) {
@@ -658,10 +658,10 @@ gsl_sf_hyperg_2F1_e(double a, double b, const double c,
                        gsl_sf_result * result)
 {
   const double d = c - a - b;
-  const double rinta = floor(a + 0.5);
-  const double rintb = floor(b + 0.5);
-  const double rintc = floor(c + 0.5);
-  const double rintd = floor(d + 0.5);
+  const double rinta = rint(a);
+  const double rintb = rint(b);
+  const double rintc = rint(c);
+  const double rintd = rint(d);
   const int a_neg_integer = ( a < 0.0  &&  fabs(a - rinta) < locEPS );
   const int b_neg_integer = ( b < 0.0  &&  fabs(b - rintb) < locEPS );
   const int c_neg_integer = ( c < 0.0  &&  fabs(c - rintc) < locEPS );
@@ -822,7 +822,7 @@ gsl_sf_hyperg_2F1_conj_e(const double aR, const double aI, const double c,
                             gsl_sf_result * result)
 {
   const double ax = fabs(x);
-  const double rintc = floor(c + 0.5);
+  const double rintc = rint(c);
   const int c_neg_integer = ( c < 0.0  &&  fabs(c - rintc) < locEPS );
 
   result->val = 0.0;
@@ -866,9 +866,9 @@ gsl_sf_hyperg_2F1_renorm_e(const double a, const double b, const double c,
                               gsl_sf_result * result
                               )
 {
-  const double rinta = floor(a + 0.5);
-  const double rintb = floor(b + 0.5);
-  const double rintc = floor(c + 0.5);
+  const double rinta = rint(a);
+  const double rintb = rint(b);
+  const double rintc = rint(c);
   const int a_neg_integer = ( a < 0.0  &&  fabs(a - rinta) < locEPS );
   const int b_neg_integer = ( b < 0.0  &&  fabs(b - rintb) < locEPS );
   const int c_neg_integer = ( c < 0.0  &&  fabs(c - rintc) < locEPS );
@@ -938,8 +938,8 @@ gsl_sf_hyperg_2F1_conj_renorm_e(const double aR, const double aI, const double c
                                    gsl_sf_result * result
                                    )
 {
-  const double rintc = floor(c  + 0.5);
-  const double rinta = floor(aR + 0.5);
+  const double rintc = rint(c);
+  const double rinta = rint(aR);
   const int a_neg_integer = ( aR < 0.0 && fabs(aR-rinta) < locEPS && aI == 0.0);
   const int c_neg_integer = (  c < 0.0 && fabs(c - rintc) < locEPS );
 

@@ -117,7 +117,7 @@ hyperg_0F1_bessel_J(const double c, const double x, gsl_sf_result * result)
 int
 gsl_sf_hyperg_0F1_e(double c, double x, gsl_sf_result * result)
 {
-  const double rintc = floor(c + 0.5);
+  const double rintc = rint(c);
   const int c_neg_integer = (c < 0.0 && fabs(c - rintc) < locEPS);
 
   /* CHECK_POINTER(result) */

@@ -670,6 +670,9 @@ int test_bessel(void)
   TEST_SF(s, gsl_sf_bessel_Ynu_e, (0.0001, 1.0, &r),  0.08813676933044478439,    TEST_TOL2, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_bessel_Ynu_e, (0.0001,10.0, &r),  0.05570979797521875261,    TEST_TOL2, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_bessel_Ynu_e, ( 0.75,  1.0, &r), -0.6218694174429746383,     TEST_TOL0, GSL_SUCCESS);
+  /* Savannah bug #47348: exact half-integer order; reference is the
+     closed form Y_{1/2}(x) = -sqrt(2/(pi x)) cos(x). */
+  TEST_SF(s, gsl_sf_bessel_Ynu_e, (  0.5,  1.0, &r), -0.43109886801837607952,    TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_bessel_Ynu_e, ( 0.75, 10.0, &r),  0.24757063446760384953,    TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_bessel_Ynu_e, ( 1.0, 0.001, &r), -636.6221672311394281,      TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_bessel_Ynu_e, ( 1.0,   1.0, &r), -0.7812128213002887165,     TEST_TOL0, GSL_SUCCESS);

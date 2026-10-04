@@ -1715,7 +1715,7 @@ hyperg_1F1_ab_neg(const double a, const double b, const double x,
   const double abs_b = fabs(b);
   const double size_a = GSL_MAX(abs_a, 1.0);
   const double size_b = GSL_MAX(abs_b, 1.0);
-  const int bma_integer = ( bma - floor(bma+0.5) < _1F1_INT_THRESHOLD );
+  const int bma_integer = ( fabs(bma - rint(bma)) < _1F1_INT_THRESHOLD );
 
   if(   (abs_a < 10.0 && abs_b < 10.0 && abs_x < 5.0)
      || (b > 0.8*GSL_MAX(fabs(a),1.0)*fabs(x))
@@ -1857,9 +1857,9 @@ gsl_sf_hyperg_1F1_e(const double a, const double b, const double x,
                        )
 {
   const double bma = b - a;
-  const double rinta = floor(a + 0.5);
-  const double rintb = floor(b + 0.5);
-  const double rintbma = floor(bma + 0.5);
+  const double rinta = rint(a);
+  const double rintb = rint(b);
+  const double rintbma = rint(bma);
   const int a_integer   = ( fabs(a-rinta) < _1F1_INT_THRESHOLD && rinta > INT_MIN && rinta < INT_MAX );
   const int b_integer   = ( fabs(b-rintb) < _1F1_INT_THRESHOLD && rintb > INT_MIN && rintb < INT_MAX );
   const int bma_integer = ( fabs(bma-rintbma) < _1F1_INT_THRESHOLD && rintbma > INT_MIN && rintbma < INT_MAX );

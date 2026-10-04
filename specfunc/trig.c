@@ -1049,7 +1049,7 @@ gsl_sf_sin_pi_x_e(const double x, gsl_sf_result * result)
     return GSL_SUCCESS;
   }
   else {
-    const double N = floor(x + 0.5);
+    const double N = rint(x);
     const double f = x - N;
 
     if(N < INT_MAX && N > INT_MIN) {

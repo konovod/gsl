@@ -112,7 +112,7 @@ gsl_sf_bessel_Jnupos_e(const double nu, const double x, gsl_sf_result * result)
      * x = (k+1/2) pi, where Jnu_e(0.5, 3pi/2) returned a NaN (Savannah
      * bug #42042).  Use whichever endpoint has the larger |J_mu|.
      */
-    const int N_base   = (int)(nu + 0.5);
+    const int N_base   = (int)rint(nu);
     const double mu_base = nu - N_base;
     const int shift = (mu_base == -0.5 && fabs(cos(x)) < fabs(sin(x))) ? 1 : 0;
     const int N = N_base - shift;

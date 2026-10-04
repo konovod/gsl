@@ -1255,7 +1255,7 @@ int
 gsl_sf_gamma_e(const double x, gsl_sf_result * result)
 {
   if(x < 0.5) {
-    int rint_x = (int)floor(x+0.5);
+    int rint_x = (int)rint(x);
     double f_x = x - rint_x;
     double sgn_gamma = ( GSL_IS_EVEN(rint_x) ? 1.0 : -1.0 );
     double sin_term = sgn_gamma * sin(M_PI * f_x) / M_PI;

@@ -42,7 +42,7 @@
 #include "eval.h"
 
 #define pow2(n) (gsl_sf_pow_int(2,n))
-#define RND(x)  ((double) ((x >= 0) ? (int) (x + 0.5) : (int) (x - 0.5)))
+#define RND(x)  (rint(x))
 
 /* evaluates the probabilists' Hermite polynomial of order n at position x */
 int 

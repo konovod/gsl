@@ -58,7 +58,7 @@ gsl_sf_bessel_Knu_scaled_e10_e(const double nu, const double x, gsl_sf_result_e1
     DOMAIN_ERROR_E10(result);
   }
   else {
-    int N = (int)(nu + 0.5);
+    int N = (int)rint(nu);
     double mu = nu - N;      /* -1/2 <= mu <= 1/2 */
     double K_mu, K_mup1, Kp_mu;
     double K_nu, K_nup1, K_num1;
