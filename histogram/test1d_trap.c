@@ -117,6 +117,27 @@ test1d_trap (void)
   gsl_histogram_find (h, 1.1, &i);
   gsl_test (status != GSL_EDOM, "gsl_histogram_find traps x above xmax");
 
+  /* Savannah bug #68611: an all-empty histogram has no probability
+     distribution and must be rejected rather than producing NaN. */
+  {
+    gsl_histogram *he = gsl_histogram_calloc_uniform (10, 0.0, 1.0);
+    gsl_histogram_pdf *p = gsl_histogram_pdf_alloc (10);
+
+    status = 0;
+    gsl_histogram_pdf_init (p, he);
+    gsl_test (!status,
+              "gsl_histogram_pdf_init traps an all-empty histogram");
+
+    status = 0;
+    gsl_histogram_accumulate (he, 0.5, 1.0);
+    gsl_histogram_pdf_init (p, he);
+    gsl_test (status,
+              "gsl_histogram_pdf_init accepts a non-empty histogram");
+
+    gsl_histogram_pdf_free (p);
+    gsl_histogram_free (he);
+  }
+
   gsl_histogram_free (h);
 }
 

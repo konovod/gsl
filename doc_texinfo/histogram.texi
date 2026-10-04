@@ -567,7 +567,9 @@ This function initializes the probability distribution @var{p} with
 the contents of the histogram @var{h}. If any of the bins of @var{h} are
 negative then the error handler is invoked with an error code of
 @code{GSL_EDOM} because a probability distribution cannot contain
-negative values.
+negative values. The same error is raised if the bins of @var{h}
+sum to zero, since an empty histogram cannot be normalised into a
+probability distribution.
 @end deftypefun
 
 @deftypefun void gsl_histogram_pdf_free (gsl_histogram_pdf * @var{p})

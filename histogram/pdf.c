@@ -118,6 +118,22 @@ gsl_histogram_pdf_init (gsl_histogram_pdf * p, const gsl_histogram * h)
         }
     }
 
+  /* An all-empty histogram has no probability distribution; without
+     this guard the normalisation below divides by a zero mean and
+     quietly fills the cumulative sums with NaN. */
+  {
+    double total = 0.0;
+
+    for (i = 0; i < n; i++)
+      total += h->bin[i];
+
+    if (total == 0.0)
+      {
+        GSL_ERROR ("histogram bins must have a non-zero sum to compute"
+                   "a probability distribution", GSL_EDOM);
+      }
+  }
+
   for (i = 0; i < n + 1; i++)
     {
       p->range[i] = h->range[i];
