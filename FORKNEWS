@@ -160,6 +160,9 @@ One line per change: date | tag | description | commit(s).
   2026-10-03 | [upstream] | build: install a gsl-without-cblas.pc                    | 442b7cbd2
   2026-10-03 | [fork]     | cmake: install gsl-without-cblas.pc                     | 9ad4ed051
   2026-10-03 | [rejected] | build: the Group N reports that need no code change    | - (see below)
+  2026-10-04 | [upstream] | multiroots: avoid division by zero at a root        | 8640b846e
+  2026-10-04 | [upstream] | ode: keep the final step within the interval        | dda917296
+  2026-10-04 | [rejected] | roots/ode: the Group O reports needing no code change | - (see below)
 
 
 ## [upstream] rng: make the random() generators produce the documented sequences
@@ -4049,3 +4052,119 @@ Kept for the record; each report was checked before it was set aside.
   Rejected.
 
 Savannah bugs #39165, #41457, #55965, #50382.
+
+
+## [upstream] multiroots: avoid division by zero when the initial point is a root
+
+Commit: 8640b846e
+
+Two solvers divided by a quantity that is zero at a root.
+
+`gnewton_set()` stores `phi = enorm(f)` from the fdf callback, but
+`gnewton_iterate()` asks the plain f callback for the next residual.  When
+the initial point is a root of fdf but not of f, `phi0` is zero and the
+relative step reduction computes `theta = phi1/phi0`, so the iterate
+becomes `NaN` (Savannah #42219).  The reduction is now taken only when
+`phi0 > 0.0`; the full step is then `d = 0`, which leaves the point in
+place and lets the driver's residual test finish.
+
+The hybrid methods (`hybrid`, `hybrids`, `hybridj`, `hybridsj`) take a
+zero dogleg step at a root.  `compute_wv()` then divides by the zero step
+norm to form the rank-1 Jacobian update, which poisons the QR factors with
+`NaN`; the reported symptom is a floating point exception only when traps
+are enabled, because the residual test stops the driver before the `NaN`
+can reach the result (Savannah #42220).  The iteration now returns
+`GSL_SUCCESS` as soon as the residual norm is zero, and `compute_wv()`
+leaves its update vectors at zero when the step norm is zero.
+
+Both were reproduced with the reporters' own `bug_gnewton.c` and
+`bug_hybrid.c`: without the fix gnewton returns `-nan(ind)`, and both
+programs die with `0xC0000090` under `GSL_IEEE_MODE=trap-common`.
+
+The regression tests in `multiroots/test.c` run all four hybrid solvers
+with the initial guess at the root, plus gnewton with mismatched f/fdf
+callbacks.  The invalid-operation trap is enabled while they run, since
+the hybrid failure is otherwise masked by the residual test.  With the
+fix reverted the test process is killed by the trap; with it the module
+suite is 77/77 and `ctest` is 56/56.
+
+Files: `multiroots/gnewton.c`, `multiroots/hybrid.c`,
+`multiroots/hybridj.c`, `multiroots/dogleg.c`, `multiroots/test.c`.
+
+See Savannah bugs #42219 and #42220.
+
+
+## [upstream] ode: keep the final step within the requested interval
+
+Commit: dda917296
+
+`gsl_odeiv2_evolve_apply()` clamps the last step to `h = t1 - t0` and
+then lets the stepper evaluate its final stage at `t0 + h`.  In floating
+point `t0 + (t1 - t0)` is not in general equal to `t1`; integrating
+backwards from 1 to `1e-12` gives `9.999778782798785e-13`, so the
+right-hand side was called just past the final time (Savannah #66849).
+The clamp now also treats `h == t1 - t0` as the final step, and backs `h`
+off with `nextafter` until `t0 + h` can no longer pass `t1`.
+
+That alone was not enough.  `bsimp` splits the step into sub-steps and
+builds their times by repeated `t += h`, which drifts past `t0 + h` as
+well; for the final step of the reproducer the accumulated time could
+dip below `t1` (for `N = 10`, to `9.999778782798785e-13`).
+`bsimp_step_local()` now computes each sub-step time directly from `t0`
+and `h_total`, so the last evaluation lands exactly on `t0 + h`.  The
+legacy `ode-initval` copies carry the same code and are changed with it.
+
+The regression test integrates backwards from 1 to `1e-12` with a
+right-hand side that records the range of times it is evaluated at, and
+asserts that it never goes below `t1` and that the final time equals `t1`
+exactly.  It runs for every stepper.  With the fixes reverted the new
+check fails for essentially every stepper; with them `ode-initval2` is
+1184/1184, `ode-initval` is 3542/3542 and `ctest` is 56/56.
+
+Files: `ode-initval2/evolve.c`, `ode-initval2/bsimp.c`,
+`ode-initval2/test.c`, `ode-initval/evolve.c`, `ode-initval/bsimp.c`,
+`ode-initval/test.c`.
+
+See Savannah bug #66849.
+
+
+## [rejected] roots/ode: the Group O reports needing no code change
+
+Kept for the record; each report was checked before it was set aside.
+
+* **#39713, secant "derivative value is not finite"** - already fixed
+  upstream, not by this fork.  `d50dc70e5` returns `GSL_SUCCESS` when the
+  previous function value is zero, and `eaaae349d` replaced the divided
+  difference with `df * ((f - f_new)/f)`, which cannot divide by zero.
+  The posted patches are against the pre-2013 source; `ce90a6b91` added
+  the regression vector `-pi x + e {1.5}` to `roots/test.c`.  The
+  reporter's "almost linear" program converges to `f = 2.2204e-19` on the
+  built library.  No fork change.
+
+* **#30540, convergence checks in `rk4imp`/`rk2imp`** - the patch targets
+  the legacy `ode-initval` (v1) steppers, which run three fixed iterations
+  and say so in a comment.  The secular energy drift the report describes
+  reproduces (maximum `|H - H0|` of `1.0e-6`, `2.3e-6` and `4.1e-6` over
+  successive intervals of the Henon-Heiles run at `h = 0.1`), but the
+  maintained `ode-initval2` steppers already check convergence
+  (`modnewton1_solve`, the Hairer-Wanner criterion), and the manual
+  recommends v2 over v1.  An accuracy/algorithm enhancement to a
+  superseded module, categorised "feature" in the triage; rejected under
+  the eligibility rule.
+
+* **#30947, fixed step size control object** - a request for new public
+  API (`gsl_odeiv_control_fixed_new()`) on the legacy v1 interface.  New
+  API is out of scope, and v2 already offers
+  `gsl_odeiv2_evolve_apply_fixed_step()` and
+  `gsl_odeiv2_driver_apply_fixed_step()`.  Rejected.
+
+* **#50712, lm+accel with a finite-difference fvv** - the test is disabled
+  under `#if 0` in `multifit_nlinear/test_fdf.c`.  Enabling it reproduces
+  the failure on MSVC x64: `levenberg-marquardt+accel` with the
+  finite-difference second directional derivative on the `box3d` problem
+  exceeds the iteration limit.  The report and the upstream `TODO` both
+  leave it disabled, and no small fix was found in the time-boxed
+  investigation; a proper fix is a numerical study of the `fvv` step and
+  the acceleration.  Rejected.
+
+Savannah bugs #39713, #30540, #30947 and #50712.
