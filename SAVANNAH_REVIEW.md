@@ -2510,3 +2510,125 @@ of scope.  The capability already exists in v2 as
 
 Recorded in `FORKNEWS` under `[upstream]` (two changes) and
 `[rejected]` (three reports).  Full CTest suite 56/56 on MSVC x64.
+
+
+## Group P - off-track / likely reject: #42058, #45797, #59914, #60026,
+## #65728
+
+Reviewed 2026-10-04 against the built `build-cmake/gsl.dll` (MSVC x64).
+This is the low-value tail: five reports that, on their face, ask for
+nothing that the eligibility rule admits.  The review confirms that for
+each of them, from the offline dossiers under
+`temp/savannah-store/dossiers/` and the `bug-gsl` mbox threads, and
+records the reasoning so they are not revisited.  **No code, test or
+documentation change follows from any of them.**
+
+The scope note: the user's working list named "43159-style items"
+alongside these five.  #43159 is **not a GSL bug** - it is a GNU Octave
+bug ("The Signal package (1.3.0) specgram() function is broken ..."),
+closed as a duplicate of Octave #42043, and it is absent from the GSL
+triage index and from every GSL source.  It is therefore dropped, not
+reviewed.
+
+Deferred for lack of offline text: none of these five is deferred;
+each has a dossier.  (The five GSL bugs that have no local copy at all
+remain `50712`, `51104`, `53903`, `53904` and are handled elsewhere or
+left for a later pass; `50712` was covered by Group O.)
+
+### `#42058` - GSL RSS Feed does not validate - rejected
+
+The report is that the link labelled "Savannah GSL RSS feed" on the
+GSL project page points at an ATOM feed with an XML error:
+
+    http://savannah.gnu.org/news/atom.php?group=gsl
+    line 228, column 100: XML parsing error: undefined entity
+
+The feed is generated and hosted by **Savannah** (`news/atom.php`,
+`savannah.gnu.org`); no part of it is produced by the GSL source tree.
+The reporter even offers to fix it himself.  There is no GSL defect here
+and nothing in this repository that could be changed: the fault, if it
+persists, belongs to the Savannah `news` module or to the project's use
+of an undefined HTML/XML entity in an announcement.  Savannah was
+unreachable during this review (`news/atom.php` returned a transport
+error), which is consistent with the meta/service nature of the report.
+Rejected - not a GSL defect; outside the repository.
+
+### `#45797` - "Possible problem with LAPACK Fortran routine ZGESVD" - rejected
+
+The reporter built a 4x4 complex SVD test with **LAPACK's `ZGESVD`** and
+saw the imaginary part of one left singular vector differ between two
+Ubuntu kernels (`2.6.31-16` "correct" and `2.6.32-40` "incorrect").  The
+report is explicitly about the LAPACK/ZGESVD behaviour bundled by the
+distribution, not about a GSL routine.
+
+GSL does not expose a complex SVD at all.  The public interface has only
+the real factorisations - `gsl_linalg_SV_decomp`, `SV_decomp_mod`,
+`SV_decomp_jacobi` in `linalg/gsl_linalg.h`; there is no
+`gsl_linalg_complex_SV*` and no `zgesvd`/`ZGESVD` reference anywhere in
+the sources (checked by search).  The reporter's program links LAPACK
+directly; there is no GSL code path to reproduce, and a change of LAPACK
+or kernel behaviour is not something GSL controls.
+
+Rejected - external LAPACK/distribution report; no GSL code involved.
+No reproduction is possible because the named routine does not exist
+here.  (A complex SVD would be a feature request, and one is in fact
+already filed separately as #66574/#66575.)
+
+### `#59914` - "Native build of GSL-2.5 on windows 10" - rejected
+
+The report is a *success story*, not a defect: the submitter cross-built
+GSL 2.5 DLLs on Ubuntu with MXE and offers to document the recipe on a
+git page, asking whether it would be worth linking from the GSL website.
+It carries no patch and reports no wrong result.
+
+The concrete need - a maintained native Windows build - is already met
+in this fork by the CMake build, and by the Windows CI and DLL workflow:
+`CMake.md` documents the MSVC build ("Windows with MSVC, tested with
+Visual Studio 2022 Build Tools, x64"), `.github/workflows/cmake.yml`
+runs `windows-msvc` shared and static, and
+`.github/workflows/windows-dll.yml` packages a Windows x64 build.  The
+remaining part - a link from the upstream project page to a
+community write-up - is a website/documentation matter outside this
+repository and not a bug fix or doc *correction* in the tree.
+
+Rejected - no defect and no actionable change; the Windows building path
+exists in the fork already.
+
+### `#60026` - "Incorporate MIXMAX random number extension into GSL" - rejected
+
+A request to add the MIXMAX family of PRNGs to GSL, citing its adoption
+in CLHEP/Geant4, CMS simulation and a NASA neutrino-telescope study.  The
+2025 follow-up locates a reference implementation in C++ (CLHEP
+`Random/src/MixMaxRng.cc`, GPLv3) and notes it would need translating to
+C; a further reply asks for TestU01/PractRand evidence and states none of
+the MIXMAX variants are in the reviewer's own Dieharder quality table.
+
+This is a **feature request: a new algorithm and a new public generator
+API**, which the eligibility rule excludes outright.  No defect in the
+existing generators is alleged.  (The neighbouring PCG request, #55965,
+was rejected on the same ground in Group N.)  Rejected - new algorithm
+and API, out of scope.
+
+### `#65728` - "Add sparse functionalities" - rejected
+
+A feature request forwarded by the maintainer, asking for complex sparse
+support: scaling a complex sparse matrix by a *real* vector, complex
+sparse matrix-vector multiplication, in-place unpacking of a complex
+vector, resize operations on blocks/vectors, and an accumulating variant
+of `_set()` that does `*ptr += x` rather than replacing.
+
+Moderate parts of this already exist, which sharpens the verdict: the
+complex sparse type has `gsl_spmatrix_complex_scale`,
+`_scale_columns`, `_scale_rows`, `_memcpy`, `_dense_add`/`_dense_sub`
+and `add_to_dense`, and the complex block/vector types have
+`alloc`/`calloc`.  What does **not** exist is a complex sparse
+matrix-vector product (sparse BLAS offers only the real
+`gsl_spblas_dgemv`) and a `resize`, and the accumulating `_set()` is a
+new function ("copy the entire code to a new name").  Every one of these
+is **new API or new algorithm**, excluded by the eligibility rule; the
+request itself is phrased as a feature ("could be added", "could it be
+possible").  Rejected - feature request, out of scope.
+
+Recorded in `FORKNEWS` under `[rejected]` (one combined entry).
+No code change, so the full CTest suite is unchanged at 56/56 on MSVC
+x64.
