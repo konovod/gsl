@@ -240,3 +240,78 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 68625 | 2026-08-21 | bug | Accuracy problem | none | **fixed** — hermite_func_der at n=0,1 (5d36e1999) | Bug: incorrect derivative of the Hermite function of order 0 or 1 |
 | 68663 | 2026-08-31 | feature | - | none | rejected - pure refactor (one-line alias for gsl_sf_expint_E1_e); no correctness case | Feature: remove GAMM_INC macro in favor of direct call |
 | 68704 | 2026-09-18 | feature | - | none | rejected - new API; proposed rename of gsl_histogram_sigma is a breaking change | Feature: introduce variance of a histogram gsl_histogram_variance |
+
+
+## Future work backlog
+
+The first stage is complete: every open item is classified.  The 50 items
+below were **rejected or deferred under the eligibility rule that admitted
+only bug fixes, documentation corrections and test-quality improvements** -
+they are not defects, and most are wanted work nonetheless.  They are kept
+here so the filter can be widened later and items removed one by one as they
+are taken.  Nothing here is a fork commitment.
+
+`kind`: `feat` = new feature/API, `perf` = performance only, `test` =
+test-quality request, `doc` = documentation matter.  `patch`: `clean`/
+`partial`/`source` if an attachment was collected by the sweep, `-` if none;
+`inline` if the text is in the bug thread only.
+
+| # | kind | patch | what it would add |
+|---|---|---|---|
+| 24252 | feat | source | gamma-tail distribution |
+| 24871 | feat | - | exponential integrals E_n |
+| 59900 | feat | inline | truncated normal distribution |
+| 66816 | feat | source | Nakagami random distribution |
+| 66949 | feat | source | Erlang cumulative distribution |
+| 66767 | feat | source | inverse binomial distribution |
+| 66775 | feat | source | inverse Poisson distribution |
+| 57173 | feat | - | zeta function for complex arguments |
+| 68367 | feat | source | inverse Jacobi elliptic integrals |
+| 66573 | feat | clean | `gsl_vector_complex_conjugate()` |
+| 60457 | feat | clean | complex tridiagonal solvers (also #65932) |
+| 66574 | feat | clean | complex SVD/QR suite (Householder, Givens, bidiag) |
+| 66575 | feat | clean | extension of the complex SVD |
+| 66695 | feat | clean | Feagin and Verner high-order ODE solvers |
+| 32257 | feat | - | integration routines imported from quadrule |
+| 66834 | feat | clean | `gamma_inc(0,0)` handling |
+| 66842 | feat | clean | exponential integrals at the origin |
+| 66850 | feat | clean | 2F1 parameter-shift special cases |
+| 66922 | feat | clean | `logsin` special case |
+| 67359 | feat | clean | `gsl_sf_hyperg_2F0` special case |
+| 66800 | feat | partial | `negative_binomial_pdf` at p = 1 |
+| 67774 | feat | - | arctan integral extended to negative inputs |
+| 68098 | feat | - | correlation division-by-zero handling |
+| 41527 | feat | - | multimin functions return error codes |
+| 45782 | feat | - | configurable derivative epsilon |
+| 63519 | feat | - | `gsl_root_fsolver_set` variant returning `GSL_EINVAL` without the handler (per-call `_with_values`, #66576) |
+| 66576 | feat | clean | `gsl_root_fsolver_set_with_values()` |
+| 30947 | feat | clean | fixed step-size control object for the v1 ODE suite (exists in v2) |
+| 55965 | feat | - | PCG random number generator |
+| 60026 | feat | - | MIXMAX random number extension |
+| 65728 | feat | - | complex sparse matrix-vector product, resize, accumulating `_set` |
+| 68549 | feat | - | uniform argument lists across the distribution functions (breaking) |
+| 47402 | feat | - | Mathieu functions - library/test redesign |
+| 30540 | feat | partial | convergence checks in the v1 `rk4imp`/`rk2imp` (done in v2) |
+| 46677 | feat | - | port the Wigner d-matrix (`gsl_sf_wigner_drot`) from `contrib/` |
+| 65932 | feat | - | see #60457 (complex tridiagonal solvers) |
+| 30324 | feat | - | extend 2F1 to `x < -1` by transformation |
+| 21828 | perf | - | `gsl_fdfsolver_lmsder` - close the gap to netlib minpack |
+| 21833 | perf | - | `gsl_permutation_next` |
+| 51104 | perf | - | `gsl_permutation_next` (reporter's benchmark + proposal) |
+| 31109 | perf | - | `ode-initval/bsimp` order control |
+| 40092 | perf | source | false-position root finding without excess evaluations |
+| 54925 | perf | clean | reduce cache misses in `source_gemm_r` |
+| 66826 | test | - | test cases for `hyperg_1F1` |
+| 66844 | test | - | test cases for the dilogarithm |
+| 66877 | test | - | test cases for `hyperg_0F1` |
+| 66880 | test | clean | test cases for `hyperg_0F1` (U variant) |
+| 64549 | test | clean | interpolation test cases (leaks/dupes as posted; one clean test better) |
+| 66742 | doc | clean | GAMS classification across 177 files |
+| 66886 | doc | clean | refactor of `specfunc/trig.c` |
+
+Already superseded by fork work, so **not** carried in the backlog:
+`66874` (bst documentation - the fork documents the module in `20eda0316`)
+and `68663` (the `GAMMA_INC_A_0` macro removal is a one-line alias, no value).
+
+The remaining 169 classified items are fixes, corrections, or rejections
+that need no future action; see the main table above and `FORKNEWS`.
