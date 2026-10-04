@@ -2533,9 +2533,9 @@ triage index and from every GSL source.  It is therefore dropped, not
 reviewed.
 
 Deferred for lack of offline text: none of these five is deferred;
-each has a dossier.  (The five GSL bugs that have no local copy at all
-remain `50712`, `51104`, `53903`, `53904` and are handled elsewhere or
-left for a later pass; `50712` was covered by Group O.)
+each has a dossier.  (The four GSL bugs that were once thought to have
+no local copy at all are now all covered: `50712` by Group O, and
+`51104`, `53903` and `53904` by Group Q below.)
 
 ### `#42058` - GSL RSS Feed does not validate - rejected
 
@@ -2634,3 +2634,80 @@ possible").  Rejected - feature request, out of scope.
 Recorded in `FORKNEWS` under `[rejected]` (one combined entry).
 No code change, so the full CTest suite is unchanged at 56/56 on MSVC
 x64.
+
+
+## Group Q - the last open items: #51104, #53903, #53904
+
+Reviewed 2026-10-04 against the built `build-cmake/gsl.dll` (MSVC x64).
+These three were the last open reports without a recorded verdict; each
+has an offline dossier under `temp/savannah-store/dossiers/`, so the
+lack of a local copy that had deferred them no longer applies.  All
+three are rejected; **no code, test or documentation change follows**.
+Recorded in `FORKNEWS` as one combined `[rejected]` entry.
+
+### `#51104` - gsl_permutation_next efficiency - rejected
+
+The report (2017, Performance) offers a more literal translation of
+Knuth's Algorithm L (AoCP volume 4, page 319) and reports a speed-up,
+linking a gist; the single follow-up adds that the second comparison in
+the selection loop, `(p->data[j] > p->data[i]) && (p->data[j] <
+p->data[k])`, is redundant because the loop that finds `i` already
+establishes `p->data[j] < p->data[k]`.
+
+No defect is alleged and the current implementation is correct;
+`permutation/test.c` walks the full lexicographic order and passes.  The
+proposal is a performance-only change, which the eligibility rule
+excludes outright; the cache-miss loop reorder #54925 was rejected on
+the same ground.  Rejected - performance-only, out of scope.
+
+### `#53903` - Test failure with gsl_sf_synchrotron_1_e on x86 - rejected
+
+The report (2018, Runtime error) is that `gsl_sf_synchrotron_1_e(0.01)`
+fails its test on an i386 build configured for Pentium MMX
+(`-march=pentium-mmx -mtune=pentium-m`, musl libc 1.1.19, gcc 6.4):
+
+    expected: 4.4497250411421063e-01
+    obtained: -1.8137993642342178e-02 +/- 1.2082330897339797e-17   (rel=6.66e-16)
+
+The reported numbers pin the fault to the toolchain rather than to GSL.
+`-1.8137993642342178e-02` is exactly `-c0*x` with `c0 = M_PI/M_SQRT3`
+and `x = 0.01`, and the reported error `1.2082330897339797e-17` is
+exactly `3*eps*c0*x`.  In `synchrotron.c` the value for `x = 0.01` comes
+from the `x <= 4` branch,
+
+    result->val  = px * c1.val - px11 * c2.val - c0 * x;
+
+with `px = pow(x, 1.0/3.0)` and `px11 = px^11`.  The reported value and
+error are what this branch produces only when `px` is zero, which drops
+both Chebyshev terms and leaves the error as
+`c0*x*eps + 2*eps*|val| = 3*eps*c0*x`.  The Chebyshev coefficients
+themselves are correct: evaluated independently (Python, with the exact
+coefficients from `synchrotron1_cs`/`synchrotron2_cs`) the branch gives
+`0.4449725041...`, matching the test's expected value, and the specfunc
+suite passes on MSVC x64 (`specfunc_test.exe`, exit 0).
+
+So a 32-bit x87 target's libm `pow` returned zero for
+`pow(0.01, 1.0/3.0)`; the same class of toolchain fault as the MinGW
+`sin`/`cos` argument reduction already recorded under Group H.  There is
+no 32-bit x87 host here to reproduce on, and correct code is not changed
+for an unreproducible libm fault.  Rejected - toolchain, not a GSL bug.
+
+### `#53904` - Bug gsl_matrix_complex_set - rejected
+
+The report (2018) is that passing `gsl_complex_rect(1., 0.)` directly to
+`gsl_matrix_complex_set(m, 1, 1, ...)` corrupts the matrix, while
+assigning it to a `gsl_complex` variable first works.  The program
+allocates the 4x4 complex matrix with `gsl_matrix_complex_alloc` (which
+does not zero it), sets only element `[1][1]` - inside a 16-iteration
+loop - and runs `gsl_eigen_herm` on it, printing neither the matrix nor
+the eigenvalues; the "wrong data array" it prints is the program's own
+input array.
+
+The two forms are equivalent C.  `gsl_complex_rect` is an `INLINE_FUN`
+returning a `gsl_complex` by value, and `gsl_matrix_complex_set` takes
+its last argument by value as well, so storing the result in a
+`gsl_complex` first changes nothing.  The difference the reporter saw is
+the uninitialized remainder of the matrix making the eigenvalues
+garbage.  Rejected - not a bug.
+
+Savannah bugs #51104, #53903 and #53904.

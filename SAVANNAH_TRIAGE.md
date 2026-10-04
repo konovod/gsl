@@ -5,17 +5,17 @@ Generated 2026-10-02 from the `scripts/savannah_bugs.py` sweep (`inventory.tsv`)
 Scratch index, not part of the fork's record of changes. Verdicts are curated from
 `FORKNEWS`, `SAVANNAH_REVIEW.md` and the git history; every other row is un-triaged.
 
-**219 open items: 168 reviewed/handled, 51 remaining.**
+**219 open items: 171 reviewed/handled, 48 remaining.**
 
 | status | count |
 |---|---:|
 | fixed | 100 |
 | partial | 5 |
-| rejected | 58 |
+| rejected | 61 |
 | deferred | 4 |
 | superseded | 1 |
 | not reviewed (feature-shaped) | 17 |
-| not reviewed | 34 |
+| not reviewed | 31 |
 
 Legend for the *Patch* column: the sweep's `git apply` verdict (`clean` / `partial` / `dirty`), `source` for a whole
 replacement file, `inline` for a patch pasted into the bug text, `none` for no patch.
@@ -121,7 +121,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 50712 | 2017-04-03 | bug | - | none | rejected — reproduces on MSVC x64 (lmaccel + finite-difference fvv on box3d); test is disabled upstream and no small fix found | Test failure for lm+accel and fdfvv |
 | 50734 | 2017-04-05 | - | Performance | clean 0001-initialize-newton-steffenson-solvers-with-GSL_FN_FDF.patch | **fixed** — same fix as #49465 (4eac6584f) | initialize newton, steffenson solvers with GSL_FN_FDF_EVAL_F_DF |
 | 51000 | 2017-05-11 | bug | Accuracy problem | none | **fixed** — airy_deriv at huge arguments (ac5f72d98) | Incorrect results of gsl_airy_deriv function |
-| 51104 | 2017-05-24 | - | Performance | none | not reviewed | gsl_permutation_next efficiency |
+| 51104 | 2017-05-24 | - | Performance | none | rejected — performance-only Algorithm L proposal; out of scope (cf. #54925) | gsl_permutation_next efficiency |
 | 52127 | 2017-09-27 | - | Accuracy problem | source nonsymm.c | rejected — 32 vs 64-bit eigen; x64 gives the documented answer | Difference between 32- vs. 64-bit versions of gsl_eigen_nonsymm |
 | 52321 | 2017-11-01 | bug | Runtime error | clean bidiag.c.patch | rejected — patch breaks working bidiag_unpack2 | gsl_linalg_bidiag_unpack2 functioan has wrong householder transform call for V in GSL1.8 |
 | 52322 | 2017-11-01 | - | Runtime error | none | rejected — 32 vs 64-bit multifit; passes on x64 | gsl_multifit_linear's output differs on 32 bit vs 64 bit linux |
@@ -131,8 +131,8 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 52927 | 2018-01-18 | bug | Runtime error | none | rejected — not reproducible; j2 large-x tests disabled under #45730 | make check fails on Bessel j2 test |
 | 53451 | 2018-03-24 | bug | - | none | **fixed** — Cauchy principal value for elliptic Pi/RJ (2673ce0d8) | gsl_sf_ellint_Pcomp( k, n, mode ) returns NaN if mode < -1 |
 | 53876 | 2018-05-11 | - | Accuracy problem | none | **fixed** — missing x^(1-c) factor in the 2F1 renorm functions (46b7c412e) | gsl_sf_hyperg_2F1_renorm missing factor |
-| 53903 | 2018-05-14 | bug | Runtime error | none | not reviewed | Test failure with gsl_sf_synchrotron_1_e on x86 |
-| 53904 | 2018-05-14 | bug | - | none | not reviewed | Bug gsl_matrix_complex_set |
+| 53903 | 2018-05-14 | bug | Runtime error | none | rejected — 32-bit x87 musl `pow` returns 0; the reported value/error are exactly the terms that survive | Test failure with gsl_sf_synchrotron_1_e on x86 |
+| 53904 | 2018-05-14 | bug | - | none | rejected — not a bug: uninitialized matrix; direct-call and variable forms of `gsl_complex_rect` are equivalent | Bug gsl_matrix_complex_set |
 | 53905 | 2018-05-14 | bug | - | none | **fixed** — terminating 2F1 for a non-positive-integer order (2aa89bae8) | Bug in Hypergeometric function |
 | 53919 | 2018-05-16 | - | Runtime error | clean v2-erf.diff +1 | **fixed** — erfc/log_erfc overflow rewritten (708791c25) | handle large values correctly in (log_)erf(c) functions |
 | 54077 | 2018-06-07 | - | Runtime error | clean 0001-replace-atol-by-strtoul-in-gsl-randist.c.patch | **fixed** — gsl-randist seed via strtoul (aebe57a5c) | usage of atol in gsl-randistdoes not allow to pass big seed |
