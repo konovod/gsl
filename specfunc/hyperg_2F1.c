@@ -732,8 +732,47 @@ gsl_sf_hyperg_2F1_e(double a, double b, const double c,
     }
   }
 
-  if(fabs(c-b) < locEPS || fabs(c-a) < locEPS) {
-    return pow_omx(x, d, result);  /* (1-x)^(c-a-b) */
+  /* Contiguous relations for the shifts c = a-1 and c = b-1.  Solving
+     DLMF 15.5.17
+       (a-1+(b+1-c)z) F(a,b;c;z) + (c-a) F(a-1,b;c;z)
+         - (c-1)(1-z) F(a,b;c-1;z) = 0
+     for F(a,b;c-1), then setting c = a and using F(a,b;a;z) = (1-z)^-b,
+     gives the closed forms
+
+       2F1(a, b, a-1, x) = (a-1 + (b+1-a) x) / ((a-1) (1-x)^(b+1))
+       2F1(a, b, b-1, x) = (b-1 + (a+1-b) x) / ((b-1) (1-x)^(a+1))
+
+     valid for all |x| < 1.  The previous code reached these through the
+     general path, where d = c-a-b+1 = 0 made the reflection formula fail
+     and returned a spurious 0 (or GSL_EUNIMPL) for c < 0.  The a = 0 and
+     b = 0 cases were handled above.  See Savannah bug #66850. */
+  if(fabs(c-(a-1.0)) < locEPS) {
+    gsl_sf_result p;
+    gsl_sf_result val;
+    const double num = (a-1.0) + (b+1.0-a)*x;
+    int stat_p = pow_omx(x, b+1.0, &p);
+    val.val = num / ((a-1.0) * p.val);
+    val.err = fabs(val.val) * (p.err / fabs(p.val));
+    val.err += 2.0 * GSL_DBL_EPSILON * fabs(val.val);
+    result->val = val.val;
+    result->err = val.err;
+    return stat_p;
+  }
+  if(fabs(c-(b-1.0)) < locEPS) {
+    gsl_sf_result p;
+    gsl_sf_result val;
+    const double num = (b-1.0) + (a+1.0-b)*x;
+    int stat_p = pow_omx(x, a+1.0, &p);
+    val.val = num / ((b-1.0) * p.val);
+    val.err = fabs(val.val) * (p.err / fabs(p.val));
+    val.err += 2.0 * GSL_DBL_EPSILON * fabs(val.val);
+    result->val = val.val;
+    result->err = val.err;
+    return stat_p;
+  }
+
+  if(fabs(c-a) < locEPS) {
+    return pow_omx(x, d, result);  /* 2F1(a,b,a,x) = (1-x)^(c-a-b) */
   }
 
   if(a >= 0.0 && b >= 0.0 && c >=0.0 && x >= 0.0 && x < 0.995) {

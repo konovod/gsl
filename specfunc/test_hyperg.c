@@ -966,6 +966,27 @@ TEST_SF(s, gsl_sf_hyperg_U_e, (2, -6.4, 1, &r),1.2141502795806162484648638e-02
 
   TEST_SF(s, gsl_sf_hyperg_2F1_e, (3.23191, -4.0229, 8.02291, 0.5, &r), 0.4300243900348170646, TEST_TOL2, GSL_SUCCESS);
 
+  /* Contiguous relations at c = a-1 and c = b-1 (Savannah bug #66850).
+     For c < 0 the general path used to return a spurious 0.  Expected
+     values from mpmath at 30 digits. */
+
+  TEST_SF(s, gsl_sf_hyperg_2F1_e, (0.7884373207329337, 20.771197426743935, -0.21156267926706629, 0.12026141496562293, &r),
+          -177.83169897968787, TEST_TOL1, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_2F1_e, (22.5005, 0.805493, -0.19450699999999999, 0.375739, &r),
+          -2759669.407956948, TEST_TOL1, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_2F1_e, (0.5, 3.0, -0.5, 0.25, &r),
+          -2.3703703703703702, TEST_TOL1, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_2F1_e, (2.5, 5.0, 1.5, 0.5, &r),
+          138.66666666666666, TEST_TOL1, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_2F1_e, (2.5, 5.0, 4.0, 0.5, &r),
+          9.1923881554251174, TEST_TOL1, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_2F1_e, (3.0, 7.0, 2.0, -0.5, &r),
+          -0.0097546105776558454, TEST_TOL1, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_2F1_e, (3.0, 7.0, 6.0, -0.5, &r),
+          0.24691358024691357, TEST_TOL1, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_2F1_e, (0.5, 3.0, 2.0, 0.25, &r),
+          1.2509255832441892, TEST_TOL1, GSL_SUCCESS);
+
   /* 2F1 conj */
 
   TEST_SF(s, gsl_sf_hyperg_2F1_conj_e, (1, 1, 1, 0.5, &r), 3.352857095662929028, TEST_TOL0, GSL_SUCCESS);
@@ -982,6 +1003,14 @@ TEST_SF(s, gsl_sf_hyperg_U_e, (2, -6.4, 1, &r),1.2141502795806162484648638e-02
   TEST_SF(s, gsl_sf_hyperg_2F0_e, (1,   1, -0.02, &r), .98075549650574351826538049000    , TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_hyperg_2F0_e, (8,   8, -0.02, &r), .32990592849626965538692141   , TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_hyperg_2F0_e, (50, 50, -0.02, &r), .2688995263772964415245902e-12 , TEST_TOL0, GSL_SUCCESS);
+
+  /* 2F0(a,b,0) = 2F0(0,b,x) = 2F0(a,0,x) = 1 (Savannah bug #67359).
+     The high-order cases used to return NaN through U(a,1+a-b,-1/x). */
+  TEST_SF(s, gsl_sf_hyperg_2F0_e, (0.0,  1.0, -0.02, &r), 1.0, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_2F0_e, (10.0, 0.0, -0.2,  &r), 1.0, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_2F0_e, (0.0,  0.0,  0.0,  &r), 1.0, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_2F0_e, (200.0, 0.0, -0.001, &r), 1.0, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_2F0_e, (0.0, 100.0, -0.01, &r), 1.0, TEST_TOL0, GSL_SUCCESS);
 
 
   /* 2F1 renorm */
