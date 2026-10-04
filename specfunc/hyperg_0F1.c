@@ -151,8 +151,9 @@ gsl_sf_hyperg_0F1_e(double c, double x, gsl_sf_result * result)
     }
   }
   else if(x == 0.0) {
+    /* 0F1(c,0) = 1 exactly, for every admissible c. */
     result->val = 1.0;
-    result->err = 1.0;
+    result->err = 0.0;
     return GSL_SUCCESS;
   }
   else {

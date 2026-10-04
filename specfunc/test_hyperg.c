@@ -50,6 +50,14 @@ int test_hyperg(void)
   TEST_SF(s, gsl_sf_hyperg_0F1_e, (1.7441963804403448e-174, 3.1209425769889232e-140, &r),
           1.7893298094111404306e+34, TEST_TOL2, GSL_SUCCESS);
 
+  /* 0F1(c,0) is exactly 1, so the reported error must be zero
+     (Savannah bug #66877). */
+  {
+    gsl_sf_result r0;
+    gsl_sf_hyperg_0F1_e(-0.5, 0.0, &r0);
+    gsl_test(r0.err != 0.0, "gsl_sf_hyperg_0F1_e reported error at x = 0");
+  }
+
 
   /* 1F1 for integer parameters */
 
