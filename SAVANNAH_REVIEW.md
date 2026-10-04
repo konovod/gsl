@@ -2800,3 +2800,46 @@ Method notes:
 
 Savannah bugs #40116, #42830, #45099, #47348, #68068, #68398, #68611,
 #68663 and #68704.
+
+
+## Group U - the remaining feature/perf/API requests: closed as rejected
+
+Reviewed 2026-10-04 from the offline dossiers under
+`temp/savannah-store/dossiers/` and the `bug-gsl` mbox threads.  This is
+the tail the eligibility rule does not admit, recorded in one place so
+the index has no un-triaged item left.  **No code, test or documentation
+change follows from any of them.**  The detail is in `FORKNEWS` under
+"meta: the remaining feature, performance and API requests"; the groups
+below are the shape of the request, not a per-bug essay.
+
+* New distributions/generators (new public API): `#24252`, `#24871`,
+  `#59900`, `#66767`, `#66775`, `#66816`, `#66949`.
+* New algorithms/solvers: `#32257`, `#66573`, `#66695`, `#57173`,
+  `#68367`.
+* New special cases or API extensions: `#41527`, `#45782`, `#66800`,
+  `#66834`, `#66842`, `#66850`, `#66922`, `#67359`, `#67774`, `#68098`.
+* Breaking/behaviour change: `#68549`.
+* Documentation/test/refactor with no patch, or a reorganisation:
+  `#66742`, `#66826`, `#66844`, `#66874`, `#66877`, `#66880`, `#66886`.
+* Performance-only (changes the floating-point result, no wrong value
+  alleged): `#21828`, `#21833`, `#31109`, `#40092`, `#51104`.
+* Not a defect: `#47402` (Mathieu design discussion).
+
+Two of these deserve a note:
+
+* `#66874` is **superseded**: the binary search tree module is already
+  documented in the fork (`20eda0316`), so the posted `doc_bst.rst` is
+  not needed.
+* `#66742` (GAMS classification) is a 177-file documentation sweep, not
+  a correction of anything wrong, so it is a feature, not a doc fix.
+
+Still under review after this entry: the four genuine numerical reports
+`#21831` (Levy skew for alpha < 1), `#25320` (Fresnel extension),
+`#29834` (BLAS wrapper argument checking) and `#34361`
+(`bspline_knots_greville` constrained least squares).
+
+Savannah bugs #21828, #21833, #24252, #24871, #31109, #32257, #40092,
+#41527, #45782, #47402, #51104, #57173, #59900, #66573, #66695, #66742,
+#66767, #66775, #66800, #66816, #66826, #66834, #66842, #66844, #66850,
+#66874, #66877, #66880, #66886, #66922, #66949, #67359, #67774, #68098,
+#68367 and #68549.
