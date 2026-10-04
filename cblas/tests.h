@@ -34,6 +34,7 @@ void test_spr2 (void);
 void test_her2 (void);
 void test_hpr2 (void);
 void test_gemm (void);
+void test_gemm_loops (void);
 void test_symm (void);
 void test_hemm (void);
 void test_syrk (void);

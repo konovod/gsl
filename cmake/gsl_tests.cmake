@@ -22,6 +22,7 @@ gsl_add_test(cblas test
     cblas/test_dot.c
     cblas/test_gbmv.c
     cblas/test_gemm.c
+    cblas/test_gemm_loops.c
     cblas/test_gemv.c
     cblas/test_ger.c
     cblas/test_hbmv.c

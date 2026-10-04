@@ -34,6 +34,7 @@
   test_her2 ();
   test_hpr2 ();
   test_gemm ();
+  test_gemm_loops ();
   test_symm ();
   test_hemm ();
   test_syrk ();

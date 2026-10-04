@@ -71,8 +71,8 @@
 
     /* form  C := alpha*A*B + C */
 
-    for (k = 0; k < K; k++) {
-      for (i = 0; i < n1; i++) {
+    for (i = 0; i < n1; i++) {
+      for (k = 0; k < K; k++) {
         const BASE temp = alpha * F[ldf * i + k];
         if (temp != 0.0) {
           for (j = 0; j < n2; j++) {
@@ -86,8 +86,8 @@
 
     /* form  C := alpha*A*B' + C */
 
-    for (i = 0; i < n1; i++) {
-      for (j = 0; j < n2; j++) {
+    for (j = 0; j < n2; j++) {
+      for (i = 0; i < n1; i++) {
         BASE temp = 0.0;
         for (k = 0; k < K; k++) {
           temp += F[ldf * i + k] * G[ldg * j + k];
@@ -98,8 +98,8 @@
 
   } else if (TransF == CblasTrans && TransG == CblasNoTrans) {
 
-    for (k = 0; k < K; k++) {
-      for (i = 0; i < n1; i++) {
+    for (i = 0; i < n1; i++) {
+      for (k = 0; k < K; k++) {
         const BASE temp = alpha * F[ldf * k + i];
         if (temp != 0.0) {
           for (j = 0; j < n2; j++) {
@@ -111,8 +111,8 @@
 
   } else if (TransF == CblasTrans && TransG == CblasTrans) {
 
-    for (i = 0; i < n1; i++) {
-      for (j = 0; j < n2; j++) {
+    for (j = 0; j < n2; j++) {
+      for (i = 0; i < n1; i++) {
         BASE temp = 0.0;
         for (k = 0; k < K; k++) {
           temp += F[ldf * k + i] * G[ldg * j + k];
