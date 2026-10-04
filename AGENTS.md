@@ -110,6 +110,15 @@ documentation correction, or test-quality improvement**. Feature requests,
 new API, new algorithms and performance-only changes are out of scope and
 are deferred, however cleanly they apply. When in doubt, do not take it.
 
+A performance-only candidate is admissible as a narrow exception when it
+is **result-preserving** (the built library returns bit-identical values
+for the affected API, demonstrated by a test or by a proof that the
+operation order is unchanged) or **removes provably redundant work without
+an interface change**, and adds no public API. A performance change that
+alters the floating-point result, or that needs the caller's tolerance
+passed into an internal routine, remains out of scope. Put the neutrality
+argument in the `FORKNEWS` entry.
+
 **Review method** (this is the hard-won part — follow it):
 
 1. Reproduce the reported behaviour with the built library before changing

@@ -9,9 +9,9 @@ Scratch index, not part of the fork's record of changes. Verdicts are curated fr
 
 | status | count |
 |---|---:|
-| fixed | 107 |
+| fixed | 111 |
 | partial | 5 |
-| rejected | 102 |
+| rejected | 98 |
 | deferred | 4 |
 | superseded | 1 |
 | not reviewed | 0 |
@@ -23,7 +23,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 |---|---|---|---|---|---|---|
 | 21828 | 2007-12-18 | - | Performance | none | rejected — performance-only; netlib minpack comparison, no defect | suboptimal performance of gsl_fdfsolver_lmsder |
 | 21831 | 2007-12-18 | - | Accuracy problem | source levy.c | **rejected** — not a bug: the CMS transform is exact for alpha < 1 (characteristic-function check); `beta = 0` delegates to `gsl_ran_levy` | Levý random number generator for alpha < 1 |
-| 21833 | 2007-12-18 | - | Performance | none | rejected — performance-only; no defect in permutation_next | suboptimal performance of gsl permutation? |
+| 21833 | 2007-12-18 | - | Performance | none | **fixed** — the selection loop scans backward from the suffix (c382ed86e); the alleged quadratic behaviour is amortised O(1) per permutation and the 8! walk in `permutation/test.c` covers it | suboptimal performance of gsl permutation? |
 | 21835 | 2007-12-18 | - | Accuracy problem | clean test_hyperg.diff +1 | **partial** — non-positive-integer termination for x >= 1 fixed (2aa89bae8); c = a+b near x = 1 still returns GSL_EMAXITER | gsl_sf_hyperg_2F1 problematic arguments |
 | 21836 | 2007-12-18 | - | Accuracy problem | none | **fixed** — Q returns exact complement of P in the series window (6f23a4cb5) | gamma_inc_P and gamma_inc_Q only satisfy P+Q=1 within errors |
 | 21837 | 2007-12-18 | - | Runtime error | none | rejected — permutation for a zero diagonal is a new algorithm; docs corrected (9418afa5f) | gsl_linalg_solve_symm_tridiag requires positive definite matrix |
@@ -63,7 +63,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 39372 | 2013-06-30 | bug | Runtime error | none | **fixed** — gsl_hypot3 returns +Inf for any infinite argument (c1df353ae) | add check for inf/nan in gsl_hypot3 |
 | 39473 | 2013-07-12 | - | Performance | clean coupling3j.patch | **fixed** — 3j symbol by edge recursion (1b2c8ff98) | more efficient algorithm for 3j,6j,9j calculations (gsl_sf_coupling_{3j,6j,9j}_e |
 | 39713 | 2013-08-07 | - | Runtime error | source gsl-secant.c +3 | **fixed** — inherited upstream d50dc70e5/eaaae349d; test vector added by ce90a6b91; posted patches are pre-2013 | roots/secant.c "derivative value is not finite" for a good guess |
-| 40092 | 2013-09-23 | - | Performance | source gsl-falsepos64.c | rejected — performance-only; more evals than a better algorithm, no defect | false position root finding requires too many function evals |
+| 40092 | 2013-09-23 | - | Performance | source gsl-falsepos64.c | **fixed** — skip the redundant linear-interpolation evaluation when it lands on an endpoint (0697ba772); the report's 64-bit function drops from 98 to 52 evaluations | false position root finding requires too many function evals |
 | 40116 | 2013-09-26 | bug | Runtime error | none | rejected - faithful QUADPACK port; `large_interval`/`increase_nrmax` map to `go to 90`, no failing case | possible error in integration routines |
 | 40176 | 2013-10-04 | bug | Runtime error | none | rejected — already fixed upstream (9cc12d037, 0466df866); duplicate of #39055 | possible error in poly test suite |
 | 40196 | 2013-10-07 | - | Documentation | none | **fixed** — the out-of-range key coercion (< 1 -> GAUSS15, > 6 -> GAUSS61) documented (6feb963d3) | Document gsl_integration_qag behavior on key out-of-range |
@@ -120,7 +120,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 50712 | 2017-04-03 | bug | - | none | rejected — reproduces on MSVC x64 (lmaccel + finite-difference fvv on box3d); test is disabled upstream and no small fix found | Test failure for lm+accel and fdfvv |
 | 50734 | 2017-04-05 | - | Performance | clean 0001-initialize-newton-steffenson-solvers-with-GSL_FN_FDF.patch | **fixed** — same fix as #49465 (4eac6584f) | initialize newton, steffenson solvers with GSL_FN_FDF_EVAL_F_DF |
 | 51000 | 2017-05-11 | bug | Accuracy problem | none | **fixed** — airy_deriv at huge arguments (ac5f72d98) | Incorrect results of gsl_airy_deriv function |
-| 51104 | 2017-05-24 | - | Performance | none | rejected — performance-only Algorithm L proposal; out of scope (cf. #54925) | gsl_permutation_next efficiency |
+| 51104 | 2017-05-24 | - | Performance | none | **fixed** — the Algorithm L selection loop scans backward from the suffix (c382ed86e) | gsl_permutation_next efficiency |
 | 52127 | 2017-09-27 | - | Accuracy problem | source nonsymm.c | rejected — 32 vs 64-bit eigen; x64 gives the documented answer | Difference between 32- vs. 64-bit versions of gsl_eigen_nonsymm |
 | 52321 | 2017-11-01 | bug | Runtime error | clean bidiag.c.patch | rejected — patch breaks working bidiag_unpack2 | gsl_linalg_bidiag_unpack2 functioan has wrong householder transform call for V in GSL1.8 |
 | 52322 | 2017-11-01 | - | Runtime error | none | rejected — 32 vs 64-bit multifit; passes on x64 | gsl_multifit_linear's output differs on 32 bit vs 64 bit linux |
@@ -136,7 +136,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 53919 | 2018-05-16 | - | Runtime error | clean v2-erf.diff +1 | **fixed** — erfc/log_erfc overflow rewritten (708791c25) | handle large values correctly in (log_)erf(c) functions |
 | 54077 | 2018-06-07 | - | Runtime error | clean 0001-replace-atol-by-strtoul-in-gsl-randist.c.patch | **fixed** — gsl-randist seed via strtoul (aebe57a5c) | usage of atol in gsl-randistdoes not allow to pass big seed |
 | 54919 | 2018-10-30 | bug | Build | none | rejected — icc-only; modules pass on MSVC and gcc | gsl 2.5+ test fails with icc (2016.4 and later) |
-| 54925 | 2018-10-31 | - | Performance | clean 0001-Reduce-cache-misses-for-source_gemm_r.patch | rejected — out-of-scope: performance-only loop reorder | Reduce cache misses for source_gemm_r |
+| 54925 | 2018-10-31 | - | Performance | clean 0001-Reduce-cache-misses-for-source_gemm_r.patch | **fixed** — loops reordered so a row of C stays resident (39cde03e2); numerically neutral | Reduce cache misses for source_gemm_r |
 | 54998 | 2018-11-10 | - | Accuracy problem | none | **fixed** — same 2F1 integer-d fix (e4c4ac326, 882c8361d) | Bugs in gsl_sf_hyperg_2F1 |
 | 55687 | 2019-02-10 | bug | - | none | **fixed** — NaN propagates; the `b = NaN` recursion crashed (99a73dd36) | Bad error handling in gsl_sf_hyperg_1F1_e with NaN arguments |
 | 55965 | 2019-03-20 | feature | - | none | rejected — feature: PCG is a new algorithm and API, out of scope | Implement PCG random number generator |
@@ -244,12 +244,18 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 
 ## Future work backlog
 
-The first stage is complete: every open item is classified.  The 50 items
+The first stage is complete: every open item is classified.  The 46 items
 below were **rejected or deferred under the eligibility rule that admitted
 only bug fixes, documentation corrections and test-quality improvements** -
 they are not defects, and most are wanted work nonetheless.  They are kept
 here so the filter can be widened later and items removed one by one as they
 are taken.  Nothing here is a fork commitment.
+
+Four performance-only items that were listed here have since been taken as
+result-preserving fixes once the filter was widened: `#54925` (cblas gemm
+loop reorder), `#51104` and `#21833` (`gsl_permutation_next`) and `#40092`
+(false-position redundant evaluation).  See `FORKNEWS`; they are no longer
+listed in the table.
 
 `kind`: `feat` = new feature/API, `perf` = performance only, `test` =
 test-quality request, `doc` = documentation matter.  `patch`: `clean`/
@@ -296,11 +302,7 @@ test-quality request, `doc` = documentation matter.  `patch`: `clean`/
 | 65932 | feat | - | see #60457 (complex tridiagonal solvers) |
 | 30324 | feat | - | extend 2F1 to `x < -1` by transformation |
 | 21828 | perf | - | `gsl_fdfsolver_lmsder` - close the gap to netlib minpack |
-| 21833 | perf | - | `gsl_permutation_next` |
-| 51104 | perf | - | `gsl_permutation_next` (reporter's benchmark + proposal) |
 | 31109 | perf | - | `ode-initval/bsimp` order control |
-| 40092 | perf | source | false-position root finding without excess evaluations |
-| 54925 | perf | clean | reduce cache misses in `source_gemm_r` |
 | 66826 | test | - | test cases for `hyperg_1F1` |
 | 66844 | test | - | test cases for the dilogarithm |
 | 66877 | test | - | test cases for `hyperg_0F1` |

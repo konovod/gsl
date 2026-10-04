@@ -1135,6 +1135,12 @@ plausibly a speed-up, but it is a performance change, not a bug fix or a
 documentation change, and reordering the accumulation changes the floating
 point result.  Outside the eligibility rule for this review.
 
+**Superseded (commit `39cde03e2`).**  The "changes the floating point
+result" claim is wrong: the patch only changes the traversal order, and
+every `C(i,j)` still accumulates its terms in the same `k` order, so the
+result is bit-for-bit identical.  Applied after the filter was widened;
+see Group V at the end of this file.
+
 
 ### `#58763` — `gsl_root_fsolver_brent` "wrong results under valgrind" — not reproducible
 
@@ -2660,6 +2666,12 @@ proposal is a performance-only change, which the eligibility rule
 excludes outright; the cache-miss loop reorder #54925 was rejected on
 the same ground.  Rejected - performance-only, out of scope.
 
+**Superseded (commit `c382ed86e`).**  The selection loop was changed to
+the single backward scan the report proposes; the generated permutations
+are unchanged.  `#21833` is the same function and is closed with it.
+Applied after the filter was widened; see Group V at the end of this
+file.
+
 ### `#53903` - Test failure with gsl_sf_synchrotron_1_e on x86 - rejected
 
 The report (2018, Runtime error) is that `gsl_sf_synchrotron_1_e(0.01)`
@@ -2823,6 +2835,10 @@ below are the shape of the request, not a per-bug essay.
   `#66742`, `#66826`, `#66844`, `#66874`, `#66877`, `#66880`, `#66886`.
 * Performance-only (changes the floating-point result, no wrong value
   alleged): `#21828`, `#21833`, `#31109`, `#40092`, `#51104`.
+  **Partly reversed:** `#21833`, `#40092` and `#51104` were taken later
+  as result-preserving fixes (`c382ed86e`, `0697ba772`); `#54925` was
+  taken too (`39cde03e2`).  `#21828` and `#31109` remain out of scope.
+  See Group V at the end of this file.
 * Not a defect: `#47402` (Mathieu design discussion).
 
 Two of these deserve a note:
@@ -2952,3 +2968,84 @@ routine "Limited function".
 Full `ctest` 56/56 on MSVC x64.
 
 Savannah bugs #21831, #25320, #29834 and #34361.
+
+
+## Group V - the performance-only items, re-examined
+
+Reviewed 2026-10-04 against the built `build-cmake` library (MSVC x64).
+The eligibility rule had set every performance-only report aside.  The
+filter was widened for changes that are either numerically neutral
+(bit-for-bit identical results) or remove provably redundant work, and
+that need no interface change.  Four of the six backlog items qualify
+and are applied; the other two do not.  No platform-conditional
+tolerance or benchmark result is used to justify a change.
+
+### `#54925` - source_gemm_r loop reordering - applied
+
+The posted patch swaps the `i`/`k` loop nesting in the two `NoTrans`
+branches of `cblas/source_gemm_r.h` and the `i`/`j` nesting in the two
+`Trans` branches, so a row of `C` is traversed once and stays resident
+while `F` and `G` are read.  The earlier rejection rested on "reordering
+the accumulation changes the floating point result", which is wrong:
+for each `C(i,j)` the terms are still added in ascending `k` order, and
+only the order in which the independent `(i,j)` pairs are visited
+changes.  The result is bit-for-bit identical, so the change is
+numerically neutral and was taken.
+
+Verification: the existing 104 `cblas` gemm cases already span both
+storage orders and all four transpositions; a new triple-loop reference
+test, `cblas/test_gemm_loops.c`, checks every combination plus non-`1`
+`alpha`/`beta` and passes.  Full `ctest` 56/56.  Commit `39cde03e2`.
+
+### `#51104` + `#21833` - gsl_permutation_next - applied
+
+The selection loop walked the whole monotone suffix and kept the
+smallest candidate, re-testing it with a comparison already implied by
+the loop that located `i`.  Both `next` and `prev` now scan from the
+right and stop at the first qualifying element, i.e. Knuth's Algorithm
+L step L3.  The suffix is monotone, so the same `k` is chosen and the
+output is unchanged.
+
+`#21833` (2007) is the same function.  Its "quadratic worst case" claim
+does not hold: summed over all `n!` permutations the reversal work is
+amortised `O(1)` per call.  The regression test was raised from the
+existing 5-element vectors to an exhaustive `8! = 40320` walk in both
+directions against an independent reference, which also serves as the
+record for `#21833`.  Full `ctest` 56/56.  Commit `c382ed86e`.
+
+### `#40092` - false-position excess evaluations - applied
+
+`falsepos_iterate()` evaluated `f` at the linear interpolation point and
+then, when the step failed to halve the bracket, again at the bisection
+point.  When the interpolation collapses onto an endpoint (an almost
+linear function with an endpoint within rounding of the root) the first
+evaluation repeats a known value, so every iteration costs two
+evaluations instead of one.
+
+The routine now reuses `f_lower`/`f_upper` for `x_linear == x_left` /
+`x_right` and evaluates only otherwise.  This is the reporter's "quick
+fix", not the complete fix (which needs the tolerance passed into the
+iterate routine and an interface change) - but it is exact, not a
+tolerance heuristic: the value skipped is the one the endpoint already
+carries.
+
+Verification: the report's 64-bit test function drops from 98 to 52
+evaluations; `roots/test.c` counts evaluations on the same function and
+requires at most 60.  Negative control: with the skip removed the count
+is 98 and the test fails.  Full `ctest` 56/56.  Commit `0697ba772`.
+
+### `#21828` (lmsder) and `#31109` (bsimp) - still out of scope
+
+Neither admits a result-preserving change from the current source:
+
+* `#21828` is a 2007 comparison against netlib MINPACK with no patch and
+  no wrong value.  The likely costs are the column-oriented Householder
+  work in `linalg/qrpt.c`/`householder.c` on GSL's row-major storage and
+  a duplicated `compute_gradient_direction()` in `lmiterate.c`/
+  `lmpar.c`; confirming either needs a profiling build and an
+  independent reference, which was not done here.
+* `#31109` needs the requested tolerance inside `bsimp_apply()`, which
+  is an interface change; there is no internal signal to key the order
+  on.  Left as a design item.
+
+Savannah bugs #54925, #51104 and #21833, and #40092.
