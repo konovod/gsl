@@ -134,6 +134,72 @@ int test_hyperg(void)
   TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (-100, -200, -10.0, &r),  0.0063278543908877674, TEST_TOL1, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (-100, -200, -100.0, &r),  4.34111795007336552e-25, TEST_TOL2, GSL_SUCCESS);
 
+  /* Special integer values, from Savannah bug #66826: the terminating
+   * cases and the check that the integer and floating forms agree.
+   * All expected values are exact closed forms, checked independently
+   * with exact rational arithmetic and mpmath at 60 digits. */
+
+  TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (5, 5, -8.0, &r),  0.000335462627902512, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (5, 5, -2.0, &r),  1/(M_E*M_E), TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (5, 5, -1.0, &r),  1/M_E, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (5, 5, 0.0, &r),   1.0, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (5, 5, 1.0, &r),   M_E, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (5, 5, 2.0, &r),   M_E*M_E, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (5, 6, -3.0, &r),  0.091228027395668113, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (5, 6, 7.0, &r),   480.548772048884018204, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (5, 6, 8.0, &r),   1204.460563611831503295, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (1, 1, -1.0, &r),  1/M_E, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (-1, -1, -1.0, &r), 1/M_E, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (-1, -1, 0.0, &r),  1.0, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (-1, -1, 1.0, &r),  M_E, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (2, 2, 0.0, &r),   1.0, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (2, 2, 1.0, &r),   M_E, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (2, 3, -1.0, &r),  2-(4/M_E), TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (2, 3, 0.0, &r),   1.0, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (2, 3, 1.0, &r),   2.0, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (-1, 1, 8.0, &r),  -7.0, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (-1, 1, -1.0, &r), 2.0, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (-2, 2, 1.0, &r),  1/6.0, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (-2, 2, 2.0, &r),  -1/3.0, TEST_TOL0, GSL_SUCCESS);
+
+  /* Integer arguments through the floating-point entry points. */
+  TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (-1, -2, 1, &r), 1.5, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_1F1_e,     (-1, -2, 1, &r), 1.5, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (-1, -3, 1, &r), 4/3.0, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_1F1_e,     (-1, -3, 1, &r), 4/3.0, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (-1, -3, 2, &r), 5/3.0, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_1F1_e,     (-1, -3, 2, &r), 5/3.0, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (0, -1, 1, &r),  1.0, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_1F1_e,     (0, -1, 1, &r),  1.0, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (0, -2, 1, &r),  1.0, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_1F1_e,     (0, -2, 1, &r),  1.0, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (2, 1, 1, &r),   2*M_E, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_1F1_e,     (2, 1, 1, &r),   2*M_E, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (3, 2, 1, &r),   3*M_E/2.0, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_1F1_e,     (3, 2, 1, &r),   3*M_E/2.0, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (3, 1, 1, &r),   7*M_E/2.0, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_1F1_e,     (3, 1, 1, &r),   7*M_E/2.0, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (4, 3, 1, &r),   4*M_E/3.0, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_1F1_e,     (4, 3, 1, &r),   4*M_E/3.0, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (4, 3, -1, &r),  2/(3*M_E), TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_1F1_e,     (4, 3, -1, &r),  2/(3*M_E), TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (4, 2, 1, &r),   13*M_E/6.0, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_1F1_e,     (4, 2, 1, &r),   13*M_E/6.0, TEST_TOL0, GSL_SUCCESS);
+
+  /* Savannah bug #66826 also reports four terminating cases with a
+   * negative integer b that are evaluated incorrectly: the integer
+   * form returns exp(x) when a == b, and otherwise applies a Kummer
+   * transformation that is not valid there.  The terminating series
+   * gives
+   *
+   *   1F1(-2,-2, 2) = 5        library: exp(2)         = 7.389
+   *   1F1(-2,-2, 1) = 2.5      library: exp(1)         = 2.718
+   *   1F1(-2,-2,-1) = 0.5      library: exp(-1)        = 0.368
+   *   1F1(-1,-2,-1) = 0.5      library: 0.551819161757...
+   *
+   * They are left disabled until that branch is fixed; see the review
+   * notes for the analysis. */
+
   /* b a nonpositive integer: the function has a pole, and the value
    * at x = 0 must be rejected like the value at x != 0, rather than
    * returned as 1.  See Savannah bug #58032. */
