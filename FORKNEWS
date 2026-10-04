@@ -184,6 +184,14 @@ One line per change: date | tag | description | commit(s).
   2026-10-04 | [upstream] | specfunc: test 0F1 at x = 0 and half-integer b   | 2d6cf433c
   2026-10-04 | [upstream] | specfunc: test U at the special parameter values | 153a149d4
   2026-10-04 | [upstream] | interpolation: test the plain eval wrappers      | 7b6979126
+  2026-10-04 | [upstream] | specfunc: expint limits at the origin            | 9a00ba0ed
+  2026-10-04 | [upstream] | specfunc: gamma_inc(0,0) limit                   | 062b15fc3
+  2026-10-04 | [upstream] | specfunc: 2F1 at c = a-1 and c = b-1             | adc9389a4
+  2026-10-04 | [upstream] | specfunc: 2F0 with a zero parameter              | 1d99544d9
+  2026-10-04 | [upstream] | specfunc: complex_logsin at a real zero of sin   | 10d64fb15
+  2026-10-04 | [upstream] | randist: negative_binomial_pdf at p = 1 and 0    | 957708351
+  2026-10-04 | [upstream] | doc: origin limits and the six special cases     | b25f7119c
+  2026-10-04 | [upstream] | specfunc: error bar for infinite test results    | d00104093
 
 
 ## [upstream] rng: make the random() generators produce the documented sequences
@@ -4551,6 +4559,13 @@ New algorithms or solvers:
 
 New special cases or API extensions:
 
+  **Partly reversed.**  The six items `#66800`, `#66834`, `#66842`,
+  `#66850`, `#66922` and `#67359` were taken later, once the fork's
+  scope was widened to admit correctness fixes to existing API that add
+  no new symbol; each turned out to be a defect for inputs the library
+  already claimed to handle.  See the six entries appended at the end of
+  this file.  The rest of the list is still rejected.
+
   * `#66800` `negative_binomial_pdf` at p = 1, `#66834` `gamma_inc(0,0)`,
     `#66842` exponential integrals at the origin, `#66850` 2F1 parameter
     shifts, `#66922` `logsin` special case, `#67359` `hyperg_2F0`,
@@ -4927,3 +4942,197 @@ coverage is kept.
 Files: `interpolation/test.c`.
 
 See Savannah bug #64549.
+
+
+## [upstream] specfunc: return the limit at the origin for the exponential integrals
+
+Commit: 9a00ba0ed
+
+`gsl_sf_expint_E1_e(0)`, `gsl_sf_expint_En_e(0,0)` and
+`gsl_sf_expint_Ei_e(0)` all raised `GSL_EDOM`.  With the default error
+handler that aborts; with the handler off the caller received
+`val = NaN, err = NaN`, and there was no way to ask for the limit even
+though each has one.  `E1(x) ~ -log|x|` as `x -> 0` from either side, so
+`E1(0) = +Inf`; `E_0(x) = e^-x/x`, so `E_0(0) = +Inf`; `Ei(0) = -Inf`.
+Return those limits with zero error before the domain-error branch.
+`Ei` reaches the same path through `E1(-x)`, and `E1_scaled(0)` is
+covered by the same test (the scale factor is `exp(0) = 1`).
+
+Verification: a direct call to the built library returns NaN for all
+three before the change and the correct infinities after.  Three new
+vectors in `test_sf.c` fail with the change reverted, and the tightest
+tolerance applies because the limits are exact.
+
+Files: `specfunc/expint.c`, `specfunc/test_sf.c`.  Documentation updated
+in both manuals (`E1`, `E2`, `En`, `Ei` lose the `GSL_EDOM` note and
+gain the origin values).
+
+See Savannah bug #66842.
+
+
+## [upstream] specfunc: return the limit of gamma_inc at the origin
+
+Commit: 062b15fc3
+
+`gsl_sf_gamma_inc_e(0,0)` fell through `x == 0` to `gsl_sf_gamma_e(0)`.
+That returned `val = +Inf` but also `err = NaN`, because the incomplete
+gamma routine inherited the pole's error estimate.  `Gamma(0,0)` is
+exactly `+Inf`, so special-case it and report zero error.
+
+Verification: the old call returns `(+Inf, NaN)` from the built library;
+the new one returns `(+Inf, 0)`.  The `(0,0)` vector fails with the
+change reverted.  The other vectors posted with the report — integer
+`a` at `x = 4, 8, 12` — were kept but their tolerances relaxed: the
+library loses a few ulp at `a = 2, 3`, so `TEST_TOL1`/`TEST_TOL2` are
+used and the `(3,4)` expectation is set to the library-consistent value
+from mpmath, not the slightly loose one in the report.
+
+Files: `specfunc/gamma_inc.c`, `specfunc/test_gamma.c`.  Documentation
+updated in both manuals.
+
+See Savannah bug #66834.
+
+
+## [upstream] specfunc: evaluate 2F1 at the contiguous arguments c = a-1 and c = b-1
+
+Commit: adc9389a4
+
+For `c = a-1` or `c = b-1` the hypergeometric exponent difference
+`d = c-a-b+1` vanishes, which is exactly the case `hyperg_2F1_reflect`
+cannot handle.  When `c >= 0` the series path happened to return the
+right value, but when `c < 0` the dispatch reached the general branch
+and returned `val = 0, err = 0` — a silent wrong answer — or
+`GSL_EUNIMPL`.  For example `2F1(0.7884, 20.77, -0.2116, 0.1203)` was
+`0` where the value is `-177.83`.
+
+The posted patch for this bug (Savannah attachment `specfunc_hyperg_2F1.diff`)
+proposes `(1 - x(1 - b/a))/(1-x)^(a+1)`, which is **not** the value of
+`2F1(a,b,a-1,x)`; applied as written it would have replaced correct
+results by wrong ones at every `c = a-1`.  It was used only as a
+diagnosis.  Solving DLMF 15.5.17
+
+  (a-1+(b+1-c)z) F(a,b;c;z) + (c-a) F(a-1,b;c;z)
+    - (c-1)(1-z) F(a,b;c-1;z) = 0
+
+for `F(a,b;c-1)`, setting `c = a` and using `F(a,b;a;z) = (1-z)^-b`,
+gives the closed forms
+
+  2F1(a, b, a-1, x) = (a-1 + (b+1-a) x) / ((a-1) (1-x)^(b+1))
+  2F1(a, b, b-1, x) = (b-1 + (a+1-b) x) / ((b-1) (1-x)^(a+1)),
+
+valid for all `|x| < 1`.  They are evaluated with the existing
+`pow_omx` helper so the error estimate is meaningful.  The `a = 0` and
+`b = 0` cases still terminate earlier; the `x < -1` / `x >= 1`
+convergence check still applies.
+
+Verification: both closed forms were checked against `mpmath.hyp2f1`
+at 50 digits over a randomized parameter sweep, and against the DLMF
+relation itself.  The expected values in the test are mpmath values at
+30 digits and are independent of GSL.  Reverting the change reproduces
+three failures: the two `c < 0` cases above and `2F1(3,7,2,-1/2)`.
+
+Files: `specfunc/hyperg_2F1.c`, `specfunc/test_hyperg.c`.  `doc:`
+mirrors the two identities in both manuals.
+
+See Savannah bug #66850.
+
+
+## [upstream] specfunc: take the exact value of 2F0 when a or b is zero
+
+Commit: 1d99544d9
+
+`2F0(a,b,0) = 2F0(0,b,x) = 2F0(a,0,x) = 1`.  The `x == 0` test used to
+sit *after* the `x < 0` route, which evaluates
+`U(a,1+a-b,-1/x)`; that asymptotic form loses the vanishing parameter
+by cancellation, so e.g. `2F0(200,0,-0.001)` returned `NaN` although the
+value is exactly `1`.  Test `a == 0 || b == 0` before the `x < 0`
+branch.  This is the clean part of the posted patch.
+
+The `a` or `b` zero case with `x >= 0` is still `GSL_EDOM`: the defining
+series only converges at `x = 0`, and returning `1` for `x > 0` would be
+analytic continuation, not a bug fix, so it is deliberately not taken.
+
+Verification: the built library returns `NaN` for `2F0(200,0,-0.001)`
+before the change and `1` after.  Two of the new vectors fail with the
+change reverted.
+
+Files: `specfunc/hyperg_2F0.c`, `specfunc/test_hyperg.c`.  Documentation
+updated in both manuals.
+
+See Savannah bug #67359.
+
+
+## [upstream] specfunc: return -Inf for complex_logsin at a real zero of sin
+
+Commit: 10d64fb15
+
+At `zi = 0` with `zr` an exact multiple of pi, `sin(zr)` is zero and
+`log(sin z)` diverges to `-Infinity` along the real axis.
+`gsl_sf_complex_logsin_e` reached `gsl_sf_complex_log_e(0,0)` and
+returned `NaN` with `GSL_EDOM`; `gsl_sf_complex_logsin(0,0)` was NaN.
+
+The posted patch tested `fmod(zr, M_PI)` against `GSL_DBL_EPSILON`.
+Because `M_PI` is only an approximation to pi this both misses some
+exact multiples in floating point and fires on nearby non-multiples, and
+it forces `lszi = 0` where the branch of the imaginary part is a genuine
+discontinuity.  Instead the limit is taken only when the library's own
+`gsl_sf_sin(zr)` returns exactly `0.0`, which is precisely where
+`sin(zr)` vanishes in double precision; `zr = 0` is the common case and
+the branch value `-Inf, 0` is returned there with zero error.  Values
+off the exact zeros, including the `zr = pi` that a naive `fmod` would
+mangle, are unchanged.
+
+Verification: the built library returns `(NaN, NaN)` for `(0,0)` before
+the change and `(-Inf, 0)` after; the new `(0,0)` vector fails with the
+change reverted.
+
+Files: `specfunc/trig.c`, `specfunc/test_sf.c`.  Documentation updated
+in both manuals.
+
+See Savannah bug #66922.
+
+
+## [upstream] randist: handle p = 1 and p = 0 in negative_binomial_pdf
+
+Commit: 957708351
+
+The negative binomial with `p = 1` is a point mass at `k = 0`: the only
+outcome is "no failures before the first success".  The general formula
+`p^n (1-p)^k` computed `n*log(1) = 0` and `k*log1p(-1) = -Inf`, giving
+`NaN` at `k = 0` (`k > 0` was already `0`).  `p = 0` gave `NaN` for
+every `k`.  Return `1` at `k = 0` and `0` otherwise for both, which is
+the limit of the mass function.  This is the intent of the posted
+patches, which were syntactically broken (they referred to an
+undeclared `i`).
+
+No out-of-domain guard for `p` outside `[0,1]` is added; a NaN input is
+left to propagate, as elsewhere.
+
+Verification: the built library returns `NaN` for `(k=0, p=1, n=5)`
+before the change and `1` after.  The direct test fails with the change
+reverted.
+
+Files: `randist/nbinomial.c`, `randist/test.c`.  Documentation updated
+in both manuals.
+
+See Savannah bug #66800.
+
+
+## [upstream] specfunc: require a usable error bar for infinite results in test_sf
+
+Commit: d00104093
+
+`test_sf_check_result()` short-circuited into the `isnan`/`isinf`
+comparison and never looked at `r.err` when both the expected and the
+obtained value were non-finite.  A result of `+Inf` with `err = NaN`
+therefore passed: `gsl_sf_erf_Z_e(+Inf)` is exactly that shape.  The
+`isinf` branch now checks `r.err` for NaN and for a negative value, in
+the same way as the finite branch.  An infinite `err` is left alone, as
+it is the legitimate signal for an overflow.  No existing expectation
+changes.
+
+Files: `specfunc/test_sf.c`.
+
+See Savannah bug #66842.
+
+
