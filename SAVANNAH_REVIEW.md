@@ -1218,12 +1218,14 @@ Three sources were evaluated:
   `web.archive.org/cdx/search/cdx?url=savannah.gnu.org/bugs/&matchType=prefix`
   (one request) gives the snapshot id for every archived bug page.
 
-Coverage of the 96 still-open bugs: mbox 56, Wayback 37, CNMAT 13,
-**91 with at least one source**, 5 with none (`50712`, `51104`, `52351`,
-`53903`, `53904`).  All 35 Wayback snapshots that augment a bug with no mbox
-thread were then fetched and their text extracted into the dossiers.  Text is
-merged into per-bug dossiers under `temp/savannah-store/` (see its
-`README.md`), which is what the review now reads instead of the tracker page.
+Coverage of the remaining bugs is now complete: the subject parser was
+fixed to accept a list tag before the bug tag (`[Bug-gsl] [bug #NNNNN]`),
+which raised the captured `bug-gsl` threads from 119 to 215 of the 219 open
+bugs, and every remaining bug has a merged dossier — the five earlier thought
+to lack text (`50712`, `51104`, `52351`, `53903`, `53904`) turned out to be
+present all along.  Text is merged into per-bug dossiers under
+`temp/savannah-store/` (see its `README.md`), which is what the review now
+reads instead of the tracker page.
 
 The mbox host is not Savannah and is not rate-limited; keep the pulls to one
 request per month.  `scripts/savannah_bugs.py` still needs Savannah for the
