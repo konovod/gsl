@@ -3148,6 +3148,18 @@ int test_zeta(void)
   TEST_SF(s, gsl_sf_eta_int_e, ( 6, &r), 0.9855510912974351041, TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_eta_int_e, ( 20, &r), 0.9999990466115815221, TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_eta_int_e, ( 1000, &r), 1.0, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_eta_int_e, (-101, &r), 3.68186626174678125588e+109, TEST_TOL1, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_eta_int_e, (-103, &r), -3.91927430664213741219e+112, TEST_TOL1, GSL_SUCCESS);
+
+  /* Savannah bug #68398: the leading factor 2^(1-n) is formed exactly,
+     so the reported error must not carry the rounding error of the
+     exponential.  The old code reported ~5.6e-14 relative here. */
+  {
+    gsl_sf_result e;
+    int status = gsl_sf_eta_int_e (-101, &e);
+    s += (status != GSL_SUCCESS);
+    s += (fabs (e.err) > 3.0e-14 * fabs (e.val));
+  }
 
   TEST_SF(s, gsl_sf_eta_e, (-51.5, &r), -1.2524184036924703656e+41, TEST_TOL2, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_eta_e, (-5, &r), 0.25, TEST_TOL0, GSL_SUCCESS);

@@ -966,9 +966,29 @@ int gsl_sf_eta_int_e(int n, gsl_sf_result * result)
     else {
       gsl_sf_result z;
       gsl_sf_result p;
+      const double eta_exp = 1.0 - n;
       int stat_z = gsl_sf_zeta_int_e(n, &z);
-      int stat_p = gsl_sf_exp_e((1.0-n)*M_LN2, &p);
-      int stat_m = gsl_sf_multiply_e(-p.val, z.val, result);
+      int stat_p;
+      int stat_m;
+
+      /* The leading factor is 2^(1-n), which is exactly representable
+         as a power of two.  Forming it with gsl_ldexp() removes the
+         rounding error of the exponential, and with it the
+         correspondingly pessimistic error estimate.  Above the
+         representable range (1-n >= 1024) fall back to the exponential
+         so that the overflow status is unchanged.  `eta_exp` is formed
+         in double so that the test is safe for n = INT_MIN.  See
+         Savannah bug #68398. */
+      if (eta_exp < 1024.0) {
+        p.val = gsl_ldexp(1.0, 1 - n);
+        p.err = 0.0;
+        stat_p = GSL_SUCCESS;
+      }
+      else {
+        stat_p = gsl_sf_exp_e((1.0-n)*M_LN2, &p);
+      }
+
+      stat_m = gsl_sf_multiply_e(-p.val, z.val, result);
       result->err  = fabs(p.err * (M_LN2*(1.0-n)) * z.val) + z.err * fabs(p.val);
       result->err += 2.0 * GSL_DBL_EPSILON * fabs(result->val);
       return GSL_ERROR_SELECT_3(stat_m, stat_p, stat_z);
