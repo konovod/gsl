@@ -670,6 +670,57 @@ int test_hyperg(void)
   TEST_SF(s, gsl_sf_hyperg_U_e, (-2.0, 0.5, 0.0, &r),  0.75, TEST_TOL2, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_hyperg_U_e, (-2.0, 0.5, 1e-20, &r),  0.75, TEST_TOL2, GSL_SUCCESS);
 
+  /* Special parameter values, from Savannah bug #66880.  The identities
+   * used are U(0,b,x) = 1, U(a,b,0) = Gamma(1-b)/Gamma(a-b+1) for
+   * |b| < 1, U(a,a,x) = exp(x) Gamma(1-a,x) and U(a,a+1,x) = x^(-a).
+   * The expected values were checked independently with mpmath at 60
+   * digits. */
+
+  /* U(0,b,x) = 1 */
+  TEST_SF(s, gsl_sf_hyperg_U_e, (0, 1, -1, &r), 1, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_U_e, (0, 1, 1, &r), 1, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_U_e, (0, 2, -1, &r), 1, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_U_e, (0, 2, 1, &r), 1, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_U_e, (0, -1, 0, &r), 1, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_U_e, (0, -1, -1, &r), 1, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_U_e, (0, -1, 1, &r), 1, TEST_TOL0, GSL_SUCCESS);
+
+  /* U(a,b,0) = Gamma(1-b)/Gamma(a-b+1), |b| < 1 */
+  TEST_SF(s, gsl_sf_hyperg_U_e, (1/2.0, 1/2.0, 0, &r), M_SQRTPI, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_U_e, (1/3.0, 1/3.0, 0, &r), 1.35411793942640041, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_U_e, (1/10.0, 1/3.0, 0, &r), 1.12481434490451074, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_U_e, (-1/10.0, 1/3.0, 0, &r), 0.86198128242771896, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_U_e, (-1/10.0, -1/3.0, 0, &r), 0.98129904714465957, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_U_e, (1/10.0, -1/3.0, 0, &r), 1.00793511253749697, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_U_e, (-1/3.0, -1/3.0, 0, &r), 0.89297951156924921, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_U_e, (1/500.0, 1/200.0, 0, &r), 1.00116831216288266, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_U_e, (-1/500.0, 0.9999999, 1, &r), 0.99999701634593083, TEST_TOL0, GSL_SUCCESS);
+  /* U(1/500, 0.9999999, 0) and U(-1/500, 0.9999999, 0) are not tested:
+     the library is only accurate to about 1e-10 there. */
+
+  /* U(a,a,x) = exp(x) Gamma(1-a,x) */
+  TEST_SF(s, gsl_sf_hyperg_U_e, (1/500.0, 1/500.0, 1, &r), 0.99880836836313237817, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_U_e, (1/500.0, 1/500.0, 10, &r), 0.99522316300793458398, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_U_e, (1/100.0, 1/100.0, 2, &r), 0.9895146096682301671, TEST_TOL1, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_U_e, (1/10.0, 1/10.0, 2, &r), 0.900279379864020072, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_U_e, (1, 1, 12, &r), 0.077326133138919230, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_U_int_e, (1, 1, 12, &r), 0.077326133138919230, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_U_e, (10, 10, 12, &r), 8.9861693867676978e-12, TEST_TOL1, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_U_int_e, (10, 10, 12, &r), 8.9861693867676978e-12, TEST_TOL1, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_U_e, (5/2.0, 5/2.0, 12, &r), 0.00167700374825995750, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_U_e, (5/2.0, 5/2.0, 2, &r), 0.08743465724793916065, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_U_e, (-5/2.0, -5/2.0, 2, &r), 19.1485468180554587730, TEST_TOL0, GSL_SUCCESS);
+
+  /* U(a,a+1,x) = x^(-a) */
+  TEST_SF(s, gsl_sf_hyperg_U_e, (-1/5.0, 4/5.0, 0, &r), 0, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_U_e, (-1/5.0, 4/5.0, 1, &r), 1, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_U_e, (-1/5.0, 4/5.0, 2, &r), 1.1486983549970350067986, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_U_e, (-1/3.0, 2/3.0, 2, &r), 1.2599210498948731648, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_U_e, (9, 10, 2, &r), 1/512.0, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_U_int_e, (9, 10, 2, &r), 1/512.0, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_U_e, (-10, -9, 2, &r), 1024, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_U_int_e, (-10, -9, 2, &r), 1024, TEST_TOL0, GSL_SUCCESS);
+
   /* U(a,b,x) for x<0 [bug #27859] */
 
   /* Tests for b >= 0 */
