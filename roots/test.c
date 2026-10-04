@@ -37,6 +37,7 @@ void my_error_handler (const char *reason, const char *file,
                        int line, int err);
 
 static void test_fdf_init_combined (const gsl_root_fdfsolver_type * T);
+static void test_falsepos_evaluations (void);
 
 #define WITHIN_TOL(a, b, epsrel, epsabs) \
  ((fabs((a) - (b)) < (epsrel) * GSL_MIN(fabs(a), fabs(b)) + (epsabs)))
@@ -106,6 +107,8 @@ main (void)
       test_f_e (*T, "invalid range check [1, 1]", &F_sin, 1.0, 1.0, M_PI);
       test_f_e (*T, "invalid range check [0.1, 0.2]", &F_sin, 0.1, 0.2, M_PI);
     }
+
+  test_falsepos_evaluations ();
 
   for (S = fdfsolver ; *S != 0 ; S++)
     {
@@ -186,6 +189,73 @@ test_fdf_init_combined (const gsl_root_fdfsolver_type * T)
             "(f=%d, df=%d, fdf=%d)", T->name, count_f, count_df, count_fdf);
 
   gsl_root_fdfsolver_free (s);
+}
+
+
+/* Regression test for Savannah bug #40092.
+
+   The false position solver evaluated f at the linear interpolation point
+   and then, when the step failed to halve the bracket, also at the
+   bisection point.  For an almost linear function the interpolation
+   collapses onto an endpoint, so that first evaluation repeats a value
+   the solver already knows and every iteration costs two evaluations
+   instead of one.  Count the evaluations on the report's function and
+   require the reduced number. */
+
+static int falsepos_eval_count = 0;
+
+static double
+falsepos_almost_linear (double x, void * p)
+{
+  double * q = (double *) p;
+  double rat = q[0] / q[1];
+
+  falsepos_eval_count++;
+  return (x * q[2] + q[1]) * (x + rat) - rat * q[2] * x;
+}
+
+static void
+test_falsepos_evaluations (void)
+{
+  double par[3] = { -1.0, 1.0, -1e-10 };
+  double x_lower = 0.5, x_upper = 1.1;
+  double tol_abs = 5.0 * GSL_DBL_EPSILON;
+  double tol_rel = 5.0 * GSL_DBL_EPSILON;
+  double r = -2 * par[0] / (sqrt (par[1] * par[1] - 4 * par[0] * par[2])
+                             + par[1]);
+  gsl_function F;
+  gsl_root_fsolver * s;
+  int status = GSL_CONTINUE;
+  size_t iterations = 0;
+
+  F.function = &falsepos_almost_linear;
+  F.params = par;
+
+  falsepos_eval_count = 0;
+
+  s = gsl_root_fsolver_alloc (gsl_root_fsolver_falsepos);
+  gsl_root_fsolver_set (s, &F, x_lower, x_upper);
+
+  while (status == GSL_CONTINUE && iterations < MAX_ITERATIONS)
+    {
+      gsl_root_fsolver_iterate (s);
+      x_lower = gsl_root_fsolver_x_lower (s);
+      x_upper = gsl_root_fsolver_x_upper (s);
+      status = gsl_root_test_interval (x_lower, x_upper, tol_abs, tol_rel);
+      iterations++;
+    }
+
+  gsl_test (status, "falsepos, almost linear function (%g obs vs %g expected)",
+            gsl_root_fsolver_root (s), r);
+
+  /* Without the skip the count is about two per iteration (~100 here);
+     with it, one per iteration plus the two initial evaluations. */
+
+  gsl_test (falsepos_eval_count > 60,
+            "falsepos, almost linear function: %d function evaluations "
+            "(expected at most 60)", falsepos_eval_count);
+
+  gsl_root_fsolver_free (s);
 }
 
 

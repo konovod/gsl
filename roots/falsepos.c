@@ -114,7 +114,25 @@ falsepos_iterate (void * vstate, gsl_function * f, double * root, double * x_low
   
   x_linear = x_right - (f_upper * (x_left - x_right) / (f_lower - f_upper));
 
-  SAFE_FUNC_CALL (f, x_linear, &f_linear);
+  /* If the interpolated point has collapsed onto an endpoint, the value
+     of f there is already known, so evaluating it again is wasted work.
+     On an almost linear function an endpoint can sit within rounding of
+     the root, and without this check every iteration evaluates the same
+     point twice (once here, once at the bisection point below).  This is
+     the excess work reported in Savannah bug #40092. */
+
+  if (x_linear == x_left)
+    {
+      f_linear = f_lower;
+    }
+  else if (x_linear == x_right)
+    {
+      f_linear = f_upper;
+    }
+  else
+    {
+      SAFE_FUNC_CALL (f, x_linear, &f_linear);
+    }
       
   if (f_linear == 0.0)
     {
