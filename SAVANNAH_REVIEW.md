@@ -2833,13 +2833,122 @@ Two of these deserve a note:
 * `#66742` (GAMS classification) is a 177-file documentation sweep, not
   a correction of anything wrong, so it is a feature, not a doc fix.
 
-Still under review after this entry: the four genuine numerical reports
-`#21831` (Levy skew for alpha < 1), `#25320` (Fresnel extension),
-`#29834` (BLAS wrapper argument checking) and `#34361`
-(`bspline_knots_greville` constrained least squares).
+The four reports once listed here as still under review - `#21831`
+(Levy skew for alpha < 1), `#25320` (Fresnel extension), `#29834` (BLAS
+wrapper argument checking) and `#34361` (`bspline_knots_greville`
+constrained least squares) - are resolved in Group C below.
 
 Savannah bugs #21828, #21833, #24252, #24871, #31109, #32257, #40092,
 #41527, #45782, #47402, #51104, #57173, #59900, #66573, #66695, #66742,
 #66767, #66775, #66800, #66816, #66826, #66834, #66842, #66844, #66850,
 #66874, #66877, #66880, #66886, #66922, #66949, #67359, #67774, #68098,
 #68367 and #68549.
+
+
+## Group C - the last numerical reports: #21831, #25320, #29834, #34361
+
+Reviewed 2026-10-04 against the built `build-cmake/gsl.dll` (MSVC x64)
+and the offline dossiers under `temp/savannah-store/dossiers/`.  These
+were the four reports still open at the end of Group U; three describe
+no defect in the current tree (or were fixed long ago) and one is a real
+hazard that the `init_augment()` guard already rejects.
+
+### `#21831` - Levy random number generator for alpha < 1 - not a bug
+
+The report (2007) has two claims.  First, that `gsl_ran_levy_skew()`
+with `beta = 0` does not produce a Levy variate but a "linear" density.
+The symmetric case has delegated to `gsl_ran_levy()` since the skew
+function was introduced (`8262207e8`, 2001); driving both with the same
+seed gives bit-identical streams.  Second, that `gsl_ran_levy()` loses
+accuracy for `alpha < 1`, requiring a sum of many variates, and is worse
+still below `0.3`.
+
+Both claims were checked against the characteristic function rather than
+against another sampler.  The transform is the Chambers-Mallows-Stuck
+one, whose exact characteristic function is in the source comment; for
+the symmetric case,
+
+    E[exp(i t X)] = exp(-|c t|^alpha)
+
+and for the skew case,
+
+    E[exp(i t X)] = exp(-|t|^alpha (1 - i beta sign(t) tan(pi alpha/2)))
+                    (alpha != 1)
+
+Calling the built DLL through ctypes and averaging `cos(tX)`, `sin(tX)`
+over 400000 draws gives agreement to the Monte-Carlo floor
+(`~2e-3`, i.e. `1/sqrt(N)`):
+
+    alpha=0.5, beta=0:  E[cos(tX)] vs exp(-|t|^0.5)   diff <= 2.1e-3
+    alpha=0.8, beta=0:  E[cos(tX)] vs exp(-|t|^0.8)   diff <= 2.1e-3
+    (alpha,beta)=(0.5,0.5):  matches both components  diff <= 3e-4
+    (alpha,beta)=(1.0,0.5):  matches both components  diff <= 3e-4
+    (alpha,beta)=(1.3,0.7):  matches both components  diff <= 3e-4
+
+The reporter compared a `10^6`-sample histogram against a numerical
+integration of the oscillatory characteristic function; that reference
+is the inaccurate part for heavy tails.  Rejected - not a bug.  The
+test suite does not exercise `alpha < 1`, but a statistical regression
+test would be seed- and tolerance-sensitive, so none is added.
+
+### `#25320` - Import fresnel, bugs on GSL Extension Fresnel - rejected
+
+The report is a maintainer note to import Andrew Steiner's Fresnel
+extension, carrying Toshiro Ohsaki's observation that the extension
+returns the wrong sign for negative `x`.  The observation is right, but
+there is no Fresnel code in GSL to fix: a repository-wide search finds
+`fresnel` only in `TODO` and `specfunc/TODO`, both asking for the
+integrals to be added.  The extension lives outside the tree.  Adding
+Fresnel integrals (and fixing their negative-`x` branch) is a new
+special function - new API and a new algorithm - which the eligibility
+rule excludes.  Rejected / deferred as a feature.
+
+### `#29834` - insufficient argument checking in blas wrapper - already fixed
+
+The report (2010) is the maintainer's note that the CBLAS routines do
+not validate their arguments and that the checking could be shared
+through macros.  The patch attached to the report
+(`error_cblas_v2.h`) was integrated shortly afterwards: `cblas/error_cblas.h`
+holds the `CHECK_*` primitives and `error_cblas_l2.h` /
+`error_cblas_l3.h` the per-routine `CBLAS_ERROR_*` macros, called from
+the `source_*.h` kernels (commits `3b3c12ef1` "added error checking",
+`36434582b` "revised cblas error checking patch from jgpallero",
+`f30cb5cd6`, `e9a1275f0`).  The `gsl_blas_*` wrappers already perform
+their dimension checks and return `GSL_EBADLEN` (for example
+`gsl_blas_dgemv()` in `blas/blas.c`).  The remaining wish - unify the
+two layers through the macros - has no failing case attached and is an
+open-ended refactor.  Rejected / already addressed; no fork change.
+
+### `#34361` - gsl_bspline_knots_greville needs constrained least squares - hazard fixed
+
+The function selects its breakpoints by an unconstrained linear
+least-squares solve for the target Greville abscissae, without enforcing
+that they be non-decreasing.  Replicating `greville.c`'s linear algebra
+in NumPy, 86448 of about 180000 random monotone requests (any
+`k = 4..8`, any `nbreak = 4..12`) produced a non-monotone breakpoint
+vector, e.g. `k = 8, nbreak = 4` with abscissae
+`{0.0745, 0.441, 0.462, 0.5876, 0.6113, 0.6795, 0.6804, 0.7269, 0.7329,
+0.9872}` gave `{0.0745, 2.5803, -0.8523, 0.9872}`.
+
+The guard added to `gsl_bspline_init_augment()` in `74cace84f`
+(Savannah bug #42830) already rejects this case with `GSL_EDOM`, before
+the workspace is written, and its comment names this caller.  The
+missing pieces were a Greville-specific test and documentation, both
+added in `c8543330d`:
+
+  * `bspline/test_greville.c`: a `k = 4`, `nbreak = 5` call with the
+    abscissae `{0, sqrt(1/6), ..., 1}` (unconstrained breakpoints
+    `{0, 1.0611, 0.6091, 0.6767, 1}`) must return `GSL_EDOM`.  Negative
+    control: with the `init_augment()` guard disabled, `status = 0`.
+  * `doc/bspline.rst` + `doc_texinfo/bspline.texi`: the
+    `gsl_bspline_init_greville()` / `gsl_bspline_knots_greville()` entry,
+    commented out since the bug was filed, is restored with the
+    `GSL_EDOM` exception and the workspace-unchanged guarantee.
+
+The full LSI solver the report proposes (Lawson-Hanson NNLS/LDP) is a
+new algorithm and remains out of scope; the source still marks the
+routine "Limited function".
+
+Full `ctest` 56/56 on MSVC x64.
+
+Savannah bugs #21831, #25320, #29834 and #34361.

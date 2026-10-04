@@ -5,16 +5,16 @@ Generated 2026-10-02 from the `scripts/savannah_bugs.py` sweep (`inventory.tsv`)
 Scratch index, not part of the fork's record of changes. Verdicts are curated from
 `FORKNEWS`, `SAVANNAH_REVIEW.md` and the git history; every other row is un-triaged.
 
-**219 open items: 215 reviewed/handled, 4 remaining.**
+**219 open items: 219 reviewed/handled, 0 remaining.**
 
 | status | count |
 |---|---:|
-| fixed | 105 |
+| fixed | 107 |
 | partial | 5 |
-| rejected | 100 |
+| rejected | 102 |
 | deferred | 4 |
 | superseded | 1 |
-| not reviewed | 4 |
+| not reviewed | 0 |
 
 Legend for the *Patch* column: the sweep's `git apply` verdict (`clean` / `partial` / `dirty`), `source` for a whole
 replacement file, `inline` for a patch pasted into the bug text, `none` for no patch.
@@ -22,16 +22,16 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | # | Date | Kind | Cat | Patch | Fork status | Notes |
 |---|---|---|---|---|---|---|
 | 21828 | 2007-12-18 | - | Performance | none | rejected — performance-only; netlib minpack comparison, no defect | suboptimal performance of gsl_fdfsolver_lmsder |
-| 21831 | 2007-12-18 | - | Accuracy problem | source levy.c | not reviewed | Levý random number generator for alpha < 1 |
+| 21831 | 2007-12-18 | - | Accuracy problem | source levy.c | **rejected** — not a bug: the CMS transform is exact for alpha < 1 (characteristic-function check); `beta = 0` delegates to `gsl_ran_levy` | Levý random number generator for alpha < 1 |
 | 21833 | 2007-12-18 | - | Performance | none | rejected — performance-only; no defect in permutation_next | suboptimal performance of gsl permutation? |
 | 21835 | 2007-12-18 | - | Accuracy problem | clean test_hyperg.diff +1 | **partial** — non-positive-integer termination for x >= 1 fixed (2aa89bae8); c = a+b near x = 1 still returns GSL_EMAXITER | gsl_sf_hyperg_2F1 problematic arguments |
 | 21836 | 2007-12-18 | - | Accuracy problem | none | **fixed** — Q returns exact complement of P in the series window (6f23a4cb5) | gamma_inc_P and gamma_inc_Q only satisfy P+Q=1 within errors |
 | 21837 | 2007-12-18 | - | Runtime error | none | rejected — permutation for a zero diagonal is a new algorithm; docs corrected (9418afa5f) | gsl_linalg_solve_symm_tridiag requires positive definite matrix |
 | 24252 | 2008-09-12 | feature | - | source gamma_tail_jpl_080908.c | rejected — new distribution/API; out of scope | suggestion: add gamma tail distribution |
 | 24871 | 2008-11-18 | feature | - | none | rejected — new function/API (exponential integrals E_n); out of scope | suggestion, add support for E_n |
-| 25320 | 2009-01-14 | - | Accuracy problem | none | not reviewed | Import fresnel, bugs on GSL Extension Fresnel |
+| 25320 | 2009-01-14 | - | Accuracy problem | none | **rejected** — feature: no Fresnel in the tree; importing it is new API/algorithm | Import fresnel, bugs on GSL Extension Fresnel |
 | 28267 | 2009-12-11 | - | Accuracy problem | source hyperg1F1.c | **partial** — same defect as #43809 (52505315d); transition region `x ~ a^2` still loses digits | poor convergence region for gsl_sf_hyperg_1F1 |
-| 29834 | 2010-05-09 | - | Runtime error | source error_cblas_v2.h | not reviewed | insufficient argument checking in blas wrapper |
+| 29834 | 2010-05-09 | - | Runtime error | source error_cblas_v2.h | **fixed** (inherited) — the report's cblas checking macros already live in `cblas/error_cblas*.h`; the wrappers check dimensions | insufficient argument checking in blas wrapper |
 | 30324 | 2010-07-02 | - | Accuracy problem | none | **deferred** — feature: extend 2F1 to x < -1 by transformation; new domain/algorithm, out of eligibility | improve range of 2F1 |
 | 30510 | 2010-07-21 | - | Runtime error | none | **fixed** — U(a,b,x) for x < 0, integer b, non-integer a, via the DLMF 13.2.9 limit (00859f816) | problems with hyperg_U(a,b,x) for x<0 |
 | 30540 | 2010-07-24 | feature | Accuracy problem | partial bug-ode2.c +2 | rejected — v1 runs three fixed iterations (secular energy drift reproduced); v2 rk2imp/rk4imp already check convergence (modnewton1) | please, add convergence checks in rk4imp/rk2imp |
@@ -44,7 +44,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 32257 | 2011-01-26 | - | - | none | rejected — new algorithms/API (quadrule integrators); out of scope | RFE: Import integration routines from quadrule |
 | 32306 | 2011-01-31 | bug | Accuracy problem | source hyp.c | **fixed** — integer-d 2F1 series and error estimate (e4c4ac326, 882c8361d) | sign error in gsl_sf_hyperg_2F1 |
 | 32776 | 2011-03-14 | feature | - | source quadratic.c | **fixed** — multimin quadratic minimiser (53cd0d098) | RFE: Add brute-force quadratic numerical multidimensional minimizer |
-| 34361 | 2011-09-22 | - | Runtime error | none | not reviewed | gsl_bspline_knots_greville needs inequality constrained linear least squares |
+| 34361 | 2011-09-22 | - | Runtime error | none | **fixed** — the `init_augment` monotonicity guard rejects non-monotone breakpoints (74cace84f); Greville test + docs (c8543330d) | gsl_bspline_knots_greville needs inequality constrained linear least squares |
 | 35032 | 2011-12-11 | doc | Documentation | none | **fixed** — gsl_test support functions documented in the usage chapter, marked as an unreviewed AI draft (8ef88af6e) | gsl_test.h lacks documentation in the reference manual |
 | 36152 | 2012-04-11 | bug | Accuracy problem | source testbessel.c | **fixed** — Y family libm sin/cos (a08ef2f7f) + exact sin/cos reduction (8a46ec7cf) | Incorrect asymptotics of spherical Bessel functions |
 | 36197 | 2012-04-15 | - | Build | dirty 36197b.diff +1 | **fixed** — leading `__` dropped from every include guard (e40dc7ceb) | reserved identifier violation |
