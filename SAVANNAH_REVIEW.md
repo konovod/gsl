@@ -2175,3 +2175,338 @@ Files: `integration/cquad.c`, `integration/test.c`.  Commit
 
 Recorded in `FORKNEWS` under `[upstream]` (four changes) and
 `[rejected]` (three entries).  Full CTest suite 56/56 on MSVC x64.
+
+
+## Group M — interpolation / histogram / misc correctness: #38548, #68379, #47193, #67301, #68415, #65932, #63519
+
+Seven reports, each reproduced (or refuted) against the built library
+before a verdict was recorded.
+
+### `#38548` — histogram rounding for integer data — fixed
+
+The report is real and reproduces exactly: `gsl_histogram_calloc_uniform
+(60, 0, 60)` gave `range[31] = 31.000000000000004`, so `find(31.0)`
+returned bin 30.  `make_uniform()` built each limit as
+`((n-i)/n)*xmin + (i/n)*xmax`, rounding the coefficients first.  The
+same helper is duplicated in `init2d.c`; the two-dimensional histogram
+had the identical defect (`xrange[31] = 31.000000000000004`).
+
+The posted/mailing-list formula was the midpoint
+`0.5*(xmin+i*dx) + 0.5*(xmax-(n-i)*dx)` with `dx=(xmax-xmin)/n`.  It is
+exact for the reported case, but comparing three candidates against
+exact rational arithmetic showed that it moves the correctly rounded
+limits of a 10-bin histogram over `[0,1]` (`0.1`, `0.2`, `0.4`, `0.6`)
+by an ulp, as does the single `xmin + i*dx`.  That regression is caught
+by the deterministic `test1d_resample` test.  Only
+`xmin + (xmax-xmin)*i/n` is exact for both cases, and it is what the
+fork uses; `range[0]`/`range[n]` are pinned because the division can
+still move them.
+
+Verification: exact-rational reference over integer spans (exact for
+every divisible span, monotone in ~27k randomised cases); new vectors
+in `test1d.c`/`test2d.c`; negative control with the old formula reports
+5 failures (3 one-dimensional, 2 two-dimensional).  `ctest` 56/56.
+Commit `f9c977f52`.
+
+### `#68379` — histogram accessor index type — fixed
+
+`gsl_histogram_max()` and the 2D `xmax()`/`ymax()` narrowed `h->n`
+(`size_t`) to `int` before indexing.  Latent for any allocatable
+histogram, but corrected to `size_t`.  Commit `ae60e2883`.
+
+### `#47193` — `gsl_ran_poisson_pdf` with `mu=0` — already fixed
+
+Duplicate of #43326, fixed earlier in this fork (`4f9f4f4fc`).
+Verified: `gsl_ran_poisson_pdf(0,0)=1`, `(1,0)=0`.  The earlier fix had
+no test, so one was added; with the `mu==0` guard disabled it is the
+only failure in `randist_test`.  Commit `5346bba43`.
+
+### `#67301` — the second `find()` on `r2` — rejected
+
+The report asks for `find(p->nx*p->ny, p->sum, r2, &k)` after the
+existing lookup on `r1`.  That would be a bug: `find()` locates a value
+in the cumulative distribution, whereas `r2` is the within-bin `y`
+fraction.  A second lookup would overwrite the bin selected by `r1` and
+combine two different bins.  Measured on the build, `r2 = 1.5` simply
+returns a `y` outside the selected bin; it does not crash.  Only the
+function description was clarified (commit `2b15efbff`).
+
+### `#68415` — variance at `n = 1` — rejected
+
+The report's premises do not reproduce.  It claims
+`gsl_stats_variance_m()` "returns 0.0" and `gsl_stats_pvariance()`
+"returns `GSL_EDOM`", but on this build all of variance, covariance and
+pooled variance return `NaN` for `n = 1`: the sum of squares is exactly
+zero and is multiplied by `n/(n-1) = 1/0`.  The three functions are
+already consistent, and `NaN` is the correct result for an estimator
+that is undefined with one observation.  Both manuals now state the
+`n >= 2` requirement (commit `65bc71664`).
+
+### `#65932` — complex tridiagonal solvers — deferred
+
+A duplicate of #60457, which is a feature request for complex
+tridiagonal solvers: new API and new algorithms, excluded by the
+eligibility rule.  It was already recorded as feature-shaped in the
+triage index and is left deferred.
+
+### `#63519` — `gsl_root_fsolver_set` straddle error — rejected
+
+The request is to return `GSL_EINVAL` without invoking the error
+handler.  `GSL_ERROR` already returns the code - under
+`gsl_set_error_handler_off()` the call returns `GSL_EINVAL` (4),
+confirmed against the DLL - but it also calls the handler, whose
+default action is to abort.  That uniform contract is by design.  A
+per-call variant is the new API proposed as
+`gsl_root_fsolver_set_with_values()` (#66576).  Both manuals now
+document the `GSL_EINVAL` return and the handler behaviour (commit
+`aaecb86e6`).
+
+Verdicts recorded in `SAVANNAH_TRIAGE.md`; the applied changes and the
+rejections are in `FORKNEWS`.  Full CTest suite 56/56 on MSVC x64.
+
+
+## Group N — build / portability / test-quality: #36197, #39120,
+## #39165, #41457, #50382, #55965, #63927, #68518
+
+Eight reports, mostly about the build rather than the numerics.  Each
+was checked against the tree before a verdict was recorded.
+
+### `#36197` — reserved identifier violation — fixed
+
+The report is real: 278 tracked headers, `.in` files and two design
+manuals used include guards of the form `__GSL_MATH_H__`.  An identifier
+that begins with an underscore and an uppercase letter is reserved to the
+implementation, and in C++ any identifier containing a double underscore
+is reserved too, so a consumer that included a GSL header was relying on
+names it does not own.
+
+The tracker discussion (Rhys Ulerich, comment #3) settled on dropping
+only the leading `__GSL`; that is what was done, so the guards are now
+`GSL_MATH_H__` and keep their trailing underscores.  The private guards
+`__ERROR_CBLAS*`, `__ROOTS_H__`, `build.h` and the two `ringbuf.c`
+includers were renamed under the same rule, as were `gsl_version.h.in`
+and the `contrib/wigner.h` guard.  `__BEGIN_DECLS`/`__END_DECLS` were
+deliberately left alone (`gsl_mode_t`/`gsl_prec_t` are unwinnable public
+API and were never in scope).
+
+The two attached patches (`36197a.diff` 118 KB, `36197b.diff` 179 KB)
+were **not** used: the sweep recorded both as `dirty`, they are thirteen
+years old, and the tree has moved a long way since.  The rename was
+redone mechanically, replacing only the enumerated guard tokens so that
+`__cplusplus`, `__GNUC__` and `__attribute__` are untouched.  The root
+`gsl/` directory is a set of build-time symlinks and needs no edit.
+
+Verification: clean CMake rebuild and 56/56 ctest on MSVC x64; every
+installed public header compiled twice on its own (251 OK; the 15
+`spmatrix` headers are not standalone-includable, pre-existing);
+negative control with the old `#define` restored in
+`gsl_vector_double.h` gives "conflicting types for 'gsl_vector'".
+Commit `e40dc7ceb`.
+
+### `#39120` — possible removal of some files — fixed
+
+The five files that no build references were removed: `err/env.c`,
+`err/warn.c`, `rng/g05faf.c`, `poly/norm.c` and `poly/inline.c`.
+`err/ChangeLog` already records `warn.c` as removed in 2003, and
+`poly/inline.c` duplicates the built `poly/eval.c`.
+
+`ode-initval2/modnewton1.c` must stay: `rk1imp.c`, `rk2imp.c` and
+`rk4imp.c` `#include` it.  `matrix/matrix.c` is built.  The report's
+rename of `eval.c`/`matrix.c` to `inline.c` was rejected as cosmetic and
+hostile to the checked-in source lists.  `statistics/wcovar.c`, also
+named, was already absent.  Commit `14920fa04`.
+
+### `#39165` — always-true conditionals — rejected (stale)
+
+Both sites the report names are already gone.  The `gegenbauer.c`
+expression was superseded by the #58065 rewrite, and `driver.c` lost its
+`hmin >= 0.0 || hmin < 0.0` test in bzr revision 4829.  The `hmax`
+guard that remains (`hmax > 0.0 || hmax < 0.0`) is not the same
+construct: it is false for `0` and for `NaN`, so it is not always true.
+
+### `#41457` — valgrind errors in `matrix/test.c` — rejected (already fixed)
+
+Fixed upstream on the same day the report was filed, by commit
+`6ed874986` (the #39101/#39102 fix), which added
+`memset(m->data, 0, MULTIPLICITY * n1 * n2 * sizeof(ATOMIC))` to
+`matrix/init_source.c`.  The memset covers the `long double` padding
+bytes that `long_double_fwrite` reads.  `valgrind` is not available on
+the Windows review machine, so the fixed source was inspected rather
+than re-run.
+
+### `#55965` — PCG random number generator — rejected (feature)
+
+A new generator is a new algorithm and a new public API, which the
+eligibility rule excludes.  The ticket's thread is about the licensing of
+the PCG reference code, not about a defect.  Deferred.
+
+### `#50382` — CMake and NuGet for Windows — rejected (partly done)
+
+The fork already builds with CMake on Windows, Linux and macOS, which is
+the half that matters; NuGet packaging is new distribution surface and is
+out of scope.  No code change.
+
+### `#63927` — `gsl-without-cblas.pc` — fixed
+
+`gsl-config --libs-without-cblas` already existed, but pkg-config could
+not express it.  A `gsl-without-cblas.pc.in` was added and installed by
+both builds (`442b7cbd2` autotools, `9ad4ed051` CMake), and
+`pkgconfig.test` now checks that the file does not pull in CBLAS.  The
+`Libs:` line is `-L${libdir} -lgsl`.  `pkg-config` is not installed here,
+so the scripted check has to run in Linux CI.
+
+### `#68518` — stale `configure.ac` construct — fixed
+
+`DISCARD_POINTER` was a `do { } while` macro that only silenced
+unused-parameter warnings.  The three uses (`monte/vegas.c`,
+`interpolation/akima.c` twice) are now `(void)` casts and the macro is
+gone from `configure.ac` (`46fa69ae1`); the CMake template
+`cmake/config.h.cmake` lost it in the separate fork commit
+(`2afdbb721`).  Two commented-out references in
+`interpolation/steffen.c` are left as comments.  Verified with a CMake
+build, 56/56 ctest, and `gcc -Wunused-parameter` (negative control
+without the cast reports "unused parameter 'xu'").
+
+Verdicts recorded in `SAVANNAH_TRIAGE.md`; the applied changes and the
+rejections are in `FORKNEWS`.  Full CTest suite 56/56 on MSVC x64.
+
+
+## Group O — root finding and ODE: #39713, #42219, #42220, #50712, #66849, #30540, #30947
+
+Reviewed 2026-10-04 against the built `build-cmake/gsl.dll` (MSVC x64),
+with the reporters' own programs compiled against it.  Two reports are
+real latent division-by-zero defects and are fixed; one final-time
+rounding defect is fixed in both ODE interfaces; one is already fixed
+upstream; three are feature-shaped or too deep to fix and are recorded
+as rejected.  The fixes are commits `8640b846e` and `dda917296`; the
+full `ctest` suite is 56/56.
+
+### `#42219` + `#42220` — division by zero at a root — fixed
+
+Reproduced with the reporters' own programs, compiled against the
+built DLL:
+
+    bug_gnewton.c   root = -nan(ind), "the iteration has not converged";
+                    GSL_IEEE_MODE=trap-common -> 0xC0000090 (SIGFPE)
+    bug_hybrid.c    all four hybrid solvers returned the correct root
+                    in the default mode, but raised 0xC0000090 under
+                    trap-common
+
+`#42219`: `gnewton_set()` stores `phi = enorm(f)` from the fdf
+callback, while `gnewton_iterate()` obtains the next residual from the
+plain f callback.  When the initial point is a root of fdf but not of
+f, `phi0 = 0`, so the relative step reduction computes
+`theta = phi1/phi0 = inf` and the iterate becomes NaN.  The reduction
+is now guarded with `phi0 > 0.0`.
+
+`#42220`: at a root the dogleg step is zero, `pnorm = 0`, and the
+rank-1 update divides `(qtdf - rdx)/pnorm` and `diag^2*dx/pnorm` by
+zero, poisoning the QR factors.  The hybrid iterations now return
+`GSL_SUCCESS` immediately when `fnorm == 0`, and `compute_wv()` leaves
+the update vectors at zero when `pnorm == 0` (defensive; the early
+return already covers it because `Q` is orthogonal, so `qtf = 0` iff
+`fnorm = 0`).  `broyden.c` has an adjacent `lambda == 0`
+`GSL_EZERODIV`, but that is not part of this report and the reporter
+left the broyden case commented out; it is left unchanged.
+
+Regression tests in `multiroots/test.c` run all four hybrid solvers at
+the root and gnewton with the mismatched callbacks, with the
+invalid-operation trap enabled (the hybrid failure is otherwise hidden
+by the residual test).  Negative control: with the four files reverted
+the test process is killed by the trap (`0xC0000090`); with the fix the
+suite is 77/77.
+
+### `#66849` — `gsl_odeiv2_evolve_apply` past the final time — fixed
+
+Reproduced with a right-hand side that records the time range it is
+called over.  Integrating backwards from 1 to `1e-12` with a suggested
+step larger than the interval:
+
+    t0 + (t1 - t0) = 9.999778782798785e-13 < t1 = 1e-12
+    RHS seen down to 9.999999960041972e-13
+
+The final step is clamped to `h = t1 - t0`, but the stepper evaluates
+its last stage at `t0 + h`, and `t0 + (t1 - t0) != t1` in floating
+point.  `evolve_apply` now treats `h == t1 - t0` as the final step and
+backs `h` off with `nextafter` until `t0 + h` can no longer pass `t1`.
+
+The first fix alone was not sufficient: `bsimp` divides the step into
+sub-steps and builds their times by repeated `t += h`, which drifts
+past `t0 + h` as well.  For the final step of the reproducer the
+accumulated time could dip below `t1` (for `N = 10`, to
+`9.999778782798785e-13`).  `bsimp_step_local()` now computes each
+sub-step time directly from `t0` and `h_total`, so the last evaluation
+lands exactly on `t0 + h`.  Both the `ode-initval2` and the legacy
+`ode-initval` copies carry the same code and both are fixed.
+
+The regression test runs for every stepper: an RHS records the minimum
+time seen, and the test asserts it is not below `t1` and that the final
+time equals `t1` exactly.  Negative control: with the four files
+reverted the new check fails for essentially every stepper.  With the
+fix, `ode-initval2` is 1184/1184 and `ode-initval` is 3542/3542.
+
+### `#39713` — secant "derivative value is not finite" — already fixed (inherited)
+
+The report is fixed in the tree, not by this fork.  Upstream
+`d50dc70e5` returns `GSL_SUCCESS` when the previous function value is
+exactly zero, and `eaaae349d` replaced the divided difference
+`df_new = (f_new - f)/(x_new - x)` with the algebraically equivalent
+`df_new = df*((f - f_new)/f)`, which cannot divide by zero.  The posted
+`gsl-roots-secant{,-v2}.patch` are against the pre-2013 line and no
+longer apply; the reviewer's "skip the update for a sub-ulp step"
+variant is not taken, because it would loop rather than terminate when
+the step cannot move the iterate.  `ce90a6b91` added `func7` and the
+vector `-pi x + e {1.5}` to `roots/test.c` as the negative control.
+The reporter's own `gsl-secant64.c` (the "almost linear" case with a
+`0.001*eps` offset) converges on the built DLL to
+`# f(x_i) = 2.2204e-19`.  No fork change.
+
+### `#50712` — lm+accel with a finite-difference `fvv` — rejected
+
+The corresponding test is disabled under `#if 0` in
+`multifit_nlinear/test_fdf.c` with the comment "box3d test fails on
+MacOS here", and `multifit_nlinear/TODO` item 5 records it.  Enabling
+it temporarily reproduces the failure on MSVC x64, so it is not
+i586-only:
+
+    FAIL: trust-region/levenberg-marquardt+accel/scale=more/
+          solver=cholesky/fdfvv/box3d did not converge,
+          status=exceeded max number of iterations
+
+(the report named the svd solver; several fail).  The failing path is
+the finite-difference second directional derivative
+`gsl_multifit_nlinear_fdfvv()` (`h_fvv = 0.02`) with the `lmaccel`
+trust region and the `box3d` problem.  The report and the upstream TODO
+both leave it disabled, and no small, defensible fix was found in the
+time-boxed investigation - the cause is a numerical study of the `fvv`
+step and the acceleration, not a wrong-value defect.  Recorded
+`[rejected]`; the `#if 0` block is left as upstream has it.
+
+### `#30540` — convergence checks in `rk4imp`/`rk2imp` — rejected
+
+The patch targets the legacy `ode-initval` (v1) steppers, which run a
+fixed three iterations and carry the comment "This method does not
+check for convergence of the iterative solution!".  The reporter's
+claim reproduces: with the Henon-Heiles program the maximum energy
+error grows from `1.03e-6` (t in [0, 1000]) through `2.34e-6`
+([4000, 5000]) to `4.07e-6` ([9000, 10000]) at `h = 0.1`, i.e. secular
+drift rather than the bounded error a symplectic method should show.
+
+However, the maintained `ode-initval2` steppers `rk2imp`/`rk4imp`
+already perform a convergence check (`modnewton1_solve`, the
+Hairer-Wanner criterion, at most seven iterations), which is exactly
+what the report asks for, and the manual recommends v2 over v1.  The
+patch is an accuracy/algorithm enhancement to a superseded module
+(categorised "feature" in the triage), so it is rejected under the
+eligibility rule; no code change.
+
+### `#30947` — fixed step size control object — rejected
+
+A feature request for a new public object and constructor,
+`gsl_odeiv_control_fixed_new()`, in the legacy v1 API.  New API is out
+of scope.  The capability already exists in v2 as
+`gsl_odeiv2_evolve_apply_fixed_step()` and
+`gsl_odeiv2_driver_apply_fixed_step()`.  Rejected, no code change.
+
+Recorded in `FORKNEWS` under `[upstream]` (two changes) and
+`[rejected]` (three reports).  Full CTest suite 56/56 on MSVC x64.

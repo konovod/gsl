@@ -117,6 +117,7 @@ One line per change: date | tag | description | commit(s).
   2026-10-03 | [upstream] | doc: attach deprecated markers to their functions      | 973212c4e
   2026-10-03 | [fork]     | doc: render the HTML manual with MathJax               | 4b7802490
   2026-10-03 | [fork]     | ci: publish the Sphinx manual on GitHub Pages          | 27c86b3f3
+  2026-10-03 | [fork]     | doc: add the fork README                               | - (pending)
   2026-10-03 | [upstream] | doc: relate the Legendre and Carlson forms          | b0eec8bc6
   2026-10-03 | [upstream] | doc: gsl_test support functions in usage             | 8ef88af6e
   2026-10-03 | [upstream] | doc: correct the gsl_ieee_env_setup description      | 060c2472c
@@ -266,6 +267,17 @@ separately checks `cmake --install` followed by a downstream
 `find_package(GSL CONFIG)` consumer on each platform.
 
 This is expected to stay in the fork, as it exercises the CMake build.
+
+
+## [fork] doc: add the fork README
+
+Commit: (pending)
+
+A top-level `README.md` for the fork.  GitHub renders it in preference to
+the upstream `README`, which is left untouched.  It states in one screen what
+the fork is for (the CMake build, CI and the harvested Savannah fixes),
+carries the CMake and Docs workflow badges, and summarises the fork-specific
+and upstream-bound work, pointing at `FORKNEWS` for the full record.
 
 
 ## [upstream] min: fix the parabolic-step test in the Brent minimiser
