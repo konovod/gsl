@@ -11,3 +11,24 @@ This function computes the Jacobian elliptic functions @math{sn(u|m)},
 transformations.
 @comment Exceptional Return Values: GSL_EDOM
 @end deftypefun
+
+@deftypefun int gsl_sf_elljac_arcsn_e (double @var{sn}, double @var{m}, gsl_sf_result * @var{result})
+@deftypefunx int gsl_sf_elljac_arccn_e (double @var{cn}, double @var{m}, gsl_sf_result * @var{result})
+@deftypefunx int gsl_sf_elljac_arcdn_e (double @var{dn}, double @var{m}, gsl_sf_result * @var{result})
+These functions compute the principal value @math{u} of the inverse
+Jacobian elliptic functions with the parameter @var{m}
+(@math{|m| \le 1}), so that @math{sn(u|m) = sn}, @math{cn(u|m) = cn}
+and @math{dn(u|m) = dn} respectively.  The principal value satisfies
+@math{0 \le u \le 2K(m)}.  The parameter @var{m} is used rather than the
+modulus @math{k = \sqrt{m}}, matching @code{gsl_sf_elljac_e}; negative
+values of @var{m} are supported.  The inverse of @math{dn} is not
+defined for @math{m = 0}, where @math{dn(u|0) = 1} for every @math{u}.
+@comment Exceptional Return Values: GSL_EDOM
+@end deftypefun
+
+@deftypefun double gsl_sf_elljac_arcsn (double @var{sn}, double @var{m})
+@deftypefunx double gsl_sf_elljac_arccn (double @var{cn}, double @var{m})
+@deftypefunx double gsl_sf_elljac_arcdn (double @var{dn}, double @var{m})
+These functions return the same values as the corresponding
+@code{_e} functions, using the default error handler.
+@end deftypefun
