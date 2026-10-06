@@ -231,6 +231,9 @@ One line per change: date | tag | description | commit(s).
   2026-10-06 | [upstream] | multiroots: configurable fdjac step              | 8abbe2c30
   2026-10-06 | [upstream] | doc: configurable fdjac step                     | 296f3b58a
 
+  2026-10-06 | [upstream] | specfunc: complex zeta, eta and Hurwitz zeta     | 2708ca0fa
+  2026-10-06 | [upstream] | doc: complex zeta, eta and Hurwitz zeta          | a605f0c44
+
 
 ## [upstream] rng: make the random() generators produce the documented sequences
 
@@ -5844,6 +5847,48 @@ Files: `multiroots/gsl_multiroots.h`, `multiroots/fsolver.c`,
 `multiroots/test.c`, both manuals.
 
 See Savannah bug #45782.
+
+
+## [upstream] specfunc: complex zeta, eta and Hurwitz zeta functions
+
+Commit: 2708ca0fa (documentation: a605f0c44)
+
+The library had the real Riemann, Hurwitz and eta functions only.
+Savannah bug #57173 (2019) asks for complex arguments.  The new
+`specfunc/zeta_complex.c` adds
+
+    gsl_sf_complex_zeta_e(x, y, &re, &im)
+    gsl_sf_complex_hzeta_e(x, y, q, &re, &im)
+    gsl_sf_complex_eta_e(x, y, &re, &im)
+
+for `s = x + iy`, following the GSL complex special-function convention
+of separate real and imaginary `gsl_sf_result` values.
+
+For `Re(s) >= 0` the Hurwitz zeta function is evaluated with the
+Euler-Maclaurin summation formula of `specfunc/zeta.c` generalised to
+complex `s`; the number of leading terms is scaled with `|s|`, which is
+what the critical strip needs.  For `Re(s) < 0` the Riemann zeta
+function uses the reflection formula
+`zeta(s) = 2^s pi^(s-1) sin(pi s/2) Gamma(1-s) zeta(1-s)`, with the
+trivial zeros at the negative even integers returned exactly.  `eta`
+uses `(1 - 2^(1-s)) zeta(s)` and handles `s = 1` exactly
+(`eta(1) = log 2`).  The complex Hurwitz zeta is defined for `Re(s) > 1`,
+matching the domain of the real `gsl_sf_hzeta_e`.
+
+Verification: reference values are 30-digit `mpmath` values, and a
+7000-point sweep over `Re(s) in [-30,30]`, `Im(s) in [-40,40]` gives a
+worst relative error of 1.7e-13 for zeta, 1.8e-13 for eta and 5.2e-14
+for hzeta, with the reported error bars covering the true error at every
+point.  Negative control: flipping the sign of the Euler-Maclaurin
+endpoint term fails the new checks, while the restored tree is clean.
+Full ctest 56/56 on MSVC x64.
+
+Files: `specfunc/zeta_complex.c`, `specfunc/gsl_sf_zeta.h`,
+`specfunc/Makefile.am`, `cmake/gsl_sources.cmake`, `specfunc/test_sf.c`,
+`specfunc/test_sf.h`, both manuals.
+
+See Savannah bug #57173.
+
 
 
 
