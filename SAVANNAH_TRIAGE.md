@@ -9,9 +9,9 @@ Scratch index, not part of the fork's record of changes. Verdicts are curated fr
 
 | status | count |
 |---|---:|
-| fixed | 124 |
+| fixed | 125 |
 | partial | 5 |
-| rejected | 86 |
+| rejected | 85 |
 | deferred | 3 |
 | superseded | 1 |
 | not reviewed | 0 |
@@ -94,7 +94,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 45265 | 2015-06-06 | bug | Accuracy problem | none | rejected — not reproducible on MSVC x64 (true/err ≤ 0.57 over x in [4,1000]) | gsl_sf_bessel_J0_e underestimates error for x>4 |
 | 45726 | 2015-08-10 | bug | Accuracy problem | source gslbesselytest.c | **fixed** — Y family libm sin/cos (a08ef2f7f) | Incorrect results of functions bessel_y0, y1 and y2 |
 | 45746 | 2015-08-13 | bug | Accuracy problem | source gsltrigtest.c | **fixed** - exact argument reduction (8a46ec7cf, 5639c380f) | Incorrect results of trigonometric functions gsl_sf_sin and gsl_sf_cos |
-| 45782 | 2015-08-17 | feature | Accuracy problem | none | rejected — new API (configurable derivative epsilon); out of scope | Feature request: Make derivative epsilon configurable |
+| 45782 | 2015-08-17 | feature | Accuracy problem | none | **fixed** — configurable finite-difference Jacobian step on `gsl_multiroot_fsolver`, default unchanged (8abbe2c30, 296f3b58a) | Feature request: Make derivative epsilon configurable |
 | 45797 | 2015-08-19 | - | Accuracy problem | none | rejected — external LAPACK/distribution report: the program links LAPACK `ZGESVD`; GSL has no complex SVD and no GSL code path exists | Possible problem with LAPACK Fortran routine ZGESVD |
 | 45924 | 2015-09-11 | bug | Runtime error | none | **fixed** — beta inverse reworked around `t = logit(x)` with a bracketed solver (51a63cbd5) | Bug in the inverse beta function gsl_cdf_beta_Pinv, and suggested fix |
 | 45925 | 2015-09-11 | - | Runtime error | none | **rejected** — not-a-bug: report confused Gamma(a,x) with P; Q matches (3cc1aaa54 docs) | Incomplete Gamma Functions flipped? |
@@ -288,9 +288,10 @@ Two further new-API items have since been taken: `#66573`
 (`gsl_vector_complex_conjugate()`) and `#68367` (inverse Jacobi
 elliptic functions, where the posted prototype misused the modulus).
 `#60457` and its duplicate `#65932` (complex tridiagonal solvers) were
-taken as well, followed by the complex SVD suite `#66574` and `#66575`
-and the Feagin/Verner ODE steppers `#66695`.  They are no longer listed
-in the table; see `FORKNEWS`.
+taken as well, followed by the complex SVD suite `#66574` and `#66575`,
+the Feagin/Verner ODE steppers `#66695` and the configurable
+finite-difference Jacobian step `#45782`.  They are no longer listed in
+the table; see `FORKNEWS`.
 
 `kind`: `feat` = new feature/API, `perf` = performance only, `test` =
 test-quality request, `doc` = documentation matter.  `patch`: `clean`/
@@ -302,7 +303,6 @@ test-quality request, `doc` = documentation matter.  `patch`: `clean`/
 | 57173 | feat | - | zeta function for complex arguments |
 | 32257 | feat | - | integration routines imported from quadrule |
 | 41527 | feat | - | multimin functions return error codes |
-| 45782 | feat | - | configurable derivative epsilon |
 | 63519 | feat | - | `gsl_root_fsolver_set` variant returning `GSL_EINVAL` without the handler (per-call `_with_values`, #66576) |
 | 66576 | feat | clean | `gsl_root_fsolver_set_with_values()` |
 | 30947 | feat | clean | fixed step-size control object for the v1 ODE suite (exists in v2) |

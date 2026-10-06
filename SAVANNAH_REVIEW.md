@@ -2861,12 +2861,13 @@ essay.
   solve and modified decomposition) and `#66695` (Feagin/Verner ODE
   steppers) were taken once the filter admitted new public API; see
   `FORKNEWS`.
-* New special cases or API extensions: `#41527`, `#45782`, `#66800`,
+* New special cases or API extensions: `#41527`, `#66800`,
   `#66834`, `#66842`, `#66850`, `#66922`, `#67359`, `#67774`, `#68098`.
   **Partly reversed:** the six among them (`#66800`, `#66834`, `#66842`,
-  `#66850`, `#66922`, `#67359`) were taken as correctness fixes, and
-  `#68098` was taken later as an argument-range fix (`6da0c08f3`); the
-  rest remain out of scope.
+  `#66850`, `#66922`, `#67359`) were taken as correctness fixes,
+  `#68098` was taken later as an argument-range fix (`6da0c08f3`) and
+  `#45782` (configurable finite-difference Jacobian step) was taken as
+  new public API (`8abbe2c30`); the rest remain out of scope.
 * Breaking/behaviour change: `#68549`.
 * Documentation/test/refactor with no patch, or a reorganisation:
   `#66742`, `#66826`, `#66844`, `#66874`, `#66877`, `#66880`, `#66886`.
