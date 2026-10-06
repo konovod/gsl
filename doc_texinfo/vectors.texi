@@ -726,6 +726,21 @@ vector @var{a}.  The result @math{a_i \leftarrow a_i + x} is stored in
 @var{a}.
 @end deftypefun
 
+The following additional functions are available for complex vector operations.
+
+@deftypefun int gsl_vector_complex_div_real (gsl_vector_complex * @var{a}, const gsl_vector * @var{b})
+This function divides the elements of complex vector @var{a} by the elements
+of real vector @var{b}.  The result @math{a_i \leftarrow a_i / b_i} is
+stored in @var{a} and @var{b} remains unchanged.  The two vectors must have
+the same length.
+@end deftypefun
+
+@deftypefun int gsl_vector_complex_conjugate (gsl_vector_complex * @var{a})
+This function replaces each element of the complex vector @var{a} by its
+complex conjugate.  The result @math{a_i \leftarrow \overline{a_i}} is
+stored in @var{a}.
+@end deftypefun
+
 @node Finding maximum and minimum elements of vectors
 @subsection Finding maximum and minimum elements of vectors
 
