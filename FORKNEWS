@@ -101,6 +101,7 @@ One line per change: date | tag | description | commit(s).
   2026-10-03 | [upstream] | specfunc: 6j symbol by the Schulten-Gordon recurrence  | 59fc479e2
   2026-10-03 | [upstream] | specfunc: drop unreachable GSL_EOVRFLW from docs     | 8cce813ef
   2026-10-06 | [upstream] | specfunc: add the Wigner d-matrix                      | 17e39bcbd
+  2026-10-06 | [upstream] | roots: add gsl_root_fsolver_set_with_values           | 33b79b362
   2026-10-03 | [upstream] | specfunc: reject NaN in the complete elliptic integrals | 14d595eb8
   2026-10-03 | [upstream] | specfunc: terminate gamma_inc for large negative a    | 932087bcd
   2026-10-03 | [upstream] | specfunc: propagate NaN in gsl_sf_hyperg_1F1_e       | 99a73dd36
@@ -3929,13 +3930,47 @@ without the handler turns it off with `gsl_set_error_handler_off()`,
 which the reporter was already using.
 
 The two manuals now document the `GSL_EINVAL` return and the
-error-handler behaviour so the choice is explicit.  A per-call variant
-is the new API proposed as `gsl_root_fsolver_set_with_values()`
-(Savannah bug #66576, feature request, out of scope here).
+error-handler behaviour so the choice is explicit.  The per-call variant
+requested alongside it is now provided as
+`gsl_root_fsolver_set_with_values()` (Savannah bug #66576); see the
+`roots: add gsl_root_fsolver_set_with_values` entry below.
 
 Files: `doc/roots.rst`, `doc_texinfo/roots.texi`.
 
 See Savannah bug #63519.
+
+
+## [upstream] roots: add gsl_root_fsolver_set_with_values
+
+Commit: 33b79b362
+
+Savannah bug #66576 asks for a bracket-solver initialiser that takes
+the function values at the interval endpoints, so an expensive `f` is
+not evaluated twice more by the solver; bug #63519 is the same request
+seen from the error-handling side.
+
+`gsl_root_fsolver_set_with_values()` is added without touching the
+public `gsl_root_fsolver_type` or `gsl_root_fsolver` structs.  The
+existing per-solver init routine is called with a temporary
+`gsl_function` whose callback returns the supplied endpoint values at
+exactly `x_lower` and `x_upper` and forwards every other point to the
+real `f`.  The init routines only evaluate `f` at the two endpoints, so
+`f` is not called at all during `set`; the finiteness and straddle
+checks are unchanged.
+
+Verification: all three bracket solvers (bisection, brent, falsepos)
+find the same ten roots through the new entry point as through
+`gsl_root_fsolver_set`, and an instrumented `f` is confirmed to be
+called zero times during `set`.  Negative control: forcing the callback
+to always evaluate `f` fails the zero-evaluation check for all three
+solvers (9 failed checks) and also the supplied-value check, because a
+non-straddling pair is then no longer detected.  The roots test is
+green.
+
+Files: `roots/fsolver.c`, `roots/gsl_roots.h`, `roots/test.c`,
+`roots/test.h`, both roots manuals.
+
+Savannah bugs #66576, #63519.
 
 
 ## [rejected] histogram/statistics/roots: the Group M reports that need no code change
@@ -3960,11 +3995,7 @@ aside.
   `NaN`.  See the `doc: require two observations for the sample
   variance` entry above.
 
-* **#63519, `gsl_root_fsolver_set` error handling** - by design;
-  `GSL_ERROR` returns the code and invokes the handler.  See the
-  `doc: document the gsl_root_fsolver_set error return` entry above.
-
-Savannah bugs #65932, #67301, #68415, #63519.
+Savannah bugs #65932, #67301, #68415.
 
 
 ## [upstream] headers: rename include guards to avoid reserved identifiers
