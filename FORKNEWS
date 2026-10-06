@@ -199,6 +199,11 @@ One line per change: date | tag | description | commit(s).
   2026-10-06 | [upstream] | ode-initval: rk2imp/rk4imp converge              | fa1622e11
   2026-10-06 | [upstream] | specfunc: arctangent integral error bar at x < 0  | 4220f05d9
   2026-10-06 | [upstream] | linalg: Householder left transform in row order   | cd9e31326
+  2026-10-06 | [upstream] | cdf: Erlang cumulative distribution               | 3d607fce8
+  2026-10-06 | [upstream] | randist: Nakagami distribution                    | 999d53bbe
+  2026-10-06 | [upstream] | randist, cdf: truncated Gaussian distribution     | 76f3b1db8
+  2026-10-06 | [upstream] | cdf: inverse binomial and Poisson distributions   | e88a81c75
+  2026-10-06 | [rejected] | randist: gamma-tail distribution (a < 1 branch wrong) | - (see below)
 
 
 ## [upstream] rng: make the random() generators produce the documented sequences
@@ -4552,10 +4557,14 @@ two entries that follow it.
 
 New distributions and generators (new public API):
 
-  * `#24252` gamma-tail distribution, `#24871` exponential integrals
-    E_n, `#59900` truncated normal, `#66816` Nakagami, `#66949` Erlang
-    CDF, `#66767` inverse binomial, `#66775` inverse Poisson - each adds
-    a routine the library does not have.
+  * `#59900` truncated normal, `#66816` Nakagami, `#66949` Erlang CDF,
+    `#66767` inverse binomial, `#66775` inverse Poisson - **taken later**
+    once the filter was widened to admit new public API; see the five
+    entries appended at the end of this file.
+  * `#24252` gamma-tail distribution - re-examined and **rejected**: the
+    posted sampler's `a < 1` branch is numerically wrong; see the
+    rejection entry appended at the end of this file.  `#24871`
+    (exponential integrals for complex arguments) remains open.
   * `#57173` zeta for complex arguments, `#68367` inverse Jacobi
     elliptic integrals - new algorithms and API.
 
@@ -5329,5 +5338,142 @@ negative-control vector to add.
 Files: `linalg/householder.c`.
 
 See Savannah bug #21828.
+
+
+## [upstream] cdf: Erlang cumulative distribution
+
+Commit: 3d607fce8
+
+The `randist` module has provided `gsl_ran_erlang()` for a long time but
+the `cdf` module had no matching cumulative distribution.  Add
+`gsl_cdf_erlang_P()` and `gsl_cdf_erlang_Q()` with shape `k` and rate
+`lambda`; the Erlang distribution is the gamma distribution with shape
+`a = k` and scale `b = 1/lambda`, so both delegate to
+`gsl_cdf_gamma_P/Q()`.  `k < 1` and `lambda <= 0` raise `GSL_EDOM`.
+
+Note that `gsl_ran_erlang(r, a, n)` takes the scale and the shape, in
+that order, which is the reverse of the new `(k, lambda)` convention;
+the manual points this out.
+
+Verification: the new vectors are the exact Poisson sum
+`P(x) = 1 - sum_{i=0}^{k-1} exp(-lambda x) (lambda x)^i / i!`, computed
+independently with scipy, at `k = 1, 3, 10` and several `x`; reversing
+the delegation makes the `Q` vectors fail.  Full ctest 56/56.
+
+Files: `cdf/erlang.c`, `cdf/gsl_cdf.h`, `cdf/Makefile.am`, `cdf/test.c`,
+`cmake/gsl_sources.cmake`, both manuals.
+
+See Savannah bug #66949.
+
+
+## [upstream] randist: Nakagami distribution
+
+Commit: 999d53bbe
+
+Add `gsl_ran_nakagami()` and `gsl_ran_nakagami_pdf()` for the Nakagami
+distribution with shape `mu` and scale `omega`.  If `Y` is gamma
+distributed with shape `mu` and scale `omega/mu` then `X = sqrt(Y)` is
+Nakagami, so the generator is a square root of `gsl_ran_gamma()`; the
+pdf is the defining formula.  The `x = 0, mu = 1/2` case is handled
+separately because the exponent contains `0 * log(0)`.
+
+Verification: pdf vectors at seven points were computed independently
+with scipy/mpmath, the sampling is checked against the pdf and against
+the analytic tail probability `P(0 < X < b) = gammainc(mu, mu b^2/omega)`,
+and the tests run after every other distribution test so that the shared
+RNG stream is not shifted (an earlier placement perturbed the
+multivariate Gaussian test).  Multiplying the pdf by 1/2 instead of the
+correct factor fails the reference vectors.  Full ctest 56/56.
+
+Files: `randist/nakagami.c`, `randist/gsl_randist.h`,
+`randist/Makefile.am`, `randist/test.c`, `cmake/gsl_sources.cmake`,
+both manuals.
+
+See Savannah bug #66816.
+
+
+## [upstream] randist, cdf: truncated Gaussian distribution
+
+Commit: 76f3b1db8
+
+Add `gsl_ran_tgaussian()`, `gsl_ran_tgaussian_pdf()` and
+`gsl_cdf_tgaussian_P/Q/Pinv/Qinv()` for the Gaussian distribution with
+standard deviation `sigma` truncated to `[a, b]`.  The posted Savannah
+patch put the generator in `randist` but had it call `gsl_cdf`, which
+would create a `randist` -> `cdf` cycle (`cdf` already calls `randist`
+from `betainv.c`, `hypergeometric.c` and `tdistinv.c`); it also fixed
+only three of the affected autotools link lines.
+
+The generator here uses rejection from the untruncated Gaussian and the
+pdf normalizes with `Phi(b/sigma) - Phi(a/sigma)` computed from
+`gsl_sf_erfc()`, so `randist` gains no dependency on `cdf`.  The cdf
+functions reuse `gsl_cdf_gaussian_P/Q/Pinv` and are therefore free of
+the cycle.  `a >= b` raises `GSL_EDOM`.
+
+Verification: the P/Q/Pinv/Qinv vectors are the Burkardt table (pages
+23-24), checked independently with mpmath; the sampling is checked
+against the pdf and the exact tail probabilities, and the pdf against
+six independently computed values.  The P/Q vectors use TEST_TOL2
+because the difference of two Gaussians loses a few ulp.  Changing the
+pdf normalization factor fails the reference vectors.  Full ctest
+56/56.
+
+Files: `randist/gauss.c`, `randist/gsl_randist.h`, `cdf/gauss.c`,
+`cdf/gaussinv.c`, `cdf/gsl_cdf.h`, `cdf/test.c`, `randist/test.c`,
+both manuals.
+
+See Savannah bug #59900.
+
+
+## [upstream] cdf: inverse binomial and Poisson distributions
+
+Commit: e88a81c75
+
+Add the discrete quantiles `gsl_cdf_binomial_Pinv/Qinv()` and
+`gsl_cdf_poisson_Pinv/Qinv()`: the smallest integer `k` with
+`P(k) >= P` (or `Q(k) <= Q`), returned as a `double`.  The binomial
+search bisects the bounded range `0..n`; the Poisson support is
+unbounded, so the upper limit is doubled until the tail condition holds
+and then bisected.  For the Poisson distribution `P = 1` returns
+`+Inf` and `P = 0` returns `0`; because the cdf takes an `unsigned int`
+argument, the quantile saturates at `UINT_MAX`.
+
+The posted attachments used a linear scan; a bisection is
+`O(log n)` and gives the same integer.  The report's Poisson prototype
+was a copy of the binomial one and is corrected to `(P, mu)`.
+
+Verification: vectors are R's `qbinom`/`qpois` (the same quantile
+convention) at several `(n, p)` and `mu`, plus exact small-case sums and
+the edge values; shifting the bisection result by one fails the tests.
+Full ctest 56/56.
+
+Files: `cdf/binomialinv.c`, `cdf/poissoninv.c`, `cdf/gsl_cdf.h`,
+`cdf/Makefile.am`, `cdf/test.c`, `cmake/gsl_sources.cmake`, both
+manuals.
+
+See Savannah bugs #66767 and #66775.
+
+
+## [rejected] randist: gamma-tail distribution (Savannah #24252)
+
+The 2008 attachment `gamma_tail_jpl_080908.c` (recovered from the
+Wayback Machine) is a left-truncated gamma sampler
+`devroye_tail_gamma_ran(rng, tail, a)` with unit scale.  It was proposed
+again in a 2026 follow-up as a faster replacement for the `a < 1` branch
+of `gsl_ran_gamma`.
+
+It is not correct.  For `a >= 1` the branches reproduce the truncated
+gamma, but the `a < 1` branch accepts with probability `(a/X)^(1-a)`
+where the proposal `Y = tail + Exp(1)` requires `(tail/Y)^(1-a)`: the
+constant must be `tail`, not `a`.  The two agree only when `tail = a`.
+At `tail = 0` the branch is meaningless, and the claimed speed-up cannot
+hold.  Simulated on 200000 draws, `a = 0.5, tail = 0` gives mean `0.75`
+instead of `0.50`; the correct `gsl_ran_gamma` already uses the standard
+`Gamma(1+a) * U^(1/a)` identity.
+
+No change is made.  A correct truncated-gamma generator would be a
+separate feature, and the posted code is not a usable basis for it.
+
+See Savannah bug #24252.
 
 
