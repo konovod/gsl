@@ -197,6 +197,8 @@ One line per change: date | tag | description | commit(s).
   2026-10-06 | [upstream] | specfunc: 2F1 for x < -1 by Pfaff (conjugate)     | cfe9311cd
   2026-10-06 | [upstream] | randist: reject |rho| >= 1 in bivariate Gaussian   | 6da0c08f3
   2026-10-06 | [upstream] | ode-initval: rk2imp/rk4imp converge              | fa1622e11
+  2026-10-06 | [upstream] | specfunc: arctangent integral error bar at x < 0  | 4220f05d9
+  2026-10-06 | [upstream] | linalg: Householder left transform in row order   | cd9e31326
 
 
 ## [upstream] rng: make the random() generators produce the documented sequences
@@ -4569,13 +4571,16 @@ New special cases or API extensions:
   scope was widened to admit correctness fixes to existing API that add
   no new symbol; each turned out to be a defect for inputs the library
   already claimed to handle.  See the six entries appended at the end of
-  this file.  The rest of the list is still rejected, with one later
-  addition: `#68098` (below) was also taken.
+  this file.  The rest of the list is still rejected, with two later
+  additions: `#68098` (below) and `#67774` (the arctangent integral's
+  error bar for negative arguments) were also taken.
 
   * `#66800` `negative_binomial_pdf` at p = 1, `#66834` `gamma_inc(0,0)`,
     `#66842` exponential integrals at the origin, `#66850` 2F1 parameter
     shifts, `#66922` `logsin` special case, `#67359` `hyperg_2F0`,
-    `#67774` arctan integral extended to negative inputs, `#41527`
+    `#67774` arctan integral extended to negative inputs (**taken later**
+    - the function already handled negative x, so only the error bar was
+    wrong; see the entry appended at the end of this file), `#41527`
     multimin error codes, `#45782` configurable derivative epsilon,
     `#68098` correlation division-by-zero behaviour (**taken later** -
     see the entry appended at the end of this file).
@@ -4601,12 +4606,12 @@ Performance-only:
     order would change the floating-point result, and none alleges a
     wrong value.
 
-    **Partly reversed.**  `#51104` and `#21833` (`permutation_next`) and
-    `#40092` (false-position) were taken later as result-preserving
-    fixes once the fork's scope was extended to admit numerically
-    neutral performance work; see the three entries appended at the end
-    of this file.  `#21828` and `#31109` remain rejected: the first has
-    no proposed fix and the second needs an interface change.
+    **Partly reversed.**  `#51104` and `#21833` (`permutation_next`),
+    `#40092` (false-position) and `#21828` (`lmsder`) were taken later as
+    result-preserving fixes once the fork's scope was extended to admit
+    numerically neutral performance work; each was verified bit-for-bit.
+    See the entries appended at the end of this file.  `#31109` remains
+    rejected: it needs an interface change.
 
   * `#47402` Mathieu functions - a library/test design discussion, not a
     defect.
@@ -5253,5 +5258,76 @@ Files: `ode-initval/rk2imp.c`, `ode-initval/rk4imp.c`,
 entry (only the v2 replacements are documented), so no manual change.
 
 See Savannah bug #30540.
+
+
+## [upstream] specfunc: positive error bar for the arctangent integral at negative arguments
+
+Commit: 4220f05d9
+
+`gsl_sf_atanint_e()` evaluates its `|x| <= 1` branch as `val = x * c`
+and `err = x * e`, where `c` and `e` come from a Chebyshev series in
+`x*x`.  The value is therefore right for `x < 0` (the function is odd:
+the series describes `AtanInt(|x|)` and the sign of `x` is carried by
+the product), but the error estimate is not: multiplying the
+non-negative series error by a signed `x` made it negative for every
+`0.5*sqrt(eps) < |x| <= 1`.  Measured on the built library, `-1` gave
+`-2.93e-17` and `-0.1` gave `-1.39e-18`; a negative error bar is
+meaningless and also made the result fail the specfunc harness's
+consistency check.
+
+Use `ax` in the error expression.  The `|x| > 1` branch already reported
+a non-negative error, so nothing else changes.  The argument range was
+never restricted: the manual defines `AtanInt(x) = int_0^x
+arctan(t)/t` with an empty `Domain`, and the code already handled
+negative `x`; this is a defect in the existing behaviour, not new API.
+
+Verification: the new vectors `(-0.1, -1.0, -2.0, 0.0)` pass the
+specfunc harness.  With the one-line change reverted the `(-0.1)` and
+`(-1.0)` vectors fail on both the negative error and the consistency
+check, while `(-2.0)` is unaffected because it takes the `|x| > 1`
+branch.  The expected values were checked independently against mpmath
+`quad(atan(t)/t, [0, x])` at 40 digits.  Full ctest 56/56.
+
+Files: `specfunc/atanint.c`, `specfunc/test_sf.c`.  The manuals already
+describe the integral over the whole line, so no prose change.
+
+See Savannah bug #67774.
+
+
+## [upstream] linalg: apply the Householder left transform in storage order
+
+Commit: cd9e31326
+
+`gsl_linalg_householder_hm()` applied `H = I - tau v v^T` one column at
+a time.  GSL stores matrices row-major, so for a fixed column the inner
+loop over rows stepped through memory with the row stride, and the whole
+`O(m n^2)` work of the QR factorization was done in the least
+cache-friendly order.  In the CMake/MSVC build it was worse still:
+`HAVE_INLINE` is undefined there, so `gsl_matrix_get()/set()` and
+`gsl_vector_get()` were genuine out-of-line calls in the innermost loop.
+
+This is the dominant cost of `gsl_linalg_QRPT_decomp()`, which lmsder
+re-enters on every successful iteration (`multifit/lmset.c`,
+`multifit/lmiterate.c`), and it matches the 2007 report that the solver
+spends most of its time in the Householder transform.  Nothing here
+changes the algorithm; the work is simply carried out in storage order.
+
+The non-BLAS branch now walks a block of 64 columns at a time using
+direct row pointers.  The arithmetic applied to a single column is
+unchanged - the dot product still accumulates in increasing row order
+and each element is updated with the same expression - so the result is
+bit-for-bit identical.  (The `USE_BLAS` branch is left alone; it is
+never compiled by the fork's builds.)
+
+Verification: on a 550 x 25 matrix the decomposition drops from `1.43`
+ms to `0.21` ms per call (MSVC x64 Release, best of 5 x 400).  The full
+matrix, `tau`, the permutation and the column-norm vector are
+bit-identical before and after over six shapes (`5x4` up to `550x25`)
+and three seeds.  Full ctest 56/56.  A bit-identical kernel has no
+negative-control vector to add.
+
+Files: `linalg/householder.c`.
+
+See Savannah bug #21828.
 
 
