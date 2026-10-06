@@ -215,6 +215,9 @@ One line per change: date | tag | description | commit(s).
   2026-10-06 | [upstream] | specfunc: inverse Jacobi elliptic functions      | 183ca894f
   2026-10-06 | [upstream] | doc: inverse Jacobi elliptic functions           | 653c77bca
 
+  2026-10-06 | [upstream] | linalg: complex tridiagonal solvers              | dd5e0a0f2
+  2026-10-06 | [upstream] | doc: complex tridiagonal solvers                 | ee6eee516
+
 
 ## [upstream] rng: make the random() generators produce the documented sequences
 
@@ -5615,6 +5618,48 @@ Files: `specfunc/elljac.c`, `specfunc/gsl_sf_elljac.h`,
 `specfunc/test_sf.c`, `specfunc/test_sf.h`, both manuals.
 
 See Savannah bug #68367.
+
+
+## [upstream] linalg: complex tridiagonal solvers
+
+Commit: dd5e0a0f2 (documentation: ee6eee516)
+
+The library had real tridiagonal solvers only.  Savannah bug #60457
+(2021) asks for the complex analogues and was re-reported as #65932
+(2024) when the posted patch went unanswered.  The new
+`linalg/tridiagcomplex.c` adds
+
+    gsl_linalg_complex_solve_tridiag
+    gsl_linalg_complex_solve_symm_tridiag
+    gsl_linalg_complex_solve_cyc_tridiag
+    gsl_linalg_complex_solve_symm_cyc_tridiag
+
+with the same argument layout, size checks and `GSL_EZERODIV` behaviour
+as the real functions.
+
+The implementation is a port of `linalg/tridiag.c` using `gsl_complex`
+arithmetic: an LDL^T variant for the symmetric forms and a Thomas /
+Sherman-Morrison elimination for the nonsymmetric ones, with the
+complex data reinterpreted from the interleaved vector storage.  The
+posted patch applies cleanly only as the new file; its `gsl_linalg.h`,
+`Makefile.am`, `linalg/test.c` and documentation hunks are against an
+older tree and were merged by hand.  Its test additions exercise only
+purely real complex systems, so a stronger test was written instead.
+
+Verification: four fixed 4x4 genuinely complex systems with reference
+solutions from `numpy.linalg.solve`, plus random diagonally dominant
+complex systems of size 2..8 for all four solvers checked against the
+residual `A x - b`; size-mismatch, `N < 3` cyclic and zero-pivot paths
+return `GSL_EBADLEN` / `GSL_EZERODIV`.  Negative control: flipping the
+sign of the back-substitution term fails the new checks, while the
+restored tree is clean.  Full ctest 56/56 on MSVC x64.
+
+Files: `linalg/tridiagcomplex.c`, `linalg/gsl_linalg.h`,
+`linalg/Makefile.am`, `cmake/gsl_sources.cmake`, `linalg/test.c`, both
+manuals.
+
+See Savannah bugs #60457 and #65932.
+
 
 
 
