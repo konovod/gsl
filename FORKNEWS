@@ -209,6 +209,9 @@ One line per change: date | tag | description | commit(s).
   2026-10-06 | [upstream] | specfunc: test the complex exponential integrals  | 4416fe729
   2026-10-06 | [upstream] | doc: complex exponential integrals                | ffad9c422
 
+  2026-10-06 | [upstream] | vector: add gsl_vector_complex_conjugate         | ec04a1312
+  2026-10-06 | [upstream] | doc: document gsl_vector_complex_conjugate       | d127fe3b2
+
 
 ## [upstream] rng: make the random() generators produce the documented sequences
 
@@ -5531,5 +5534,41 @@ Files: `specfunc/expint_complex.c`, `specfunc/gsl_sf_expint.h`,
 `specfunc/test_sf.h`, both manuals.
 
 See Savannah bug #24871.
+
+
+## [upstream] vector: add gsl_vector_complex_conjugate
+
+Commit: ec04a1312 (documentation: d127fe3b2)
+
+The matrix module has `gsl_matrix_complex_conjugate()`, but the vector
+module had no equivalent; Savannah bug #66573 (2024) posts a small
+patch adding one.  The new function replaces every element of a complex
+vector by its complex conjugate in place:
+
+    int gsl_vector_complex_conjugate (gsl_vector_complex * a)
+
+It is implemented in `vector/oper_complex_source.c`, so the float,
+double and long double complex types are all generated, and declared in
+all three public complex vector headers.  The posted patch declared only
+the double type, although the generated source produced all three.
+
+Verification: a strided-view test was added to
+`vector/test_complex_source.c`.  Negative control: turning the
+imaginary-part negation into a no-op fails the new check for all three
+types (`gsl_vector_complex_conjugate`,
+`gsl_vector_complex_float_conjugate`,
+`gsl_vector_complex_long_double_conjugate`), while the restored tree is
+clean.  Full ctest 56/56 on MSVC x64.
+
+The Texinfo manual was missing the neighbouring
+`gsl_vector_complex_div_real` entry as well; it is added so the two
+manuals mirror each other.
+
+Files: `vector/oper_complex_source.c`, the three
+`vector/gsl_vector_complex_*.h` headers, `vector/test_complex_source.c`,
+both manuals.
+
+See Savannah bug #66573.
+
 
 
