@@ -9,9 +9,9 @@ Scratch index, not part of the fork's record of changes. Verdicts are curated fr
 
 | status | count |
 |---|---:|
-| fixed | 126 |
+| fixed | 127 |
 | partial | 5 |
-| rejected | 84 |
+| rejected | 83 |
 | deferred | 3 |
 | superseded | 1 |
 | not reviewed | 0 |
@@ -41,7 +41,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 31109 | 2010-09-23 | - | Performance | none | rejected — performance-only; bsimp order is by design | ode-initval/bsimp is always high order |
 | 31362 | 2010-10-18 | bug | Runtime error | none | **fixed** — NaN rejected as GSL_EDOM in the complete elliptic integrals (14d595eb8) | The Complete Elliptic Integrals (gsl_sf_ellint_Ecomp and _Kcomp) Loop Forever with NaN Argument |
 | 31426 | 2010-10-23 | - | Runtime error | none | **fixed** — rescaled/bounded symmetric QR iteration (7d586d89b) | infinite loop in gsl_eigen_symm |
-| 32257 | 2011-01-26 | - | - | none | rejected — new algorithms/API (quadrule integrators); out of scope | RFE: Import integration routines from quadrule |
+| 32257 | 2011-01-26 | - | - | none | **fixed** — Gauss-Lobatto, Gauss-Radau, Clenshaw-Curtis and Fejer fixed quadrature rules (7cdd25747, 4ad7f6f36) | RFE: Import integration routines from quadrule |
 | 32306 | 2011-01-31 | bug | Accuracy problem | source hyp.c | **fixed** — integer-d 2F1 series and error estimate (e4c4ac326, 882c8361d) | sign error in gsl_sf_hyperg_2F1 |
 | 32776 | 2011-03-14 | feature | - | source quadratic.c | **fixed** — multimin quadratic minimiser (53cd0d098) | RFE: Add brute-force quadratic numerical multidimensional minimizer |
 | 34361 | 2011-09-22 | - | Runtime error | none | **fixed** — the `init_augment` monotonicity guard rejects non-monotone breakpoints (74cace84f); Greville test + docs (c8543330d) | gsl_bspline_knots_greville needs inequality constrained linear least squares |
@@ -290,9 +290,9 @@ elliptic functions, where the posted prototype misused the modulus).
 `#60457` and its duplicate `#65932` (complex tridiagonal solvers) were
 taken as well, followed by the complex SVD suite `#66574` and `#66575`,
 the Feagin/Verner ODE steppers `#66695`, the configurable
-finite-difference Jacobian step `#45782` and the complex zeta/eta/Hurwitz
-functions `#57173`.  They are no longer listed in the table; see
-`FORKNEWS`.
+finite-difference Jacobian step `#45782`, the complex zeta/eta/Hurwitz
+functions `#57173` and the new fixed quadrature rules `#32257`.  They
+are no longer listed in the table; see `FORKNEWS`.
 
 `kind`: `feat` = new feature/API, `perf` = performance only, `test` =
 test-quality request, `doc` = documentation matter.  `patch`: `clean`/
@@ -301,7 +301,6 @@ test-quality request, `doc` = documentation matter.  `patch`: `clean`/
 
 | # | kind | patch | what it would add |
 |---|---|---|---|
-| 32257 | feat | - | integration routines imported from quadrule |
 | 41527 | feat | - | multimin functions return error codes |
 | 63519 | feat | - | `gsl_root_fsolver_set` variant returning `GSL_EINVAL` without the handler (per-call `_with_values`, #66576) |
 | 66576 | feat | clean | `gsl_root_fsolver_set_with_values()` |
