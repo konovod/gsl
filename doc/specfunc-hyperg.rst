@@ -113,7 +113,9 @@ Hypergeometric functions are described in Abramowitz & Stegun, Chapters
 
       .. math:: 2F1(a,b,c,x) = F(a,b,c,x)
          
-   for :math:`|x| < 1`. If the arguments :math:`(a,b,c,x)` are too close to a singularity then
+   for :math:`|x| < 1`.  The range is extended to :math:`x < -1` by the
+   Pfaff transformations [DLMF 15.8.1 and 15.8.2], which map the argument
+   into :math:`(1/2, 1)`.  If the arguments :math:`(a,b,c,x)` are too close to a singularity then
    the function can return the error code :macro:`GSL_EMAXITER` when the
    series approximation converges too slowly.  This occurs in the region of
    :math:`x = 1`, :math:`c - a - b = m` for integer m.
@@ -155,7 +157,8 @@ Hypergeometric functions are described in Abramowitz & Stegun, Chapters
 
       .. math:: 2F1(a,b,c,x) / \Gamma(c)
 
-   for :math:`|x| < 1`.
+   for :math:`|x| < 1`, extended to :math:`x < -1` as for
+   :func:`gsl_sf_hyperg_2F1`.
 .. exceptions:
 
 .. function:: double gsl_sf_hyperg_2F1_conj_renorm (double aR, double aI, double c, double x)

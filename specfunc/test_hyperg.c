@@ -987,6 +987,35 @@ TEST_SF(s, gsl_sf_hyperg_U_e, (2, -6.4, 1, &r),1.2141502795806162484648638e-02
   TEST_SF(s, gsl_sf_hyperg_2F1_e, (0.5, 3.0, 2.0, 0.25, &r),
           1.2509255832441892, TEST_TOL1, GSL_SUCCESS);
 
+  /* 2F1 for x < -1, via the Pfaff transformations.  The defining Gauss
+   * series does not converge outside the unit disk, so these used to be
+   * rejected with GSL_EDOM (Savannah bug #30324).  Expected values from
+   * mpmath.hyp2f1 at 60 digits; the terminating cases are exact. */
+
+  TEST_SF(s, gsl_sf_hyperg_2F1_e, (1.0, 2.0, 3.0, -2.0, &r),
+          0.4506938556659451543023774, TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_2F1_e, (0.5, 0.5, 1.5, -3.0, &r),
+          0.7603459963009463475310943, TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_2F1_e, (0.3, 0.7, 2.5, -1.0001, &r),
+          0.9345423482221381182206012, TEST_TOL1, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_2F1_e, (-0.5, 1.5, 0.5, -1.5, &r),
+          2.529822128134703465599115, TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_2F1_e, (2.0, 3.0, 5.0, -10.0, &r),
+          0.02981809047076497298389036, TEST_TOL3, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_2F1_e, (5.0, 4.0, 1.0, -2.0, &r),
+          0.002591068434689833866788599, TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_2F1_e, (10.5, 0.5, 3.5, -2.0, &r),
+          0.3563114789666732329892793, TEST_TOL1, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_2F1_e, (3.0, -2.5, 1.7, -4.0, &r),
+          146.9484797731515458622785, TEST_TOL1, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_2F1_e, (0.5, 8.5, 9.0, -50.0, &r),
+          0.144369248322754762183506, TEST_TOL3, GSL_SUCCESS);
+  /* c-b = -1 and c-a = -1 terminate the transformed series exactly */
+  TEST_SF(s, gsl_sf_hyperg_2F1_e, (-5.0, 2.0, 1.0, -3.0, &r),
+          4864.0, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_2F1_e, (2.0, -5.0, 1.0, -3.0, &r),
+          4864.0, TEST_TOL0, GSL_SUCCESS);
+
   /* 2F1 conj */
 
   TEST_SF(s, gsl_sf_hyperg_2F1_conj_e, (1, 1, 1, 0.5, &r), 3.352857095662929028, TEST_TOL0, GSL_SUCCESS);

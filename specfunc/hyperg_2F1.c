@@ -719,7 +719,61 @@ gsl_sf_hyperg_2F1_e(double a, double b, const double c,
     return hyperg_2F1_series(ap, bp, c, x, result);
   }
 
-  if(x < -1.0 || 1.0 <= x) {
+  /* The Gauss series only converges for |x| < 1, but the Pfaff
+   * transformations [DLMF 15.8.1 and 15.8.2]
+   *
+   *   2F1(a,b;c;x) = (1-x)^-a 2F1(a,   c-b; c, x/(x-1))
+   *                = (1-x)^-b 2F1(c-a, b;   c, x/(x-1))
+   *
+   * continue the function to every x < 1.  For x < -1 the transformed
+   * argument z = x/(x-1) lies in (1/2,1), where the dispatch below is
+   * at its best.  Savannah bug #30324.
+   */
+  if(x < -1.0) {
+    const double z = x / (x - 1.0);
+    const double ln_omx = log(1.0 - x);
+    double a1, b1, p;
+    gsl_sf_result F;
+    int stat_F;
+    int use_a;
+
+    /* Prefer a form whose transformed parameter terminates the series
+     * exactly; otherwise use the smaller prefactor exponent.  The
+     * sign-exchange 2F1(a,b;c;x) = 2F1(b,a;c;x) has already been
+     * folded into the a/b naming by the caller, so either is valid.
+     */
+    if(fabs(c - b - rint(c - b)) < locEPS && c - b <= 0.0) {
+      use_a = 1;
+    }
+    else if(fabs(c - a - rint(c - a)) < locEPS && c - a <= 0.0) {
+      use_a = 0;
+    }
+    else {
+      use_a = (fabs(a) <= fabs(b));
+    }
+
+    if(use_a) {
+      a1 = a;
+      b1 = c - b;
+      p  = -a;
+    }
+    else {
+      a1 = c - a;
+      b1 = b;
+      p  = -b;
+    }
+
+    stat_F = gsl_sf_hyperg_2F1_e(a1, b1, c, z, &F);
+    {
+      const double ln_pre = p * ln_omx;
+      const double ln_pre_err = GSL_DBL_EPSILON * (fabs(ln_pre) + fabs(ln_omx));
+      const int stat_e = gsl_sf_exp_mult_err_e(ln_pre, ln_pre_err,
+                                               F.val, F.err, result);
+      return GSL_ERROR_SELECT_2(stat_e, stat_F);
+    }
+  }
+
+  if(1.0 <= x) {
     DOMAIN_ERROR(result);
   }
 
