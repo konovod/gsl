@@ -107,6 +107,33 @@ int gsl_sf_eta_e(const double s, gsl_sf_result * result);
 double gsl_sf_eta(const double s);
 
 
+/* Riemann zeta function for complex argument s = x + iy
+ *
+ * s != 1.0
+ * exceptions: GSL_EDOM
+ */
+int gsl_sf_complex_zeta_e(const double x, const double y,
+                          gsl_sf_result * result_re,
+                          gsl_sf_result * result_im);
+
+/* Hurwitz zeta function zeta(s,q) for complex s = x + iy and real q > 0,
+ * with Re(s) > 1
+ *
+ * exceptions: GSL_EDOM
+ */
+int gsl_sf_complex_hzeta_e(const double x, const double y, const double q,
+                           gsl_sf_result * result_re,
+                           gsl_sf_result * result_im);
+
+/* eta function for complex argument s = x + iy
+ *
+ * exceptions: GSL_EDOM
+ */
+int gsl_sf_complex_eta_e(const double x, const double y,
+                         gsl_sf_result * result_re,
+                         gsl_sf_result * result_im);
+
+
 __END_DECLS
 
 #endif /* GSL_SF_ZETA_H__ */

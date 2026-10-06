@@ -1041,6 +1041,46 @@ int test_elljac(void)
 }
 
 
+int test_zeta_complex(void)
+{
+  gsl_sf_result r1, r2;
+  int s = 0;
+
+  /* Complex zeta, eta and Hurwitz zeta.  The reference values are
+     30-digit mpmath values for s = x + iy. */
+
+  TEST_SF_2(s, gsl_sf_complex_zeta_e, (2, 0, &r1, &r2), 1.6449340668482264365, TEST_TOL3, 0.0, TEST_TOL3, GSL_SUCCESS);
+  TEST_SF_2(s, gsl_sf_complex_zeta_e, (3, 0, &r1, &r2), 1.2020569031595942854, TEST_TOL3, 0.0, TEST_TOL3, GSL_SUCCESS);
+  TEST_SF_2(s, gsl_sf_complex_zeta_e, (0.5, 14, &r1, &r2), 0.022241142609993589246, TEST_TOL3, -0.1032581232664500579, TEST_TOL3, GSL_SUCCESS);
+  TEST_SF_2(s, gsl_sf_complex_zeta_e, (0.5, -14, &r1, &r2), 0.022241142609993589246, TEST_TOL3, 0.1032581232664500579, TEST_TOL3, GSL_SUCCESS);
+  TEST_SF_2(s, gsl_sf_complex_zeta_e, (-1, 0, &r1, &r2), -0.083333333333333333333, TEST_TOL3, 0.0, TEST_TOL3, GSL_SUCCESS);
+  TEST_SF_2(s, gsl_sf_complex_zeta_e, (0, 0, &r1, &r2), -0.5, TEST_TOL3, 0.0, TEST_TOL3, GSL_SUCCESS);
+  TEST_SF_2(s, gsl_sf_complex_zeta_e, (2, 30, &r1, &r2), 0.82587982431582637523, TEST_TOL3, -0.26903382749730631099, TEST_TOL3, GSL_SUCCESS);
+  TEST_SF_2(s, gsl_sf_complex_zeta_e, (-3.5, 50, &r1, &r2), -3111.0157505529050671, TEST_TOL3, -2278.7928884163814098, TEST_TOL3, GSL_SUCCESS);
+  TEST_SF_2(s, gsl_sf_complex_zeta_e, (-10, 0, &r1, &r2), 0.0, TEST_TOL3, 0.0, TEST_TOL3, GSL_SUCCESS);
+  TEST_SF_2(s, gsl_sf_complex_zeta_e, (10, 1, &r1, &r2), 1.0007590778298567688, TEST_TOL3, -0.00064012802678552397458, TEST_TOL3, GSL_SUCCESS);
+
+  TEST_SF_2(s, gsl_sf_complex_eta_e, (1, 0, &r1, &r2), 0.69314718055994530942, TEST_TOL3, 0.0, TEST_TOL3, GSL_SUCCESS);
+  TEST_SF_2(s, gsl_sf_complex_eta_e, (2, 0, &r1, &r2), 0.82246703342411321824, TEST_TOL3, 0.0, TEST_TOL3, GSL_SUCCESS);
+  TEST_SF_2(s, gsl_sf_complex_eta_e, (0.5, 14, &r1, &r2), 0.012220891770754763066, TEST_TOL3, -0.2522997666528998332, TEST_TOL3, GSL_SUCCESS);
+  TEST_SF_2(s, gsl_sf_complex_eta_e, (-1, 0, &r1, &r2), 0.25, TEST_TOL3, 0.0, TEST_TOL3, GSL_SUCCESS);
+  TEST_SF_2(s, gsl_sf_complex_eta_e, (3, -5, &r1, &r2), 1.1328263629444648158, TEST_TOL3, 0.0097675275599834827953, TEST_TOL3, GSL_SUCCESS);
+
+  TEST_SF_2(s, gsl_sf_complex_hzeta_e, (2, 0, 1.0, &r1, &r2), 1.6449340668482264365, TEST_TOL3, 0.0, TEST_TOL3, GSL_SUCCESS);
+  TEST_SF_2(s, gsl_sf_complex_hzeta_e, (3, 0, 2.0, &r1, &r2), 0.2020569031595942854, TEST_TOL3, 0.0, TEST_TOL3, GSL_SUCCESS);
+  TEST_SF_2(s, gsl_sf_complex_hzeta_e, (2, 14, 1.0, &r1, &r2), 0.68936377888190002799, TEST_TOL3, 0.015418738812501524927, TEST_TOL3, GSL_SUCCESS);
+  TEST_SF_2(s, gsl_sf_complex_hzeta_e, (5, 0, 0.5, &r1, &r2), 32.144760409444467716, TEST_TOL3, 0.0, TEST_TOL3, GSL_SUCCESS);
+  TEST_SF_2(s, gsl_sf_complex_hzeta_e, (4, -7, 3.0, &r1, &r2), -0.00063288751811792145803, TEST_TOL3, 0.010030507112027792439, TEST_TOL3, GSL_SUCCESS);
+
+  /* out-of-domain arguments */
+  TEST_SF_RETURN(s, gsl_sf_complex_zeta_e, (1, 0, &r1, &r2), GSL_EDOM);
+  TEST_SF_RETURN(s, gsl_sf_complex_hzeta_e, (1, 0, 1.0, &r1, &r2), GSL_EDOM);
+  TEST_SF_RETURN(s, gsl_sf_complex_hzeta_e, (2, 0, -1.0, &r1, &r2), GSL_EDOM);
+
+  return s;
+}
+
+
 int test_erf(void)
 {
   gsl_sf_result r;
@@ -3552,6 +3592,7 @@ int main(int argc, char * argv[])
   gsl_test(test_elementary(),  "Elementary Functions (Misc)");
   gsl_test(test_ellint(),      "Elliptic Integrals");
   gsl_test(test_elljac(),      "Jacobi Elliptic Functions");
+  gsl_test(test_zeta_complex(), "Complex zeta, eta and Hurwitz zeta");
   gsl_test(test_jac(),         "Elliptic Functions (Jacobi)");
   gsl_test(test_erf(),         "Error Functions");
   gsl_test(test_exp(),         "Exponential Functions");

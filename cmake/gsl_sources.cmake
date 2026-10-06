@@ -735,6 +735,7 @@ set(GSL_SOURCES
     specfunc/transport.c
     specfunc/trig.c
     specfunc/zeta.c
+    specfunc/zeta_complex.c
     splinalg/itersolve.c
     splinalg/gmres.c
     spmatrix/compress.c
