@@ -1261,14 +1261,15 @@ Singular Value Decomposition
 
 A general rectangular :math:`M`-by-:math:`N` matrix :math:`A` has a
 singular value decomposition (SVD) into the product of an
-:math:`M`-by-:math:`N` orthogonal matrix :math:`U`, an :math:`N`-by-:math:`N`
+:math:`M`-by-:math:`N` orthogonal (or unitary for complex :math:`A`) matrix
+:math:`U`, an :math:`N`-by-:math:`N`
 diagonal matrix of singular values :math:`S` and the transpose of an
-:math:`N`-by-:math:`N` orthogonal square matrix :math:`V`,
+:math:`N`-by-:math:`N` orthogonal (unitary) square matrix :math:`V`,
 
 .. math:: A = U S V^T
 
 The singular values :math:`\sigma_i = S_{ii}`
-are all non-negative and are
+are all real-valued, non-negative and are
 generally chosen to form a non-increasing sequence
 
 .. only:: not texinfo
@@ -1295,24 +1296,30 @@ Similarly, the range of :math:`A` is given by columns of :math:`U`
 corresponding to the non-zero singular values.
 
 Note that the routines here compute the "thin" version of the SVD
-with :math:`U` as :math:`M`-by-:math:`N` orthogonal matrix. This allows
-in-place computation and is the most commonly-used form in practice.
+with :math:`U` as :math:`M`-by-:math:`N` orthogonal (unitary) matrix. This
+allows in-place computation and is the most commonly-used form in practice.
 Mathematically, the "full" SVD is defined with :math:`U` as an
-:math:`M`-by-:math:`M` orthogonal matrix and :math:`S` as an
+:math:`M`-by-:math:`M` orthogonal (unitary) matrix and :math:`S` as an
 :math:`M`-by-:math:`N` diagonal matrix (with additional rows of zeros).
 
 .. function:: int gsl_linalg_SV_decomp (gsl_matrix * A, gsl_matrix * V, gsl_vector * S, gsl_vector * work)
+              int gsl_linalg_complex_SV_decomp (gsl_matrix_complex * A, gsl_matrix_complex * V, gsl_vector * S, gsl_vector_complex * w1, gsl_vector_complex * w2)
 
    This function factorizes the :math:`M`-by-:math:`N` matrix :data:`A` into
-   the singular value decomposition :math:`A = U S V^T` for :math:`M \ge N`.
+   the singular value decomposition :math:`A = U S V^T` (or :math:`A = U S
+   V^H`) for :math:`M \ge N`.
    On output the matrix :data:`A` is replaced by
    :math:`U`. The diagonal elements of the singular value matrix :math:`S`
    are stored in the vector :data:`S`. The singular values are non-negative
    and form a non-increasing sequence from :math:`S_1` to :math:`S_N`. The
-   matrix :data:`V` contains the elements of :math:`V` in untransposed
-   form. To form the product :math:`U S V^T` it is necessary to take the
+   matrix :data:`V` contains the elements of :math:`V` in untransposed (or
+   untransposed and not complex conjugated)
+   form. To form the product :math:`U S V^T` (or :math:`U S V^H`) it is
+   necessary to take the (Hermitian)
    transpose of :data:`V`.  A workspace of length :data:`N` is required in
-   :data:`work`.
+   :data:`work` for real :math:`A`, and two workspaces of length :data:`N` and
+   :data:`N-1` are required in :data:`w1` and :data:`w2` for complex
+   :math:`A`.
 
    This routine uses the Golub-Reinsch SVD algorithm.  
 
