@@ -1458,6 +1458,15 @@ int test_expint(void)
   TEST_SF(s,  gsl_sf_atanint_e, (300.0, &r), 8.96281388924518959990, TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s,  gsl_sf_atanint_e, (1.0e+5, &r), 18.084471031038661920, TEST_TOL0, GSL_SUCCESS);
 
+  /* The integral is odd: AtanInt(-x) = -AtanInt(x).  The value was
+     always right for negative arguments, but the error estimate was
+     computed with the signed x, so it came back negative.  See Savannah
+     bug #67774. */
+  TEST_SF(s,  gsl_sf_atanint_e, (-0.1, &r), -0.09988928686033618404, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s,  gsl_sf_atanint_e, (-1.0, &r), -0.91596559417721901505, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s,  gsl_sf_atanint_e, (-2.0, &r), -1.57601540344632342236, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s,  gsl_sf_atanint_e, (0.0, &r), 0.0, TEST_TOL0, GSL_SUCCESS);
+
   /* Bug report from Wolfgang Ehrhardt <Wolfgang.Ehrhardt@munich.netsurf.de> */
   TEST_SF(s,  gsl_sf_atanint_e, (1.0e+9, &r), 32.552029856869591656, TEST_TOL0, GSL_SUCCESS);
 
