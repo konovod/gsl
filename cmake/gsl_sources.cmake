@@ -365,11 +365,13 @@ set(GSL_SOURCES
     linalg/symmtd.c
     linalg/hermtd.c
     linalg/bidiag.c
+    linalg/bidiagc.c
     linalg/balance.c
     linalg/balancemat.c
     linalg/inline.c
     linalg/trimult.c
     linalg/trimult_complex.c
+    linalg/givensc.c
     matrix/init.c
     matrix/matrix.c
     matrix/file.c

@@ -136,6 +136,14 @@ int gsl_linalg_complex_householder_left (const gsl_complex tau,
                                          gsl_matrix_complex * A,
                                          gsl_vector_complex * work);
 
+int gsl_linalg_complex_householder_right (const gsl_complex tau,
+                                          const gsl_vector_complex * v,
+                                          gsl_matrix_complex * A,
+                                          gsl_vector_complex * work);
+
+int gsl_linalg_complex_householder_hm1 (gsl_complex tau,
+                                        gsl_matrix_complex * A);
+
 /* Hessenberg reduction */
 
 int gsl_linalg_hessenberg_decomp(gsl_matrix *A, gsl_vector *tau);
@@ -913,6 +921,30 @@ int gsl_linalg_bidiag_unpack_B (const gsl_matrix * A,
                                 gsl_vector * diag, 
                                 gsl_vector * superdiag);
 
+int gsl_linalg_complex_bidiag_decomp (gsl_matrix_complex * A,
+                              gsl_vector_complex * tau_U,
+                              gsl_vector_complex * tau_V);
+
+int gsl_linalg_complex_bidiag_unpack (const gsl_matrix_complex * A,
+                              const gsl_vector_complex * tau_U,
+                              gsl_matrix_complex * U,
+                              const gsl_vector_complex * tau_V,
+                              gsl_matrix_complex * V,
+                              gsl_vector * diag,
+                              gsl_vector * superdiag,
+                              gsl_vector_complex * work);
+
+int gsl_linalg_complex_bidiag_unpack2 (gsl_matrix_complex * A,
+                               gsl_vector_complex * tau_U,
+                               gsl_vector_complex * tau_V,
+                               gsl_matrix_complex * V,
+                               gsl_vector * diag,
+                               gsl_vector * superdiag);
+
+int gsl_linalg_complex_bidiag_unpack_B (const gsl_matrix_complex * A,
+                                gsl_vector * diag,
+                                gsl_vector * superdiag);
+
 /* Balancing */
 
 int gsl_linalg_balance_matrix (gsl_matrix * A, gsl_vector * D);
@@ -992,6 +1024,12 @@ gsl_linalg_givens_gv (gsl_vector * v, const size_t i, const size_t j,
 }
 
 #endif /* HAVE_INLINE */
+
+void gsl_linalg_complex_givens (const gsl_complex a, const gsl_complex b,
+                                double *c, gsl_complex *s);
+void gsl_linalg_complex_givens_gv (gsl_vector_complex * v,
+                                   const size_t i, const size_t j,
+                                   const double c, const gsl_complex s);
 
 __END_DECLS
 

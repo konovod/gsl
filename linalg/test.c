@@ -403,6 +403,10 @@ gsl_matrix * moler10;
 #include "test_qrc.c"
 #include "test_qr_band.c"
 #include "test_svd.c"
+#include "test_hh.c"
+#include "test_hhc.c"
+#include "test_bidiag.c"
+#include "test_bidiagc.c"
 
 int
 test_QR_solve_dim(const gsl_matrix * m, const double * actual, double eps)
@@ -3728,6 +3732,18 @@ main(void)
   gsl_test(test_TDN_solve(),             "Tridiagonal nonsymmetric solve");
   gsl_test(test_TDN_cyc_solve(),         "Tridiagonal nonsymmetric cyclic solve");
   gsl_test(test_tridiag_complex(r),      "Complex tridiagonal solves");
+
+  gsl_test(test_HH_left(r),              "Householder Left");
+  gsl_test(test_HH_right(r),             "Householder Right");
+
+  gsl_test(test_HH_complex_left(r),      "Complex Householder Left");
+  gsl_test(test_HH_complex_right(r),     "Complex Householder Right");
+
+  gsl_test(test_givens_complex(r),       "Complex Givens rotations");
+
+  gsl_test(test_bidiag_unpack(r),        "Bidiagonal Unpacking");
+  gsl_test(test_bidiag_complex_decomp(r),"Complex Bidiagonal Decomposition");
+  gsl_test(test_bidiag_complex_unpack(r),"Complex Bidiagonal Unpacking");
 
   gsl_matrix_free(m11);
   gsl_matrix_free(m35);

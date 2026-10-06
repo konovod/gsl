@@ -1,6 +1,8 @@
 /* linalg/householdercomplex.c
  * 
  * Copyright (C) 2001, 2007 Brian Gough
+ * Copyright (C) 2020 Patrick Alken
+ * Copyright (C) 2024 Christian Krueger
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -225,6 +227,85 @@ gsl_linalg_complex_householder_left(const gsl_complex tau, const gsl_vector_comp
     }
 }
 
+/*
+gsl_linalg_complex_householder_right()
+  Apply a Householder reflector
+
+H = I - tau v^* v^*^H = (I - tau v v^H)^T
+
+to a M-by-N matrix A from the right (^* denotes complex conjugation)
+
+The transpose of the Householder reflector has to be applied since H
+is not constructed to be hermitian. The transpose is identical to
+taking the complex conjugate of v.
+
+Inputs: tau  - Householder coefficient
+        v    - Householder vector, length N
+        A    - (input/output) M-by-N matrix on input; on output, A*H
+        work - workspace, length M
+
+Notes:
+1) v(1) is modified but is restored on output
+*/
+
+int
+gsl_linalg_complex_householder_right(const gsl_complex tau, const gsl_vector_complex * v, gsl_matrix_complex * A, gsl_vector_complex * work)
+{
+  const size_t M = A->size1;
+  const size_t N = A->size2;
+
+  const size_t stride = v->stride;
+  size_t i;
+
+  if (v->size != N)
+    {
+      GSL_ERROR ("matrix must match Householder vector dimensions", GSL_EBADLEN);
+    }
+  else if (work->size != M)
+    {
+      GSL_ERROR ("workspace must match matrix", GSL_EBADLEN);
+    }
+  else
+    {
+      gsl_complex v0, mtau;
+
+      /* quick return */
+      if (GSL_REAL(tau) == 0.0 && GSL_IMAG(tau) == 0.0)
+        return GSL_SUCCESS;
+
+      v0 = gsl_vector_complex_get(v, 0);
+      v->data[0] = 1.0;
+      v->data[1] = 0.0;
+
+      /* need the conjugate of v, however, it's declared as const */
+      /* so we have to manipulate the memory directly.            */
+      for (i = 0; i < v->size; i++)
+        {
+          size_t k = 2 * i * stride + 1;
+          v->data[k] = -(v->data[k]);
+        }
+
+      /* work := A v^* */
+      gsl_blas_zgemv(CblasNoTrans, GSL_COMPLEX_ONE, A, v, GSL_COMPLEX_ZERO, work);
+
+      /* A := A - tau work v^*^H */
+      GSL_REAL(mtau) = -GSL_REAL(tau);
+      GSL_IMAG(mtau) = -GSL_IMAG(tau);
+      gsl_blas_zgerc(mtau, work, v, A);
+
+      /* restore v */
+      for (i = 0; i < v->size; i++)
+        {
+          size_t k = 2 * i * stride + 1;
+          v->data[k] = -(v->data[k]);
+        }
+      v->data[0] = GSL_REAL(v0);
+      v->data[1] = GSL_IMAG(v0);
+
+      return GSL_SUCCESS;
+    }
+}
+
 #ifndef GSL_DISABLE_DEPRECATED
 
 int
@@ -329,6 +410,105 @@ gsl_linalg_complex_householder_mh (gsl_complex tau, const gsl_vector_complex * v
         }
     }
       
+  return GSL_SUCCESS;
+}
+
+int
+gsl_linalg_complex_householder_hm1 (gsl_complex tau, gsl_matrix_complex * A)
+{
+  /* applies a householder transformation v,tau to a matrix being
+     build up from the identity matrix, using the first column of A as
+     a householder vector */
+
+  if (GSL_REAL(tau) == 0 && GSL_IMAG(tau) == 0)
+    {
+      size_t i,j;
+
+      gsl_matrix_complex_set (A, 0, 0, GSL_COMPLEX_ONE);
+
+      for (j = 1; j < A->size2; j++)
+        {
+          gsl_matrix_complex_set (A, 0, j, GSL_COMPLEX_ZERO);
+        }
+
+      for (i = 1; i < A->size1; i++)
+        {
+          gsl_matrix_complex_set (A, i, 0, GSL_COMPLEX_ZERO);
+        }
+
+      return GSL_SUCCESS;
+    }
+
+  /* w = A' v */
+
+#ifdef USE_BLAS
+  {
+    gsl_matrix_complex_view A1 = gsl_matrix_complex_submatrix (A, 1, 0, A->size1 - 1, A->size2);
+    gsl_vector_complex_view v1 = gsl_matrix_complex_column (&A1.matrix, 0);
+    size_t j;
+
+    for (j = 1; j < A->size2; j++)
+      {
+        double wj = 0.0;   /* A0j * v0 */ // TODO
+
+        gsl_vector_complex_view A1j = gsl_matrix_complex_column(&A1.matrix, j);
+        gsl_blas_ddot (&A1j.vector, &v1.vector, &wj); // TODO
+
+        /* A = A - tau v w' */
+
+        gsl_matrix_complex_set (A, 0, j, - tau *  wj);
+
+        gsl_blas_daxpy(-tau*wj, &v1.vector, &A1j.vector); // TODO
+      }
+
+    gsl_blas_dscal(-tau, &v1.vector); // TODO
+
+    gsl_matrix_complex_set (A, 0, 0, 1.0 - tau);
+  }
+#else
+  {
+    size_t i, j;
+
+    for (j = 1; j < A->size2; j++)
+      {
+        gsl_complex wj = GSL_COMPLEX_ZERO;   /* A0j * v0 */
+
+        for (i = 1; i < A->size1; i++)
+          {
+            gsl_complex vi = gsl_matrix_complex_get(A, i, 0);
+            gsl_complex Aij = gsl_complex_conjugate(gsl_matrix_complex_get(A, i, j));
+            gsl_complex Aijvi = gsl_complex_mul(Aij, vi);
+            wj = gsl_complex_add(wj, Aijvi);
+          }
+
+        wj = gsl_complex_conjugate(wj);
+
+        /* A = A - tau v w' */
+        gsl_complex tauwj = gsl_complex_mul(tau, wj);
+
+        gsl_matrix_complex_set (A, 0, j, gsl_complex_sub(GSL_COMPLEX_ZERO, tauwj));
+
+        for (i = 1; i < A->size1; i++)
+          {
+            gsl_complex vi = gsl_matrix_complex_get (A, i, 0);
+            gsl_complex Aij = gsl_matrix_complex_get (A, i, j);
+            gsl_complex tauwv = gsl_complex_mul(vi, tauwj);
+            gsl_complex Atwv = gsl_complex_sub(Aij, tauwv);
+            gsl_matrix_complex_set (A, i, j, Atwv);
+          }
+      }
+
+    for (i = 1; i < A->size1; i++)
+      {
+        gsl_complex vi = gsl_matrix_complex_get(A, i, 0);
+        gsl_complex tauvi = gsl_complex_mul(tau, vi);
+        gsl_matrix_complex_set(A, i, 0, gsl_complex_sub(GSL_COMPLEX_ZERO, tauvi));
+      }
+
+    gsl_matrix_complex_set (A, 0, 0, gsl_complex_sub(GSL_COMPLEX_ONE, tau));
+  }
+#endif
+
   return GSL_SUCCESS;
 }
 
