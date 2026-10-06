@@ -33,6 +33,7 @@
 #include <string.h>
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_errno.h>
+#include <gsl/gsl_sys.h>
 #include <gsl/gsl_odeiv.h>
 
 #include "odeiv_util.h"
@@ -44,6 +45,7 @@ typedef struct
   double *ytmp;
   double *y_onestep;
   double *y0_orig;
+  int converged;
 }
 rk2imp_state_t;
 
@@ -108,6 +110,8 @@ rk2imp_alloc (size_t dim)
       GSL_ERROR_NULL ("failed to allocate space for y0_orig", GSL_ENOMEM);
     }
 
+  state->converged = 1;
+
   return state;
 }
 
@@ -129,39 +133,67 @@ rk2imp_step (double *y, rk2imp_state_t *state,
   const double *y0 = state->y0;
   double *Y1 = state->Y1;
   double *ytmp = state->ytmp;
-  int max_iter=3;
+  /* Iterate the functional equation Y1 = f(t + h/2, y0 + h/2 Y1) to
+     convergence.  The old code used three unconditional iterations,
+     which left the implicit method behaving like an explicit one and
+     produced a secular energy drift on Hamiltonian problems
+     (Savannah bug #30540).  A non-converged step leaves y untouched and
+     is flagged through state->converged so the caller can reject it. */
+  const int max_iter = 1000;
+  const double tol = GSL_DBL_EPSILON;
+  int converged = 0;
   int nu;
   size_t i;
 
-  /* iterative solution of Y1 = y0 + h/2 * f(t + h/2, Y1) 
-     Y1 should include initial values at call.
-
-     Note: This method does not check for convergence of the
-     iterative solution! 
-  */
+  for (i = 0; i < dim; i++)
+    {
+      ytmp[i] = y0[i] + 0.5 * h * Y1[i];
+    }
 
   for (nu = 0; nu < max_iter; nu++)
     {
-      for (i = 0; i < dim; i++)
+      int s = GSL_ODEIV_FN_EVAL (sys, t + 0.5 * h, ytmp, Y1);
+
+      if (s != GSL_SUCCESS)
         {
-          ytmp[i] = y0[i] + 0.5 * h * Y1[i];
+          return s;
         }
 
       {
-	int s = GSL_ODEIV_FN_EVAL (sys, t + 0.5 * h, ytmp, Y1);
-	
-	if (s != GSL_SUCCESS)
-	  {
-	    return s;
-	  }    
+        double delta = 0.0;
+        double scale = 0.0;
+
+        for (i = 0; i < dim; i++)
+          {
+            const double ynext = y0[i] + 0.5 * h * Y1[i];
+            const double diff = fabs (ynext - ytmp[i]);
+
+            delta = GSL_MAX (delta, diff);
+            scale = GSL_MAX (scale, fabs (ynext));
+            ytmp[i] = ynext;
+          }
+
+        if (gsl_finite (delta) && gsl_finite (scale)
+            && delta <= tol * (scale + 1.0))
+          {
+            converged = 1;
+            break;
+          }
       }
     }
-  
-  /* assignment */
 
-  for (i = 0; i < dim; i++)
+  state->converged = converged;
+
+  /* Only advance y when the iteration converged; a non-converged
+     (possibly divergent or NaN) iterate must not corrupt the state.
+     The caller rejects the step through the reported error. */
+
+  if (converged)
     {
-      y[i] = y0[i] + h * Y1[i];
+      for (i = 0; i < dim; i++)
+        {
+          y[i] = y0[i] + h * Y1[i];
+        }
     }
 
   return GSL_SUCCESS;
@@ -180,6 +212,7 @@ rk2imp_apply (void *vstate,
   rk2imp_state_t *state = (rk2imp_state_t *) vstate;
 
   size_t i;
+  int converged = 1;
 
   double *Y1 = state->Y1;
   double *y0 = state->y0;
@@ -221,6 +254,8 @@ rk2imp_apply (void *vstate,
       {
 	return s;
       }
+
+    converged = converged && state->converged;
   }
 
  /* Then with two steps with half step length (save to y) */ 
@@ -235,6 +270,8 @@ rk2imp_apply (void *vstate,
 
 	return s;
       }
+
+    converged = converged && state->converged;
   }
 
   DBL_MEMCPY (y0, y, dim);
@@ -261,6 +298,8 @@ rk2imp_apply (void *vstate,
 
 	return s;
       }
+
+    converged = converged && state->converged;
   }
 
   /* Derivatives at output */
@@ -283,6 +322,18 @@ rk2imp_apply (void *vstate,
   for (i = 0; i < dim; i++) 
     {
       yerr[i] = 4.0 * (y[i] - y_onestep[i]) / 3.0;
+    }
+
+  if (!converged)
+    {
+      /* The functional iteration did not converge at this step size.
+         The step left y untouched; report a large error so the adaptive
+         control rejects the step and reduces h.  The old code always
+         accepted the three-iteration result silently. */
+      for (i = 0; i < dim; i++)
+        {
+          yerr[i] = GSL_DBL_MAX;
+        }
     }
 
   return GSL_SUCCESS;

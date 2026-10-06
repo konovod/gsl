@@ -1001,6 +1001,100 @@ test_evolve_stiff5 (const gsl_odeiv_step_type * T, double h, double err)
                       "stiff[0,5]");
 }
 
+/* The Henon-Heiles Hamiltonian
+     H = (p1^2 + p2^2)/2 + (q1^2 + q2^2)/2 + q1^2 q2 - q2^3/3
+   is a classic test for symplectic integrators: the energy error of a
+   symplectic method is bounded, whereas the old three-iteration
+   rk2imp/rk4imp solvers drifted linearly (Savannah bug #30540). */
+
+static double
+henon_heiles_energy (const double y[])
+{
+  const double q1 = y[0], q2 = y[1], p1 = y[2], p2 = y[3];
+
+  return 0.5 * (p1*p1 + p2*p2) + 0.5 * (q1*q1 + q2*q2)
+    + q1*q1*q2 - q2*q2*q2 / 3.0;
+}
+
+static int
+rhs_henon_heiles (double t, const double y[], double dydt[], void *params)
+{
+  (void) t;
+  (void) params;
+
+  dydt[0] =  y[2];
+  dydt[1] =  y[3];
+  dydt[2] = -y[0] - 2.0 * y[0] * y[1];
+  dydt[3] = -y[1] - y[0] * y[0] + y[1] * y[1];
+
+  return GSL_SUCCESS;
+}
+
+void
+test_energy_conservation (void)
+{
+  const gsl_odeiv_step_type *steppers[2] = {
+    gsl_odeiv_step_rk4imp, gsl_odeiv_step_rk2imp
+  };
+  const char *names[2] = { "rk4imp", "rk2imp" };
+  const double h = 0.1;
+  const double window = 1000.0;
+  const double t_end = 10000.0;
+  gsl_odeiv_system sys = { rhs_henon_heiles, 0, 4, 0 };
+  int k;
+
+  for (k = 0; k < 2; k++)
+    {
+      gsl_odeiv_step *step = gsl_odeiv_step_alloc (steppers[k], 4);
+      double y[4] = { 0.2, 0.2, 0.2, 0.2 };
+      double yerr[4];
+      double dydt_out[4];
+      const double E0 = henon_heiles_energy (y);
+      double t = 0.0;
+      double next_window = window;
+      double e_max = 0.0;
+      double e_first = 0.0;
+      double e_last = 0.0;
+      int i = 0;
+
+      while (t < t_end - 1.0e-9)
+        {
+          const double hh = GSL_MIN (h, t_end - t);
+          const int s = gsl_odeiv_step_apply (step, t, hh, y, yerr, NULL,
+                                              dydt_out, &sys);
+          double e;
+
+          if (s != GSL_SUCCESS)
+            {
+              gsl_test (s, "energy_conservation %s step failed", names[k]);
+              break;
+            }
+
+          t += hh;
+          e = fabs (henon_heiles_energy (y) - E0);
+          e_max = GSL_MAX (e_max, e);
+
+          if (t >= next_window - 1.0e-9)
+            {
+              if (i == 0)
+                {
+                  e_first = e_max;
+                }
+              e_last = e_max;
+              e_max = 0.0;
+              next_window += window;
+              i++;
+            }
+        }
+
+      gsl_test (e_last > 2.0 * e_first,
+                "energy_conservation %s: last window max %.3e vs first %.3e",
+                names[k], e_last, e_first);
+
+      gsl_odeiv_step_free (step);
+    }
+}
+
 /* Test cases from Frank Reininghaus <frank78ac@googlemail.com> */
 
 int rhs_stepfn (double t, const double * y, double * dydt, void * params) {
@@ -1333,7 +1427,9 @@ main (void)
 
   test_compare_vanderpol();
   test_compare_oregonator();
-  
+
+  test_energy_conservation();
+
   test_stepfn();
   test_stepfn2();
   test_stepfn3();

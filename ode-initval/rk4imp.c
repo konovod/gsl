@@ -33,6 +33,7 @@
 #include <string.h>
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_errno.h>
+#include <gsl/gsl_sys.h>
 #include <gsl/gsl_odeiv.h>
 
 #include "odeiv_util.h"
@@ -46,6 +47,7 @@ typedef struct
   double *y0;
   double *y0_orig;
   double *y_onestep;
+  int converged;
 }
 rk4imp_state_t;
 
@@ -137,6 +139,8 @@ rk4imp_alloc (size_t dim)
       GSL_ERROR_NULL ("failed to allocate space for y_onestep", GSL_ENOMEM);
     }
 
+  state->converged = 1;
+
   return state;
 }
 
@@ -161,7 +165,19 @@ rk4imp_step (double *y, rk4imp_state_t *state,
   */
 
   const double ir3 = 1.0 / M_SQRT3;
-  const int iter_steps = 3;
+  const double a11 = 0.25;
+  const double a12 = 0.5 * (0.5 - ir3);
+  const double a21 = 0.5 * (0.5 + ir3);
+  const double a22 = 0.25;
+  /* Iterate the coupled functional equations for the two stages to
+     convergence.  The old code used three unconditional iterations,
+     which left the implicit method behaving like an explicit one and
+     produced a secular energy drift on Hamiltonian problems
+     (Savannah bug #30540).  A non-converged step leaves y untouched and
+     is flagged through state->converged so the caller can reject it. */
+  const int max_iter = 1000;
+  const double tol = GSL_DBL_EPSILON;
+  int converged = 0;
   int nu;
   size_t i;
 
@@ -170,47 +186,65 @@ rk4imp_step (double *y, rk4imp_state_t *state,
   double *const ytmp1 = state->ytmp1;
   double *const ytmp2 = state->ytmp2;
 
-  /* iterative solution of Y1 and Y2.
+  for (i = 0; i < dim; i++)
+    {
+      ytmp1[i] = y[i] + h * (a11 * k1nu[i] + a12 * k2nu[i]);
+      ytmp2[i] = y[i] + h * (a21 * k1nu[i] + a22 * k2nu[i]);
+    }
 
-     Note: This method does not check for convergence of the
-     iterative solution! 
-  */
+  for (nu = 0; nu < max_iter; nu++)
+    {
+      double delta = 0.0;
+      double scale = 0.0;
+      int s;
 
-  for (nu = 0; nu < iter_steps; nu++)
+      s = GSL_ODEIV_FN_EVAL (sys, t + 0.5 * h * (1.0 - ir3), ytmp1, k1nu);
+      if (s != GSL_SUCCESS)
+        {
+          return s;
+        }
+
+      s = GSL_ODEIV_FN_EVAL (sys, t + 0.5 * h * (1.0 + ir3), ytmp2, k2nu);
+
+      if (s != GSL_SUCCESS)
+        {
+          return s;
+        }
+
+      for (i = 0; i < dim; i++)
+        {
+          const double y1 = y[i] + h * (a11 * k1nu[i] + a12 * k2nu[i]);
+          const double y2 = y[i] + h * (a21 * k1nu[i] + a22 * k2nu[i]);
+
+          delta = GSL_MAX (delta, fabs (y1 - ytmp1[i]));
+          delta = GSL_MAX (delta, fabs (y2 - ytmp2[i]));
+          scale = GSL_MAX (scale, fabs (y1));
+          scale = GSL_MAX (scale, fabs (y2));
+          ytmp1[i] = y1;
+          ytmp2[i] = y2;
+        }
+
+      if (gsl_finite (delta) && gsl_finite (scale)
+          && delta <= tol * (scale + 1.0))
+        {
+          converged = 1;
+          break;
+        }
+    }
+
+  state->converged = converged;
+
+  /* Only advance y when the iteration converged; a non-converged
+     (possibly divergent or NaN) iterate must not corrupt the state.
+     The caller rejects the step through the reported error. */
+
+  if (converged)
     {
       for (i = 0; i < dim; i++)
         {
-          ytmp1[i] =
-            y[i] + h * (0.25 * k1nu[i] + 0.5 * (0.5 - ir3) * k2nu[i]);
-          ytmp2[i] =
-            y[i] + h * (0.25 * k2nu[i] + 0.5 * (0.5 + ir3) * k1nu[i]);
+          const double d_i = 0.5 * (k1nu[i] + k2nu[i]);
+          y[i] += h * d_i;
         }
-      {
-        int s =
-	  GSL_ODEIV_FN_EVAL (sys, t + 0.5 * h * (1.0 - ir3), ytmp1, k1nu);
-	
-	if (s != GSL_SUCCESS)
-	  {
-	    return s;
-	  }    
-      }
-      {
-        int s =
-	  GSL_ODEIV_FN_EVAL (sys, t + 0.5 * h * (1.0 + ir3), ytmp2, k2nu);
-	
-	if (s != GSL_SUCCESS)
-	  {
-	    return s;
-	  }    
-      }
-    }
-
-  /* assignment */
-  
-  for (i = 0; i < dim; i++)
-    {
-      const double d_i = 0.5 * (k1nu[i] + k2nu[i]);
-      y[i] += h * d_i;
     }
 
   return GSL_SUCCESS;
@@ -230,6 +264,7 @@ rk4imp_apply (void *vstate,
   rk4imp_state_t *state = (rk4imp_state_t *) vstate;
 
   size_t i;
+  int converged = 1;
 
   double *y0 = state->y0;
   double *y0_orig = state->y0_orig;
@@ -270,6 +305,8 @@ rk4imp_apply (void *vstate,
       {
 	return s;
       }
+
+    converged = converged && state->converged;
   }
   
  /* Then with two steps with half step length (save to y) */ 
@@ -283,6 +320,8 @@ rk4imp_apply (void *vstate,
 	DBL_MEMCPY (y, y0_orig, dim);
 	return s;
       }
+
+    converged = converged && state->converged;
   }
 
   DBL_MEMCPY (y0, y, dim);
@@ -309,6 +348,8 @@ rk4imp_apply (void *vstate,
 	DBL_MEMCPY (y, y0_orig, dim);
 	return s;
       }
+
+    converged = converged && state->converged;
   }
   
   /* Derivatives at output */
@@ -335,6 +376,18 @@ rk4imp_apply (void *vstate,
       yerr[i] = 8.0 * 0.5 * (y[i] - y_onestep[i]) / 15.0;
     }
   
+  if (!converged)
+    {
+      /* The functional iteration did not converge at this step size.
+         The step left y untouched; report a large error so the adaptive
+         control rejects the step and reduces h.  The old code always
+         accepted the three-iteration result silently. */
+      for (i = 0; i < dim; i++)
+        {
+          yerr[i] = GSL_DBL_MAX;
+        }
+    }
+
   return GSL_SUCCESS;
 }
 
