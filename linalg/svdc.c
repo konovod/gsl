@@ -275,3 +275,215 @@ gsl_linalg_complex_SV_decomp (gsl_matrix_complex * A, gsl_matrix_complex * V, gs
 }
 
 
+/* Modified algorithm which is better for M>>N */
+int
+gsl_linalg_complex_SV_decomp_mod (gsl_matrix_complex * A,
+                          gsl_matrix_complex * X,
+                          gsl_matrix_complex * V,
+                          gsl_vector * S,
+                          gsl_vector_complex * work,
+                          gsl_vector_complex * work2)
+{
+  size_t i, j;
+
+  const size_t M = A->size1;
+  const size_t N = A->size2;
+
+  if (M < N)
+    {
+      GSL_ERROR ("svd of MxN matrix, M<N, is not implemented", GSL_EUNIMPL);
+    }
+  else if (V->size1 != N)
+    {
+      GSL_ERROR ("square matrix V must match second dimension of matrix A",
+                 GSL_EBADLEN);
+    }
+  else if (V->size1 != V->size2)
+    {
+      GSL_ERROR ("matrix V must be square", GSL_ENOTSQR);
+    }
+  else if (X->size1 != N)
+    {
+      GSL_ERROR ("square matrix X must match second dimension of matrix A",
+                 GSL_EBADLEN);
+    }
+  else if (X->size1 != X->size2)
+    {
+      GSL_ERROR ("matrix X must be square", GSL_ENOTSQR);
+    }
+  else if (S->size != N)
+    {
+      GSL_ERROR ("length of vector S must match second dimension of matrix A",
+                 GSL_EBADLEN);
+    }
+  else if (work->size != N)
+    {
+      GSL_ERROR ("length of workspace must match second dimension of matrix A",
+                 GSL_EBADLEN);
+    }
+  else if (work2->size + 1 != N)
+    {
+      GSL_ERROR ("length of workspace 2 must be (N - 1)",
+                 GSL_EBADLEN);
+    }
+
+  if (N == 1)
+    {
+      gsl_vector_complex_view column = gsl_matrix_complex_column (A, 0);
+      double norm = gsl_blas_dznrm2 (&column.vector);
+
+      gsl_vector_set (S, 0, norm);
+      gsl_matrix_complex_set (V, 0, 0, GSL_COMPLEX_ONE);
+
+      if (norm != 0.0)
+        {
+          gsl_blas_zdscal (1.0/norm, &column.vector);
+        }
+
+      return GSL_SUCCESS;
+    }
+
+  /* Convert A into an upper triangular matrix R */
+
+  for (i = 0; i < N; i++)
+    {
+      gsl_vector_complex_view c = gsl_matrix_complex_column (A, i);
+      gsl_vector_complex_view v = gsl_vector_complex_subvector (&c.vector, i, M - i);
+      gsl_complex tau_i = gsl_linalg_complex_householder_transform (&v.vector);
+
+      /* Apply the transformation to the remaining columns */
+
+      if (i + 1 < N)
+        {
+          gsl_matrix_complex_view m =
+            gsl_matrix_complex_submatrix (A, i, i + 1, M - i, N - (i + 1));
+          gsl_linalg_complex_householder_hm (gsl_complex_conjugate(tau_i), &v.vector, &m.matrix);
+        }
+
+      gsl_vector_complex_set (work, i, tau_i);
+    }
+
+  /* Copy the upper triangular part of A into X */
+
+  for (i = 0; i < N; i++)
+    {
+      for (j = 0; j < i; j++)
+        {
+          gsl_matrix_complex_set (X, i, j, GSL_COMPLEX_ZERO);
+        }
+
+      {
+        gsl_complex Aii = gsl_matrix_complex_get (A, i, i);
+        gsl_matrix_complex_set (X, i, i, Aii);
+      }
+
+      for (j = i + 1; j < N; j++)
+        {
+          gsl_complex Aij = gsl_matrix_complex_get (A, i, j);
+          gsl_matrix_complex_set (X, i, j, Aij);
+        }
+    }
+
+  /* Convert A into an orthogonal matrix L */
+
+  for (j = N; j-- > 0;)
+    {
+      /* Householder column transformation to accumulate L */
+      gsl_complex tj = gsl_vector_complex_get (work, j);
+      gsl_matrix_complex_view m = gsl_matrix_complex_submatrix (A, j, j, M - j, N - j);
+      gsl_linalg_complex_householder_hm1 (tj, &m.matrix);
+    }
+
+
+  /* unpack R into X V S */
+
+  gsl_linalg_complex_SV_decomp (X, V, S, work, work2);
+
+
+  /* Multiply L by X, to obtain U = L X, stored in U */
+
+  {
+    gsl_vector_complex_view sum = gsl_vector_complex_subvector (work, 0, N);
+
+    for (i = 0; i < M; i++)
+      {
+        gsl_vector_complex_view L_i = gsl_matrix_complex_row (A, i);
+        gsl_vector_complex_set_zero (&sum.vector);
+
+        for (j = 0; j < N; j++)
+          {
+            gsl_complex Lij = gsl_vector_complex_get (&L_i.vector, j);
+            gsl_vector_complex_view X_j = gsl_matrix_complex_row (X, j);
+            gsl_blas_zaxpy (Lij, &X_j.vector, &sum.vector);
+          }
+
+        gsl_vector_complex_memcpy (&L_i.vector, &sum.vector);
+      }
+  }
+
+  return GSL_SUCCESS;
+}
+
+
+/*  Solves the system A x = b using the SVD factorization
+ *
+ *  A = U S V^T
+ *
+ *  to obtain x. For M x N systems it finds the solution in the least
+ *  squares sense.
+ */
+
+int
+gsl_linalg_complex_SV_solve (const gsl_matrix_complex * U,
+                     const gsl_matrix_complex * V,
+                     const gsl_vector * S,
+                     const gsl_vector_complex * b, gsl_vector_complex * x)
+{
+  if (U->size1 != b->size)
+    {
+      GSL_ERROR ("first dimension of matrix U must size of vector b",
+                 GSL_EBADLEN);
+    }
+  else if (U->size2 != S->size)
+    {
+      GSL_ERROR ("length of vector S must match second dimension of matrix U",
+                 GSL_EBADLEN);
+    }
+  else if (V->size1 != V->size2)
+    {
+      GSL_ERROR ("matrix V must be square", GSL_ENOTSQR);
+    }
+  else if (S->size != V->size1)
+    {
+      GSL_ERROR ("length of vector S must match size of matrix V",
+                 GSL_EBADLEN);
+    }
+  else if (V->size2 != x->size)
+    {
+      GSL_ERROR ("size of matrix V must match size of vector x", GSL_EBADLEN);
+    }
+  else
+    {
+      const size_t N = U->size2;
+      size_t i;
+
+      gsl_vector_complex *w = gsl_vector_complex_calloc (N);
+
+      gsl_blas_zgemv (CblasConjTrans, GSL_COMPLEX_ONE, U, b, GSL_COMPLEX_ZERO, w);
+
+      for (i = 0; i < N; i++)
+        {
+          gsl_complex wi = gsl_vector_complex_get (w, i);
+          double alpha = gsl_vector_get (S, i);
+          if (alpha != 0)
+            alpha = 1.0 / alpha;
+          gsl_vector_complex_set (w, i, gsl_complex_mul_real(wi, alpha));
+        }
+
+      gsl_blas_zgemv (CblasNoTrans, GSL_COMPLEX_ONE, V, w, GSL_COMPLEX_ZERO, x);
+
+      gsl_vector_complex_free (w);
+
+      return GSL_SUCCESS;
+    }
+}

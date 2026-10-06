@@ -3747,6 +3747,8 @@ main(void)
   gsl_test(test_bidiag_complex_unpack(r),"Complex Bidiagonal Unpacking");
 
   gsl_test(test_SV_complex_decomp(r),    "Complex Singular Value Decomposition");
+  gsl_test(test_SV_complex_decomp_mod(r),"Complex Singular Value Decomposition (Mod)");
+  gsl_test(test_SV_complex_solve(r),     "Complex SVD Solve");
   gsl_test(test_SV_complex_reference(),  "Complex SVD reference values");
 
   gsl_matrix_free(m11);

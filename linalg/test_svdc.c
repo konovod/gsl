@@ -1,3 +1,22 @@
+/* linalg/test_svdc.c
+ *
+ * Copyright (C) 2024 Christian Krueger
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ */
+
 #include <config.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -6,9 +25,13 @@
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_complex_math.h>
 #include <gsl/gsl_linalg.h>
+#include <gsl/gsl_rng.h>
+
+/* method 0: gsl_linalg_complex_SV_decomp
+   method 1: gsl_linalg_complex_SV_decomp_mod */
 
 int
-test_SV_complex_decomp_dim(const gsl_matrix_complex * m, double eps)
+test_SV_complex_decomp_dim(const gsl_matrix_complex * m, double eps, int method)
 {
   int s = 0;
   double di1;
@@ -18,6 +41,7 @@ test_SV_complex_decomp_dim(const gsl_matrix_complex * m, double eps)
   gsl_matrix_complex * v  = gsl_matrix_complex_alloc(M,N);
   gsl_matrix_complex * a  = gsl_matrix_complex_alloc(M,N);
   gsl_matrix_complex * q  = gsl_matrix_complex_alloc(N,N);
+  gsl_matrix_complex * X  = gsl_matrix_complex_alloc(N,N);
   gsl_matrix_complex * dqt  = gsl_matrix_complex_alloc(N,N);
   gsl_vector * d  = gsl_vector_alloc(N);
   gsl_vector_complex * w1  = gsl_vector_complex_alloc(N);
@@ -33,13 +57,16 @@ test_SV_complex_decomp_dim(const gsl_matrix_complex * m, double eps)
     }
   }
 
-  s = gsl_linalg_complex_SV_decomp(v, q, d, w1, w2);
+  if (method == 0)
+    s = gsl_linalg_complex_SV_decomp(v, q, d, w1, w2);
+  else
+    s = gsl_linalg_complex_SV_decomp_mod(v, X, q, d, w1, w2);
 
   if (s) printf("returned error code %d = %s\n", s, gsl_strerror(s));
 
   /* Check that singular values are non-negative and in non-decreasing
      order */
-  
+
   di1 = 0.0;
 
   for (i = 0; i < N; i++)
@@ -48,7 +75,7 @@ test_SV_complex_decomp_dim(const gsl_matrix_complex * m, double eps)
 
       if (gsl_isnan (di))
         {
-          if (input_nans > 0) 
+          if (input_nans > 0)
             continue;  /* skip NaNs if present in input */
           else
             {
@@ -68,10 +95,10 @@ test_SV_complex_decomp_dim(const gsl_matrix_complex * m, double eps)
       }
 
       di1 = di;
-    }      
-  
+    }
+
   /* Scale dqt = D Q^T */
-  
+
   for (i = 0; i < N ; i++)
     {
       double di = gsl_vector_get (d, i);
@@ -83,7 +110,7 @@ test_SV_complex_decomp_dim(const gsl_matrix_complex * m, double eps)
           gsl_matrix_complex_set (dqt, i, j, qji);
         }
     }
-            
+
   /* compute a = v dqt */
   gsl_blas_zgemm (CblasNoTrans, CblasNoTrans, GSL_COMPLEX_ONE, v, dqt, GSL_COMPLEX_ZERO, a);
 
@@ -110,10 +137,13 @@ test_SV_complex_decomp_dim(const gsl_matrix_complex * m, double eps)
         s += foo;
       }
     }
-  }gsl_vector_complex_free(w1);
+  }
+
+  gsl_vector_complex_free(w1);
   gsl_vector_complex_free(w2);
   gsl_vector_free(d);
   gsl_matrix_complex_free(v);
+  gsl_matrix_complex_free(X);
   gsl_matrix_complex_free(a);
   gsl_matrix_complex_free(q);
   gsl_matrix_complex_free(dqt);
@@ -133,7 +163,7 @@ test_SV_complex_decomp (gsl_rng * r)
     {
       for (N = 1; N <= M; N++)
         {
-          gsl_matrix_complex *A = gsl_matrix_complex_alloc (M, N);
+          gsl_matrix_complex *A = gsl_matrix_complex_alloc(M, N);
 
           acc = (M <  8) ? 1e4 * GSL_DBL_EPSILON
               : (M < 20) ? 1e5 * GSL_DBL_EPSILON
@@ -141,9 +171,42 @@ test_SV_complex_decomp (gsl_rng * r)
                          : 1e8 * GSL_DBL_EPSILON;
 
           create_random_complex_matrix (A, r);
-          f = test_SV_complex_decomp_dim (A, acc);
+          f = test_SV_complex_decomp_dim (A, acc, 0);
           gsl_test (f, "  svd_complex_decomp");
           s += f;
+
+          gsl_matrix_complex_free(A);
+        }
+    }
+
+  return s;
+}
+
+int
+test_SV_complex_decomp_mod (gsl_rng * r)
+{
+  int f;
+  int s = 0;
+  size_t M, N;
+  double acc;
+
+  for (M = 1; M <= 50; M++)
+    {
+      for (N = 1; N <= M; N++)
+        {
+          gsl_matrix_complex *A = gsl_matrix_complex_alloc(M, N);
+
+          acc = (M <  5) ? 1e3 * GSL_DBL_EPSILON
+              : (M < 18) ? 1e5 * GSL_DBL_EPSILON
+              : (M < 30) ? 1e7 * GSL_DBL_EPSILON
+                         : 1e8 * GSL_DBL_EPSILON;
+
+          create_random_complex_matrix (A, r);
+          f = test_SV_complex_decomp_dim (A, acc, 1);
+          gsl_test (f, "  svd_complex_decomp_mod");
+          s += f;
+
+          gsl_matrix_complex_free(A);
         }
     }
 
@@ -200,6 +263,80 @@ test_SV_complex_reference(void)
   gsl_matrix_complex_free(q);
   gsl_matrix_complex_free(v);
   gsl_matrix_complex_free(m);
+
+  return s;
+}
+
+static int
+test_complex_SV_solve_eps(const gsl_matrix_complex * m, const gsl_vector_complex * rhs,
+                          const gsl_vector_complex * sol, const double eps, const char * desc)
+{
+  int s = 0;
+  const size_t N = m->size1;
+  size_t i;
+  double scale = 0.0;
+
+  gsl_matrix_complex * U = gsl_matrix_complex_alloc(N, N);
+  gsl_matrix_complex * V = gsl_matrix_complex_alloc(N, N);
+  gsl_vector * S = gsl_vector_alloc(N);
+  gsl_vector_complex * x = gsl_vector_complex_alloc(N);
+  gsl_vector_complex * w1 = gsl_vector_complex_alloc(N);
+  gsl_vector_complex * w2 = gsl_vector_complex_alloc(N-1);
+
+  gsl_matrix_complex_memcpy(U, m);
+
+  s += gsl_linalg_complex_SV_decomp(U, V, S, w1, w2);
+  s += gsl_linalg_complex_SV_solve(U, V, S, rhs, x);
+
+  for (i = 0; i < N; i++)
+    {
+      double t = gsl_complex_abs(gsl_vector_complex_get(sol, i));
+      if (t > scale) scale = t;
+    }
+
+  for (i = 0; i < N; i++)
+    {
+      gsl_complex xi = gsl_vector_complex_get(x, i);
+      gsl_complex yi = gsl_vector_complex_get(sol, i);
+      double dd = gsl_complex_abs(gsl_complex_sub(xi, yi));
+      int foo = (dd > eps * (gsl_complex_abs(yi) + scale));
+      if (foo)
+        printf("%s: %3lu[%lu]: %22.18g%+22.18gi   %22.18g%+22.18gi\n",
+               desc, N, i, GSL_REAL(xi), GSL_IMAG(xi), GSL_REAL(yi), GSL_IMAG(yi));
+      s += foo;
+    }
+
+  gsl_vector_complex_free(w1);
+  gsl_vector_complex_free(w2);
+  gsl_vector_complex_free(x);
+  gsl_matrix_complex_free(U);
+  gsl_matrix_complex_free(V);
+  gsl_vector_free(S);
+
+  return s;
+}
+
+static int
+test_SV_complex_solve(gsl_rng * r)
+{
+  int s = 0;
+  size_t n;
+
+  for (n = 1; n <= 50; ++n)
+    {
+      gsl_matrix_complex * m = gsl_matrix_complex_alloc(n, n);
+      gsl_vector_complex * rhs = gsl_vector_complex_alloc(n);
+      gsl_vector_complex * sol = gsl_vector_complex_alloc(n);
+
+      create_random_complex_matrix(m, r);
+      create_random_complex_vector(sol, r);
+      gsl_blas_zgemv(CblasNoTrans, GSL_COMPLEX_ONE, m, sol, GSL_COMPLEX_ZERO, rhs);
+      s += test_complex_SV_solve_eps(m, rhs, sol, 1.0e4 * n * GSL_DBL_EPSILON, "SV_solve random");
+
+      gsl_matrix_complex_free(m);
+      gsl_vector_complex_free(rhs);
+      gsl_vector_complex_free(sol);
+    }
 
   return s;
 }

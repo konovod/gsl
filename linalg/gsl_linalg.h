@@ -219,6 +219,21 @@ gsl_linalg_complex_SV_decomp (gsl_matrix_complex * A,
                               gsl_vector_complex * w2
                               );
 
+int
+gsl_linalg_complex_SV_decomp_mod (gsl_matrix_complex * A,
+                                  gsl_matrix_complex * X,
+                                  gsl_matrix_complex * V,
+                                  gsl_vector * S,
+                                  gsl_vector_complex * work,
+                                  gsl_vector_complex * work2);
+
+int
+gsl_linalg_complex_SV_solve (const gsl_matrix_complex * U,
+                             const gsl_matrix_complex * V,
+                             const gsl_vector * S,
+                             const gsl_vector_complex * b,
+                             gsl_vector_complex * x);
+
 
 /* LU Decomposition, Gaussian elimination with partial pivoting
  */
