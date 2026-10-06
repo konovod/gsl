@@ -9,9 +9,9 @@ Scratch index, not part of the fork's record of changes. Verdicts are curated fr
 
 | status | count |
 |---|---:|
-| fixed | 111 |
+| fixed | 116 |
 | partial | 5 |
-| rejected | 98 |
+| rejected | 93 |
 | deferred | 4 |
 | superseded | 1 |
 | not reviewed | 0 |
@@ -27,7 +27,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 21835 | 2007-12-18 | - | Accuracy problem | clean test_hyperg.diff +1 | **partial** — non-positive-integer termination for x >= 1 fixed (2aa89bae8); c = a+b near x = 1 still returns GSL_EMAXITER | gsl_sf_hyperg_2F1 problematic arguments |
 | 21836 | 2007-12-18 | - | Accuracy problem | none | **fixed** — Q returns exact complement of P in the series window (6f23a4cb5) | gamma_inc_P and gamma_inc_Q only satisfy P+Q=1 within errors |
 | 21837 | 2007-12-18 | - | Runtime error | none | rejected — permutation for a zero diagonal is a new algorithm; docs corrected (9418afa5f) | gsl_linalg_solve_symm_tridiag requires positive definite matrix |
-| 24252 | 2008-09-12 | feature | - | source gamma_tail_jpl_080908.c | rejected — new distribution/API; out of scope | suggestion: add gamma tail distribution |
+| 24252 | 2008-09-12 | feature | - | source gamma_tail_jpl_080908.c | rejected — the posted truncated-gamma sampler's a<1 branch uses the wrong rejection constant (a instead of tail) and does not reproduce Gamma(a); see FORKNEWS | suggestion: add gamma tail distribution |
 | 24871 | 2008-11-18 | feature | - | none | rejected — new function/API (exponential integrals E_n); out of scope | suggestion, add support for E_n |
 | 25320 | 2009-01-14 | - | Accuracy problem | none | **rejected** — feature: no Fresnel in the tree; importing it is new API/algorithm | Import fresnel, bugs on GSL Extension Fresnel |
 | 28267 | 2009-12-11 | - | Accuracy problem | source hyperg1F1.c | **partial** — same defect as #43809 (52505315d); transition region `x ~ a^2` still loses digits | poor convergence region for gsl_sf_hyperg_1F1 |
@@ -160,7 +160,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 59759 | 2020-12-23 | bug | Runtime error | none | rejected — report is about 32-bit; spmatrix passes on x64 | spmatrix test fails on x86_64 |
 | 59834 | 2021-01-06 | bug | Runtime error | clean mmacc.c.patch | **fixed** — movstat accumulator alignment (4e4a88242) | Misaligned memory access error in deque.c |
 | 59845 | 2021-01-08 | - | Performance | clean 0001-initialize-newton-steffenson-solvers-with-GSL_FN_FDF.patch | **fixed** — same fix as #49465 (4eac6584f) | Initialize newton, steffenson solvers with GSL_FN_FDF_EVAL_F_DF |
-| 59900 | 2021-01-17 | feature | - | inline | rejected — new distribution/API (truncated normal); out of scope | Add truncated normal distribution |
+| 59900 | 2021-01-17 | feature | - | inline | **fixed** — truncated Gaussian randist + cdf functions; generator self-contained in randist to avoid the cdf cycle (76f3b1db8) | Add truncated normal distribution |
 | 59911 | 2021-01-20 | - | - | none | rejected — caller's cosh(x) overflows; library returns GSL_EMAXITER | Problem with qagui 1D integrator |
 | 59912 | 2021-01-20 | - | Documentation | none | **fixed** — gsl_permute/vector/matrix header files named in the permutation chapter (aa796e20b) | gsl_permutation header files |
 | 59913 | 2021-01-20 | - | - | none | **fixed** — cquad error estimate guarded against nc == 0 (f20496de6) | gsl 2.3.0 problem in gsl_integration_cquad |
@@ -190,11 +190,11 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 66576 | 2024-12-18 | feature | - | clean fsolver_set_with_values.patch | rejected — new API; docs record the GSL_EINVAL return (aaecb86e6) | Feature: gsl_root_fsolver_set_with_values() |
 | 66695 | 2025-01-22 | feature | - | clean feagin_verner.patch | rejected — new algorithms/API (Feagin/Verner ODE solvers); out of scope | Feature: additional high order ODE solvers (Feagin, Verner) |
 | 66742 | 2025-01-31 | - | Documentation | clean gams.diff | rejected — large doc-only classification diff; not a correction, out of scope | GAMS classification |
-| 66767 | 2025-02-08 | feature | Build | source binomialinv.c +1 | rejected — new API (inverse binomial); out of scope | Feature: inverse of binomial distribution |
-| 66775 | 2025-02-10 | feature | Build | source poissoninv.c +1 | rejected — new API (inverse Poisson); out of scope | Feature: inverse poisson distribution |
+| 66767 | 2025-02-08 | feature | Build | source binomialinv.c +1 | **fixed** — gsl_cdf_binomial_Pinv/Qinv by bisection, double result (e88a81c75) | Feature: inverse of binomial distribution |
+| 66775 | 2025-02-10 | feature | Build | source poissoninv.c +1 | **fixed** — gsl_cdf_poisson_Pinv/Qinv by doubling + bisection, double result (e88a81c75) | Feature: inverse poisson distribution |
 | 66800 | 2025-02-15 | feature | Accuracy problem | partial nbinomial-2.diff +1 | **fixed** — negative_binomial_pdf degenerate at p = 1 and p = 0 (957708351) | Feature: gsl_ran_negative_binomial_pdf with p = 1 |
 | 66808 | 2025-02-17 | bug | Accuracy problem | source test_airy_zeroes_derivs.c | **partial** — Airy accuracy not improved; sub-defects fixed (ac5f72d98) | Bug: Airy Ai function values inaccurate |
-| 66816 | 2025-02-19 | feature | Build | source nakagami_.c | rejected — new distribution/API (Nakagami); out of scope | Feature: Nakagami random distribution |
+| 66816 | 2025-02-19 | feature | Build | source nakagami_.c | **fixed** — gsl_ran_nakagami + pdf, sqrt of a gamma variate (999d53bbe) | Feature: Nakagami random distribution |
 | 66826 | 2025-02-21 | feature | Build | none | **fixed** — test vectors added (728206d82); the negative-integer-`b` library defect the report exposes is open, see `SAVANNAH_REVIEW.md` | Feature: test cases for function hyperg_1F1() |
 | 66834 | 2025-02-23 | feature | Build | clean specfunc_gamma_test.diff | **fixed** — gamma_inc(0,0) = +Inf (062b15fc3) | Feature: gamma_inc(0, 0) handling and test cases |
 | 66842 | 2025-02-24 | feature | Build | clean expint_infinity.diff | **fixed** — exponential integrals at the origin (9a00ba0ed) | Feature: exponential integrals at origin |
@@ -208,7 +208,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 66886 | 2025-03-09 | feature | Build | clean specfunc_trig_.diff | rejected — refactor, not a bug fix; out of scope | Feature: refactoring of specfunc/trig.c |
 | 66894 | 2025-03-11 | - | Documentation | none | **fixed** — chapter introduction notes that randist does not validate distribution parameters (dbe316d49) | Domain value checking for random number distributions |
 | 66922 | 2025-03-17 | feature | Build | clean specfunc_trig.diff | **fixed** — complex_logsin at a real zero of sin (10d64fb15) | Feature: special case for special functin logsin() |
-| 66949 | 2025-03-25 | feature | Build | source erlang.c | rejected — new distribution/API (Erlang CDF); out of scope | Feature: Erlang cumulative distribution |
+| 66949 | 2025-03-25 | feature | Build | source erlang.c | **fixed** — gsl_cdf_erlang_P/Q delegating to the gamma cdf (3d607fce8) | Feature: Erlang cumulative distribution |
 | 66993 | 2025-04-05 | bug | Accuracy problem | none | **partial** — zero-base overflow documented (afd7f7d6c); the other claims do not reproduce | Bug: pow_int issues |
 | 67058 | 2025-04-28 | - | Accuracy problem | none | **fixed** — empty data sets raise `GSL_EBADLEN` (NaN with the handler off) (68fc3c752) | gsl_stats_mean and gsl_stats_sd result to 0.0 when array with zero length |
 | 67301 | 2025-07-10 | bug | - | none | rejected — not-a-bug: r2 is a within-bin fraction, a second find() would pick the wrong bin; documented 2b15efbff | Bug: Test for existence of uniform random variate in histogram |
@@ -275,6 +275,14 @@ Three further deferred items were taken once the filter was widened again:
 v1 `rk2imp`/`rk4imp`) and `#68098` (the bivariate Gaussian `rho` range).
 They are no longer listed in the table.  See `FORKNEWS`.
 
+The filter was widened once more to admit new public API.  Five items
+listed below were taken: `#59900` (truncated Gaussian), `#66816`
+(Nakagami), `#66949` (Erlang CDF), `#66767` (inverse binomial) and
+`#66775` (inverse Poisson); `#24252` (gamma tail) was re-examined and
+**rejected** because the posted sampler is numerically wrong (see
+`FORKNEWS`), and `#24871` was left because it is a large new complex
+algorithm.  The five are no longer listed in the table.
+
 `kind`: `feat` = new feature/API, `perf` = performance only, `test` =
 test-quality request, `doc` = documentation matter.  `patch`: `clean`/
 `partial`/`source` if an attachment was collected by the sweep, `-` if none;
@@ -282,13 +290,7 @@ test-quality request, `doc` = documentation matter.  `patch`: `clean`/
 
 | # | kind | patch | what it would add |
 |---|---|---|---|
-| 24252 | feat | source | gamma-tail distribution |
-| 24871 | feat | - | exponential integrals E_n |
-| 59900 | feat | inline | truncated normal distribution |
-| 66816 | feat | source | Nakagami random distribution |
-| 66949 | feat | source | Erlang cumulative distribution |
-| 66767 | feat | source | inverse binomial distribution |
-| 66775 | feat | source | inverse Poisson distribution |
+| 24871 | feat | - | exponential integrals for complex arguments (the real E_n already exists) |
 | 57173 | feat | - | zeta function for complex arguments |
 | 68367 | feat | source | inverse Jacobi elliptic integrals |
 | 66573 | feat | clean | `gsl_vector_complex_conjugate()` |

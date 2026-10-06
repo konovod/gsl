@@ -3223,3 +3223,75 @@ vector to add.  Commit `cd9e31326`.
 
 Savannah bugs #67774 and #21828.
 
+
+## Group W - the new distributions: five taken, the gamma tail re-rejected
+
+Reviewed 2026-10-06 against the built `build-cmake/gsl.dll` (MSVC x64).
+The eligibility filter was widened to admit new public API, so the
+"new distributions/generators" group from Group U was revisited.  Five
+were implemented and one was re-rejected on correctness grounds.
+
+### `#66949` - Erlang cumulative distribution - taken
+
+`randist` had `gsl_ran_erlang()` but `cdf` had no Erlang cdf.  Added
+`gsl_cdf_erlang_P/Q(x, k, lambda)` as the gamma cdf with shape `k` and
+scale `1/lambda`.  Vectors are the exact Poisson sum
+`1 - sum_{i=0}^{k-1} exp(-lambda x)(lambda x)^i/i!`; reversing the
+delegation fails them.  Commit `3d607fce8`.
+
+### `#66816` - Nakagami distribution - taken
+
+Added `gsl_ran_nakagami()`/`_pdf()`; a Nakagami variate is the square
+root of a `Gamma(mu, omega/mu)` variate.  Pdf vectors were checked
+against scipy/mpmath, and the sampling against the pdf and the analytic
+tail.  The consuming tests were placed after every other distribution
+test: an earlier placement shifted the shared RNG stream and made the
+multivariate Gaussian test fail at `p = 0.027`, which is the same
+stream-sensitivity the `beta_small` comment already warns about.
+Commit `999d53bbe`.
+
+### `#59900` - truncated normal distribution - taken, self-contained
+
+The posted patch called `gsl_cdf_*` from `randist/gauss.c`.  That would
+make `randist` depend on `cdf` while `cdf` already depends on `randist`
+(`betainv.c`, `hypergeometric.c`, `tdistinv.c`), and the patch fixed
+only three of the affected autotools test link lines (not `cdf/test`
+itself).  The implementation here keeps `randist` self-contained: the
+generator rejects from the untruncated Gaussian and the pdf normalizes
+with `gsl_sf_erfc`.  The cdf side reuses `gsl_cdf_gaussian_*` inside the
+`cdf` module.  The Burkardt P/Q/Pinv/Qinv table was reproduced
+independently with mpmath; the P/Q vectors use `TEST_TOL2` because the
+difference of two Gaussians loses a few ulp.  Commit `76f3b1db8`.
+
+### `#66767`, `#66775` - inverse binomial and Poisson - taken
+
+Added the discrete quantiles as `double`, smallest `k` with
+`P(k) >= P` (or `Q(k) <= Q`), by bisection (the Poisson range is
+doubled first).  The report's Poisson prototype was a copy of the
+binomial one; the real signature is `(P, mu)`.  Vectors are R's
+`qbinom`/`qpois` plus exact small-case sums; shifting the result by one
+fails them.  Commit `e88a81c75`.
+
+### `#24252` - gamma tail distribution - rejected (again, for a new reason)
+
+The 2008 attachment `gamma_tail_jpl_080908.c` was recovered from the
+Wayback Machine.  It is a left-truncated gamma sampler
+`devroye_tail_gamma_ran(rng, tail, a)` with unit scale, proposed again
+in 2026 as a replacement for the `a < 1` branch of `gsl_ran_gamma`.
+
+It is numerically wrong.  For `a < 1` the proposal is `Y = tail +
+Exp(1)` and the target is proportional to `Y^(a-1) e^(-Y)`, so the
+acceptance probability is `(tail/Y)^(1-a)`; the code uses
+`(a/Y)^(1-a)`, i.e. the constant `a` where it must be `tail`.  The two
+agree only when `tail = a`.  Simulated over 200000 draws:
+
+    a = 0.5, tail = 0: sample mean 0.7476   Gamma(0.5) mean 0.5000
+    a = 0.8, tail = 0: sample mean 0.9177   Gamma(0.8) mean 0.8000
+
+(the `a >= 1` branches do match).  The `tail = 0` case the 2026 comment
+proposes is exactly where the branch is meaningless, so the claimed
+speed-up cannot hold.  No change; a correct truncated-gamma generator
+would be separate work.  Recorded as `[rejected]` in `FORKNEWS`.
+
+Savannah bugs #66949, #66816, #59900, #66767, #66775 and #24252.
+
