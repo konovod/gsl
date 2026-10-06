@@ -225,6 +225,9 @@ One line per change: date | tag | description | commit(s).
   2026-10-06 | [upstream] | linalg: complex SVD solve and modified decomposition | 77032d17c
   2026-10-06 | [upstream] | doc: complex SVD solve and modified decomposition | 5a209fff9
 
+  2026-10-06 | [upstream] | ode-initval2: Feagin and Verner steppers          | d67eae92b
+  2026-10-06 | [upstream] | doc: Feagin and Verner steppers                  | 6fa6706f4
+
 
 ## [upstream] rng: make the random() generators produce the documented sequences
 
@@ -5752,6 +5755,50 @@ Files: `linalg/svdc.c`, `linalg/gsl_linalg.h`, `linalg/test.c`,
 `linalg/test_svdc.c`, both manuals.
 
 See Savannah bug #66575.
+
+
+## [upstream] ode-initval2: Feagin and Verner high-order steppers
+
+Commit: d67eae92b (documentation: 6fa6706f4)
+
+Savannah bug #66695 (2025) offers six explicit embedded Runge-Kutta
+steppers that are common in the high-order literature but absent from
+GSL:
+
+    gsl_odeiv2_step_vern7, _vern8, _vern9       (Verner 7(6), 8(7), 9(8))
+    gsl_odeiv2_step_feagin108, _1210, _1412     (Feagin 10(8), 12(10), 14(12))
+
+implemented in new `ode-initval2/vern7.c`, `vern8.c`, `vern9.c`,
+`feagin108.c`, `feagin1210.c` and `feagin1412.c`.
+
+The posted patch is against v2.8; only its `gsl_odeiv2.h` hunk fails to
+apply because the fork renamed the include guards, so the six
+declarations were added by hand.  The three Feagin sources were missing
+`#include <config.h>`; it was added.
+
+Verification: all six pass the `ode-initval2` test suite.  The
+coefficients of `vern8` were compared element by element against
+Verner's published floating-point file
+`RKV87.IIa.Efficient.000000011182-240510`, and the Butcher order
+conditions of the implemented main and embedded weights hold to order 8
+and 7 respectively.  A convergence study on `y' = y` confirms the
+expected orders for `vern7` (7.2), `vern9` (8.9) and `feagin1210`
+(12.1), `feagin1412` (14.6).  `vern8` shows an apparently low order at
+moderate step sizes because its coefficients reach ~1.5e4, so
+double-precision rounding dominates the local error; a direct
+double-precision transcription of the published coefficients reproduces
+the C result digit for digit, so this is a property of the published
+method, not of the implementation.  `feagin108` likewise shows a higher
+apparent order because its leading error constant vanishes for the
+scalar exponential.  Full ctest 56/56 on MSVC x64.
+
+Files: `ode-initval2/vern7.c`, `vern8.c`, `vern9.c`, `feagin108.c`,
+`feagin1210.c`, `feagin1412.c`, `ode-initval2/gsl_odeiv2.h`,
+`ode-initval2/Makefile.am`, `cmake/gsl_sources.cmake`,
+`ode-initval2/test.c`, both manuals.
+
+See Savannah bug #66695.
+
 
 
 
