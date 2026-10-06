@@ -99,7 +99,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 45924 | 2015-09-11 | bug | Runtime error | none | **fixed** — beta inverse reworked around `t = logit(x)` with a bracketed solver (51a63cbd5) | Bug in the inverse beta function gsl_cdf_beta_Pinv, and suggested fix |
 | 45925 | 2015-09-11 | - | Runtime error | none | **rejected** — not-a-bug: report confused Gamma(a,x) with P; Q matches (3cc1aaa54 docs) | Incomplete Gamma Functions flipped? |
 | 46593 | 2015-12-02 | bug | Accuracy problem | none | rejected — 32-bit multifit; passes on x64 | multifit test failure in 32 bit mode |
-| 46677 | 2015-12-12 | - | - | none | **deferred** — feature request: port the Wigner d-matrix (gsl_sf_wigner_drot) from contrib/wigner.c; new API, out of scope | Wigner d-matrix |
+| 46677 | 2015-12-12 | - | - | none | **fixed** — ported the Wigner d-matrix (`gsl_sf_wigner_drot`) into `specfunc/coupling.c` (17e39bcbd) | Wigner d-matrix |
 | 46678 | 2015-12-12 | bug | - | none | **fixed** — F_array spike was the #39292 Steed C; vector added (861de2adc) | Bug in gsl_sf_coulomb_wave_F_array |
 | 47027 | 2016-01-31 | bug | - | none | **fixed** — WKB G' overflow now reported (8031f18bf) | gsl_sf_coulomb_wave_FG_e returns NaN but with success flag |
 | 47028 | 2016-01-31 | bug | Runtime error | none | rejected — ppc64le multifit; passes on x64 | multifit testsuite failure on ppc64le |
@@ -310,7 +310,6 @@ test-quality request, `doc` = documentation matter.  `patch`: `clean`/
 | 65728 | feat | - | complex sparse matrix-vector product, resize, accumulating `_set` |
 | 68549 | feat | - | uniform argument lists across the distribution functions (breaking) |
 | 47402 | feat | - | Mathieu functions - library/test redesign |
-| 46677 | feat | - | port the Wigner d-matrix (`gsl_sf_wigner_drot`) from `contrib/` |
 | 31109 | perf | - | `ode-initval/bsimp` order control |
 | 66742 | doc | clean | GAMS classification across 177 files |
 | 66886 | doc | clean | refactor of `specfunc/trig.c` |
