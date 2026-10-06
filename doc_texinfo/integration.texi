@@ -32,6 +32,7 @@ The functions described in this chapter are declared in the header file
 * QAWF adaptive integration for Fourier integrals::  
 * CQUAD doubly-adaptive integration::  
 * Fixed order Gauss-Legendre integration::  
+* Fixed quadrature::
 * Hermite quadrature integration::
 * Special weight quadratures::
 * Numerical integration error codes::  
@@ -905,6 +906,69 @@ $$
 where the weight function @math{w(x)} takes certain forms which allow solutions based
 on interpolating quadratures. The table below lists the specialized integrals that
 can be solved with this method:
+
+@node Fixed quadrature
+@section Fixed quadrature
+
+The routines in this section evaluate integrals with fixed-order
+interpolating quadratures using a user-specified number of nodes and a
+choice of weighting function.  Unlike the adaptive routines they do not
+accept absolute or relative error bounds.
+
+@deftypefun {gsl_integration_fixed_workspace *} gsl_integration_fixed_alloc (const gsl_integration_fixed_type * @var{T}, const size_t @var{n}, const double @var{a}, const double @var{b}, const double @var{alpha}, const double @var{beta})
+This function allocates a workspace for an @var{n}-point interpolating
+quadrature of type @var{T} on the interval [@var{a},@var{b}].  The parameters
+@var{alpha} and @var{beta} are used by some of the quadrature types.
+@end deftypefun
+
+@deftypefun void gsl_integration_fixed_free (gsl_integration_fixed_workspace * @var{w})
+This function frees the memory associated with @var{w}.
+@end deftypefun
+
+@deftypefun size_t gsl_integration_fixed_n (const gsl_integration_fixed_workspace * @var{w})
+This function returns the number of quadrature nodes and weights.
+@end deftypefun
+
+@deftypefun {double *} gsl_integration_fixed_nodes (const gsl_integration_fixed_workspace * @var{w})
+This function returns a pointer to the array of @var{n} quadrature nodes.
+@end deftypefun
+
+@deftypefun {double *} gsl_integration_fixed_weights (const gsl_integration_fixed_workspace * @var{w})
+This function returns a pointer to the array of @var{n} quadrature weights.
+@end deftypefun
+
+@deftypefun int gsl_integration_fixed (const gsl_function * @var{func}, double * @var{result}, const gsl_integration_fixed_workspace * @var{w})
+This function integrates @var{f(x)} using the previously computed rule and
+stores the result in @var{result}.
+@end deftypefun
+
+The quadrature type @var{T} is one of @code{gsl_integration_fixed_legendre},
+@code{gsl_integration_fixed_chebyshev}, @code{gsl_integration_fixed_gegenbauer},
+@code{gsl_integration_fixed_jacobi}, @code{gsl_integration_fixed_laguerre},
+@code{gsl_integration_fixed_hermite}, @code{gsl_integration_fixed_exponential},
+@code{gsl_integration_fixed_rational} or
+@code{gsl_integration_fixed_chebyshev2}, or one of the following rules
+introduced for the fork:
+
+@deftypevr {Variable} {gsl_integration_fixed_type *} gsl_integration_fixed_lobatto
+Gauss-Lobatto quadrature, whose nodes include both endpoints and which is
+exact for polynomials of degree @math{2n-3}.
+@end deftypevr
+
+@deftypevr {Variable} {gsl_integration_fixed_type *} gsl_integration_fixed_radau
+Gauss-Radau quadrature, whose nodes include the right endpoint and which is
+exact for polynomials of degree @math{2n-2}.
+@end deftypevr
+
+@deftypevr {Variable} {gsl_integration_fixed_type *} gsl_integration_fixed_clenshaw_curtis
+Clenshaw-Curtis quadrature, whose nodes include both endpoints and which is
+exact for polynomials of degree @math{n-1}.
+@end deftypevr
+
+@deftypevr {Variable} {gsl_integration_fixed_type *} gsl_integration_fixed_fejer
+Fejer's first rule, whose nodes do not include the endpoints and which is
+exact for polynomials of degree @math{n-1}.
+@end deftypevr
 
 @node Hermite quadrature integration
 @section Hermite quadrature integration

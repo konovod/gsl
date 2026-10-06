@@ -811,6 +811,10 @@ Hermite          :math:`(-\infty,\infty)` :math:`|x-a|^{\alpha} \exp{( -b (x-a)^
 Exponential      :math:`(a,b)`            :math:`|x - (a + b)/2|^{\alpha}`            :math:`\alpha > -1, b > a`
 Rational         :math:`(a,\infty)`       :math:`(x - a)^{\alpha} (x + b)^{\beta}`    :math:`\alpha > -1, \alpha + \beta + 2n < 0, a + b > 0`
 Chebyshev Type 2 :math:`(a,b)`            :math:`\sqrt{(b - x) (x - a)}`              :math:`b > a`
+Gauss-Lobatto    :math:`(a,b)`            :math:`1`                                   :math:`b > a, n \ge 2`
+Gauss-Radau      :math:`(a,b)`            :math:`1`                                   :math:`b > a, n \ge 1`
+Clenshaw-Curtis  :math:`(a,b)`            :math:`1`                                   :math:`b > a, n \ge 2`
+Fejer            :math:`(a,b)`            :math:`1`                                   :math:`b > a, n \ge 1`
 ================ ======================== =========================================== =======================================================
 
 The fixed point quadrature routines use the following workspace to store the nodes and weights,
@@ -879,6 +883,33 @@ as well as additional variables for intermediate calculations:
 
          This specifies Chebyshev type 2 quadrature integration. The parameters :data:`alpha` and
          :data:`beta` are ignored for this type.
+
+      .. var:: gsl_integration_fixed_type * gsl_integration_fixed_lobatto
+
+         This specifies Gauss-Lobatto quadrature, whose nodes include both
+         endpoints :data:`a` and :data:`b`; it is exact for polynomials of
+         degree :math:`2n-3`.  The parameters :data:`alpha` and :data:`beta`
+         are ignored for this type.
+
+      .. var:: gsl_integration_fixed_type * gsl_integration_fixed_radau
+
+         This specifies Gauss-Radau quadrature, whose nodes include the right
+         endpoint :data:`b`; it is exact for polynomials of degree
+         :math:`2n-2`.  The parameters :data:`alpha` and :data:`beta` are
+         ignored for this type.
+
+      .. var:: gsl_integration_fixed_type * gsl_integration_fixed_clenshaw_curtis
+
+         This specifies Clenshaw-Curtis quadrature, whose nodes include both
+         endpoints :data:`a` and :data:`b`; it is exact for polynomials of
+         degree :math:`n-1`.  The parameters :data:`alpha` and :data:`beta`
+         are ignored for this type.
+
+      .. var:: gsl_integration_fixed_type * gsl_integration_fixed_fejer
+
+         This specifies Fejer's first rule, whose nodes do not include the
+         endpoints; it is exact for polynomials of degree :math:`n-1`.  The
+         parameters :data:`alpha` and :data:`beta` are ignored for this type.
 
 .. function:: void gsl_integration_fixed_free(gsl_integration_fixed_workspace * w)
 
