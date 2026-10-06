@@ -218,6 +218,13 @@ One line per change: date | tag | description | commit(s).
   2026-10-06 | [upstream] | linalg: complex tridiagonal solvers              | dd5e0a0f2
   2026-10-06 | [upstream] | doc: complex tridiagonal solvers                 | ee6eee516
 
+  2026-10-06 | [upstream] | linalg: complex Householder right, Givens, bidiag | 5df7c9876
+  2026-10-06 | [upstream] | doc: complex Householder, Givens, bidiagonal      | e0993e48c
+  2026-10-06 | [upstream] | linalg: complex singular value decomposition      | b5325c1df
+  2026-10-06 | [upstream] | doc: complex singular value decomposition         | ac4a51535
+  2026-10-06 | [upstream] | linalg: complex SVD solve and modified decomposition | 77032d17c
+  2026-10-06 | [upstream] | doc: complex SVD solve and modified decomposition | 5a209fff9
+
 
 ## [upstream] rng: make the random() generators produce the documented sequences
 
@@ -5659,6 +5666,93 @@ Files: `linalg/tridiagcomplex.c`, `linalg/gsl_linalg.h`,
 manuals.
 
 See Savannah bugs #60457 and #65932.
+
+
+## [upstream] linalg: complex Householder right, Givens, bidiagonal decomposition and SVD
+
+Commits: 5df7c9876, b5325c1df (documentation: e0993e48c, ac4a51535)
+
+Savannah bug #66574 (2024) offers a patch series that builds a complex
+SVD from the ground up.  Four pieces were taken:
+
+    gsl_linalg_complex_householder_right
+    gsl_linalg_complex_householder_hm1
+    gsl_linalg_complex_givens / gsl_linalg_complex_givens_gv
+    gsl_linalg_complex_bidiag_decomp / _unpack / _unpack2 / _unpack_B
+    gsl_linalg_complex_SV_decomp
+
+in new `linalg/givensc.c`, `linalg/bidiagc.c`, `linalg/svdc.c` and
+`linalg/svdstepc.c`, with the Householder additions in
+`linalg/householdercomplex.c`.  The complex SVD is a port of the
+Golub-Reinsch algorithm in `linalg/svd.c`; the bidiagonal factor `B` is
+real even for complex input.  `_householder_hm1` is kept (it is used by
+the bidiagonal unpack) despite being inside the deprecated block for the
+real matrix case.
+
+The posted patch series is against v2.8 and its shared header,
+`Makefile.am`, `linalg/test.c` and documentation hunks do not apply to
+the current tree, so they were merged by hand.  The new test files were
+added to `noinst_HEADERS` (the patch omitted them, which would have
+dropped them from the autotools dist), and `test_bidiag.c`,
+`test_bidiagc.c`, `test_hh.c`, `test_hhc.c` and `test_svdc.c` were given
+the missing `<config.h>`.
+
+The posted tests compare real and imaginary parts with a pure relative
+tolerance, which fails on entries that are legitimately near zero after
+the involution or reconstruction; they now compare the complex magnitude
+against an absolute-plus-relative bound.  A direct test of the complex
+Givens rotation (second component zeroed, norm preserved,
+`c^2 + |s|^2 = 1`) was added, and the SVD singular values are checked
+against a fixed 4x3 matrix whose values come from `numpy.linalg.svd`.
+
+Verification: the Householder involution, the bidiagonal reconstruction
+`U B V^H`, both unpack paths and the SVD reconstruction `U S V^H` for
+every `M,N` up to 50, which exercises the right transform and the Givens
+rotations independently.  Negative control: dropping the sign reflection
+of negative singular values fails the new SVD checks, while the restored
+tree is clean.  Full ctest 56/56 on MSVC x64.
+
+Files: `linalg/householdercomplex.c`, `linalg/givensc.c`,
+`linalg/bidiagc.c`, `linalg/svdc.c`, `linalg/svdstepc.c`,
+`linalg/gsl_linalg.h`, `linalg/Makefile.am`, `cmake/gsl_sources.cmake`,
+`linalg/test.c`, `linalg/test_hh.c`, `linalg/test_hhc.c`,
+`linalg/test_bidiag.c`, `linalg/test_bidiagc.c`, `linalg/test_svdc.c`,
+both manuals.
+
+See Savannah bug #66574.
+
+
+## [upstream] linalg: complex SVD solve and modified decomposition
+
+Commit: 77032d17c (documentation: 5a209fff9)
+
+Savannah bug #66575 (2024) extends the complex SVD of #66574 with
+
+    gsl_linalg_complex_SV_solve
+    gsl_linalg_complex_SV_decomp_mod
+
+`SV_solve` computes `x = V S^{-1} U^H b`, using only the non-zero
+singular values.  `SV_decomp_mod` implements the modified
+Golub-Reinsch algorithm, which first reduces `A` to triangular form and
+is faster for `M >> N`; it needs an `N`-by-`N` workspace matrix `X` and
+a second complex workspace of length `N-1`.
+
+The posted test for the modified decomposition calls the modified
+routine for both of its methods and never exercises the plain
+decomposition; it was corrected to dispatch on the method.  The solve
+comparison was also made absolute-aware on near-zero components.
+
+Verification: for every `M,N` up to 50 the modified decomposition
+reconstructs `U S V^H = A`, and `SV_solve` recovers a known solution
+from `b = A x`.  Negative control: replacing the conjugate transpose by
+a plain transpose in `SV_solve` fails the solve checks, while the
+restored tree is clean.  Full ctest 56/56 on MSVC x64.
+
+Files: `linalg/svdc.c`, `linalg/gsl_linalg.h`, `linalg/test.c`,
+`linalg/test_svdc.c`, both manuals.
+
+See Savannah bug #66575.
+
 
 
 
