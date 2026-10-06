@@ -1551,6 +1551,7 @@ definite.  For non-positive definite matrices, the functions return
 the error code @code{GSL_EZERODIV}.
 
 @deftypefun int gsl_linalg_solve_tridiag (const gsl_vector * @var{diag}, const gsl_vector * @var{e}, const gsl_vector * @var{f}, const gsl_vector * @var{b}, gsl_vector * @var{x})
+@deftypefunx int gsl_linalg_complex_solve_tridiag (const gsl_vector_complex * @var{diag}, const gsl_vector_complex * @var{e}, const gsl_vector_complex * @var{f}, const gsl_vector_complex * @var{b}, gsl_vector_complex * @var{x})
 This function solves the general @math{N}-by-@math{N} system @math{A x =
 b} where @var{A} is tridiagonal (@c{$N\geq 2$}
 @math{N >= 2}). The super-diagonal and
@@ -1580,6 +1581,7 @@ A = ( d_0 e_0  0   0  )
 @end deftypefun
 
 @deftypefun int gsl_linalg_solve_symm_tridiag (const gsl_vector * @var{diag}, const gsl_vector * @var{e}, const gsl_vector * @var{b}, gsl_vector * @var{x})
+@deftypefunx int gsl_linalg_complex_solve_symm_tridiag (const gsl_vector_complex * @var{diag}, const gsl_vector_complex * @var{e}, const gsl_vector_complex * @var{b}, gsl_vector_complex * @var{x})
 This function solves the general @math{N}-by-@math{N} system @math{A x =
 b} where @var{A} is symmetric tridiagonal (@c{$N\geq 2$}
 @math{N >= 2}).  The off-diagonal vector
@@ -1607,6 +1609,7 @@ A = ( d_0 e_0  0   0  )
 @end deftypefun
 
 @deftypefun int gsl_linalg_solve_cyc_tridiag (const gsl_vector * @var{diag}, const gsl_vector * @var{e}, const gsl_vector * @var{f}, const gsl_vector * @var{b}, gsl_vector * @var{x})
+@deftypefunx int gsl_linalg_complex_solve_cyc_tridiag (const gsl_vector_complex * @var{diag}, const gsl_vector_complex * @var{e}, const gsl_vector_complex * @var{f}, const gsl_vector_complex * @var{b}, gsl_vector_complex * @var{x})
 This function solves the general @math{N}-by-@math{N} system @math{A x =
 b} where @var{A} is cyclic tridiagonal (@c{$N\geq 3$}
 @math{N >= 3}).  The cyclic super-diagonal and
@@ -1636,6 +1639,7 @@ A = ( d_0 e_0  0  f_3 )
 
 
 @deftypefun int gsl_linalg_solve_symm_cyc_tridiag (const gsl_vector * @var{diag}, const gsl_vector * @var{e}, const gsl_vector * @var{b}, gsl_vector * @var{x})
+@deftypefunx int gsl_linalg_complex_solve_symm_cyc_tridiag (const gsl_vector_complex * @var{diag}, const gsl_vector_complex * @var{e}, const gsl_vector_complex * @var{b}, gsl_vector_complex * @var{x})
 This function solves the general @math{N}-by-@math{N} system @math{A x =
 b} where @var{A} is symmetric cyclic tridiagonal (@c{$N\geq 3$}
 @math{N >= 3}).  The cyclic

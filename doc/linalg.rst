@@ -2141,6 +2141,7 @@ definite.  For non-positive definite matrices, the functions return
 the error code :macro:`GSL_EZERODIV`.
 
 .. function:: int gsl_linalg_solve_tridiag (const gsl_vector * diag, const gsl_vector * e, const gsl_vector * f, const gsl_vector * b, gsl_vector * x)
+              int gsl_linalg_complex_solve_tridiag (const gsl_vector_complex * diag, const gsl_vector_complex * e, const gsl_vector_complex * f, const gsl_vector_complex * b, gsl_vector_complex * x)
 
    This function solves the general :math:`N`-by-:math:`N` system :math:`A x = b`
    where :data:`A` is tridiagonal (:math:`N \geq 2`).
@@ -2173,6 +2174,7 @@ the error code :macro:`GSL_EZERODIV`.
              (  0   0  f_2 d_3 )
 
 .. function:: int gsl_linalg_solve_symm_tridiag (const gsl_vector * diag, const gsl_vector * e, const gsl_vector * b, gsl_vector * x)
+              int gsl_linalg_complex_solve_symm_tridiag (const gsl_vector_complex * diag, const gsl_vector_complex * e, const gsl_vector_complex * b, gsl_vector_complex * x)
 
    This function solves the general :math:`N`-by-:math:`N` system :math:`A x = b`
    where :data:`A` is symmetric tridiagonal (:math:`N \geq 2`).
@@ -2204,6 +2206,7 @@ the error code :macro:`GSL_EZERODIV`.
              (  0   0  e_2 d_3 )
 
 .. function:: int gsl_linalg_solve_cyc_tridiag (const gsl_vector * diag, const gsl_vector * e, const gsl_vector * f, const gsl_vector * b, gsl_vector * x)
+              int gsl_linalg_complex_solve_cyc_tridiag (const gsl_vector_complex * diag, const gsl_vector_complex * e, const gsl_vector_complex * f, const gsl_vector_complex * b, gsl_vector_complex * x)
 
    This function solves the general :math:`N`-by-:math:`N` system :math:`A x = b`
    where :data:`A` is cyclic tridiagonal (:math:`N \geq 3`).
@@ -2236,6 +2239,7 @@ the error code :macro:`GSL_EZERODIV`.
              ( e_3  0  f_2 d_3 )
 
 .. function:: int gsl_linalg_solve_symm_cyc_tridiag (const gsl_vector * diag, const gsl_vector * e, const gsl_vector * b, gsl_vector * x)
+              int gsl_linalg_complex_solve_symm_cyc_tridiag (const gsl_vector_complex * diag, const gsl_vector_complex * e, const gsl_vector_complex * b, gsl_vector_complex * x)
 
    This function solves the general :math:`N`-by-:math:`N` system :math:`A x = b`
    where :data:`A` is symmetric cyclic tridiagonal (:math:`N \geq 3`).
