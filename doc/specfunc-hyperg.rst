@@ -142,7 +142,8 @@ Hypergeometric functions are described in Abramowitz & Stegun, Chapters
 
       .. math:: 2F1(a_R + i a_I, aR - i aI, c, x)
 
-   with complex parameters for :math:`|x| < 1`.
+   with complex parameters for :math:`|x| < 1`, extended to
+   :math:`x < -1` by the same transformation.
 
 .. function:: double gsl_sf_hyperg_2F1_renorm (double a, double b, double c, double x)
               int gsl_sf_hyperg_2F1_renorm_e (double a, double b, double c, double x, gsl_sf_result * result)
@@ -174,7 +175,8 @@ Hypergeometric functions are described in Abramowitz & Stegun, Chapters
 
       .. math:: 2F1(a_R + i a_I, a_R - i a_I, c, x) / \Gamma(c)
 
-   for :math:`|x| < 1`.
+   for :math:`|x| < 1`, extended to :math:`x < -1` by the same
+   transformation.
 .. exceptions:
 
 .. function:: double gsl_sf_hyperg_2F0 (double a, double b, double x)

@@ -1025,6 +1025,24 @@ TEST_SF(s, gsl_sf_hyperg_U_e, (2, -6.4, 1, &r),1.2141502795806162484648638e-02
   TEST_SF(s, gsl_sf_hyperg_2F1_conj_e, (8, 8, 5, -0.5, &r), 0.00023301916814505902809, TEST_TOL3, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_hyperg_2F1_conj_e, (25, 25, 1, -0.5, &r), 5.1696944096e-06, TEST_SQRT_TOL0, GSL_SUCCESS);
 
+  /* 2F1 conj for x < -1, by the same Pfaff transformation (Savannah bug
+   * #30324).  Expected values from mpmath.hyp2f1 at 60 digits.  The
+   * aI = 0 case reduces to the real function. */
+  TEST_SF(s, gsl_sf_hyperg_2F1_conj_e, (1.0, 0.5, 3.0, -2.0, &r),
+          0.5766888242154879625124, TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_2F1_conj_e, (0.5, 2.0, 1.5, -4.0, &r),
+          -0.06087410481015601336449, TEST_TOL3, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_2F1_conj_e, (2.0, 1.0, 5.0, -1.0001, &r),
+          0.460318673007183482373, TEST_TOL1, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_2F1_conj_e, (4.0, 0.5, 1.5, -3.0, &r),
+          0.0005984382506363659676063, TEST_TOL1, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_2F1_conj_e, (0.0, 1.0, 2.0, -2.0, &r),
+          0.3789606084413825560182, TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_2F1_conj_e, (-1.5, 0.5, 2.5, -2.0, &r),
+          -0.7319134609150615512907, TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_2F1_conj_e, (2.0, 0.0, 3.0, -2.0, &r),
+          0.2159728110007215123642893, TEST_TOL2, GSL_SUCCESS);
+
   /* updated correct values, testing enabled, Richard J. Mathar, 2008-01-09 */
 
   TEST_SF(s, gsl_sf_hyperg_2F0_e, (0.01, 1.0, -0.02, &r), .99980388665511730901180717   , TEST_TOL0, GSL_SUCCESS);

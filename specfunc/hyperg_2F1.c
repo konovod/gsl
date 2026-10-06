@@ -909,6 +909,89 @@ gsl_sf_hyperg_2F1_e(double a, double b, const double c,
 }
 
 
+/* Pfaff continuation of the conjugate 2F1 to x < -1:
+ *
+ *   2F1(a,a*;c;x) = (1-x)^-a 2F1(a, c-a*; c, x/(x-1)),  a = aR + i aI.
+ *
+ * The transformed pair (aR + i aI, (c-aR) + i aI) is not a conjugate
+ * pair, so the Gauss series is summed directly in complex arithmetic and
+ * the real part of the product with the complex prefactor is returned
+ * (the imaginary part vanishes identically).  Savannah bug #30324.
+ */
+static int
+hyperg_2F1_conj_xlt_m1(const double aR, const double aI, const double c,
+                       const double x, gsl_sf_result * result)
+{
+  const int max_iter = 30000;
+  const double z = x / (x - 1.0);
+  const double bR = c - aR;
+  double sum_re = 1.0;
+  double sum_im = 0.0;
+  double term_re = 1.0;
+  double term_im = 0.0;
+  double abs_sum = 1.0;
+  double last_mag = 0.0;
+  int k;
+
+  if(aI == 0.0) {
+    /* The pair is real; the real routine continues it. */
+    return gsl_sf_hyperg_2F1_e(aR, aR, c, x, result);
+  }
+
+  for(k = 0; k < max_iter; k++) {
+    const double ar = aR + k;
+    const double br = bR + k;
+    const double den = (c + k) * (k + 1.0);
+    const double f_re = (ar * br - aI * aI) / den * z;
+    const double f_im = aI * (ar + br) / den * z;
+    const double t_re = term_re * f_re - term_im * f_im;
+    const double t_im = term_re * f_im + term_im * f_re;
+
+    term_re = t_re;
+    term_im = t_im;
+    sum_re += term_re;
+    sum_im += term_im;
+
+    last_mag = fabs(term_re) + fabs(term_im);
+    abs_sum += last_mag;
+
+    if(!gsl_finite(last_mag)) {
+      result->val = 0.0;
+      result->err = 0.0;
+      GSL_ERROR ("error", GSL_EMAXITER);
+    }
+
+    if(last_mag <= GSL_DBL_EPSILON * (fabs(sum_re) + fabs(sum_im)))
+      break;
+  }
+
+  if(k >= max_iter) {
+    result->val = 0.0;
+    result->err = 0.0;
+    GSL_ERROR ("error", GSL_EMAXITER);
+  }
+
+  {
+    const double L = log(1.0 - x);
+    const double mag_p = exp(-aR * L);
+    const double phase_re = cos(aI * L);
+    const double phase_im = -sin(aI * L);
+    const double H_abs = fabs(sum_re) + fabs(sum_im);
+    const double err_H = 2.0 * GSL_DBL_EPSILON * abs_sum + last_mag;
+    const double err_p = GSL_DBL_EPSILON
+      * (fabs(aR * L) + fabs(aI * L) + 1.0) * mag_p;
+    const double val = mag_p * (phase_re * sum_re - phase_im * sum_im);
+    double err = mag_p * err_H + err_p * H_abs;
+
+    err += 2.0 * GSL_DBL_EPSILON * fabs(val);
+    result->val = val;
+    result->err = err;
+  }
+
+  return GSL_SUCCESS;
+}
+
+
 int
 gsl_sf_hyperg_2F1_conj_e(const double aR, const double aI, const double c,
                             const double x,
@@ -921,7 +1004,18 @@ gsl_sf_hyperg_2F1_conj_e(const double aR, const double aI, const double c,
   result->val = 0.0;
   result->err = 0.0;
 
-  if(ax >= 1.0 || c_neg_integer || c == 0.0) {
+  if(c_neg_integer || c == 0.0) {
+    DOMAIN_ERROR(result);
+  }
+
+  /* Continue to x < -1 with the Pfaff transformation, as for the real
+   * 2F1 (Savannah bug #30324).  The transformed pair is not conjugate,
+   * so this goes through a complex series; see below. */
+  if(x < -1.0) {
+    return hyperg_2F1_conj_xlt_m1(aR, aI, c, x, result);
+  }
+
+  if(ax >= 1.0) {
     DOMAIN_ERROR(result);
   }
 
