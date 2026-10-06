@@ -146,6 +146,20 @@ different problems.
    guess :data:`x`.  Note that the initial position is copied from :data:`x`, this
    argument is not modified by subsequent iterations.
 
+.. function:: int gsl_multiroot_fsolver_set_fdjac_epsrel (gsl_multiroot_fsolver * s, double epsrel)
+
+   This function sets the relative step :data:`epsrel` used by the
+   finite-difference Jacobian of the solvers that do not have an analytic
+   derivative.  The default is :macro:`GSL_SQRT_DBL_EPSILON`.  A larger value
+   can help when the function is only known to a limited accuracy, since the
+   default step may be smaller than the evaluation error.  The value must be
+   positive; otherwise the error code :macro:`GSL_EDOM` is returned.
+
+.. function:: double gsl_multiroot_fsolver_fdjac_epsrel (const gsl_multiroot_fsolver * s)
+
+   This function returns the relative step currently used for the
+   finite-difference Jacobian.
+
 .. function:: void gsl_multiroot_fsolver_free (gsl_multiroot_fsolver * s)
               void gsl_multiroot_fdfsolver_free (gsl_multiroot_fdfsolver * s)
 

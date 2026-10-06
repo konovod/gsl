@@ -170,6 +170,20 @@ guess @var{x}.  Note that the initial position is copied from @var{x}, this
 argument is not modified by subsequent iterations.
 @end deftypefun
 
+@deftypefun int gsl_multiroot_fsolver_set_fdjac_epsrel (gsl_multiroot_fsolver * @var{s}, double @var{epsrel})
+This function sets the relative step @var{epsrel} used by the
+finite-difference Jacobian of the solvers that do not have an analytic
+derivative.  The default is @code{GSL_SQRT_DBL_EPSILON}.  A larger value can
+help when the function is only known to a limited accuracy, since the default
+step may be smaller than the evaluation error.  The value must be positive;
+otherwise the error code @code{GSL_EDOM} is returned.
+@end deftypefun
+
+@deftypefun double gsl_multiroot_fsolver_fdjac_epsrel (const gsl_multiroot_fsolver * @var{s})
+This function returns the relative step currently used for the
+finite-difference Jacobian.
+@end deftypefun
+
 @deftypefun void gsl_multiroot_fsolver_free (gsl_multiroot_fsolver * @var{s})
 @deftypefunx void gsl_multiroot_fdfsolver_free (gsl_multiroot_fdfsolver * @var{s})
 These functions free all the memory associated with the solver @var{s}.
