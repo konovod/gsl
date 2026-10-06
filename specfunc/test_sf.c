@@ -955,6 +955,92 @@ int test_ellint(void)
 }
 
 
+int test_elljac(void)
+{
+  gsl_sf_result r;
+  int s = 0;
+
+  /* Inverse Jacobi elliptic functions.  The reference values are
+     30-digit mpmath values for the parameter m (not the modulus k). */
+
+  TEST_SF(s, gsl_sf_elljac_arcsn_e, (0.5, 0.3, &r), 0.53063689953986742501, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_elljac_arcsn_e, (0.9, 0.3, &r), 1.1820637382839384563, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_elljac_arcsn_e, (-0.7, 0.3, &r), -0.79762133889051756628, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_elljac_arcsn_e, (0.5, 0.7, &r), 0.54087222253594585172, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_elljac_arcsn_e, (0.9, 0.7, &r), 1.3044067280954652262, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_elljac_arcsn_e, (-0.7, 0.7, &r), -0.83347083436444141038, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_elljac_arcsn_e, (0.5, 0.99, &r), 0.54901317512970679474, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_elljac_arcsn_e, (0.9, 0.99, &r), 1.4641979499934943138, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_elljac_arcsn_e, (-0.7, 0.99, &r), -0.86604263515355059254, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_elljac_arcsn_e, (0.5, -0.4, &r), 0.51493124782894120927, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_elljac_arcsn_e, (0.9, -0.4, &r), 1.0566953576964596128, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_elljac_arcsn_e, (-0.7, -0.4, &r), -0.75010663662342189927, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_elljac_arcsn_e, (0.5, 0.0, &r), 0.52359877559829887308, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_elljac_arcsn_e, (0.9, 0.0, &r), 1.1197695149986341867, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_elljac_arcsn_e, (-0.7, 0.0, &r), -0.77539749661075306374, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_elljac_arcsn_e, (0.5, 1.0, &r), 0.54930614433405484570, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_elljac_arcsn_e, (-0.7, 1.0, &r), -0.86730052769405319443, TEST_TOL0, GSL_SUCCESS);
+
+  TEST_SF(s, gsl_sf_elljac_arccn_e, (0.5, 0.3, &r), 1.0991352230920430096, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_elljac_arccn_e, (-0.5, 0.3, &r), 2.3286436732655391144, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_elljac_arccn_e, (-0.9, 0.3, &r), 2.9722292343614428258, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_elljac_arccn_e, (0.5, 0.7, &r), 1.1966306515644649497, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_elljac_arccn_e, (-0.5, 0.7, &r), 2.9540956190204733380, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_elljac_arccn_e, (-0.9, 0.7, &r), 3.6887452692060250062, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_elljac_arccn_e, (0.5, 0.99, &r), 1.3116561370004079034, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_elljac_arccn_e, (-0.5, 0.99, &r), 6.0796185889793414522, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_elljac_arccn_e, (-0.9, 0.99, &r), 6.9243067089444646727, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_elljac_arccn_e, (0.5, -0.4, &r), 0.99334137910937788023, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_elljac_arccn_e, (-0.5, -0.4, &r), 1.8896953731075831284, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_elljac_arccn_e, (-0.9, -0.4, &r), 2.4376880588010519194, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_elljac_arccn_e, (0.5, 0.0, &r), 1.0471975511965977462, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_elljac_arccn_e, (-0.5, 0.0, &r), 2.0943951023931954923, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_elljac_arccn_e, (-0.9, 0.0, &r), 2.6905658417935308059, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_elljac_arccn_e, (0.5, 1.0, &r), 1.3169578969248167086, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_elljac_arccn_e, (0.9, 1.0, &r), 0.46714530810326201813, TEST_TOL0, GSL_SUCCESS);
+
+  TEST_SF(s, gsl_sf_elljac_arcdn_e, (0.918330013267037760719382795155, 0.3, &r), 0.83262989126111091183, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_elljac_arcdn_e, (0.773861278752583076998291373028, 0.7, &r), 0.93864754711595708354, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_elljac_arcdn_e, (0.55, 0.99, &r), 1.2150297652600412803, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_elljac_arcdn_e, (1.1, -0.4, &r), 0.78202749045978956579, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_elljac_arcdn_e, (0.5, 1.0, &r), 1.3169578969248167086, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_elljac_arcdn_e, (0.9, 1.0, &r), 0.46714530810326201813, TEST_TOL0, GSL_SUCCESS);
+
+  /* out-of-domain arguments */
+  TEST_SF(s, gsl_sf_elljac_arcsn_e, (1.5, 0.5, &r), GSL_NAN, GSL_NAN, GSL_EDOM);
+  TEST_SF(s, gsl_sf_elljac_arcsn_e, (0.5, 1.5, &r), GSL_NAN, GSL_NAN, GSL_EDOM);
+  TEST_SF(s, gsl_sf_elljac_arccn_e, (-1.5, 0.5, &r), GSL_NAN, GSL_NAN, GSL_EDOM);
+  TEST_SF(s, gsl_sf_elljac_arcdn_e, (1.0, 0.0, &r), GSL_NAN, GSL_NAN, GSL_EDOM);
+  TEST_SF(s, gsl_sf_elljac_arcdn_e, (0.5, 0.5, &r), GSL_NAN, GSL_NAN, GSL_EDOM);
+
+  /* round trip through the direct functions, including m < 0 */
+  {
+    const double m[5] = { 0.0, 0.3, 0.7, 0.99, -0.4 };
+    const double x[5] = { -0.9, -0.5, 0.0, 0.5, 0.9 };
+    double sn, cn, dn, u;
+    size_t im, ix;
+
+    for (im = 0; im < 5; ++im)
+      {
+        for (ix = 0; ix < 5; ++ix)
+          {
+            u = gsl_sf_elljac_arcsn(x[ix], m[im]);
+            gsl_sf_elljac_e(u, m[im], &sn, &cn, &dn);
+            gsl_test(fabs(sn - x[ix]) > 1.0e-14,
+                     "elljac arcsn round trip sn (m=%.2g, x=%.2g)", m[im], x[ix]);
+
+            u = gsl_sf_elljac_arccn(x[ix], m[im]);
+            gsl_sf_elljac_e(u, m[im], &sn, &cn, &dn);
+            gsl_test(fabs(cn - x[ix]) > 1.0e-13,
+                     "elljac arccn round trip cn (m=%.2g, x=%.2g)", m[im], x[ix]);
+          }
+      }
+  }
+
+  return s;
+}
+
+
 int test_erf(void)
 {
   gsl_sf_result r;
@@ -3465,6 +3551,7 @@ int main(int argc, char * argv[])
   gsl_test(test_dilog(),       "Dilogarithm");
   gsl_test(test_elementary(),  "Elementary Functions (Misc)");
   gsl_test(test_ellint(),      "Elliptic Integrals");
+  gsl_test(test_elljac(),      "Jacobi Elliptic Functions");
   gsl_test(test_jac(),         "Elliptic Functions (Jacobi)");
   gsl_test(test_erf(),         "Error Functions");
   gsl_test(test_exp(),         "Exponential Functions");

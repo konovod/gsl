@@ -101,6 +101,7 @@ int test_alf(void);
 int test_bessel(void);
 int test_coulomb(void);
 int test_dilog(void);
+int test_elljac(void);
 int test_expint_complex(void);
 int test_gamma(void);
 int test_mathieu(void);
