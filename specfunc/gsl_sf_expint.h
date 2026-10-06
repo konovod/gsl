@@ -162,6 +162,41 @@ int     gsl_sf_atanint_e(const double x, gsl_sf_result * result);
 double  gsl_sf_atanint(const double x);
 
 
+/* Complex exponential integrals
+ *
+ * E_n(z) := Integral_1^Infinity exp(-z t) / t^n dt
+ *
+ * analytically continued to the cut plane -Pi < arg(z) <= Pi; the
+ * negative real axis is approached from above.  z != 0 when n == 1.
+ * exceptions: GSL_EDOM, GSL_EOVRFLW, GSL_EUNDRFLW, GSL_ELOSS,
+ *             GSL_EMAXITER, GSL_EFAILED
+ */
+int     gsl_sf_complex_expint_E1_e(double zr, double zi,
+                                   gsl_sf_result * re, gsl_sf_result * im);
+int     gsl_sf_complex_expint_En_e(int n, double zr, double zi,
+                                   gsl_sf_result * re, gsl_sf_result * im);
+
+
+/* E_n_scaled(z) := exp(z) E_n(z)
+ *
+ * exceptions: as for gsl_sf_complex_expint_E1_e / _En_e
+ */
+int     gsl_sf_complex_expint_E1_scaled_e(double zr, double zi,
+                                          gsl_sf_result * re, gsl_sf_result * im);
+int     gsl_sf_complex_expint_En_scaled_e(int n, double zr, double zi,
+                                          gsl_sf_result * re, gsl_sf_result * im);
+
+
+/* Ei(z) := - PV Integral_{-z}^Infinity exp(-t) / t dt
+ *
+ * for z in the cut plane -Pi < arg(z) <= Pi.  z != 0.
+ * exceptions: GSL_EDOM, GSL_EOVRFLW, GSL_EUNDRFLW, GSL_ELOSS,
+ *             GSL_EMAXITER, GSL_EFAILED
+ */
+int     gsl_sf_complex_expint_Ei_e(double zr, double zi,
+                                   gsl_sf_result * re, gsl_sf_result * im);
+
+
 __END_DECLS
 
 #endif /* GSL_SF_EXPINT_H__ */
