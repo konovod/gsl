@@ -1915,47 +1915,57 @@ Bidiagonalization
 A general matrix :math:`A` can be factorized by similarity
 transformations into the form,
 
-.. math:: A = U B V^T
+.. math:: A = U B V^{\dagger}
 
-where :math:`U` and :math:`V` are orthogonal matrices and :math:`B` is a
-:math:`N`-by-:math:`N` bidiagonal matrix with non-zero entries only on the
-diagonal and superdiagonal.  The size of :data:`U` is :math:`M`-by-:math:`N`
-and the size of :data:`V` is :math:`N`-by-:math:`N`.
+where :math:`U` and :math:`V` are orthogonal (unitary) matrices and :math:`B`
+is a :math:`N`-by-:math:`N` bidiagonal matrix with non-zero entries only on
+the diagonal and superdiagonal; the bidiagonal matrix :math:`B` is real-valued
+even if :math:`A` is complex-valued.  The size of :data:`U` is
+:math:`M`-by-:math:`N` and the size of :data:`V` is :math:`N`-by-:math:`N`.
 
 .. function:: int gsl_linalg_bidiag_decomp (gsl_matrix * A, gsl_vector * tau_U, gsl_vector * tau_V)
+              int gsl_linalg_complex_bidiag_decomp (gsl_matrix_complex * A, gsl_vector_complex * tau_U, gsl_vector_complex * tau_V)
 
    This function factorizes the :math:`M`-by-:math:`N` matrix :data:`A` into
-   bidiagonal form :math:`U B V^T`.  The diagonal and superdiagonal of the
-   matrix :math:`B` are stored in the diagonal and superdiagonal of :data:`A`.
-   The orthogonal matrices :math:`U` and :data:`V` are stored as compressed
-   Householder vectors in the remaining elements of :data:`A`.  The
-   Householder coefficients are stored in the vectors :data:`tau_U` and
-   :data:`tau_V`.  The length of :data:`tau_U` must equal the number of
-   elements in the diagonal of :data:`A` and the length of :data:`tau_V` should
-   be one element shorter.
+   bidiagonal form :math:`U B V^{\dagger}`.  The diagonal and superdiagonal of
+   the matrix :math:`B` are stored in the diagonal and superdiagonal of
+   :data:`A`.  The orthogonal (unitary) matrices :math:`U` and :data:`V` are
+   stored as compressed Householder vectors in the remaining elements of
+   :data:`A`.  The Householder coefficients are stored in the vectors
+   :data:`tau_U` and :data:`tau_V`.  The length of :data:`tau_U` must equal
+   the number of elements in the diagonal of :data:`A` and the length of
+   :data:`tau_V` should be one element shorter.
 
 .. function:: int gsl_linalg_bidiag_unpack (const gsl_matrix * A, const gsl_vector * tau_U, gsl_matrix * U, const gsl_vector * tau_V, gsl_matrix * V, gsl_vector * diag, gsl_vector * superdiag)
+              int gsl_linalg_complex_bidiag_unpack (const gsl_matrix_complex * A, const gsl_vector_complex * tau_U, gsl_matrix_complex * U, const gsl_vector_complex * tau_V, gsl_matrix_complex * V, gsl_vector * diag, gsl_vector * superdiag, gsl_vector_complex * work)
 
    This function unpacks the bidiagonal decomposition of :data:`A` produced by
-   :func:`gsl_linalg_bidiag_decomp`, (:data:`A`, :data:`tau_U`, :data:`tau_V`)
-   into the separate orthogonal matrices :data:`U`, :data:`V` and the diagonal
-   vector :data:`diag` and superdiagonal :data:`superdiag`.  Note that :data:`U`
-   is stored as a compact :math:`M`-by-:math:`N` orthogonal matrix satisfying
-   :math:`U^T U = I` for efficiency.
+   :func:`gsl_linalg_bidiag_decomp` or
+   :func:`gsl_linalg_complex_bidiag_decomp`, (:data:`A`, :data:`tau_U`,
+   :data:`tau_V`) into the separate orthogonal (unitary) matrices :data:`U`, :data:`V`
+   and the diagonal vector :data:`diag` and superdiagonal :data:`superdiag`.
+   Note that :data:`U` is stored as a compact :math:`M`-by-:math:`N`
+   orthogonal matrix satisfying :math:`U^T U = I` for efficiency.
+   Note that the complex-valued variant requires an additional workspace
+   :data:`work` of length :data:`N`.
 
 .. function:: int gsl_linalg_bidiag_unpack2 (gsl_matrix * A, gsl_vector * tau_U, gsl_vector * tau_V, gsl_matrix * V)
+              int gsl_linalg_complex_bidiag_unpack2 (gsl_matrix_complex * A, gsl_vector_complex * tau_U, gsl_vector_complex * tau_V, gsl_matrix_complex * V, gsl_vector * diag, gsl_vector * superdiag)
 
    This function unpacks the bidiagonal decomposition of :data:`A` produced by
-   :func:`gsl_linalg_bidiag_decomp`, (:data:`A`, :data:`tau_U`, :data:`tau_V`)
-   into the separate orthogonal matrices :data:`U`, :data:`V` and the diagonal
-   vector :data:`diag` and superdiagonal :data:`superdiag`.  The matrix :data:`U`
-   is stored in-place in :data:`A`.
+   :func:`gsl_linalg_bidiag_decomp` or
+   :func:`gsl_linalg_complex_bidiag_decomp`, (:data:`A`, :data:`tau_U`,
+   :data:`tau_V`) into the separate orthogonal (unitary) matrices :data:`U`,
+   :data:`V` and the diagonal vector :data:`diag` and superdiagonal
+   :data:`superdiag`.  The matrix :data:`U` is stored in-place in :data:`A`.
 
 .. function:: int gsl_linalg_bidiag_unpack_B (const gsl_matrix * A, gsl_vector * diag, gsl_vector * superdiag)
+              int gsl_linalg_complex_bidiag_unpack_B (const gsl_matrix_complex * A, gsl_vector * diag, gsl_vector * superdiag)
 
    This function unpacks the diagonal and superdiagonal of the bidiagonal
-   decomposition of :data:`A` from :func:`gsl_linalg_bidiag_decomp`, into
-   the diagonal vector :data:`diag` and superdiagonal vector :data:`superdiag`.
+   decomposition of :data:`A` from :func:`gsl_linalg_bidiag_decomp` or
+   :func:`gsl_linalg_complex_bidiag_decomp`, into the diagonal vector
+   :data:`diag` and superdiagonal vector :data:`superdiag`.
 
 .. index:: Givens rotation
 
@@ -2020,15 +2030,20 @@ case, it is typically desired to find :math:`c` and :math:`s` such that
      [ c -s ] [ a ] = [ r ]
      [ s  c ] [ b ]   [ 0 ]
 
-with :math:`r = \sqrt{a^2 + b^2}`.
+with :math:`r = \sqrt{a^2 + b^2}`. In the case of a complex vector
+:math:`(a,b)`, the sine acquires a complex phase, i.e., :math:`s = e^{i\phi}
+\sin{\theta}` and :math:`s` takes complex values; the variable :math:`c` is
+real-valued in all cases.
 
 .. function:: void gsl_linalg_givens (const double a, const double b, double * c, double * s)
+              void gsl_linalg_complex_givens (const gsl_complex a, const gsl_complex b, double * c, gsl_complex * s)
 
    This function computes :math:`c = \cos{\theta}` and :math:`s = \sin{\theta}`
    so that the Givens matrix :math:`G(\theta)` acting on the
    vector :math:`(a,b)` produces :math:`(r, 0)`, with :math:`r = \sqrt{a^2 + b^2}`.
 
 .. function:: void gsl_linalg_givens_gv (gsl_vector * v, const size_t i, const size_t j, const double c, const double s)
+              void gsl_linalg_complex_givens_gv (gsl_vector_complex * v, const size_t i, const size_t j, const double c, const gsl_complex s)
 
    This function applies the Givens rotation defined by
    :math:`c = \cos{\theta}` and :math:`s = \sin{\theta}` to the :data:`i`
@@ -2065,7 +2080,27 @@ Householder transformations efficiently.
    stored in the output vector. Instead, :code:`w[0]` is set to
    the first element of the transformed vector, so that if
    :math:`u = H w`, :code:`w[0] = u[0]` on output and the remainder
-   of :math:`u` is zero.
+   of :math:`u` is zero. Note that if :math:`H` is reconstructed from
+   :math:`\tau` and :data:`v`, the resulting matrix is orthogonal (unitary)
+   but not symmetric (hermitian).
+
+.. function:: int gsl_linalg_householder_left (const double tau, const gsl_vector * v, gsl_matrix * A, gsl_vector * work)
+              int gsl_linalg_complex_householder_left (const gsl_complex tau, const gsl_vector_complex * v, gsl_matrix_complex * A, gsl_vector_complex * work)
+
+   This function applies the Householder matrix :math:`H` defined by the
+   scalar :data:`tau` and the vector :data:`v` to the left-hand side of the
+   matrix :data:`A`. On output the result :math:`H A` is stored in :data:`A`.
+   This function replaces gsl_linalg_*_householder_hm().
+
+.. function:: int gsl_linalg_householder_right (const double tau, const gsl_vector * v, gsl_matrix * A, gsl_vector * work)
+              int gsl_linalg_complex_householder_right (const gsl_complex tau, const gsl_vector_complex * v, gsl_matrix_complex * A, gsl_vector_complex * work)
+
+   This function applies the Householder matrix :math:`H` defined by the
+   scalar :data:`tau` and the vector :data:`v` to the right-hand side of the
+   matrix :data:`A`. On output the result is stored in :data:`A`, which is
+   :math:`A H` for real-valued matrices and :math:`A H^T` for complex-valued
+   matrices.
+   This function replaces gsl_linalg_*_householder_mh().
 
 .. function:: int gsl_linalg_householder_hm (double tau, const gsl_vector * v, gsl_matrix * A)
               int gsl_linalg_complex_householder_hm (gsl_complex tau, const gsl_vector_complex * v, gsl_matrix_complex * A)
@@ -2073,6 +2108,7 @@ Householder transformations efficiently.
    This function applies the Householder matrix :math:`H` defined by the
    scalar :data:`tau` and the vector :data:`v` to the left-hand side of the
    matrix :data:`A`. On output the result :math:`H A` is stored in :data:`A`.
+   This function is DEPRECATED.
 
 .. function:: int gsl_linalg_householder_mh (double tau, const gsl_vector * v, gsl_matrix * A)
               int gsl_linalg_complex_householder_mh (gsl_complex tau, const gsl_vector_complex * v, gsl_matrix_complex * A)
@@ -2080,6 +2116,7 @@ Householder transformations efficiently.
    This function applies the Householder matrix :math:`H` defined by the
    scalar :data:`tau` and the vector :data:`v` to the right-hand side of the
    matrix :data:`A`. On output the result :math:`A H` is stored in :data:`A`.
+   This function is DEPRECATED.
 
 .. function:: int gsl_linalg_householder_hv (double tau, const gsl_vector * v, gsl_vector * w)
               int gsl_linalg_complex_householder_hv (gsl_complex tau, const gsl_vector_complex * v, gsl_vector_complex * w)
