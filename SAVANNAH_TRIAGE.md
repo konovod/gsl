@@ -9,9 +9,9 @@ Scratch index, not part of the fork's record of changes. Verdicts are curated fr
 
 | status | count |
 |---|---:|
-| fixed | 116 |
+| fixed | 117 |
 | partial | 5 |
-| rejected | 93 |
+| rejected | 92 |
 | deferred | 4 |
 | superseded | 1 |
 | not reviewed | 0 |
@@ -28,7 +28,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 21836 | 2007-12-18 | - | Accuracy problem | none | **fixed** — Q returns exact complement of P in the series window (6f23a4cb5) | gamma_inc_P and gamma_inc_Q only satisfy P+Q=1 within errors |
 | 21837 | 2007-12-18 | - | Runtime error | none | rejected — permutation for a zero diagonal is a new algorithm; docs corrected (9418afa5f) | gsl_linalg_solve_symm_tridiag requires positive definite matrix |
 | 24252 | 2008-09-12 | feature | - | source gamma_tail_jpl_080908.c | rejected — the posted truncated-gamma sampler's a<1 branch uses the wrong rejection constant (a instead of tail) and does not reproduce Gamma(a); see FORKNEWS | suggestion: add gamma tail distribution |
-| 24871 | 2008-11-18 | feature | - | none | rejected — new function/API (exponential integrals E_n); out of scope | suggestion, add support for E_n |
+| 24871 | 2008-11-18 | feature | - | none | **fixed** — complex exponential integrals E1(z), En(z), their exp(z)-scaled variants and Ei(z), by a port of Amos Algorithm 683 (c01e6b922, 4416fe729, ffad9c422) | suggestion, add support for E_n |
 | 25320 | 2009-01-14 | - | Accuracy problem | none | **rejected** — feature: no Fresnel in the tree; importing it is new API/algorithm | Import fresnel, bugs on GSL Extension Fresnel |
 | 28267 | 2009-12-11 | - | Accuracy problem | source hyperg1F1.c | **partial** — same defect as #43809 (52505315d); transition region `x ~ a^2` still loses digits | poor convergence region for gsl_sf_hyperg_1F1 |
 | 29834 | 2010-05-09 | - | Runtime error | source error_cblas_v2.h | **fixed** (inherited) — the report's cblas checking macros already live in `cblas/error_cblas*.h`; the wrappers check dimensions | insufficient argument checking in blas wrapper |
@@ -280,8 +280,9 @@ listed below were taken: `#59900` (truncated Gaussian), `#66816`
 (Nakagami), `#66949` (Erlang CDF), `#66767` (inverse binomial) and
 `#66775` (inverse Poisson); `#24252` (gamma tail) was re-examined and
 **rejected** because the posted sampler is numerically wrong (see
-`FORKNEWS`), and `#24871` was left because it is a large new complex
-algorithm.  The five are no longer listed in the table.
+`FORKNEWS`).  `#24871`, the large new complex algorithm, was taken
+later as a port of Amos Algorithm 683.  All six are no longer listed in
+the table.
 
 `kind`: `feat` = new feature/API, `perf` = performance only, `test` =
 test-quality request, `doc` = documentation matter.  `patch`: `clean`/
@@ -290,7 +291,6 @@ test-quality request, `doc` = documentation matter.  `patch`: `clean`/
 
 | # | kind | patch | what it would add |
 |---|---|---|---|
-| 24871 | feat | - | exponential integrals for complex arguments (the real E_n already exists) |
 | 57173 | feat | - | zeta function for complex arguments |
 | 68367 | feat | source | inverse Jacobi elliptic integrals |
 | 66573 | feat | clean | `gsl_vector_complex_conjugate()` |

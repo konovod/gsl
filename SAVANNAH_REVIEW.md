@@ -2842,13 +2842,17 @@ Reviewed 2026-10-04 from the offline dossiers under
 the tail the eligibility rule does not admit, recorded in one place so
 the index has no un-triaged item left.  **No code, test or documentation
 change follows from any of them** at the time of writing; several were
-taken later once the filter was widened (the six special cases, `#68098`
-and some performance items; see `FORKNEWS`).  The detail is in `FORKNEWS`
-under "meta: the remaining feature, performance and API requests"; the
-groups below are the shape of the request, not a per-bug essay.
+taken later once the filter was widened (the six special cases, `#68098`,
+`#24871` and some performance items; see `FORKNEWS`).  The detail is in
+`FORKNEWS` under "meta: the remaining feature, performance and API
+requests"; the groups below are the shape of the request, not a per-bug
+essay.
 
-* New distributions/generators (new public API): `#24252`, `#24871`,
+* New distributions/generators (new public API): `#24252`,
   `#59900`, `#66767`, `#66775`, `#66816`, `#66949`.
+  **Partly reversed:** `#24871` (complex exponential integrals E_n) was
+  taken later as a port of Amos Algorithm 683 (`c01e6b922`); see
+  `FORKNEWS`.
 * New algorithms/solvers: `#32257`, `#66573`, `#66695`, `#57173`,
   `#68367`.
 * New special cases or API extensions: `#41527`, `#45782`, `#66800`,
