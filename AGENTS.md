@@ -91,6 +91,7 @@ no `Signed-off-by` trailer.
 ## Savannah bug review
 
 The tracker is <https://savannah.gnu.org/bugs/?group=gsl>.
+Texts for all bugs are available offline at `/temp/savannah-store/dossiers/NNN.txt` 
 
 * `scripts/savannah_bugs.py` walks the open bugs, downloads patch-like
   attachments, and runs `git apply --check` against the tree. It writes an
@@ -100,24 +101,16 @@ The tracker is <https://savannah.gnu.org/bugs/?group=gsl>.
 * `SAVANNAH_REVIEW.md` holds the working notes and verdicts for each bug.
   It is deliberately **not** part of the fork's record of changes and is
   kept out of `FORKNEWS`; it records both applied and rejected items, plus
-  method notes. It is currently untracked in git; treat it as scratch unless
-  told otherwise.
+  method notes.
 * `/temp/` (git-ignored) is the scratch area for patch and reference files
   being evaluated.
+* `SAVANNAH_TRIAGE.md` consists of two parts - big table with short description and status of each bug and backlog with items remaining to process.
 
 **Eligibility rule.** A candidate is in scope if it is a **bug fix,
 documentation correction, or test-quality improvement**. Feature requests,
-new API, new algorithms and performance-only changes are out of scope and
-are deferred, however cleanly they apply. When in doubt, do not take it.
+new API, new algorithms and performance-only changes was out of scope and
+deferred, however cleanly they apply. We are widening our eligibility rule now, starting from changes with minimal impact on backward compatibility.
 
-A performance-only candidate is admissible as a narrow exception when it
-is **result-preserving** (the built library returns bit-identical values
-for the affected API, demonstrated by a test or by a proof that the
-operation order is unchanged) or **removes provably redundant work without
-an interface change**, and adds no public API. A performance change that
-alters the floating-point result, or that needs the caller's tolerance
-passed into an internal routine, remains out of scope. Put the neutrality
-argument in the `FORKNEWS` entry.
 
 **Review method** (this is the hard-won part — follow it):
 
@@ -133,7 +126,7 @@ argument in the `FORKNEWS` entry.
    precision, or a published value), not against GSL itself.
 6. Record the outcome: applied entries in the `FORKNEWS` summary and body;
    rejected ones as `[rejected]` with the reason, and in
-   `SAVANNAH_REVIEW.md`.
+   `SAVANNAH_REVIEW.md`. Update status and backlog in `SAVANNAH_TRIAGE.md`
 
 ## Build and test
 
