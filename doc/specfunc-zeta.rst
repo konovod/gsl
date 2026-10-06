@@ -30,6 +30,18 @@ The Riemann zeta function is defined by the infinite sum
 .. Domain: s != 1.0
 .. Exceptional Return Values: GSL_EDOM, GSL_EOVRFLW
 
+.. function:: int gsl_sf_complex_zeta_e (double x, double y, gsl_sf_result * result_re, gsl_sf_result * result_im)
+
+   This function computes the Riemann zeta function :math:`\zeta(s)` for the
+   complex argument :math:`s = x + iy`, storing the real and imaginary parts in
+   :data:`result_re` and :data:`result_im`.  The trivial zeros at the negative
+   even integers are returned exactly.  The value is computed with the
+   Euler-Maclaurin summation formula for :math:`\Re(s) \ge 0` and with the
+   reflection formula :math:`\zeta(s) = 2^s \pi^{s-1} \sin(\pi s/2)
+   \Gamma(1-s) \zeta(1-s)` for :math:`\Re(s) < 0`.
+.. Domain: s != 1.0
+.. Exceptional Return Values: GSL_EDOM
+
 Riemann Zeta Function Minus One
 -------------------------------
 
@@ -69,6 +81,15 @@ The Hurwitz zeta function is defined by
 .. Domain: s > 1.0, q > 0.0
 .. Exceptional Return Values: GSL_EDOM, GSL_EUNDRFLW, GSL_EOVRFLW
 
+.. function:: int gsl_sf_complex_hzeta_e (double x, double y, double q, gsl_sf_result * result_re, gsl_sf_result * result_im)
+
+   This function computes the Hurwitz zeta function :math:`\zeta(s,q)` for the
+   complex argument :math:`s = x + iy` and real :math:`q > 0`, storing the real
+   and imaginary parts in :data:`result_re` and :data:`result_im`.  It uses the
+   Euler-Maclaurin summation formula and is defined for :math:`\Re(s) > 1`.
+.. Domain: Re(s) > 1.0, q > 0.0
+.. Exceptional Return Values: GSL_EDOM
+
 Eta Function
 ------------
 .. index:: Eta Function
@@ -88,3 +109,12 @@ The eta function is defined by
 
    These routines compute the eta function :math:`\eta(s)` for arbitrary :data:`s`.
 .. Exceptional Return Values: GSL_EUNDRFLW, GSL_EOVRFLW
+
+.. function:: int gsl_sf_complex_eta_e (double x, double y, gsl_sf_result * result_re, gsl_sf_result * result_im)
+
+   This function computes the eta function :math:`\eta(s)` for the complex
+   argument :math:`s = x + iy` through :math:`\eta(s) = (1 - 2^{1-s})
+   \zeta(s)`, storing the real and imaginary parts in :data:`result_re` and
+   :data:`result_im`.  The value :math:`\eta(1) = \log 2` is handled exactly.
+.. Domain: s != 1.0
+.. Exceptional Return Values: GSL_EDOM
