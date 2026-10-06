@@ -1451,10 +1451,17 @@ The Poisson Distribution
 
 .. function:: double gsl_cdf_poisson_P (unsigned int k, double mu)
               double gsl_cdf_poisson_Q (unsigned int k, double mu)
+              double gsl_cdf_poisson_Pinv (double P, double mu)
+              double gsl_cdf_poisson_Qinv (double Q, double mu)
 
    These functions compute the cumulative distribution functions
-   :math:`P(k)`, :math:`Q(k)` for the Poisson distribution with parameter
-   :data:`mu`.
+   :math:`P(k)`, :math:`Q(k)` and their inverses for the Poisson
+   distribution with parameter :data:`mu`.
+
+   The inverse functions return the smallest integer :math:`k` such that
+   :math:`P(k) \ge P` (or :math:`Q(k) \le Q`), as a :code:`double`.
+   Since the Poisson distribution is unbounded, :math:`P = 1` gives
+   :math:`+\infty` (and likewise :math:`Q = 0`).
 
 |newpage|
 
@@ -1519,10 +1526,15 @@ The Binomial Distribution
 
 .. function:: double gsl_cdf_binomial_P (unsigned int k, double p, unsigned int n)
               double gsl_cdf_binomial_Q (unsigned int k, double p, unsigned int n)
+              double gsl_cdf_binomial_Pinv (double P, double p, unsigned int n)
+              double gsl_cdf_binomial_Qinv (double Q, double p, unsigned int n)
 
    These functions compute the cumulative distribution functions
-   :math:`P(k)`, :math:`Q(k)`  for the binomial
+   :math:`P(k)`, :math:`Q(k)` and their inverses for the binomial
    distribution with parameters :data:`p` and :data:`n`.
+
+   The inverse functions return the smallest integer :math:`k` such that
+   :math:`P(k) \ge P` (or :math:`Q(k) \le Q`), as a :code:`double`.
 
 |newpage|
 

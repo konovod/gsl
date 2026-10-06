@@ -203,7 +203,9 @@ set(GSL_SOURCES
     cdf/weibull.c
     cdf/weibullinv.c
     cdf/binomial.c
+    cdf/binomialinv.c
     cdf/poisson.c
+    cdf/poissoninv.c
     cdf/geometric.c
     cdf/nbinomial.c
     cdf/pascal.c

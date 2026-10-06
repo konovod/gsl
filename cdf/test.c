@@ -41,6 +41,8 @@ void test_ugaussian (void);
 void test_ugaussianinv (void);
 void test_tgaussian (void);
 void test_tgaussianinv (void);
+void test_binomialinv (void);
+void test_poissoninv (void);
 void test_exponential (void);
 void test_exponentialinv (void);
 void test_exppow (void);
@@ -413,6 +415,8 @@ main (void)
 
   test_ugaussianinv ();
   test_tgaussianinv ();
+  test_binomialinv ();
+  test_poissoninv ();
   test_exponentialinv ();
   test_gammainv (); 
   test_chisqinv (); 
@@ -1564,6 +1568,97 @@ void test_tgaussianinv (void)
   TEST (gsl_cdf_tgaussian_Qinv, (0.8900431251157445, -50.0, 50.0, 25.0), -28.4328, TEST_TOL0);
   TEST (gsl_cdf_tgaussian_Qinv, (0.9561710212644348, -50.0, 50.0, 25.0), -37.9345999999999819, TEST_TOL0);
   TEST (gsl_cdf_tgaussian_Qinv, (0.36604136756928596, -50.0, 50.0, 25.0), 8.155, TEST_TOL0);
+}
+
+  /* Tests for the inverse binomial cumulative distribution function.
+     Expected values are from R's qbinom() / qbinom() with lower.tail
+     (the same "smallest k with F(k) >= P" convention).
+     See Savannah bug #66767. */
+
+void test_binomialinv (void)
+{
+  TEST (gsl_cdf_binomial_Pinv, (0.25, 0.3, 5), 1.0, 0.0);
+  TEST (gsl_cdf_binomial_Pinv, (0.5, 0.3, 5), 1.0, 0.0);
+  TEST (gsl_cdf_binomial_Pinv, (0.75, 0.3, 5), 2.0, 0.0);
+  TEST (gsl_cdf_binomial_Pinv, (0.9, 0.3, 5), 3.0, 0.0);
+  TEST (gsl_cdf_binomial_Pinv, (0.99, 0.3, 5), 4.0, 0.0);
+  TEST (gsl_cdf_binomial_Pinv, (0.01, 0.3, 5), 0.0, 0.0);
+  TEST (gsl_cdf_binomial_Pinv, (0.1, 0.3, 5), 0.0, 0.0);
+  TEST (gsl_cdf_binomial_Pinv, (0.0, 0.3, 5), 0.0, 0.0);
+  TEST (gsl_cdf_binomial_Pinv, (1.0, 0.3, 5), 5.0, 0.0);
+
+  TEST (gsl_cdf_binomial_Qinv, (0.25, 0.3, 5), 2.0, 0.0);
+  TEST (gsl_cdf_binomial_Qinv, (0.5, 0.3, 5), 1.0, 0.0);
+  TEST (gsl_cdf_binomial_Qinv, (0.75, 0.3, 5), 1.0, 0.0);
+  TEST (gsl_cdf_binomial_Qinv, (0.9, 0.3, 5), 0.0, 0.0);
+  TEST (gsl_cdf_binomial_Qinv, (0.99, 0.3, 5), 0.0, 0.0);
+  TEST (gsl_cdf_binomial_Qinv, (0.01, 0.3, 5), 4.0, 0.0);
+  TEST (gsl_cdf_binomial_Qinv, (0.1, 0.3, 5), 3.0, 0.0);
+  TEST (gsl_cdf_binomial_Qinv, (1.0, 0.3, 5), 0.0, 0.0);
+  TEST (gsl_cdf_binomial_Qinv, (0.0, 0.3, 5), 5.0, 0.0);
+
+  TEST (gsl_cdf_binomial_Pinv, (0.01, 0.5, 20), 5.0, 0.0);
+  TEST (gsl_cdf_binomial_Pinv, (0.5, 0.5, 20), 10.0, 0.0);
+  TEST (gsl_cdf_binomial_Pinv, (0.99, 0.5, 20), 15.0, 0.0);
+  TEST (gsl_cdf_binomial_Qinv, (0.01, 0.5, 20), 15.0, 0.0);
+  TEST (gsl_cdf_binomial_Qinv, (0.5, 0.5, 20), 10.0, 0.0);
+  TEST (gsl_cdf_binomial_Qinv, (0.99, 0.5, 20), 5.0, 0.0);
+
+  TEST (gsl_cdf_binomial_Pinv, (0.25, 0.1, 50), 3.0, 0.0);
+  TEST (gsl_cdf_binomial_Pinv, (0.5, 0.1, 50), 5.0, 0.0);
+  TEST (gsl_cdf_binomial_Pinv, (0.99, 0.1, 50), 10.0, 0.0);
+  TEST (gsl_cdf_binomial_Qinv, (0.25, 0.1, 50), 6.0, 0.0);
+  TEST (gsl_cdf_binomial_Qinv, (0.5, 0.1, 50), 5.0, 0.0);
+  TEST (gsl_cdf_binomial_Qinv, (0.99, 0.1, 50), 1.0, 0.0);
+
+  TEST (gsl_cdf_binomial_Pinv, (0.01, 0.95, 200), 182.0, 0.0);
+  TEST (gsl_cdf_binomial_Pinv, (0.5, 0.95, 200), 190.0, 0.0);
+  TEST (gsl_cdf_binomial_Pinv, (0.99, 0.95, 200), 196.0, 0.0);
+  TEST (gsl_cdf_binomial_Qinv, (0.01, 0.95, 200), 196.0, 0.0);
+  TEST (gsl_cdf_binomial_Qinv, (0.5, 0.95, 200), 190.0, 0.0);
+  TEST (gsl_cdf_binomial_Qinv, (0.99, 0.95, 200), 182.0, 0.0);
+}
+
+  /* Tests for the inverse Poisson cumulative distribution function.
+     Expected values are from R's qpois() (smallest k with F(k) >= P).
+     See Savannah bug #66775. */
+
+void test_poissoninv (void)
+{
+  TEST (gsl_cdf_poisson_Pinv, (0.25, 0.5), 0.0, 0.0);
+  TEST (gsl_cdf_poisson_Pinv, (0.75, 0.5), 1.0, 0.0);
+  TEST (gsl_cdf_poisson_Pinv, (0.99, 0.5), 3.0, 0.0);
+  TEST (gsl_cdf_poisson_Pinv, (0.0, 0.5), 0.0, 0.0);
+  TEST (gsl_cdf_poisson_Pinv, (1.0, 0.5), GSL_POSINF, 0.0);
+  TEST (gsl_cdf_poisson_Qinv, (0.25, 0.5), 1.0, 0.0);
+  TEST (gsl_cdf_poisson_Qinv, (0.5, 0.5), 0.0, 0.0);
+  TEST (gsl_cdf_poisson_Qinv, (0.01, 0.5), 3.0, 0.0);
+  TEST (gsl_cdf_poisson_Qinv, (1.0, 0.5), 0.0, 0.0);
+  TEST (gsl_cdf_poisson_Qinv, (0.0, 0.5), GSL_POSINF, 0.0);
+
+  TEST (gsl_cdf_poisson_Pinv, (0.1, 2.3), 0.0, 0.0);
+  TEST (gsl_cdf_poisson_Pinv, (0.25, 2.3), 1.0, 0.0);
+  TEST (gsl_cdf_poisson_Pinv, (0.5, 2.3), 2.0, 0.0);
+  TEST (gsl_cdf_poisson_Pinv, (0.9, 2.3), 4.0, 0.0);
+  TEST (gsl_cdf_poisson_Pinv, (0.99, 2.3), 6.0, 0.0);
+  TEST (gsl_cdf_poisson_Qinv, (0.1, 2.3), 4.0, 0.0);
+  TEST (gsl_cdf_poisson_Qinv, (0.5, 2.3), 2.0, 0.0);
+  TEST (gsl_cdf_poisson_Qinv, (0.9, 2.3), 0.0, 0.0);
+  TEST (gsl_cdf_poisson_Qinv, (0.99, 2.3), 0.0, 0.0);
+
+  TEST (gsl_cdf_poisson_Pinv, (0.01, 10.0), 3.0, 0.0);
+  TEST (gsl_cdf_poisson_Pinv, (0.5, 10.0), 10.0, 0.0);
+  TEST (gsl_cdf_poisson_Pinv, (0.99, 10.0), 18.0, 0.0);
+  TEST (gsl_cdf_poisson_Qinv, (0.01, 10.0), 18.0, 0.0);
+  TEST (gsl_cdf_poisson_Qinv, (0.5, 10.0), 10.0, 0.0);
+  TEST (gsl_cdf_poisson_Qinv, (0.99, 10.0), 3.0, 0.0);
+
+  TEST (gsl_cdf_poisson_Pinv, (0.01, 100.0), 77.0, 0.0);
+  TEST (gsl_cdf_poisson_Pinv, (0.5, 100.0), 100.0, 0.0);
+  TEST (gsl_cdf_poisson_Pinv, (0.99, 100.0), 124.0, 0.0);
+  TEST (gsl_cdf_poisson_Qinv, (0.01, 100.0), 124.0, 0.0);
+  TEST (gsl_cdf_poisson_Qinv, (0.5, 100.0), 100.0, 0.0);
+  TEST (gsl_cdf_poisson_Qinv, (0.99, 100.0), 77.0, 0.0);
 }
 
 

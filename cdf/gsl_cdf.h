@@ -157,8 +157,14 @@ double gsl_cdf_logistic_Qinv (const double Q, const double a);
 double gsl_cdf_binomial_P (const unsigned int k, const double p, const unsigned int n);
 double gsl_cdf_binomial_Q (const unsigned int k, const double p, const unsigned int n);
 
+double gsl_cdf_binomial_Pinv (const double P, const double p, const unsigned int n);
+double gsl_cdf_binomial_Qinv (const double Q, const double p, const unsigned int n);
+
 double gsl_cdf_poisson_P (const unsigned int k, const double mu);
 double gsl_cdf_poisson_Q (const unsigned int k, const double mu);
+
+double gsl_cdf_poisson_Pinv (const double P, const double mu);
+double gsl_cdf_poisson_Qinv (const double Q, const double mu);
 
 double gsl_cdf_geometric_P (const unsigned int k, const double p);
 double gsl_cdf_geometric_Q (const unsigned int k, const double p);

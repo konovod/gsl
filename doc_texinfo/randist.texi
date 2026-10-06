@@ -1894,9 +1894,16 @@ given above.
 
 @deftypefun double gsl_cdf_poisson_P (unsigned int @var{k}, double @var{mu})
 @deftypefunx double gsl_cdf_poisson_Q (unsigned int @var{k}, double @var{mu})
+@deftypefunx double gsl_cdf_poisson_Pinv (double @var{P}, double @var{mu})
+@deftypefunx double gsl_cdf_poisson_Qinv (double @var{Q}, double @var{mu})
 These functions compute the cumulative distribution functions
-@math{P(k)}, @math{Q(k)} for the Poisson distribution with parameter
-@var{mu}.
+@math{P(k)}, @math{Q(k)} and their inverses for the Poisson distribution
+with parameter @var{mu}.
+
+The inverse functions return the smallest integer @math{k} such that
+@math{P(k) >= P} (or @math{Q(k) <= Q}), as a @code{double}.  Since the
+Poisson distribution is unbounded, @math{P = 1} gives @math{+\infty}
+(and likewise @math{Q = 0}).
 @end deftypefun
 
 
@@ -1979,9 +1986,14 @@ the formula given above.
 
 @deftypefun double gsl_cdf_binomial_P (unsigned int @var{k}, double @var{p}, unsigned int @var{n})
 @deftypefunx double gsl_cdf_binomial_Q (unsigned int @var{k}, double @var{p}, unsigned int @var{n})
+@deftypefunx double gsl_cdf_binomial_Pinv (double @var{P}, double @var{p}, unsigned int @var{n})
+@deftypefunx double gsl_cdf_binomial_Qinv (double @var{Q}, double @var{p}, unsigned int @var{n})
 These functions compute the cumulative distribution functions
-@math{P(k)}, @math{Q(k)}  for the binomial
+@math{P(k)}, @math{Q(k)} and their inverses for the binomial
 distribution with parameters @var{p} and @var{n}.
+
+The inverse functions return the smallest integer @math{k} such that
+@math{P(k) >= P} (or @math{Q(k) <= Q}), as a @code{double}.
 @end deftypefun
 
 
