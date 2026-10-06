@@ -37,6 +37,11 @@ test_f (const gsl_root_fsolver_type * T,
         double lower_bound, double upper_bound, double correct_root);
 
 void
+test_f_wv (const gsl_root_fsolver_type * T,
+           const char * description, gsl_function *f,
+           double lower_bound, double upper_bound, double correct_root);
+
+void
 test_f_e (const gsl_root_fsolver_type * T, const char * description, 
           gsl_function *f,
           double lower_bound, double upper_bound, double correct_root);

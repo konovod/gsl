@@ -82,6 +82,11 @@ int gsl_root_fsolver_set (gsl_root_fsolver * s,
                           gsl_function * f, 
                           double x_lower, double x_upper);
 
+int gsl_root_fsolver_set_with_values (gsl_root_fsolver * s,
+                                      gsl_function * f,
+                                      double x_lower, double f_lower,
+                                      double x_upper, double f_upper);
+
 int gsl_root_fsolver_iterate (gsl_root_fsolver * s);
 
 const char * gsl_root_fsolver_name (const gsl_root_fsolver * s);

@@ -23,6 +23,33 @@
 #include <gsl/gsl_errno.h>
 #include <gsl/gsl_roots.h>
 
+/* Closure used by gsl_root_fsolver_set_with_values().  The solver's
+   init routine asks for f(x_lower) and f(x_upper); the wrapper returns
+   the caller-supplied values for those two points instead of evaluating
+   the (possibly expensive) function again.  Any other point is
+   forwarded to the real function. */
+
+typedef struct
+{
+  gsl_function * f;
+  double x_lower, f_lower;
+  double x_upper, f_upper;
+}
+fsolver_wv_closure;
+
+static double
+fsolver_wv_eval (double x, void * params)
+{
+  fsolver_wv_closure * c = (fsolver_wv_closure *) params;
+
+  if (x == c->x_lower)
+    return c->f_lower;
+  else if (x == c->x_upper)
+    return c->f_upper;
+  else
+    return GSL_FN_EVAL (c->f, x);
+}
+
 gsl_root_fsolver *
 gsl_root_fsolver_alloc (const gsl_root_fsolver_type * T)
 {
@@ -64,6 +91,36 @@ gsl_root_fsolver_set (gsl_root_fsolver * s, gsl_function * f, double x_lower, do
   s->x_upper = x_upper;
 
   return (s->type->set) (s->state, s->function, &(s->root), x_lower, x_upper);
+}
+
+int
+gsl_root_fsolver_set_with_values (gsl_root_fsolver * s, gsl_function * f,
+                                  double x_lower, double f_lower,
+                                  double x_upper, double f_upper)
+{
+  fsolver_wv_closure c;
+  gsl_function wf;
+
+  if (x_lower > x_upper)
+    {
+      GSL_ERROR ("invalid interval (lower > upper)", GSL_EINVAL);
+    }
+
+  s->function = f;
+  s->root = 0.5 * (x_lower + x_upper);  /* initial estimate */
+  s->x_lower = x_lower;
+  s->x_upper = x_upper;
+
+  c.f = f;
+  c.x_lower = x_lower;
+  c.f_lower = f_lower;
+  c.x_upper = x_upper;
+  c.f_upper = f_upper;
+
+  wf.function = &fsolver_wv_eval;
+  wf.params = &c;
+
+  return (s->type->set) (s->state, &wf, &(s->root), x_lower, x_upper);
 }
 
 int

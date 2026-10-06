@@ -148,6 +148,16 @@ Initializing the Solver
    handler the program is aborted; call :func:`gsl_set_error_handler_off`
    if you want to test the interval and handle the status yourself.
 
+.. function:: int gsl_root_fsolver_set_with_values (gsl_root_fsolver * s, gsl_function * f, double x_lower, double f_lower, double x_upper, double f_upper)
+
+   This function is equivalent to :func:`gsl_root_fsolver_set` but uses
+   the supplied values :data:`f_lower` and :data:`f_upper` instead of
+   evaluating :math:`f(x_{lower})` and :math:`f(x_{upper})`.  It is useful
+   when the function is expensive to evaluate and its values at the two
+   ends of the interval are already known.  As with
+   :func:`gsl_root_fsolver_set`, a non-straddling interval returns
+   :macro:`GSL_EINVAL` and invokes the error handler.
+
 .. function:: int gsl_root_fdfsolver_set (gsl_root_fdfsolver * s, gsl_function_fdf * fdf, double root)
 
    This function initializes, or reinitializes, an existing solver :data:`s`

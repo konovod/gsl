@@ -164,6 +164,16 @@ the program is aborted; call @code{gsl_set_error_handler_off} if you want
 to test the interval and handle the status yourself.
 @end deftypefun
 
+@deftypefun int gsl_root_fsolver_set_with_values (gsl_root_fsolver * @var{s}, gsl_function * @var{f}, double @var{x_lower}, double @var{f_lower}, double @var{x_upper}, double @var{f_upper})
+This function is equivalent to @code{gsl_root_fsolver_set} but uses the
+supplied values @var{f_lower} and @var{f_upper} instead of evaluating
+@math{f(x_{lower})} and @math{f(x_{upper})}.  It is useful when the
+function is expensive to evaluate and its values at the two ends of the
+interval are already known.  As with @code{gsl_root_fsolver_set}, a
+non-straddling interval returns @code{GSL_EINVAL} and invokes the error
+handler.
+@end deftypefun
+
 @deftypefun int gsl_root_fdfsolver_set (gsl_root_fdfsolver * @var{s}, gsl_function_fdf * @var{fdf}, double @var{root})
 This function initializes, or reinitializes, an existing solver @var{s}
 to use the function and derivative @var{fdf} and the initial guess

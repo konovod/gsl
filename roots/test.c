@@ -38,6 +38,7 @@ void my_error_handler (const char *reason, const char *file,
 
 static void test_fdf_init_combined (const gsl_root_fdfsolver_type * T);
 static void test_falsepos_evaluations (void);
+static void test_set_with_values (const gsl_root_fsolver_type * T);
 
 #define WITHIN_TOL(a, b, epsrel, epsabs) \
  ((fabs((a) - (b)) < (epsrel) * GSL_MIN(fabs(a), fabs(b)) + (epsabs)))
@@ -102,10 +103,23 @@ main (void)
       test_f (*T, "x^2 - 1e-8 [0, 1]", &F_func3, 0.0, 1.0, sqrt (1e-8));
       test_f (*T, "x exp(-x) [-1/3, 2]", &F_func4, -1.0 / 3.0, 2.0, 0.0);
       test_f (*T, "(x - 1)^7 [0.9995, 1.0002]", &F_func6, 0.9995, 1.0002, 1.0);
-      
+
+      test_f_wv (*T, "sin(x) [3, 4]", &F_sin, 3.0, 4.0, M_PI);
+      test_f_wv (*T, "sin(x) [-4, -3]", &F_sin, -4.0, -3.0, -M_PI);
+      test_f_wv (*T, "sin(x) [-1/3, 1]", &F_sin, -1.0 / 3.0, 1.0, 0.0);
+      test_f_wv (*T, "cos(x) [0, 3]", &F_cos, 0.0, 3.0, M_PI / 2.0);
+      test_f_wv (*T, "cos(x) [-3, 0]", &F_cos, -3.0, 0.0, -M_PI / 2.0);
+      test_f_wv (*T, "x^20 - 1 [0.1, 2]", &F_func1, 0.1, 2.0, 1.0);
+      test_f_wv (*T, "sqrt(|x|)*sgn(x)", &F_func2, -1.0 / 3.0, 1.0, 0.0);
+      test_f_wv (*T, "x^2 - 1e-8 [0, 1]", &F_func3, 0.0, 1.0, sqrt (1e-8));
+      test_f_wv (*T, "x exp(-x) [-1/3, 2]", &F_func4, -1.0 / 3.0, 2.0, 0.0);
+      test_f_wv (*T, "(x - 1)^7 [0.9995, 1.0002]", &F_func6, 0.9995, 1.0002, 1.0);
+
       test_f_e (*T, "invalid range check [4, 0]", &F_sin, 4.0, 0.0, M_PI);
       test_f_e (*T, "invalid range check [1, 1]", &F_sin, 1.0, 1.0, M_PI);
       test_f_e (*T, "invalid range check [0.1, 0.2]", &F_sin, 0.1, 0.2, M_PI);
+
+      test_set_with_values (*T);
     }
 
   test_falsepos_evaluations ();
@@ -259,6 +273,60 @@ test_falsepos_evaluations (void)
 }
 
 
+/* Regression test for Savannah bug #66576.  gsl_root_fsolver_set_with_values()
+   takes the endpoint values as arguments, so the init routine must use them
+   rather than evaluating f at the endpoints again.  Count the calls to f and
+   require zero during set; then supply non-straddling values, which must be
+   rejected - proving that the supplied values are the ones used. */
+
+static int wv_eval_count = 0;
+
+static double
+wv_counted_sin (double x, void * p)
+{
+  wv_eval_count++;
+  return sin (x);
+}
+
+static void
+test_set_with_values (const gsl_root_fsolver_type * T)
+{
+  gsl_function F;
+  gsl_root_fsolver * s;
+  double x_lower = 3.0, x_upper = 4.0;
+  double f_lower, f_upper;
+  int status;
+
+  F.function = &wv_counted_sin;
+  F.params = 0;
+
+  f_lower = sin (x_lower);
+  f_upper = sin (x_upper);
+
+  wv_eval_count = 0;
+  s = gsl_root_fsolver_alloc (T);
+  status = gsl_root_fsolver_set_with_values (s, &F, x_lower, f_lower,
+                                             x_upper, f_upper);
+  gsl_test (status, "gsl_root_fsolver_set_with_values, %s (set)", T->name);
+  gsl_test (wv_eval_count != 0,
+            "gsl_root_fsolver_set_with_values, %s evaluates f zero times "
+            "during set (%d)", T->name, wv_eval_count);
+  gsl_root_fsolver_free (s);
+
+  wv_eval_count = 0;
+  s = gsl_root_fsolver_alloc (T);
+  status = gsl_root_fsolver_set_with_values (s, &F, x_lower, 1.0,
+                                             x_upper, 1.0);
+  gsl_test (status != GSL_EINVAL,
+            "gsl_root_fsolver_set_with_values, %s rejects non-straddling "
+            "supplied values", T->name);
+  gsl_test (wv_eval_count != 0,
+            "gsl_root_fsolver_set_with_values, %s evaluates f zero times "
+            "for the non-straddling case (%d)", T->name, wv_eval_count);
+  gsl_root_fsolver_free (s);
+}
+
+
 /* Using gsl_root_bisection, find the root of the function pointed to by f,
    using the interval [lower_bound, upper_bound]. Check if f succeeded and
    that it was accurate enough. */
@@ -320,6 +388,65 @@ test_f (const gsl_root_fsolver_type * T, const char * description, gsl_function 
     }
 
   gsl_root_fsolver_free(s);  
+}
+
+void
+test_f_wv (const gsl_root_fsolver_type * T, const char * description,
+           gsl_function * f, double lower_bound, double upper_bound,
+           double correct_root)
+{
+  int status;
+  size_t iterations = 0;
+  double r, a, b;
+  double x_lower, x_upper, f_lower, f_upper;
+  gsl_root_fsolver * s;
+
+  x_lower = lower_bound;
+  x_upper = upper_bound;
+
+  f_lower = GSL_FN_EVAL (f, x_lower);
+  f_upper = GSL_FN_EVAL (f, x_upper);
+
+  s = gsl_root_fsolver_alloc (T);
+  gsl_root_fsolver_set_with_values (s, f, x_lower, f_lower, x_upper, f_upper);
+
+  do
+    {
+      iterations++;
+
+      gsl_root_fsolver_iterate (s);
+
+      r = gsl_root_fsolver_root (s);
+
+      a = gsl_root_fsolver_x_lower (s);
+      b = gsl_root_fsolver_x_upper (s);
+
+      if (a > b)
+        gsl_test (GSL_FAILURE, "interval is invalid (%g,%g)", a, b);
+
+      if (r < a || r > b)
+        gsl_test (GSL_FAILURE, "r lies outside interval %g (%g,%g)", r, a, b);
+
+      status = gsl_root_test_interval (a, b, EPSABS, EPSREL);
+    }
+  while (status == GSL_CONTINUE && iterations < MAX_ITERATIONS);
+
+  gsl_test (status, "%s, %s (%g obs vs %g expected) ",
+            gsl_root_fsolver_name (s), description,
+            gsl_root_fsolver_root (s), correct_root);
+
+  if (iterations == MAX_ITERATIONS)
+    {
+      gsl_test (GSL_FAILURE, "exceeded maximum number of iterations");
+    }
+
+  if (!WITHIN_TOL (r, correct_root, EPSREL, EPSABS))
+    {
+      gsl_test (GSL_FAILURE, "incorrect precision (%g obs vs %g expected)",
+                r, correct_root);
+    }
+
+  gsl_root_fsolver_free (s);
 }
 
 void
