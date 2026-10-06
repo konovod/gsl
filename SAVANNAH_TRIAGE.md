@@ -9,9 +9,9 @@ Scratch index, not part of the fork's record of changes. Verdicts are curated fr
 
 | status | count |
 |---|---:|
-| fixed | 125 |
+| fixed | 126 |
 | partial | 5 |
-| rejected | 85 |
+| rejected | 84 |
 | deferred | 3 |
 | superseded | 1 |
 | not reviewed | 0 |
@@ -141,7 +141,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 55687 | 2019-02-10 | bug | - | none | **fixed** — NaN propagates; the `b = NaN` recursion crashed (99a73dd36) | Bad error handling in gsl_sf_hyperg_1F1_e with NaN arguments |
 | 55965 | 2019-03-20 | feature | - | none | rejected — feature: PCG is a new algorithm and API, out of scope | Implement PCG random number generator |
 | 56843 | 2019-08-31 | - | Accuracy problem | none | rejected — non-x86 eigen accuracy; x64 passes | Unit Tests in linalg eigen fail on non-x86 hardware due to slight accuracy differences |
-| 57173 | 2019-11-05 | feature | Accuracy problem | none | rejected — new API (complex-argument zeta); out of scope | Feature request: zeta function for complex arguments |
+| 57173 | 2019-11-05 | feature | Accuracy problem | none | **fixed** — complex `gsl_sf_complex_zeta_e`, `_hzeta_e` and `_eta_e` via Euler-Maclaurin and reflection (2708ca0fa, a605f0c44) | Feature request: zeta function for complex arguments |
 | 57978 | 2020-03-09 | bug | Accuracy problem | clean sincos_pi.c.patch | **fixed** — sin_pi/cos_pi(inf) -> EDOM (7c27b358b) | Incorrect result from cosine function with inf input |
 | 57979 | 2020-03-09 | bug | - | none | **fixed** — gsl_sf_hypot: +Inf for infinite args, NaN propagation (1a470222a) | Incorrect Result from hypot function with NaN input |
 | 58031 | 2020-03-23 | - | Accuracy problem | none | rejected — not-a-bug: `e^x K_0(x) -> 0` is the limit; value+vector added (fc4059b12) | gsl_sf_bessel_Kn_scaled incorrectly evaluating limit |
@@ -289,9 +289,10 @@ Two further new-API items have since been taken: `#66573`
 elliptic functions, where the posted prototype misused the modulus).
 `#60457` and its duplicate `#65932` (complex tridiagonal solvers) were
 taken as well, followed by the complex SVD suite `#66574` and `#66575`,
-the Feagin/Verner ODE steppers `#66695` and the configurable
-finite-difference Jacobian step `#45782`.  They are no longer listed in
-the table; see `FORKNEWS`.
+the Feagin/Verner ODE steppers `#66695`, the configurable
+finite-difference Jacobian step `#45782` and the complex zeta/eta/Hurwitz
+functions `#57173`.  They are no longer listed in the table; see
+`FORKNEWS`.
 
 `kind`: `feat` = new feature/API, `perf` = performance only, `test` =
 test-quality request, `doc` = documentation matter.  `patch`: `clean`/
@@ -300,7 +301,6 @@ test-quality request, `doc` = documentation matter.  `patch`: `clean`/
 
 | # | kind | patch | what it would add |
 |---|---|---|---|
-| 57173 | feat | - | zeta function for complex arguments |
 | 32257 | feat | - | integration routines imported from quadrule |
 | 41527 | feat | - | multimin functions return error codes |
 | 63519 | feat | - | `gsl_root_fsolver_set` variant returning `GSL_EINVAL` without the handler (per-call `_with_values`, #66576) |

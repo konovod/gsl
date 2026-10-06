@@ -2853,14 +2853,14 @@ essay.
   **Partly reversed:** `#24871` (complex exponential integrals E_n) was
   taken later as a port of Amos Algorithm 683 (`c01e6b922`); see
   `FORKNEWS`.
-* New algorithms/solvers: `#32257`, `#57173`.
+* New algorithms/solvers: `#32257`.
   **Partly reversed:** `#66573` (`gsl_vector_complex_conjugate()`),
   `#68367` (inverse Jacobi elliptic functions), `#60457`/`#65932`
   (complex tridiagonal solvers), `#66574` (complex Householder right,
   Givens, bidiagonal decomposition and SVD), `#66575` (complex SVD
-  solve and modified decomposition) and `#66695` (Feagin/Verner ODE
-  steppers) were taken once the filter admitted new public API; see
-  `FORKNEWS`.
+  solve and modified decomposition), `#66695` (Feagin/Verner ODE
+  steppers) and `#57173` (complex zeta, eta and Hurwitz zeta) were taken
+  once the filter admitted new public API; see `FORKNEWS`.
 * New special cases or API extensions: `#41527`, `#66800`,
   `#66834`, `#66842`, `#66850`, `#66922`, `#67359`, `#67774`, `#68098`.
   **Partly reversed:** the six among them (`#66800`, `#66834`, `#66842`,
