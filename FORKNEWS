@@ -193,6 +193,11 @@ One line per change: date | tag | description | commit(s).
   2026-10-04 | [upstream] | doc: origin limits and the six special cases     | b25f7119c
   2026-10-04 | [upstream] | specfunc: error bar for infinite test results    | d00104093
 
+  2026-10-06 | [upstream] | specfunc: 2F1 for x < -1 by Pfaff (real)          | b99ec4e7c
+  2026-10-06 | [upstream] | specfunc: 2F1 for x < -1 by Pfaff (conjugate)     | cfe9311cd
+  2026-10-06 | [upstream] | randist: reject |rho| >= 1 in bivariate Gaussian   | 6da0c08f3
+  2026-10-06 | [upstream] | ode-initval: rk2imp/rk4imp converge              | fa1622e11
+
 
 ## [upstream] rng: make the random() generators produce the documented sequences
 
@@ -4184,13 +4189,13 @@ Kept for the record; each report was checked before it was set aside.
 * **#30540, convergence checks in `rk4imp`/`rk2imp`** - the patch targets
   the legacy `ode-initval` (v1) steppers, which run three fixed iterations
   and say so in a comment.  The secular energy drift the report describes
-  reproduces (maximum `|H - H0|` of `1.0e-6`, `2.3e-6` and `4.1e-6` over
-  successive intervals of the Henon-Heiles run at `h = 0.1`), but the
-  maintained `ode-initval2` steppers already check convergence
-  (`modnewton1_solve`, the Hairer-Wanner criterion), and the manual
-  recommends v2 over v1.  An accuracy/algorithm enhancement to a
-  superseded module, categorised "feature" in the triage; rejected under
-  the eligibility rule.
+  reproduces, but the maintained `ode-initval2` steppers already check
+  convergence (`modnewton1_solve`, the Hairer-Wanner criterion), and the
+  manual recommends v2 over v1, so this was rejected as an
+  accuracy/algorithm enhancement to a superseded module.
+
+  **Reversed.**  Both v1 steppers were later iterated to convergence once
+  the filter was widened; see the entry appended at the end of this file.
 
 * **#30947, fixed step size control object** - a request for new public
   API (`gsl_odeiv_control_fixed_new()`) on the legacy v1 interface.  New
@@ -4564,14 +4569,16 @@ New special cases or API extensions:
   scope was widened to admit correctness fixes to existing API that add
   no new symbol; each turned out to be a defect for inputs the library
   already claimed to handle.  See the six entries appended at the end of
-  this file.  The rest of the list is still rejected.
+  this file.  The rest of the list is still rejected, with one later
+  addition: `#68098` (below) was also taken.
 
   * `#66800` `negative_binomial_pdf` at p = 1, `#66834` `gamma_inc(0,0)`,
     `#66842` exponential integrals at the origin, `#66850` 2F1 parameter
     shifts, `#66922` `logsin` special case, `#67359` `hyperg_2F0`,
     `#67774` arctan integral extended to negative inputs, `#41527`
     multimin error codes, `#45782` configurable derivative epsilon,
-    `#68098` correlation division-by-zero behaviour.
+    `#68098` correlation division-by-zero behaviour (**taken later** -
+    see the entry appended at the end of this file).
 
 Breaking or behaviour changes:
 
@@ -5134,5 +5141,117 @@ changes.
 Files: `specfunc/test_sf.c`.
 
 See Savannah bug #66842.
+
+
+## [upstream] specfunc: continue 2F1 to x < -1 by the Pfaff transformations
+
+Commits: b99ec4e7c (real), cfe9311cd (conjugate)
+
+`gsl_sf_hyperg_2F1_e()` and `gsl_sf_hyperg_2F1_conj_e()` evaluate the
+Gauss series, which converges only for `|x| < 1`, and rejected `x < -1`
+with `GSL_EDOM`.  The report asks for the range to be extended with the
+two Pfaff transformations (MathWorld relations 32/33, DLMF 15.8.1 and
+15.8.2), which map `x < -1` to an argument `z = x/(x-1)` in `(1/2, 1)`:
+
+  2F1(a,b;c;x) = (1-x)^-a 2F1(a,   c-b; c, x/(x-1))
+               = (1-x)^-b 2F1(c-a, b;   c, x/(x-1))
+
+The branch is taken after the terminating-series dispatch for a
+non-positive integer `a` or `b` (so those polynomials keep their exact
+values) and is skipped at `x = -1`, leaving the previous behaviour
+there untouched; `x >= 1` still raises `GSL_EDOM`.  For the real
+function the form is chosen so that the transformed series terminates
+when `c-b` or `c-a` is a non-positive integer and otherwise so that the
+prefactor exponent is smallest; the prefactor is combined with
+`gsl_sf_exp_mult_err_e`.
+
+For the conjugate function the transformed pair `(aR+i aI, (c-aR)+i aI)`
+is **not** a conjugate pair - both parameters carry the same imaginary
+part - so `hyperg_2F1_conj_series` cannot be reused.  A new static
+helper sums the Gauss series for that pair directly in complex
+arithmetic and returns the real part of the product with the complex
+prefactor (the imaginary part vanishes identically).  The `aI = 0` case
+reduces to the real function and is delegated to it.
+`gsl_sf_hyperg_2F1_renorm_e` inherits the real extension through its
+generic-`c` path.
+
+References were computed independently with `mpmath.hyp2f1` at 60
+digits.  For the real function a 14-vector set (including the two
+terminating cases, which are exact) agrees to a few ulp; for the
+conjugate function a 750-point grid over `(aR, aI, c, x < -1)` was
+checked and every call succeeds with the true error inside the reported
+bar.  Negative controls: with the real branch removed `specfunc_test`
+reports 9 vector failures plus the summary line; with the conjugate
+branch disabled it reports 7 vector failures plus the summary line.
+With both, the `specfunc` suite and the full CTest suite pass.
+
+Files: `specfunc/hyperg_2F1.c`, `specfunc/test_hyperg.c`.  Both manuals
+updated (`doc/specfunc-hyperg.rst`, `doc_texinfo/specfunc-hyperg.texi`).
+
+See Savannah bug #30324.
+
+
+## [upstream] randist: reject |rho| >= 1 in the bivariate Gaussian
+
+Commit: 6da0c08f3
+
+`gsl_ran_bivariate_gaussian_pdf()` divides by `sqrt(1 - rho^2)`, so at
+the perfectly correlated limit `rho = +/-1` it returned `NaN`/`Inf`, and
+for `|rho| > 1` it returned `NaN` through the square root of a negative
+number.  There is no two-dimensional density at `|rho| = 1`, so the
+documented range `-1 < rho < 1` is now enforced: the pdf signals
+`GSL_EDOM` through the error handler and `gsl_ran_bivariate_gaussian()`
+does the same before consuming any random numbers.  (The generator would
+produce a valid degenerate pair at `rho = +/-1`, but it is guarded too so
+the documented domain is consistent across the pair.)  The manuals said
+only "rho should lie between 1 and -1", which does not say whether the
+endpoints are included; both entries now give the open interval and the
+pdf entry notes the domain error.
+
+Negative control: with the two guards disabled the pdf returns `NaN`;
+with them, the new `randist/test.c` check (a counting error handler,
+`rho` in `{+/-1, +/-2}` must raise `GSL_EDOM` once and in-range values
+must stay silent) fails, and the `randist` suite passes.
+
+Files: `randist/bigauss.c`, `randist/test.c`.  Both manuals updated.
+
+See Savannah bug #68098.
+
+
+## [upstream] ode-initval: iterate the legacy rk2imp/rk4imp to convergence
+
+Commit: fa1622e11
+
+The legacy implicit Gauss steppers solved their stage equations with
+three unconditional fixed-point iterations and carried the comment
+"This method does not check for convergence".  That makes a symplectic
+method behave like an explicit one and gives the energy error a secular
+drift.  Reproduced on the Henon-Heiles Hamiltonian at `h = 0.1`: the
+maximum `|H - H0|` grows from `1.4e-9` to `7.5e-9` (rk4imp) and from
+`1.8e-5` to `4.3e-5` (rk2imp) between the first and the last 1000-time
+window over `[0, 10000]`.
+
+Both steppers now iterate until the stage increment satisfies
+`|delta| <= GSL_DBL_EPSILON (|Y| + 1)`, with a cap of 1000 iterations and
+a guard against non-finite iterates.  A step that does not converge
+leaves `y` untouched and reports `yerr = GSL_DBL_MAX`, so the adaptive
+control rejects it and reduces `h`.  Reporting a hard failure instead
+would abort `gsl_odeiv_evolve_apply()` (unlike v2 it does not retry) and
+would also break `gear2`, which uses `rk4imp` as its primer; the
+non-converged iterate must not reach the control either, because a NaN
+in `y` or `dydt_out` makes the control's error norm increase the step.
+
+With the fix the error is bounded: rk4imp holds at about `1.0e-9` and
+rk2imp at about `1.6e-5` across all ten windows.  The new
+`test_energy_conservation()` asserts that the last window is no more than
+twice the first.  Negative control: with the two files reverted the test
+reports two failures (rk4imp `7.5e-9` vs `1.4e-9`, rk2imp `4.3e-5` vs
+`1.8e-5`); with the fix the `ode-initval` and full CTest suites pass.
+
+Files: `ode-initval/rk2imp.c`, `ode-initval/rk4imp.c`,
+`ode-initval/test.c`.  The legacy v1 steppers have no per-stepper manual
+entry (only the v2 replacements are documented), so no manual change.
+
+See Savannah bug #30540.
 
 
