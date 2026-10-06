@@ -100,7 +100,7 @@ One line per change: date | tag | description | commit(s).
   2026-10-03 | [upstream] | specfunc: F_array recurrence regression vector         | 861de2adc
   2026-10-03 | [upstream] | specfunc: 6j symbol by the Schulten-Gordon recurrence  | 59fc479e2
   2026-10-03 | [upstream] | specfunc: drop unreachable GSL_EOVRFLW from docs     | 8cce813ef
-  2026-10-03 | [rejected] | specfunc: port the Wigner d-matrix (wigner_drot)       | - (see below)
+  2026-10-06 | [upstream] | specfunc: add the Wigner d-matrix                      | 17e39bcbd
   2026-10-03 | [upstream] | specfunc: reject NaN in the complete elliptic integrals | 14d595eb8
   2026-10-03 | [upstream] | specfunc: terminate gamma_inc for large negative a    | 932087bcd
   2026-10-03 | [upstream] | specfunc: propagate NaN in gsl_sf_hyperg_1F1_e       | 99a73dd36
@@ -2541,41 +2541,33 @@ Files: `specfunc/test_coulomb.c`.
 Savannah bug #46678.
 
 
-## [rejected] specfunc: port the Wigner d-matrix (gsl_sf_wigner_drot)
+## [upstream] specfunc: add the Wigner d-matrix
 
-Deferred, not applied.  No patch.
+Commit: 17e39bcbd
 
-Savannah bug #46677 asks why `contrib/wigner.h` was never ported into
-`specfunc/`.  Most of it was: the 3j, 6j and 9j symbols now live in
-`specfunc/coupling.c` and are declared in `gsl/gsl_sf_coupling.h`.  The
-one function left behind is `gsl_sf_wigner_drot` / `_e`, the Wigner
-(small) d-matrix, whose only home is `contrib/wigner.c`.
+Savannah bug #46677 reports that `contrib/wigner.c` was never fully
+ported into `specfunc/`: the 3j, 6j and 9j symbols live in
+`specfunc/coupling.c`, but the Wigner (small) d-matrix
+`gsl_sf_wigner_drot` / `_e` was left behind.
 
-That is a feature request - a new public function, its header entry, its
-documentation and its tests - rather than a bug fix, so it falls outside
-the eligibility rule for this review and is deferred rather than taken or
-rejected on the merits.  The submitter's own probe (copy the file, rename
-to GSL conventions, add the source to the build) is the shape of the
-change; it would also need test vectors and a decision on the two-j /
-two-m integer parameter convention and the `theta` argument.
+The function is now in `specfunc/coupling.c`, declared in
+`gsl_sf_coupling.h` and documented in both manuals.  The closed form is
+the finite sum of Zare, Eq. 3.57 (also the Wikipedia d-matrix page),
+which is what `contrib/wigner.c` used.  The port fixes the error
+estimate: the original divided by each term value, so a term that
+underflowed to zero produced an infinite error bar; the term ratios are
+now guarded.  A non-finite `theta` is a domain error rather than an
+overflow.
 
-Two things to keep in mind if it is ever picked up:
+Verification: the values are compared against the closed form evaluated
+with mpmath at 50 digits, for `j` up to 20, plus the exact `j = 1/2`
+and `j = 1` matrix elements and the value quoted in the report,
+`d^{3/2}_{3/2,3/2}(3 pi / 4)`.  Negative control: flipping the sign of
+the alternating sum fails all 18 new value vectors, while the
+domain-error checks still pass.  The specfunc test is green.
 
-* Adding the file means touching both build systems: `specfunc/Makefile.am`
-  and the generated `cmake/gsl_sources.cmake` (regenerate with
-  `python cmake/regen_sources.py`), as `AGENTS.md` requires.
-
-* `contrib/wigner.c` is *not* a more accurate implementation than
-  `specfunc`.  Its 3j/6j/9j go through `lndelta_e` (log factorials), so
-  they do not overflow the way the factorial normalisation in
-  `specfunc/coupling.c` can, but they are still direct alternating sums,
-  so they lose accuracy for large `j` in exactly the way Savannah bug
-  `#68312` reports.  Porting the file would therefore not close `#68312`,
-  which needs a stable algorithm.  That algorithm is now in place
-  separately: `gsl_sf_coupling_6j_e()` uses the Schulten-Gordon
-  recurrence as of commit `59fc479e2`.
-
-Kept here so the item is not re-investigated.
+Files: `specfunc/coupling.c`, `specfunc/gsl_sf_coupling.h`,
+`specfunc/test_sf.c`, both coupling manuals.
 
 Savannah bug #46677.
 
