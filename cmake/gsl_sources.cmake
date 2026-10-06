@@ -312,6 +312,10 @@ set(GSL_SOURCES
     integration/lebedev.c
     integration/rational.c
     integration/romberg.c
+    integration/lobatto.c
+    integration/radau.c
+    integration/clenshaw_curtis.c
+    integration/fejer.c
     interpolation/accel.c
     interpolation/akima.c
     interpolation/cspline.c

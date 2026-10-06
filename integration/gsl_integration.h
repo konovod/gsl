@@ -347,6 +347,10 @@ typedef struct
 {
   int (*check)(const size_t n, const gsl_integration_fixed_params * params);
   int (*init)(const size_t n, double * diag, double * subdiag, gsl_integration_fixed_params * params);
+  /* optional: fill nodes x and weights w directly, for rules that are not
+     Gaussian quadratures of a positive weight (e.g. Lobatto, Radau,
+     Clenshaw-Curtis, Fejer) */
+  int (*nodes)(const size_t n, double * x, double * w, gsl_integration_fixed_params * params);
 } gsl_integration_fixed_type;
 
 typedef struct
@@ -369,6 +373,10 @@ GSL_VAR const gsl_integration_fixed_type * gsl_integration_fixed_hermite;
 GSL_VAR const gsl_integration_fixed_type * gsl_integration_fixed_exponential;
 GSL_VAR const gsl_integration_fixed_type * gsl_integration_fixed_rational;
 GSL_VAR const gsl_integration_fixed_type * gsl_integration_fixed_chebyshev2;
+GSL_VAR const gsl_integration_fixed_type * gsl_integration_fixed_lobatto;
+GSL_VAR const gsl_integration_fixed_type * gsl_integration_fixed_radau;
+GSL_VAR const gsl_integration_fixed_type * gsl_integration_fixed_clenshaw_curtis;
+GSL_VAR const gsl_integration_fixed_type * gsl_integration_fixed_fejer;
 
 gsl_integration_fixed_workspace *
 gsl_integration_fixed_alloc(const gsl_integration_fixed_type * type, const size_t n,

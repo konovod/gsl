@@ -2570,6 +2570,25 @@ main (void)
 #endif
       }
 
+    /* Gauss-Lobatto, Gauss-Radau, Clenshaw-Curtis and Fejer rules:
+       exact for the degree-5 monomial with n = 15 */
+    {
+      const double pa[3] = { 0.0, 1.2, -1.0 };
+      const double pb[3] = { 1.0, 2.6,  1.0 };
+      size_t ip;
+
+      for (ip = 0; ip < 3; ip++)
+        {
+          a = pa[ip];
+          b = pb[ip];
+          exact = (pow(b, params.degree + 1.0) - pow(a, params.degree + 1.0)) / (params.degree + 1.0);
+          test_fixed_quadrature(gsl_integration_fixed_lobatto, 15, a, b, 0.0, 0.0, 1.0e-12, exact, &f, "lobatto monomial");
+          test_fixed_quadrature(gsl_integration_fixed_radau, 15, a, b, 0.0, 0.0, 1.0e-12, exact, &f, "radau monomial");
+          test_fixed_quadrature(gsl_integration_fixed_clenshaw_curtis, 15, a, b, 0.0, 0.0, 1.0e-12, exact, &f, "clenshaw-curtis monomial");
+          test_fixed_quadrature(gsl_integration_fixed_fejer, 15, a, b, 0.0, 0.0, 1.0e-12, exact, &f, "fejer monomial");
+        }
+    }
+
     /* now test on myfn1 */
     f = make_function(&myfn1, 0);
     n = 200;

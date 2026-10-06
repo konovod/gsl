@@ -170,6 +170,14 @@ fixed_compute(const double a, const double b, const double alpha, const double b
   if (s)
     return s;
 
+  /* rules that are not Gaussian quadratures of a positive weight fill the
+     nodes and weights directly */
+  if (w->type->nodes != NULL)
+    {
+      s = (w->type->nodes)(n, w->x, w->weights, &params);
+      return s;
+    }
+
   /* initialize Jacobi matrix */
   s = (w->type->init)(n, w->diag, w->subdiag, &params);
   if (s)
