@@ -45,6 +45,7 @@ void test_exppow (void);
 void test_tdist (void);
 void test_fdist (void);
 void test_gamma (void);
+void test_erlang (void);
 void test_chisq (void);
 void test_beta (void);
 void test_gammainv (void);
@@ -403,6 +404,7 @@ main (void)
   test_tdist (); 
   test_fdist (); 
   test_gamma ();
+  test_erlang ();
   test_chisq (); 
   test_beta (); 
 
@@ -1134,6 +1136,46 @@ void test_gamma (void)
   TEST (gsl_cdf_gamma_Q, (100.0, 17.0, 10.0), 9.72958390215198872e-1, TEST_TOL6);
   TEST (gsl_cdf_gamma_Q, (1000.0, 17.0, 10.0), 2.11200951633948570e-25, TEST_TOL6);
   TEST (gsl_cdf_gamma_Q, (10000.0, 17.0, 10.0), 0.0, 0.0);
+}
+
+  /* Tests for the Erlang cumulative distribution function.
+     Expected values are the exact Poisson sum
+        P(x) = 1 - sum_{i=0}^{k-1} exp(-lambda x) (lambda x)^i / i!,
+     computed independently in double precision.  See Savannah bug #66949. */
+
+void test_erlang (void)
+{
+  TEST (gsl_cdf_erlang_P, (0.0, 1, 4.0), 0.0, 0.0);
+  TEST (gsl_cdf_erlang_P, (0.1, 1, 4.0), 0.3296799539643607, TEST_TOL6);
+  TEST (gsl_cdf_erlang_P, (1.0, 1, 4.0), 0.9816843611112658, TEST_TOL6);
+  TEST (gsl_cdf_erlang_P, (2.0, 1, 4.0), 0.9996645373720975, TEST_TOL6);
+
+  TEST (gsl_cdf_erlang_P, (0.1, 3, 4.0), 0.007926331867253838, TEST_TOL6);
+  TEST (gsl_cdf_erlang_P, (0.5, 3, 4.0), 0.32332358381693654, TEST_TOL6);
+  TEST (gsl_cdf_erlang_P, (1.0, 3, 4.0), 0.7618966944464556, TEST_TOL6);
+  TEST (gsl_cdf_erlang_P, (2.0, 3, 4.0), 0.986246032255997, TEST_TOL6);
+  TEST (gsl_cdf_erlang_P, (5.0, 3, 4.0), 0.9999995444850495, TEST_TOL6);
+
+  TEST (gsl_cdf_erlang_P, (1.0, 10, 2.0), 4.649807501726386e-05, TEST_TOL6);
+  TEST (gsl_cdf_erlang_P, (4.0, 10, 2.0), 0.28337574127298915, TEST_TOL6);
+  TEST (gsl_cdf_erlang_P, (10.0, 10, 2.0), 0.9950045876916924, TEST_TOL6);
+  TEST (gsl_cdf_erlang_P, (20.0, 10, 2.0), 0.9999999960740678, TEST_TOL6);
+
+  TEST (gsl_cdf_erlang_Q, (0.0, 1, 4.0), 1.0, 0.0);
+  TEST (gsl_cdf_erlang_Q, (0.1, 1, 4.0), 0.6703200460356393, TEST_TOL6);
+  TEST (gsl_cdf_erlang_Q, (1.0, 1, 4.0), 0.018315638888734186, TEST_TOL6);
+  TEST (gsl_cdf_erlang_Q, (2.0, 1, 4.0), 0.0003354626279025119, TEST_TOL6);
+
+  TEST (gsl_cdf_erlang_Q, (0.1, 3, 4.0), 0.9920736681327461, TEST_TOL6);
+  TEST (gsl_cdf_erlang_Q, (0.5, 3, 4.0), 0.6766764161830634, TEST_TOL6);
+  TEST (gsl_cdf_erlang_Q, (1.0, 3, 4.0), 0.23810330555354436, TEST_TOL6);
+  TEST (gsl_cdf_erlang_Q, (2.0, 3, 4.0), 0.013753967744002971, TEST_TOL6);
+  TEST (gsl_cdf_erlang_Q, (5.0, 3, 4.0), 4.5551495055892125e-07, TEST_TOL6);
+
+  TEST (gsl_cdf_erlang_Q, (1.0, 10, 2.0), 0.9999535019249828, TEST_TOL6);
+  TEST (gsl_cdf_erlang_Q, (4.0, 10, 2.0), 0.7166242587270109, TEST_TOL6);
+  TEST (gsl_cdf_erlang_Q, (10.0, 10, 2.0), 0.004995412308307578, TEST_TOL6);
+  TEST (gsl_cdf_erlang_Q, (20.0, 10, 2.0), 3.925932226286185e-09, TEST_TOL6);
 }
 
 void test_chisq (void) {

@@ -704,6 +704,20 @@ The Gamma Distribution
    :math:`P(x)`, :math:`Q(x)` and their inverses for the gamma
    distribution with parameters :data:`a` and :data:`b`.
 
+.. function:: double gsl_cdf_erlang_P (double x, unsigned int k, double lambda)
+              double gsl_cdf_erlang_Q (double x, unsigned int k, double lambda)
+
+   These functions compute the cumulative distribution functions
+   :math:`P(x)` and :math:`Q(x)` for the Erlang distribution with shape
+   parameter :data:`k` and rate parameter :data:`lambda`,
+
+   .. math:: p(x) dx = {\lambda^k \over (k-1)!} x^{k-1} e^{-\lambda x} dx
+
+   for :math:`x > 0`.  The Erlang distribution is the gamma distribution
+   with an integer shape parameter, :math:`a = k`, and scale
+   :math:`b = 1/\lambda`.  Note that :func:`gsl_ran_erlang` takes the
+   scale and the shape, in that order, as its two parameters.
+
 |newpage|
 
 The Flat (Uniform) Distribution

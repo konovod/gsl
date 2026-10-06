@@ -52,6 +52,9 @@ double gsl_cdf_gamma_Q (const double x, const double a, const double b);
 double gsl_cdf_gamma_Pinv (const double P, const double a, const double b);
 double gsl_cdf_gamma_Qinv (const double Q, const double a, const double b);
 
+double gsl_cdf_erlang_P (const double x, const unsigned int k, const double lambda);
+double gsl_cdf_erlang_Q (const double x, const unsigned int k, const double lambda);
+
 double gsl_cdf_cauchy_P (const double x, const double a);
 double gsl_cdf_cauchy_Q (const double x, const double a);
 

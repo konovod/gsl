@@ -172,6 +172,7 @@ set(GSL_SOURCES
     cdf/cauchyinv.c
     cdf/chisq.c
     cdf/chisqinv.c
+    cdf/erlang.c
     cdf/exponential.c
     cdf/exponentialinv.c
     cdf/exppow.c

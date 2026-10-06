@@ -937,6 +937,29 @@ These functions compute the cumulative distribution functions
 distribution with parameters @var{a} and @var{b}.
 @end deftypefun
 
+@deftypefun double gsl_cdf_erlang_P (double @var{x}, unsigned int @var{k}, double @var{lambda})
+@deftypefunx double gsl_cdf_erlang_Q (double @var{x}, unsigned int @var{k}, double @var{lambda})
+These functions compute the cumulative distribution functions
+@math{P(x)} and @math{Q(x)} for the Erlang distribution with shape
+parameter @var{k} and rate parameter @var{lambda},
+@tex
+\beforedisplay
+$$
+p(x)\,dx = {\lambda^k \over (k-1)!} x^{k-1} e^{-\lambda x} dx
+$$
+\afterdisplay
+@end tex
+@ifinfo
+@example
+p(x) dx = lambda^k x^(k-1) exp(-lambda x) / (k-1)! dx
+@end example
+@end ifinfo
+for @math{x > 0}.  The Erlang distribution is the gamma distribution
+with an integer shape parameter, @math{a = k}, and scale
+@math{b = 1/lambda}.  Note that @code{gsl_ran_erlang} takes the scale
+and the shape, in that order, as its two parameters.
+@end deftypefun
+
 @page
 @node The Flat (Uniform) Distribution
 @section The Flat (Uniform) Distribution
