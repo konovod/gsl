@@ -514,6 +514,12 @@ set(GSL_SOURCES
     ode-initval2/rkf45.c
     ode-initval2/rk8pd.c
     ode-initval2/rkck.c
+    ode-initval2/vern7.c
+    ode-initval2/vern8.c
+    ode-initval2/vern9.c
+    ode-initval2/feagin108.c
+    ode-initval2/feagin1210.c
+    ode-initval2/feagin1412.c
     ode-initval2/bsimp.c
     ode-initval2/rk1imp.c
     ode-initval2/msadams.c

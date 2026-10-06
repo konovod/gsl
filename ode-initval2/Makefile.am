@@ -4,7 +4,7 @@ pkginclude_HEADERS = gsl_odeiv2.h
 
 AM_CPPFLAGS = -I$(top_srcdir)
 
-libgslodeiv2_la_SOURCES = control.c cstd.c cscal.c evolve.c step.c rk2.c rk2imp.c rk4.c rk4imp.c rkf45.c rk8pd.c rkck.c bsimp.c rk1imp.c msadams.c msbdf.c driver.c
+libgslodeiv2_la_SOURCES = control.c cstd.c cscal.c evolve.c step.c rk2.c rk2imp.c rk4.c rk4imp.c rkf45.c rk8pd.c rkck.c vern7.c vern8.c vern9.c feagin108.c feagin1210.c feagin1412.c bsimp.c rk1imp.c msadams.c msbdf.c driver.c
 
 noinst_HEADERS = odeiv_util.h step_utils.c rksubs.c modnewton1.c control_utils.c
 

@@ -865,6 +865,11 @@ rhs_brusselator (double t, const double y[], double f[], void *params)
   f[0] = a + y[0] * y[0] * y[1] - (b + 1.0) * y[0];
   f[1] = b * y[0] - y[0] * y[0] * y[1];
 
+  if (isnan(f[0]))
+    {
+      return GSL_EFAILED;
+    }
+
   return GSL_SUCCESS;
 }
 
@@ -1795,19 +1800,31 @@ test_nonstiff_problems (void)
   err_target[3] = 1e-6;
   steppers[4] = gsl_odeiv2_step_rk8pd;
   err_target[4] = 1e-6;
-  steppers[5] = gsl_odeiv2_step_rk1imp;
-  err_target[5] = 1e-3;
-  steppers[6] = gsl_odeiv2_step_rk2imp;
-  err_target[6] = 1e-5;
-  steppers[7] = gsl_odeiv2_step_rk4imp;
-  err_target[7] = 1e-6;
-  steppers[8] = gsl_odeiv2_step_bsimp;
-  err_target[8] = 1e-6;
-  steppers[9] = gsl_odeiv2_step_msadams;
+  steppers[5] = gsl_odeiv2_step_vern7;
+  err_target[5] = 1e-8;
+  steppers[6] = gsl_odeiv2_step_vern8;
+  err_target[6] = 1e-8;
+  steppers[7] = gsl_odeiv2_step_vern9;
+  err_target[7] = 1e-8;
+  steppers[8] = gsl_odeiv2_step_feagin108;
+  err_target[8] = 1e-5;
+  steppers[9] = gsl_odeiv2_step_feagin1210;
   err_target[9] = 1e-5;
-  steppers[10] = gsl_odeiv2_step_msbdf;
+  steppers[10] = gsl_odeiv2_step_feagin1412;
   err_target[10] = 1e-5;
-  steppers[11] = 0;
+  steppers[11] = gsl_odeiv2_step_rk1imp;
+  err_target[11] = 1e-3;
+  steppers[12] = gsl_odeiv2_step_rk2imp;
+  err_target[12] = 1e-5;
+  steppers[13] = gsl_odeiv2_step_rk4imp;
+  err_target[13] = 1e-6;
+  steppers[14] = gsl_odeiv2_step_bsimp;
+  err_target[14] = 1e-6;
+  steppers[15] = gsl_odeiv2_step_msadams;
+  err_target[15] = 1e-5;
+  steppers[16] = gsl_odeiv2_step_msbdf;
+  err_target[16] = 1e-5;
+  steppers[17] = 0;
 
   /* Loop over problems */
 
@@ -2357,19 +2374,31 @@ benchmark_precision (void)
   err_target[3] = 1e-6;
   steppers[4] = gsl_odeiv2_step_rk8pd;
   err_target[4] = 1e-6;
-  steppers[5] = gsl_odeiv2_step_rk1imp;
-  err_target[5] = 1e-3;
-  steppers[6] = gsl_odeiv2_step_rk2imp;
-  err_target[6] = 1e-5;
-  steppers[7] = gsl_odeiv2_step_rk4imp;
-  err_target[7] = 1e-6;
-  steppers[8] = gsl_odeiv2_step_bsimp;
-  err_target[8] = 1e-6;
-  steppers[9] = gsl_odeiv2_step_msadams;
-  err_target[9] = 1e-5;
-  steppers[10] = gsl_odeiv2_step_msbdf;
-  err_target[10] = 1e-5;
-  steppers[11] = 0;
+  steppers[5] = gsl_odeiv2_step_vern7;
+  err_target[5] = 1e-6;
+  steppers[6] = gsl_odeiv2_step_vern8;
+  err_target[6] = 1e-3;
+  steppers[7] = gsl_odeiv2_step_vern9;
+  err_target[7] = 1e-3;
+  steppers[8] = gsl_odeiv2_step_feagin108;
+  err_target[8] = 1e-3;
+  steppers[9] = gsl_odeiv2_step_feagin1210;
+  err_target[9] = 1e-3;
+  steppers[10] = gsl_odeiv2_step_feagin1412;
+  err_target[10] = 1e-3;
+  steppers[11] = gsl_odeiv2_step_rk1imp;
+  err_target[11] = 1e-3;
+  steppers[12] = gsl_odeiv2_step_rk2imp;
+  err_target[12] = 1e-5;
+  steppers[13] = gsl_odeiv2_step_rk4imp;
+  err_target[13] = 1e-6;
+  steppers[14] = gsl_odeiv2_step_bsimp;
+  err_target[14] = 1e-6;
+  steppers[15] = gsl_odeiv2_step_msadams;
+  err_target[15] = 1e-5;
+  steppers[16] = gsl_odeiv2_step_msbdf;
+  err_target[16] = 1e-5;
+  steppers[17] = 0;
 
   /* Loop over problems */
 
@@ -2545,19 +2574,31 @@ main (void)
   p[3].h = 1.0e-3;
   p[4].type = gsl_odeiv2_step_rk8pd;
   p[4].h = 1.0e-3;
-  p[5].type = gsl_odeiv2_step_rk1imp;
+  p[5].type = gsl_odeiv2_step_vern7;
   p[5].h = 1.0e-3;
-  p[6].type = gsl_odeiv2_step_rk2imp;
+  p[6].type = gsl_odeiv2_step_vern8;
   p[6].h = 1.0e-3;
-  p[7].type = gsl_odeiv2_step_rk4imp;
+  p[7].type = gsl_odeiv2_step_vern9;
   p[7].h = 1.0e-3;
-  p[8].type = gsl_odeiv2_step_bsimp;
+  p[8].type = gsl_odeiv2_step_feagin108;
   p[8].h = 1.0e-3;
-  p[9].type = gsl_odeiv2_step_msadams;
+  p[9].type = gsl_odeiv2_step_feagin1210;
   p[9].h = 1.0e-3;
-  p[10].type = gsl_odeiv2_step_msbdf;
+  p[10].type = gsl_odeiv2_step_feagin1412;
   p[10].h = 1.0e-3;
-  p[11].type = 0;
+  p[11].type = gsl_odeiv2_step_rk1imp;
+  p[11].h = 1.0e-3;
+  p[12].type = gsl_odeiv2_step_rk2imp;
+  p[12].h = 1.0e-3;
+  p[13].type = gsl_odeiv2_step_rk4imp;
+  p[13].h = 1.0e-3;
+  p[14].type = gsl_odeiv2_step_bsimp;
+  p[14].h = 1.0e-3;
+  p[15].type = gsl_odeiv2_step_msadams;
+  p[15].h = 1.0e-3;
+  p[16].type = gsl_odeiv2_step_msbdf;
+  p[16].h = 1.0e-3;
+  p[17].type = 0;
 
   gsl_ieee_env_setup ();
 
@@ -2593,9 +2634,20 @@ main (void)
   explicit_stepper[3].h = 1.0e-3;
   explicit_stepper[4].type = gsl_odeiv2_step_rk8pd;
   explicit_stepper[4].h = 1.0e-3;
-  explicit_stepper[5].type = gsl_odeiv2_step_msadams;
+  explicit_stepper[5].type = gsl_odeiv2_step_vern7;
   explicit_stepper[5].h = 1.0e-3;
-  explicit_stepper[6].type = 0;
+  explicit_stepper[6].type = gsl_odeiv2_step_vern8;
+  explicit_stepper[6].h = 1.0e-3;
+  explicit_stepper[7].type = gsl_odeiv2_step_vern9;
+  explicit_stepper[7].h = 1.0e-3;
+  // Feagin integrators are not tested here because
+  // they have difficulties with integrating across
+  // discontinuous derivatives. It is also mentioned
+  // in the documentation that generally the integration
+  // domain should be split at discontinuities.
+  explicit_stepper[8].type = gsl_odeiv2_step_msadams;
+  explicit_stepper[8].h = 1.0e-3;
+  explicit_stepper[9].type = 0;
 
   for (i = 0; explicit_stepper[i].type != 0; i++)
     {
