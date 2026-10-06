@@ -212,6 +212,9 @@ One line per change: date | tag | description | commit(s).
   2026-10-06 | [upstream] | vector: add gsl_vector_complex_conjugate         | ec04a1312
   2026-10-06 | [upstream] | doc: document gsl_vector_complex_conjugate       | d127fe3b2
 
+  2026-10-06 | [upstream] | specfunc: inverse Jacobi elliptic functions      | 183ca894f
+  2026-10-06 | [upstream] | doc: inverse Jacobi elliptic functions           | 653c77bca
+
 
 ## [upstream] rng: make the random() generators produce the documented sequences
 
@@ -5569,6 +5572,50 @@ Files: `vector/oper_complex_source.c`, the three
 both manuals.
 
 See Savannah bug #66573.
+
+
+## [upstream] specfunc: inverse Jacobi elliptic functions
+
+Commit: 183ca894f (documentation: 653c77bca)
+
+The library has the direct Jacobi elliptic functions
+`gsl_sf_elljac_e(u, m, ...)` but no inverse.  Savannah bug #68367 (2026)
+posts a prototype that inverts them through `gsl_sf_ellint_F_e()`.  Three
+per-function routines with result/error bars were added instead:
+
+    int gsl_sf_elljac_arcsn_e(double sn, double m, gsl_sf_result * result);
+    int gsl_sf_elljac_arccn_e(double cn, double m, gsl_sf_result * result);
+    int gsl_sf_elljac_arcdn_e(double dn, double m, gsl_sf_result * result);
+
+with `double` wrappers.  Each returns the principal value `u` in
+`[0, 2K(m)]` for the parameter `m` (`|m| <= 1`), so that
+`gsl_sf_elljac_e(u, m, ...)` reproduces the argument.
+
+The posted prototype is wrong: it passes `m` to `gsl_sf_ellint_F_e()`,
+whose second argument is the modulus `k = sqrt(m)`, not the parameter.
+It also returns success if any one output succeeds and hides failures.
+The fork instead evaluates the reduced incomplete integral directly as
+`F(phi|m) = sin(phi) RF(cos^2 phi, 1 - m sin^2 phi, 1)`, which uses the
+parameter and therefore also covers `m < 0` (where the modulus is
+imaginary and `gsl_sf_ellint_F_e()` cannot be used).  `K(m)` is
+`RF(0, 1 - m, 1)`, real for every `m <= 1`.  `arcsn` uses
+`phi = asin(sn)`; `arccn` uses `phi = acos(cn)` and, for `cn < 0`, the
+reduction `u = 2K - F(pi - phi|m)`; `arcdn` uses
+`sin^2(phi) = (1 - dn^2)/m`.  The inverse of `dn` is a domain error at
+`m = 0`, where `dn(u|0) = 1` for every `u`.
+
+Verification: reference values from 30-digit `mpmath` (`ellipf`) for
+`m` in `{0, 0.3, 0.7, 0.99, -0.4, 1}` and both signs of the argument,
+all within `TEST_TOL0`; a round trip through `gsl_sf_elljac_e` over the
+same grid; and explicit `GSL_EDOM` cases.  Negative control: flipping
+the sign of the `m` term inside `RF` fails the new checks, while the
+restored tree is clean.  Full ctest 56/56 on MSVC x64.
+
+Files: `specfunc/elljac.c`, `specfunc/gsl_sf_elljac.h`,
+`specfunc/test_sf.c`, `specfunc/test_sf.h`, both manuals.
+
+See Savannah bug #68367.
+
 
 
 
