@@ -2855,9 +2855,11 @@ essay.
   `FORKNEWS`.
 * New algorithms/solvers: `#32257`, `#66695`, `#57173`.
   **Partly reversed:** `#66573` (`gsl_vector_complex_conjugate()`),
-  `#68367` (inverse Jacobi elliptic functions) and `#60457`/`#65932`
-  (complex tridiagonal solvers) were taken once the filter admitted new
-  public API; see `FORKNEWS`.
+  `#68367` (inverse Jacobi elliptic functions), `#60457`/`#65932`
+  (complex tridiagonal solvers), `#66574` (complex Householder right,
+  Givens, bidiagonal decomposition and SVD) and `#66575` (complex SVD
+  solve and modified decomposition) were taken once the filter admitted
+  new public API; see `FORKNEWS`.
 * New special cases or API extensions: `#41527`, `#45782`, `#66800`,
   `#66834`, `#66842`, `#66850`, `#66922`, `#67359`, `#67774`, `#68098`.
   **Partly reversed:** the six among them (`#66800`, `#66834`, `#66842`,
