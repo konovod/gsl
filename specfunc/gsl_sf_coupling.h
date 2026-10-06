@@ -97,6 +97,24 @@ double gsl_sf_coupling_9j(int two_ja, int two_jb, int two_jc,
                           );
 
 
+/* Wigner (small) d-matrix:
+ *
+ *   d^j_{m1 m2}(theta) = <j m1| exp(-i theta Jy) |j m2>
+ *
+ * The angle theta is in radians and two_j = 2j, two_m1 = 2m1,
+ * two_m2 = 2m2 are twice the angular momenta.  Ported from
+ * contrib/wigner.c (Savannah bug #46677).
+ *
+ * exceptions: GSL_EDOM
+ */
+int gsl_sf_wigner_drot_e(int two_j, int two_m1, int two_m2,
+                         double theta, gsl_sf_result * result
+                         );
+double gsl_sf_wigner_drot(int two_j, int two_m1, int two_m2,
+                          double theta
+                          );
+
+
 /* INCORRECT version of 6j Symbols:
  * This function actually calculates
  *              / ja jb je \

@@ -28,6 +28,8 @@
 #include <gsl/gsl_sf_coupling.h>
 #include <gsl/gsl_sf_exp.h>
 #include <gsl/gsl_sf_log.h>
+#include <gsl/gsl_sf_pow_int.h>
+#include <gsl/gsl_sf_trig.h>
 
 #include "error.h"
 
@@ -718,6 +720,127 @@ gsl_sf_coupling_9j_e(int two_ja, int two_jb, int two_jc,
 }
 
 
+/* Wigner (small) d-matrix.
+ *
+ * d^j_{m1 m2}(theta) = <j m1| exp(-i theta Jy) |j m2>
+ *
+ * The closed form is the sum (Zare Eq. 3.57; the same expression is on
+ * the Wikipedia "Wigner D-matrix" page)
+ *
+ *   d^j_{m1 m2}(theta) =
+ *     sqrt((j+m1)!(j-m1)!(j+m2)!(j-m2)!)
+ *     sum_v (-1)^v (cos(theta/2))^{2j+m1-m2-2v}
+ *                 (sin(theta/2))^{m2-m1+2v}
+ *           / ( (j+m1-v)! (j-m2-v)! (m2-m1+v)! v! )
+ *
+ * where v runs from max(0, m1-m2) to min(j+m1, j-m2).  This is the
+ * implementation from contrib/wigner.c by Jonathan Underwood, ported
+ * here (Savannah bug #46677) with an error estimate that does not
+ * divide by a possibly-zero term.
+ *
+ * exceptions: GSL_EDOM
+ */
+int
+gsl_sf_wigner_drot_e(const int two_j, const int two_m1, const int two_m2,
+                     const double theta, gsl_sf_result * result)
+{
+  int v, vmin, vmax, t1, t2, t3, t4;
+  gsl_sf_result a, a1, a2, a3, a4;
+  gsl_sf_result ct, st;
+
+  if (two_j < 0 || abs(two_m1) > two_j || abs(two_m2) > two_j
+      || GSL_IS_ODD(two_j + two_m1) || GSL_IS_ODD(two_j + two_m2))
+    DOMAIN_ERROR(result);
+
+  if (!gsl_finite(theta))
+    DOMAIN_ERROR(result);
+
+  result->val = 0.0;
+  result->err = 0.0;
+
+  t1 = (two_j + two_m1) / 2;
+  t2 = (two_j - two_m2) / 2;
+  t3 = (two_m2 - two_m1) / 2;
+  t4 = (2 * two_j + two_m1 - two_m2) / 2;
+
+  vmin = (-t3 < 0) ? 0 : -t3;
+  vmax = (t2 < t1) ? t2 : t1;
+
+  if (vmin > vmax)
+    return GSL_SUCCESS;
+
+  {
+    int status = GSL_SUCCESS;
+    status += gsl_sf_cos_e(theta * 0.5, &ct);
+    status += gsl_sf_sin_e(theta * 0.5, &st);
+    status += gsl_sf_lnfact_e(t1, &a1);
+    status += gsl_sf_lnfact_e(t2, &a2);
+    status += gsl_sf_lnfact_e((two_j - two_m1) / 2, &a3);
+    status += gsl_sf_lnfact_e((two_j + two_m2) / 2, &a4);
+    if (status != GSL_SUCCESS)
+      OVERFLOW_ERROR(result);
+  }
+
+  a.val = 0.5 * (a1.val + a2.val + a3.val + a4.val);
+  a.err = 0.5 * (a1.err + a2.err + a3.err + a4.err);
+  a.err += 2.0 * GSL_DBL_EPSILON * a.val;
+
+  for (v = vmin; v <= vmax; v++)
+    {
+      gsl_sf_result b1, b2, b3, b4, b5, b6, b7, b8;
+      int i1, i2;
+      int status = GSL_SUCCESS;
+      double term, rel;
+
+      status += gsl_sf_lnfact_e(t1 - v, &b1);
+      status += gsl_sf_lnfact_e(t2 - v, &b2);
+      status += gsl_sf_lnfact_e(t3 + v, &b3);
+      status += gsl_sf_lnfact_e(v, &b4);
+      if (status != GSL_SUCCESS)
+        OVERFLOW_ERROR(result);
+
+      b5.val = a.val - b1.val - b2.val - b3.val - b4.val;
+      b5.err = a.err + b1.err + b2.err + b3.err + b4.err;
+      b5.err += 2.0 * GSL_DBL_EPSILON *
+        (a.val + b1.val + b2.val + b3.val + b4.val);
+
+      status += gsl_sf_exp_err_e(b5.val, b5.err, &b6);
+      if (status != GSL_SUCCESS)
+        OVERFLOW_ERROR(result);
+
+      i1 = t4 - 2 * v;
+      i2 = t3 + 2 * v;
+
+      status += gsl_sf_pow_int_e(ct.val, i1, &b7);
+      status += gsl_sf_pow_int_e(st.val, i2, &b8);
+      if (status != GSL_SUCCESS)
+        OVERFLOW_ERROR(result);
+
+      /* add the error propagated from the error in the input values */
+      b7.err += fabs((double) i1) * fabs(ct.err);
+      b8.err += fabs((double) i2) * fabs(st.err);
+
+      term = b6.val * b7.val * b8.val;
+      result->val += GSL_IS_ODD(v) ? -term : term;
+
+      rel = 0.0;
+      if (b6.val != 0.0)
+        rel += fabs(b6.err / b6.val);
+      if (b7.val != 0.0)
+        rel += fabs(b7.err / b7.val);
+      if (b8.val != 0.0)
+        rel += fabs(b8.err / b8.val);
+
+      result->err += fabs(term) * rel;
+      result->err += 2.0 * GSL_DBL_EPSILON * fabs(term);
+    }
+
+  result->err += 2.0 * GSL_DBL_EPSILON * fabs(result->val);
+
+  return GSL_SUCCESS;
+}
+
+
 /*-*-*-*-*-*-*-*-*-* Functions w/ Natural Prototypes *-*-*-*-*-*-*-*-*-*-*/
 
 #include "eval.h"
@@ -769,4 +892,10 @@ double gsl_sf_coupling_9j(int two_ja, int two_jb, int two_jc,
                                    two_jd, two_je, two_jf,
                                    two_jg, two_jh, two_ji,
                                    &result));
+}
+
+
+double gsl_sf_wigner_drot(int two_j, int two_m1, int two_m2, double theta)
+{
+  EVAL_RESULT(gsl_sf_wigner_drot_e(two_j, two_m1, two_m2, theta, &result));
 }

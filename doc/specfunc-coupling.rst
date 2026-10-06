@@ -109,3 +109,23 @@ section are declared in the header file :file:`gsl_sf_coupling.h`.
    where the arguments are given in half-integer units, :math:`ja` =
    :data:`two_ja`/2, :math:`ma` = :data:`two_ma`/2, etc.
 .. Exceptional Return Values: GSL_EDOM
+
+Wigner d-matrix
+---------------
+
+.. function:: double gsl_sf_wigner_drot (int two_j, int two_m1, int two_m2, double theta)
+              int gsl_sf_wigner_drot_e (int two_j, int two_m1, int two_m2, double theta, gsl_sf_result * result)
+
+   These routines compute the Wigner (small) d-matrix element
+
+   .. math::
+
+      d^{j}_{m_1 m_2}(\theta) = \langle j m_1 | e^{-i \theta J_y} | j m_2 \rangle
+
+   where the angular momenta are given in half-integer units, :math:`j` =
+   :data:`two_j`/2, :math:`m_1` = :data:`two_m1`/2, :math:`m_2` =
+   :data:`two_m2`/2, and :data:`theta` is the rotation angle in radians.
+   The value is computed from the finite sum of Zare, Eq. 3.57.  An
+   error is returned if :math:`j < 0`, :math:`|m_1| > j`, :math:`|m_2| > j`
+   or :math:`j + m_1` and :math:`j + m_2` are not integers.
+.. Exceptional Return Values: GSL_EDOM

@@ -17,6 +17,7 @@ section are declared in the header file @file{gsl_sf_coupling.h}.
 * 3-j Symbols::                 
 * 6-j Symbols::                 
 * 9-j Symbols::                 
+* Wigner d-matrix::             
 @end menu
 
 @node 3-j Symbols
@@ -111,6 +112,37 @@ $$
 @noindent
 where the arguments are given in half-integer units, @math{ja} =
 @var{two_ja}/2, @math{ma} = @var{two_ma}/2, etc.
+@comment Exceptional Return Values: GSL_EDOM
+@end deftypefun
+
+
+@node Wigner d-matrix
+@subsection Wigner d-matrix
+
+@deftypefun double gsl_sf_wigner_drot (int @var{two_j}, int @var{two_m1}, int @var{two_m2}, double @var{theta})
+@deftypefunx int gsl_sf_wigner_drot_e (int @var{two_j}, int @var{two_m1}, int @var{two_m2}, double @var{theta}, gsl_sf_result * @var{result})
+These routines compute the Wigner (small) d-matrix element
+@tex
+\beforedisplay
+$$
+d^{j}_{m_1 m_2}(\theta) = \langle j m_1 | e^{-i \theta J_y} | j m_2 \rangle
+$$
+\afterdisplay
+@end tex
+@ifinfo
+
+@example
+d^j_{m1 m2}(theta) = <j m1| exp(-i theta Jy) |j m2>
+@end example
+
+@end ifinfo
+@noindent
+where the angular momenta are given in half-integer units, @math{j} =
+@var{two_j}/2, @math{m_1} = @var{two_m1}/2, @math{m_2} =
+@var{two_m2}/2, and @var{theta} is the rotation angle in radians.  The
+value is computed from the finite sum of Zare, Eq. 3.57.  An error is
+returned if @math{j < 0}, @math{|m_1| > j}, @math{|m_2| > j} or
+@math{j + m_1} and @math{j + m_2} are not integers.
 @comment Exceptional Return Values: GSL_EDOM
 @end deftypefun
 

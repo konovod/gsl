@@ -539,6 +539,49 @@ int test_coupling(void)
   TEST_SF(s, gsl_sf_coupling_9j_e, (1, 1, 1, 1, 1, 1, 0, 0, 0, &r), 0, 0, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_coupling_9j_e, (1, 1, 0, 1, 1, 0, 1, 1, 0, &r), 0, 0, GSL_SUCCESS);
 
+  /* Wigner (small) d-matrix, Savannah bug #46677.  The reference values
+     come from the closed form evaluated with mpmath at 50 digits; the
+     small cases are the exact Wikipedia d-matrix elements. */
+
+  /* j = 1/2: d = [[cos(theta/2), -sin(theta/2)],
+                  [sin(theta/2),  cos(theta/2)]] */
+  TEST_SF(s, gsl_sf_wigner_drot_e, (1,  1,  1, M_PI/3.0, &r),  0.8660254037844386467637231707529, TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_wigner_drot_e, (1,  1, -1, M_PI/3.0, &r), -0.5, TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_wigner_drot_e, (1, -1,  1, M_PI/3.0, &r),  0.5, TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_wigner_drot_e, (1, -1, -1, M_PI/3.0, &r),  0.8660254037844386467637231707529, TEST_TOL2, GSL_SUCCESS);
+
+  /* j = 1 */
+  TEST_SF(s, gsl_sf_wigner_drot_e, (2,  2,  2, M_PI/4.0, &r),  0.8535533905932737622004221810524, TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_wigner_drot_e, (2,  2,  0, M_PI/4.0, &r), -0.5, TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_wigner_drot_e, (2,  2, -2, M_PI/4.0, &r),  0.1464466094067262377995778189476, TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_wigner_drot_e, (2,  0,  0, M_PI/4.0, &r),  0.7071067811865475244008443621048, TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_wigner_drot_e, (2,  0,  2, M_PI/4.0, &r),  0.5, TEST_TOL2, GSL_SUCCESS);
+
+  /* the value quoted in Savannah bug #46677: j = m1 = m2 = 3/2 */
+  TEST_SF(s, gsl_sf_wigner_drot_e, (3, 3, 3, 3.0*M_PI/4.0, &r), 0.05604269114599563976429918713567, TEST_TOL2, GSL_SUCCESS);
+
+  /* half-integer and general cases */
+  TEST_SF(s, gsl_sf_wigner_drot_e, (3,  1, -1, M_PI/3.0, &r), -0.625, TEST_TOL3, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_wigner_drot_e, (3, -1,  3, 2.0, &r), 0.6626370871085421273668007, TEST_TOL4, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_wigner_drot_e, (4,  2, -2, 5.0*M_PI/6.0, &r), -0.6830127018922193233818616, TEST_TOL4, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_wigner_drot_e, (5,  1,  3, 0.7, &r), 0.6042584354064186448214243, TEST_TOL4, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_wigner_drot_e, (10, 4, -6, 1.9, &r), 0.332766520457978206487304, TEST_TOL6, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_wigner_drot_e, (20, 10, 0, 2.5, &r), 0.3876412196165414945216856, TEST_TOL6, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_wigner_drot_e, (41, 41, 41, 0.3, &r), 0.6293988402179727389840889, TEST_TOL6, GSL_SUCCESS);
+
+  /* Wigner d-matrix domain checks */
+  TEST_SF(s, gsl_sf_wigner_drot_e, (-1, 0, 0, 1.0, &r), GSL_NAN, GSL_NAN, GSL_EDOM);
+  TEST_SF(s, gsl_sf_wigner_drot_e, (2, 3, 0, 1.0, &r), GSL_NAN, GSL_NAN, GSL_EDOM);
+  TEST_SF(s, gsl_sf_wigner_drot_e, (2, 0, 3, 1.0, &r), GSL_NAN, GSL_NAN, GSL_EDOM);
+  TEST_SF(s, gsl_sf_wigner_drot_e, (2, 1, 0, 1.0, &r), GSL_NAN, GSL_NAN, GSL_EDOM);
+  TEST_SF(s, gsl_sf_wigner_drot_e, (2, 0, 1, 1.0, &r), GSL_NAN, GSL_NAN, GSL_EDOM);
+  TEST_SF(s, gsl_sf_wigner_drot_e, (2, 0, 0, GSL_POSINF, &r), GSL_NAN, GSL_NAN, GSL_EDOM);
+
+  /* orthogonality at theta = 0: d^j_{m1 m2}(0) = delta_{m1 m2} */
+  TEST_SF(s, gsl_sf_wigner_drot_e, (1, 1, -1, 0.0, &r), 0, 0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_wigner_drot_e, (4, 4, -2, 0.0, &r), 0, 0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_wigner_drot_e, (4, -2, -2, 0.0, &r), 1.0, TEST_TOL2, GSL_SUCCESS);
+
   return s;
 }
 
