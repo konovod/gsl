@@ -1474,6 +1474,212 @@ int test_expint(void)
 }
 
 
+int test_expint_complex(void)
+{
+  gsl_sf_result r1, r2;
+  int s = 0;
+  int n;
+
+  /* Complex grid against independent 40-digit values (mpmath).  The
+     tolerance reflects the conditioning of the recurrence / series
+     transition near |z| = 2. */
+  TEST_SF_2(s, gsl_sf_complex_expint_E1_e, (1.0, 1.0, &r1, &r2),
+            2.81624451981418342e-04, TEST_TOL3,
+           -1.79324535039358940e-01, TEST_TOL3, GSL_SUCCESS);
+  TEST_SF_2(s, gsl_sf_complex_expint_E1_e, (0.5, 0.5, &r1, &r2),
+            2.57866457137983784e-01, TEST_TOL3,
+           -3.96690435455815227e-01, TEST_TOL3, GSL_SUCCESS);
+  TEST_SF_2(s, gsl_sf_complex_expint_E1_e, (3.0, 1.0, &r1, &r2),
+            3.79005606429572801e-03, TEST_TOL3,
+           -1.19841414105378019e-02, TEST_TOL3, GSL_SUCCESS);
+  TEST_SF_2(s, gsl_sf_complex_expint_E1_e, (10.0, -4.0, &r1, &r2),
+           -1.37219961389495017e-06, TEST_TOL3,
+           -3.64896198049840167e-06, TEST_TOL3, GSL_SUCCESS);
+  TEST_SF_2(s, gsl_sf_complex_expint_E1_e, (-10.0, 15.0, &r1, &r2),
+           -2.13050339387819378e+02, TEST_TOL3,
+            1.23853666784218240e+03, TEST_TOL3, GSL_SUCCESS);
+  TEST_SF_2(s, gsl_sf_complex_expint_E1_e, (-25.0, -30.0, &r1, &r2),
+            1.26609783156135821e+09, TEST_TOL3,
+            1.38144017500582385e+09, TEST_TOL3, GSL_SUCCESS);
+  TEST_SF_2(s, gsl_sf_complex_expint_E1_e, (-5.0, 0.5, &r1, &r2),
+           -3.72624689613679365e+01, TEST_TOL3,
+            1.12832684964602628e+01, TEST_TOL3, GSL_SUCCESS);
+  TEST_SF_2(s, gsl_sf_complex_expint_E1_e, (-12.0, -0.3, &r1, &r2),
+           -1.44036615137708941e+04, TEST_TOL3,
+           -4.01422174491384112e+03, TEST_TOL3, GSL_SUCCESS);
+  TEST_SF_2(s, gsl_sf_complex_expint_E1_e, (-20.0, 1.0, &r1, &r2),
+           -1.49402410281775929e+07, TEST_TOL3,
+            2.07628916608807892e+07, TEST_TOL3, GSL_SUCCESS);
+  TEST_SF_2(s, gsl_sf_complex_expint_E1_e, (-8.0, 0.01, &r1, &r2),
+           -4.40363597530618733e+02, TEST_TOL3,
+            5.84556312216707119e-01, TEST_TOL3, GSL_SUCCESS);
+  TEST_SF_2(s, gsl_sf_complex_expint_E1_e, (-8.0, -0.01, &r1, &r2),
+           -4.40363597530618733e+02, TEST_TOL3,
+           -5.84556312216707119e-01, TEST_TOL3, GSL_SUCCESS);
+  TEST_SF_2(s, gsl_sf_complex_expint_E1_e, (40.0, 40.0, &r1, &r2),
+           -7.40010430028992331e-20, TEST_TOL3,
+           -4.99184785533681630e-21, TEST_TOL3, GSL_SUCCESS);
+  TEST_SF_2(s, gsl_sf_complex_expint_E1_e, (-2.0, 3.0, &r1, &r2),
+            3.61551944599640296e-01, TEST_TOL3,
+            2.12895578222390158e+00, TEST_TOL3, GSL_SUCCESS);
+  TEST_SF_2(s, gsl_sf_complex_expint_E1_e, (0.2, -1.7, &r1, &r2),
+           -3.60912033786770059e-01, TEST_TOL3,
+            1.28910152585750643e-01, TEST_TOL3, GSL_SUCCESS);
+  TEST_SF_2(s, gsl_sf_complex_expint_E1_e, (-0.5, 0.1, &r1, &r2),
+           -4.70319032817109905e-01, TEST_TOL3,
+           -2.81453401637943745e+00, TEST_TOL3, GSL_SUCCESS);
+
+  /* higher orders */
+  TEST_SF_2(s, gsl_sf_complex_expint_En_e, (2, 2.0, 3.0, &r1, &r2),
+           -2.33784743080100200e-02, TEST_TOL3,
+            1.47467577493736474e-02, TEST_TOL3, GSL_SUCCESS);
+  TEST_SF_2(s, gsl_sf_complex_expint_En_e, (3, -5.0, 0.5, &r1, &r2),
+           -5.99687456900055906e+01, TEST_TOL3,
+           -1.32337562648672584e+01, TEST_TOL3, GSL_SUCCESS);
+  TEST_SF_2(s, gsl_sf_complex_expint_En_e, (5, -25.0, -30.0, &r1, &r2),
+            1.47312610785254741e+09, TEST_TOL3,
+            1.34328591317539573e+09, TEST_TOL3, GSL_SUCCESS);
+  TEST_SF_2(s, gsl_sf_complex_expint_En_e, (10, 40.0, 40.0, &r1, &r2),
+           -6.54980002255329779e-20, TEST_TOL3,
+           -1.08150951733069511e-20, TEST_TOL3, GSL_SUCCESS);
+  TEST_SF_2(s, gsl_sf_complex_expint_En_e, (3, -8.0, 0.01, &r1, &r2),
+           -6.78075151980208375e+02, TEST_TOL3,
+           -9.51100578459197266e+01, TEST_TOL3, GSL_SUCCESS);
+  TEST_SF_2(s, gsl_sf_complex_expint_En_e, (7, -3.5, -0.2, &r1, &r2),
+            9.35295499052267232e+00, TEST_TOL3,
+            9.92617973975997536e+00, TEST_TOL3, GSL_SUCCESS);
+
+  /* scaled variants */
+  TEST_SF_2(s, gsl_sf_complex_expint_En_scaled_e, (1, 1000.0, 0.0, &r1, &r2),
+            9.99001994023880797e-04, TEST_TOL3,
+            0.0, TEST_TOL3, GSL_SUCCESS);
+  TEST_SF_2(s, gsl_sf_complex_expint_En_scaled_e, (2, 4.0, -2.0, &r1, &r2),
+            1.53903509181514769e-01, TEST_TOL3,
+            5.54940823679274109e-02, TEST_TOL3, GSL_SUCCESS);
+  TEST_SF_2(s, gsl_sf_complex_expint_En_scaled_e, (3, -10.0, 15.0, &r1, &r2),
+           -2.49312522646428676e-02, TEST_TOL3,
+           -5.44854581497557916e-02, TEST_TOL3, GSL_SUCCESS);
+  TEST_SF_2(s, gsl_sf_complex_expint_En_scaled_e, (2, -3.0, 1.0, &r1, &r2),
+           -2.51069391157689781e-01, TEST_TOL3,
+           -4.10412487364388123e-01, TEST_TOL3, GSL_SUCCESS);
+
+  /* Ei */
+  TEST_SF_2(s, gsl_sf_complex_expint_Ei_e, (1.0, 0.0, &r1, &r2),
+            1.89511781635593679e+00, TEST_TOL3,
+            0.0, TEST_TOL3, GSL_SUCCESS);
+  TEST_SF_2(s, gsl_sf_complex_expint_Ei_e, (2.0, 0.0, &r1, &r2),
+            4.95423435600188977e+00, TEST_TOL3,
+            0.0, TEST_TOL3, GSL_SUCCESS);
+  TEST_SF_2(s, gsl_sf_complex_expint_Ei_e, (1.0, 1.0, &r1, &r2),
+            1.76462598556385397e+00, TEST_TOL3,
+            2.38776985151052257e+00, TEST_TOL3, GSL_SUCCESS);
+  TEST_SF_2(s, gsl_sf_complex_expint_Ei_e, (-1.0, 1.0, &r1, &r2),
+           -2.81624451981418342e-04, TEST_TOL3,
+            2.96226811855043426e+00, TEST_TOL3, GSL_SUCCESS);
+  TEST_SF_2(s, gsl_sf_complex_expint_Ei_e, (-3.0, 0.5, &r1, &r2),
+           -1.04040841335217380e-02, TEST_TOL3,
+            3.13392739375167917e+00, TEST_TOL3, GSL_SUCCESS);
+  TEST_SF_2(s, gsl_sf_complex_expint_Ei_e, (0.5, -2.0, &r1, &r2),
+            6.93567668847722474e-01, TEST_TOL3,
+           -3.34679359200657167e+00, TEST_TOL3, GSL_SUCCESS);
+  TEST_SF_2(s, gsl_sf_complex_expint_Ei_e, (-2.0, -3.0, &r1, &r2),
+            2.48262079441993640e-02, TEST_TOL3,
+           -3.16190932850083772e+00, TEST_TOL3, GSL_SUCCESS);
+  TEST_SF_2(s, gsl_sf_complex_expint_Ei_e, (5.0, -1.0, &r1, &r2),
+            2.90251581449927087e+01, TEST_TOL3,
+           -2.64462954640796966e+01, TEST_TOL3, GSL_SUCCESS);
+
+  /* The branch cut on the negative real axis is approached from above:
+     E1(-1) has imaginary part -Pi and Ei(-1) has +Pi.  See Amos (1990). */
+  TEST_SF_2(s, gsl_sf_complex_expint_E1_e, (-1.0, 0.0, &r1, &r2),
+           -1.89511781635593679e+00, TEST_TOL3,
+           -3.14159265358979312e+00, TEST_TOL3, GSL_SUCCESS);
+  TEST_SF_2(s, gsl_sf_complex_expint_Ei_e, (-1.0, 0.0, &r1, &r2),
+           -2.19383934395520286e-01, TEST_TOL3,
+            3.14159265358979312e+00, TEST_TOL3, GSL_SUCCESS);
+
+  /* E_n(0) = 1/(n-1) for n > 1; E_1(0) is a branch point. */
+  TEST_SF_2(s, gsl_sf_complex_expint_En_e, (2, 0.0, 0.0, &r1, &r2),
+            1.0, TEST_TOL0, 0.0, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF_2(s, gsl_sf_complex_expint_En_e, (5, 0.0, 0.0, &r1, &r2),
+            0.25, TEST_TOL0, 0.0, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF_2(s, gsl_sf_complex_expint_E1_e, (0.0, 0.0, &r1, &r2),
+            GSL_NAN, TEST_TOL0, GSL_NAN, TEST_TOL0, GSL_EDOM);
+  TEST_SF_2(s, gsl_sf_complex_expint_Ei_e, (0.0, 0.0, &r1, &r2),
+            GSL_NAN, TEST_TOL0, GSL_NAN, TEST_TOL0, GSL_EDOM);
+
+  /* Non-finite arguments: a NaN propagates, Z -> +Inf tends to zero. */
+  TEST_SF_2(s, gsl_sf_complex_expint_E1_e, (GSL_NAN, 1.0, &r1, &r2),
+            GSL_NAN, TEST_TOL0, GSL_NAN, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF_2(s, gsl_sf_complex_expint_E1_e, (1.0, GSL_NAN, &r1, &r2),
+            GSL_NAN, TEST_TOL0, GSL_NAN, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF_2(s, gsl_sf_complex_expint_E1_e, (GSL_POSINF, 0.0, &r1, &r2),
+            0.0, TEST_TOL0, 0.0, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF_2(s, gsl_sf_complex_expint_E1_e, (GSL_NEGINF, 0.0, &r1, &r2),
+            GSL_NAN, TEST_TOL0, GSL_NAN, TEST_TOL0, GSL_EDOM);
+  TEST_SF_2(s, gsl_sf_complex_expint_E1_e, (1.0, GSL_POSINF, &r1, &r2),
+            GSL_NAN, TEST_TOL0, GSL_NAN, TEST_TOL0, GSL_EDOM);
+
+  /* Domain: order n >= 1 */
+  TEST_SF_2(s, gsl_sf_complex_expint_En_e, (0, 1.0, 1.0, &r1, &r2),
+            GSL_NAN, TEST_TOL0, GSL_NAN, TEST_TOL0, GSL_EDOM);
+
+  /* Recurrence n E_{n+1}(z) + z E_n(z) = exp(-z) */
+  {
+    static const double zrr[5] = { 3.0, -5.0, -25.0, 1.0, 0.5 };
+    static const double zii[5] = { 1.0, 0.5, -30.0, 1.0, -1.5 };
+    int k;
+    for (k = 0; k < 5; k++) {
+      for (n = 1; n <= 6; n++) {
+        gsl_sf_result e1r, e1i, e2r, e2i;
+        double em = exp(-zrr[k]);
+        double exr = em * cos(zii[k]);
+        double exi = -em * sin(zii[k]);
+        double lr, li, resid, scale;
+        int bad;
+        int st1 = gsl_sf_complex_expint_En_e(n,     zrr[k], zii[k], &e1r, &e1i);
+        int st2 = gsl_sf_complex_expint_En_e(n + 1, zrr[k], zii[k], &e2r, &e2i);
+        lr = n * e2r.val + (zrr[k] * e1r.val - zii[k] * e1i.val);
+        li = n * e2i.val + (zrr[k] * e1i.val + zii[k] * e1r.val);
+        resid = gsl_hypot(lr - exr, li - exi);
+        scale = gsl_hypot(exr, exi);
+        bad = (st1 != GSL_SUCCESS || st2 != GSL_SUCCESS || resid > 1e-12 * scale);
+        gsl_test(bad, "complex_expint recurrence n=%d z=(%g,%g)", n, zrr[k], zii[k]);
+        s += bad;
+      }
+    }
+  }
+
+  /* exp(z) E_n(z) is consistent with E_n(z) */
+  {
+    static const double zrr[4] = { 4.0, -3.0, -10.0, 2.0 };
+    static const double zii[4] = { -2.0, 1.0, 15.0, 0.5 };
+    int k;
+    for (k = 0; k < 4; k++) {
+      for (n = 1; n <= 4; n++) {
+        gsl_sf_result ur, ui, sr, si;
+        double em = exp(-zrr[k]);
+        double er = em * cos(zii[k]);
+        double ei = -em * sin(zii[k]);
+        double rr, ri, d, scale;
+        int bad;
+        int st1 = gsl_sf_complex_expint_En_e(n, zrr[k], zii[k], &ur, &ui);
+        int st2 = gsl_sf_complex_expint_En_scaled_e(n, zrr[k], zii[k], &sr, &si);
+        rr = sr.val * er - si.val * ei;
+        ri = sr.val * ei + si.val * er;
+        d = gsl_hypot(rr - ur.val, ri - ui.val);
+        scale = gsl_hypot(ur.val, ui.val);
+        bad = (st1 != GSL_SUCCESS || st2 != GSL_SUCCESS || d > 1e-12 * (scale + 1e-300));
+        gsl_test(bad, "complex_expint scaling n=%d z=(%g,%g)", n, zrr[k], zii[k]);
+        s += bad;
+      }
+    }
+  }
+
+  return s;
+}
+
+
 int test_fermidirac(void)
 {
   gsl_sf_result r;
@@ -3263,6 +3469,7 @@ int main(int argc, char * argv[])
   gsl_test(test_erf(),         "Error Functions");
   gsl_test(test_exp(),         "Exponential Functions");
   gsl_test(test_expint(),      "Exponential/Sine/Cosine Integrals");
+  gsl_test(test_expint_complex(), "Complex Exponential Integrals");
   gsl_test(test_fermidirac(),  "Fermi-Dirac Functions");
   gsl_test(test_gamma(),       "Gamma Functions");
   gsl_test(test_gegen(),       "Gegenbauer Polynomials");
