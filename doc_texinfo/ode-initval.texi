@@ -230,6 +230,28 @@ Explicit embedded Runge-Kutta Cash-Karp (4, 5) method.
 Explicit embedded Runge-Kutta Prince-Dormand (8, 9) method.
 @end deffn
 
+@deffn {Step Type} gsl_odeiv2_step_vern7
+@deffnx {Step Type} gsl_odeiv2_step_vern8
+@deffnx {Step Type} gsl_odeiv2_step_vern9
+@cindex Verner method
+@cindex Runge-Kutta methods
+Three explicit embedded Runge-Kutta methods by Verner.  The orders of the
+methods are (6, 7), (7, 8), and (8, 9), respectively.
+@end deffn
+
+@deffn {Step Type} gsl_odeiv2_step_feagin108
+@deffnx {Step Type} gsl_odeiv2_step_feagin1210
+@deffnx {Step Type} gsl_odeiv2_step_feagin1412
+@cindex Feagin method
+@cindex Runge-Kutta methods
+Three explicit high-order embedded Runge-Kutta methods by Feagin.  The
+orders of the methods are (8, 10), (10, 12), and (12, 14), respectively.
+When using these methods, it is particularly recommended to take care of
+discontinuities in the derivatives and carry out the evolution not across
+these discontinuities.  See also the comment at the end of the
+@ref{Evolution} section.
+@end deffn
+
 @deffn {Step Type} gsl_odeiv2_step_rk1imp 
 @cindex Implicit Euler method
 Implicit Gaussian first order Runge-Kutta. Also known as implicit

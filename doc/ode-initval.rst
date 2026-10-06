@@ -256,6 +256,33 @@ the new state :data:`y`.
 
       Explicit embedded Runge-Kutta Prince-Dormand (8, 9) method.
 
+   .. index::
+      single: Verner method
+      single: Runge-Kutta methods
+
+   .. var:: gsl_odeiv2_step_type * gsl_odeiv2_step_vern7
+   .. var:: gsl_odeiv2_step_type * gsl_odeiv2_step_vern8
+   .. var:: gsl_odeiv2_step_type * gsl_odeiv2_step_vern9
+
+      Three explicit embedded Runge-Kutta methods by Verner. The orders of the
+      methods are (6, 7), (7, 8), and (8, 9), respectively .
+
+   .. index::
+      single: Feagin method
+      single: Runge-Kutta methods
+
+   .. var:: gsl_odeiv2_step_type * gsl_odeiv2_step_feagin108
+   .. var:: gsl_odeiv2_step_type * gsl_odeiv2_step_feagin1210
+   .. var:: gsl_odeiv2_step_type * gsl_odeiv2_step_feagin1412
+
+      Three explicit high-order embedded Runge-Kutta methods by Feagin. The
+      orders of the methods are (8, 10), (10, 12), and (12, 14),
+      respectively. When using these methods, it is particularly recommended
+      to take care of discontinuities in the derivatives and carry out the
+      evolution not across these discontinuities. See also the comment at the
+      end of the `Evolution` section.
+
+
    .. index:: Implicit Euler method
 
    .. var:: gsl_odeiv2_step_type * gsl_odeiv2_step_rk1imp 
