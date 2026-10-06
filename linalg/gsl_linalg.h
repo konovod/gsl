@@ -211,6 +211,14 @@ gsl_linalg_SV_lssolve (const double lambda,
 
 int gsl_linalg_SV_leverage(const gsl_matrix *U, gsl_vector *h);
 
+int
+gsl_linalg_complex_SV_decomp (gsl_matrix_complex * A,
+                              gsl_matrix_complex * V,
+                              gsl_vector * S,
+                              gsl_vector_complex * w1,
+                              gsl_vector_complex * w2
+                              );
+
 
 /* LU Decomposition, Gaussian elimination with partial pivoting
  */

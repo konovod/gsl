@@ -351,6 +351,7 @@ set(GSL_SOURCES
     linalg/lq.c
     linalg/ptlq.c
     linalg/svd.c
+    linalg/svdc.c
     linalg/householder.c
     linalg/householdercomplex.c
     linalg/hessenberg.c

@@ -403,6 +403,7 @@ gsl_matrix * moler10;
 #include "test_qrc.c"
 #include "test_qr_band.c"
 #include "test_svd.c"
+#include "test_svdc.c"
 #include "test_hh.c"
 #include "test_hhc.c"
 #include "test_bidiag.c"
@@ -3744,6 +3745,9 @@ main(void)
   gsl_test(test_bidiag_unpack(r),        "Bidiagonal Unpacking");
   gsl_test(test_bidiag_complex_decomp(r),"Complex Bidiagonal Decomposition");
   gsl_test(test_bidiag_complex_unpack(r),"Complex Bidiagonal Unpacking");
+
+  gsl_test(test_SV_complex_decomp(r),    "Complex Singular Value Decomposition");
+  gsl_test(test_SV_complex_reference(),  "Complex SVD reference values");
 
   gsl_matrix_free(m11);
   gsl_matrix_free(m35);
