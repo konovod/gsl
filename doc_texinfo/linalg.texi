@@ -738,10 +738,12 @@ This routine uses the Golub-Reinsch SVD algorithm.
 @end deftypefun
 
 @deftypefun int gsl_linalg_SV_decomp_mod (gsl_matrix * @var{A}, gsl_matrix * @var{X}, gsl_matrix * @var{V}, gsl_vector * @var{S}, gsl_vector * @var{work})
+@deftypefunx int gsl_linalg_complex_SV_decomp_mod (gsl_matrix_complex * @var{A}, gsl_matrix_complex * @var{X}, gsl_matrix_complex * @var{V}, gsl_vector * @var{S}, gsl_vector_complex * @var{work}, gsl_vector_complex * @var{work2})
 This function computes the SVD using the modified Golub-Reinsch
 algorithm, which is faster for @c{$M \gg N$}
 @math{M>>N}.  It requires the vector @var{work} of length @var{N} and the
-@math{N}-by-@math{N} matrix @var{X} as additional working space.
+@math{N}-by-@math{N} matrix @var{X} as additional working space; for complex
+@var{A} another workspace @var{work2} of length @var{N-1} is required.
 @end deftypefun
 
 @deftypefun int gsl_linalg_SV_decomp_jacobi (gsl_matrix * @var{A}, gsl_matrix * @var{V}, gsl_vector * @var{S})
@@ -754,9 +756,11 @@ details).
 @end deftypefun
 
 @deftypefun int gsl_linalg_SV_solve (const gsl_matrix * @var{U}, const gsl_matrix * @var{V}, const gsl_vector * @var{S}, const gsl_vector * @var{b}, gsl_vector * @var{x})
+@deftypefunx int gsl_linalg_complex_SV_solve (const gsl_matrix_complex * @var{U}, const gsl_matrix_complex * @var{V}, const gsl_vector * @var{S}, const gsl_vector_complex * @var{b}, gsl_vector_complex * @var{x})
 This function solves the system @math{A x = b} using the singular value
 decomposition (@var{U}, @var{S}, @var{V}) of @math{A} which must 
-have been computed previously with @code{gsl_linalg_SV_decomp}.
+have been computed previously with @code{gsl_linalg_SV_decomp} or
+@code{gsl_linalg_complex_SV_decomp}.
 
 Only non-zero singular values are used in computing the solution. The
 parts of the solution corresponding to singular values of zero are

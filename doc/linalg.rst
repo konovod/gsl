@@ -1324,11 +1324,14 @@ Mathematically, the "full" SVD is defined with :math:`U` as an
    This routine uses the Golub-Reinsch SVD algorithm.  
 
 .. function:: int gsl_linalg_SV_decomp_mod (gsl_matrix * A, gsl_matrix * X, gsl_matrix * V, gsl_vector * S, gsl_vector * work)
+              int gsl_linalg_complex_SV_decomp_mod (gsl_matrix_complex * A, gsl_matrix_complex * X, gsl_matrix_complex * V, gsl_vector * S, gsl_vector_complex * work, gsl_vector_complex * work2)
 
    This function computes the SVD using the modified Golub-Reinsch
    algorithm, which is faster for :math:`M \gg N`.
    It requires the vector :data:`work` of length :data:`N` and the
-   :math:`N`-by-:math:`N` matrix :data:`X` as additional working space.
+   :math:`N`-by-:math:`N` matrix :data:`X` as additional working space; for
+   complex :math:`A` another workspace :data:`work2` of length :data:`N-1` is
+   required.
 
 .. index:: Jacobi orthogonalization
 
@@ -1341,10 +1344,12 @@ Mathematically, the "full" SVD is defined with :math:`U` as an
    details).
 
 .. function:: int gsl_linalg_SV_solve (const gsl_matrix * U, const gsl_matrix * V, const gsl_vector * S, const gsl_vector * b, gsl_vector * x)
+              int gsl_linalg_complex_SV_solve (const gsl_matrix_complex * U, const gsl_matrix_complex * V, const gsl_vector * S, const gsl_vector_complex * b, gsl_vector_complex * x)
 
    This function solves the system :math:`A x = b` using the singular value
    decomposition (:data:`U`, :data:`S`, :data:`V`) of :math:`A` which must 
-   have been computed previously with :func:`gsl_linalg_SV_decomp`.
+   have been computed previously with :func:`gsl_linalg_SV_decomp` or
+   :func:`gsl_linalg_complex_SV_decomp`.
 
    Only non-zero singular values are used in computing the solution. The
    parts of the solution corresponding to singular values of zero are
