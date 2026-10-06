@@ -57,8 +57,8 @@ typedef struct
 broyden_state_t;
 
 static int broyden_alloc (void *vstate, size_t n);
-static int broyden_set (void *vstate, gsl_multiroot_function * function, gsl_vector * x, gsl_vector * f, gsl_vector * dx);
-static int broyden_iterate (void *vstate, gsl_multiroot_function * function, gsl_vector * x, gsl_vector * f, gsl_vector * dx);
+static int broyden_set (void *vstate, gsl_multiroot_function * function, gsl_vector * x, gsl_vector * f, gsl_vector * dx, double fdjac_epsrel);
+static int broyden_iterate (void *vstate, gsl_multiroot_function * function, gsl_vector * x, gsl_vector * f, gsl_vector * dx, double fdjac_epsrel);
 static void broyden_free (void *vstate);
 
 
@@ -199,7 +199,7 @@ broyden_alloc (void *vstate, size_t n)
 }
 
 static int
-broyden_set (void *vstate, gsl_multiroot_function * function, gsl_vector * x, gsl_vector * f, gsl_vector * dx)
+broyden_set (void *vstate, gsl_multiroot_function * function, gsl_vector * x, gsl_vector * f, gsl_vector * dx, double fdjac_epsrel)
 {
   broyden_state_t *state = (broyden_state_t *) vstate;
   size_t i, j, n = function->n;
@@ -207,7 +207,7 @@ broyden_set (void *vstate, gsl_multiroot_function * function, gsl_vector * x, gs
 
   GSL_MULTIROOT_FN_EVAL (function, x, f);
 
-  gsl_multiroot_fdjacobian (function, x, f, GSL_SQRT_DBL_EPSILON, state->lu);
+  gsl_multiroot_fdjacobian (function, x, f, fdjac_epsrel, state->lu);
   gsl_linalg_LU_decomp (state->lu, state->permutation, &signum);
   gsl_linalg_LU_invert (state->lu, state->permutation, state->H);
 
@@ -226,7 +226,7 @@ broyden_set (void *vstate, gsl_multiroot_function * function, gsl_vector * x, gs
 }
 
 static int
-broyden_iterate (void *vstate, gsl_multiroot_function * function, gsl_vector * x, gsl_vector * f, gsl_vector * dx)
+broyden_iterate (void *vstate, gsl_multiroot_function * function, gsl_vector * x, gsl_vector * f, gsl_vector * dx, double fdjac_epsrel)
 {
   broyden_state_t *state = (broyden_state_t *) vstate;
 
@@ -300,7 +300,7 @@ new_step:
       /* need to recompute Jacobian */
       int signum = 0;
       
-      gsl_multiroot_fdjacobian (function, x, f, GSL_SQRT_DBL_EPSILON, lu);
+      gsl_multiroot_fdjacobian (function, x, f, fdjac_epsrel, lu);
       
       for (i = 0; i < n; i++)
         for (j = 0; j < n; j++)

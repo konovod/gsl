@@ -29,6 +29,7 @@
 #include "test_funcs.h"
 int test_fdf (const char * desc, gsl_multiroot_function_fdf * function, initpt_function initpt, double factor, const gsl_multiroot_fdfsolver_type * T);
 int test_f (const char * desc, gsl_multiroot_function_fdf * fdf, initpt_function initpt, double factor, const gsl_multiroot_fsolver_type * T);
+int test_fdjac_epsrel (void);
 
 #if defined(_MSC_VER)
 #include <float.h>
@@ -119,6 +120,26 @@ gnewton_mismatch_initpt (gsl_vector * x)
 
 static gsl_multiroot_function_fdf gnewton_mismatch =
   { &gnewton_mismatch_f, &gnewton_mismatch_df, &gnewton_mismatch_fdf, 1, 0 };
+
+/* A function whose evaluation carries a smooth but high-frequency
+   perturbation of order 1e-5, modelling an imprecise function
+   (Savannah bug #45782).  The default finite-difference step sees the
+   perturbation's large derivative; a larger step averages it out. */
+
+static int
+noisy_f (const gsl_vector * x, void *params, gsl_vector * f)
+{
+  double xv = gsl_vector_get (x, 0);
+  (void) params;
+  gsl_vector_set (f, 0, (xv - 1.0) + 1.0e-5 * sin (1.0e7 * xv));
+  return GSL_SUCCESS;
+}
+
+static void
+noisy_initpt (gsl_vector * x)
+{
+  gsl_vector_set (x, 0, M_PI / 1.0e7);
+}
 
 static void
 test_root_point (void)
@@ -220,6 +241,8 @@ main (void)
 #else
   test_root_point ();
 #endif
+
+  test_fdjac_epsrel ();
 
   exit (gsl_test_summary ());
 }
@@ -387,4 +410,88 @@ test_f (const char * desc, gsl_multiroot_function_fdf * fdf,
   gsl_test(status, "%s on %s (%g), %u iterations, residual = %.2g", T->name, desc, factor, iter, residual);
 
   return status;
+}
+
+static int
+noisy_solve (double epsrel, int use_epsrel, double * x_final)
+{
+  int status = GSL_SUCCESS;
+  size_t i;
+  gsl_multiroot_function function;
+  gsl_multiroot_fsolver * s;
+  gsl_vector * x = gsl_vector_alloc (1);
+
+  function.f = &noisy_f;
+  function.params = 0;
+  function.n = 1;
+
+  noisy_initpt (x);
+
+  s = gsl_multiroot_fsolver_alloc (gsl_multiroot_fsolver_dnewton, 1);
+
+  if (use_epsrel)
+    {
+      status = gsl_multiroot_fsolver_set_fdjac_epsrel (s, epsrel);
+      if (status != GSL_SUCCESS)
+        {
+          gsl_multiroot_fsolver_free (s);
+          gsl_vector_free (x);
+          return status;
+        }
+    }
+
+  status = gsl_multiroot_fsolver_set (s, &function, x);
+
+  if (status == GSL_SUCCESS)
+    {
+      for (i = 0; i < 200; i++)
+        {
+          status = gsl_multiroot_fsolver_iterate (s);
+          if (status != GSL_SUCCESS)
+            break;
+          if (fabs (gsl_vector_get (s->x, 0) - 1.0) < 1.0e-6)
+            break;
+        }
+    }
+
+  *x_final = gsl_vector_get (s->x, 0);
+
+  gsl_multiroot_fsolver_free (s);
+  gsl_vector_free (x);
+
+  return status;
+}
+
+int
+test_fdjac_epsrel (void)
+{
+  double x_default = 0.0, x_tuned = 0.0;
+  gsl_multiroot_fsolver * solver;
+
+  /* default value, validation and storage */
+  solver = gsl_multiroot_fsolver_alloc (gsl_multiroot_fsolver_dnewton, 1);
+  gsl_test (gsl_multiroot_fsolver_fdjac_epsrel (solver) != GSL_SQRT_DBL_EPSILON,
+            "fsolver default fdjac epsrel");
+  {
+    gsl_error_handler_t * old = gsl_set_error_handler_off ();
+    gsl_test (gsl_multiroot_fsolver_set_fdjac_epsrel (solver, -1.0) != GSL_EDOM,
+              "fsolver rejects a non-positive fdjac epsrel");
+    gsl_set_error_handler (old);
+  }
+  gsl_test (gsl_multiroot_fsolver_set_fdjac_epsrel (solver, 1.0e-3) != GSL_SUCCESS,
+            "fsolver accepts a positive fdjac epsrel");
+  gsl_test (gsl_multiroot_fsolver_fdjac_epsrel (solver) != 1.0e-3,
+            "fsolver stores the fdjac epsrel");
+  gsl_multiroot_fsolver_free (solver);
+
+  /* a noisy function defeats the default step but not a larger one */
+  noisy_solve (0.0, 0, &x_default);
+  noisy_solve (1.0e-3, 1, &x_tuned);
+
+  gsl_test (fabs (x_tuned - 1.0) > 1.0e-3,
+            "tuned fdjac epsrel reaches the root: x = %.17g", x_tuned);
+  gsl_test (fabs (x_default - 1.0) < 1.0e-3,
+            "default fdjac epsrel is deflected by the noise: x = %.17g", x_default);
+
+  return 0;
 }

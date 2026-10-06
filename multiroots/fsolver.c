@@ -81,6 +81,8 @@ gsl_multiroot_fsolver_alloc (const gsl_multiroot_fsolver_type * T,
 
   s->type = T ;
 
+  s->fdjac_epsrel = GSL_SQRT_DBL_EPSILON;
+
   status = (s->type->alloc)(s->state, n);
 
   if (status != GSL_SUCCESS)
@@ -118,13 +120,35 @@ gsl_multiroot_fsolver_set (gsl_multiroot_fsolver * s,
   s->function = f;
   gsl_vector_memcpy(s->x,x);
   
-  return (s->type->set) (s->state, s->function, s->x, s->f, s->dx);
+  return (s->type->set) (s->state, s->function, s->x, s->f, s->dx,
+                         s->fdjac_epsrel);
 }
 
 int
 gsl_multiroot_fsolver_iterate (gsl_multiroot_fsolver * s)
 {
-  return (s->type->iterate) (s->state, s->function, s->x, s->f, s->dx);
+  return (s->type->iterate) (s->state, s->function, s->x, s->f, s->dx,
+                             s->fdjac_epsrel);
+}
+
+int
+gsl_multiroot_fsolver_set_fdjac_epsrel (gsl_multiroot_fsolver * s,
+                                        double epsrel)
+{
+  if (epsrel <= 0.0)
+    {
+      GSL_ERROR ("fdjac epsrel must be positive", GSL_EDOM);
+    }
+
+  s->fdjac_epsrel = epsrel;
+
+  return GSL_SUCCESS;
+}
+
+double
+gsl_multiroot_fsolver_fdjac_epsrel (const gsl_multiroot_fsolver * s)
+{
+  return s->fdjac_epsrel;
 }
 
 void

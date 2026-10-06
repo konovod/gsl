@@ -46,8 +46,8 @@ typedef struct
 dnewton_state_t;
 
 static int dnewton_alloc (void * vstate, size_t n);
-static int dnewton_set (void * vstate, gsl_multiroot_function * function, gsl_vector * x, gsl_vector * f, gsl_vector * dx);
-static int dnewton_iterate (void * vstate, gsl_multiroot_function * function, gsl_vector * x, gsl_vector * f, gsl_vector * dx);
+static int dnewton_set (void * vstate, gsl_multiroot_function * function, gsl_vector * x, gsl_vector * f, gsl_vector * dx, double fdjac_epsrel);
+static int dnewton_iterate (void * vstate, gsl_multiroot_function * function, gsl_vector * x, gsl_vector * f, gsl_vector * dx, double fdjac_epsrel);
 static void dnewton_free (void * vstate);
 
 static int
@@ -93,7 +93,7 @@ dnewton_alloc (void * vstate, size_t n)
 }
 
 static int
-dnewton_set (void * vstate, gsl_multiroot_function * function, gsl_vector * x, gsl_vector * f, gsl_vector * dx)
+dnewton_set (void * vstate, gsl_multiroot_function * function, gsl_vector * x, gsl_vector * f, gsl_vector * dx, double fdjac_epsrel)
 {
   dnewton_state_t * state = (dnewton_state_t *) vstate;
   size_t i, n = function->n ;
@@ -103,7 +103,7 @@ dnewton_set (void * vstate, gsl_multiroot_function * function, gsl_vector * x, g
   if (status)
     return status;
 
-  status = gsl_multiroot_fdjacobian (function, x, f, GSL_SQRT_DBL_EPSILON,
+  status = gsl_multiroot_fdjacobian (function, x, f, fdjac_epsrel,
       state->J);
   if (status)
     return status;
@@ -117,7 +117,7 @@ dnewton_set (void * vstate, gsl_multiroot_function * function, gsl_vector * x, g
 }
 
 static int
-dnewton_iterate (void * vstate, gsl_multiroot_function * function, gsl_vector * x, gsl_vector * f, gsl_vector * dx)
+dnewton_iterate (void * vstate, gsl_multiroot_function * function, gsl_vector * x, gsl_vector * f, gsl_vector * dx, double fdjac_epsrel)
 {
   dnewton_state_t * state = (dnewton_state_t *) vstate;
   
@@ -158,7 +158,7 @@ dnewton_iterate (void * vstate, gsl_multiroot_function * function, gsl_vector * 
       }
   }
  
-  gsl_multiroot_fdjacobian (function, x, f, GSL_SQRT_DBL_EPSILON, state->J);
+  gsl_multiroot_fdjacobian (function, x, f, fdjac_epsrel, state->J);
 
   return GSL_SUCCESS;
 }

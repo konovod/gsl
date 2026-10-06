@@ -61,8 +61,8 @@ typedef struct
     const char *name;
     size_t size;
     int (*alloc) (void *state, size_t n);
-    int (*set) (void *state, gsl_multiroot_function * function, gsl_vector * x, gsl_vector * f, gsl_vector * dx);
-    int (*iterate) (void *state, gsl_multiroot_function * function, gsl_vector * x, gsl_vector * f, gsl_vector * dx);
+    int (*set) (void *state, gsl_multiroot_function * function, gsl_vector * x, gsl_vector * f, gsl_vector * dx, double fdjac_epsrel);
+    int (*iterate) (void *state, gsl_multiroot_function * function, gsl_vector * x, gsl_vector * f, gsl_vector * dx, double fdjac_epsrel);
     void (*free) (void *state);
   }
 gsl_multiroot_fsolver_type;
@@ -74,6 +74,7 @@ typedef struct
     gsl_vector * x ;
     gsl_vector * f ;
     gsl_vector * dx ;
+    double fdjac_epsrel ;
     void *state;
   }
 gsl_multiroot_fsolver;
@@ -89,6 +90,11 @@ int gsl_multiroot_fsolver_set (gsl_multiroot_fsolver * s,
                                const gsl_vector * x);
 
 int gsl_multiroot_fsolver_iterate (gsl_multiroot_fsolver * s);
+
+int gsl_multiroot_fsolver_set_fdjac_epsrel (gsl_multiroot_fsolver * s,
+                                            double epsrel);
+
+double gsl_multiroot_fsolver_fdjac_epsrel (const gsl_multiroot_fsolver * s);
 
 const char * gsl_multiroot_fsolver_name (const gsl_multiroot_fsolver * s);
 gsl_vector * gsl_multiroot_fsolver_root (const gsl_multiroot_fsolver * s);
