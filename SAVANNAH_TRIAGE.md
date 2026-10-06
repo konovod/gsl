@@ -9,9 +9,9 @@ Scratch index, not part of the fork's record of changes. Verdicts are curated fr
 
 | status | count |
 |---|---:|
-| fixed | 123 |
+| fixed | 124 |
 | partial | 5 |
-| rejected | 87 |
+| rejected | 86 |
 | deferred | 3 |
 | superseded | 1 |
 | not reviewed | 0 |
@@ -188,7 +188,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 66574 | 2024-12-18 | feature | - | clean 2_givens_cmplx.patch +3 | **fixed** — complex Householder right, Givens, bidiagonal decomposition and `gsl_linalg_complex_SV_decomp` (5df7c9876, b5325c1df, e0993e48c, ac4a51535) | Feature: complex singular value decomposition |
 | 66575 | 2024-12-18 | feature | - | clean 5_svd_SV_solve_cmplx.patch +1 | **fixed** — `gsl_linalg_complex_SV_solve` and `_SV_decomp_mod` (77032d17c, 5a209fff9) | Feature: Extension to complex SVD |
 | 66576 | 2024-12-18 | feature | - | clean fsolver_set_with_values.patch | rejected — new API; docs record the GSL_EINVAL return (aaecb86e6) | Feature: gsl_root_fsolver_set_with_values() |
-| 66695 | 2025-01-22 | feature | - | clean feagin_verner.patch | rejected — new algorithms/API (Feagin/Verner ODE solvers); out of scope | Feature: additional high order ODE solvers (Feagin, Verner) |
+| 66695 | 2025-01-22 | feature | - | clean feagin_verner.patch | **fixed** — Verner 7(6)/8(7)/9(8) and Feagin 10(8)/12(10)/14(12) steppers (d67eae92b, 6fa6706f4) | Feature: additional high order ODE solvers (Feagin, Verner) |
 | 66742 | 2025-01-31 | - | Documentation | clean gams.diff | rejected — large doc-only classification diff; not a correction, out of scope | GAMS classification |
 | 66767 | 2025-02-08 | feature | Build | source binomialinv.c +1 | **fixed** — gsl_cdf_binomial_Pinv/Qinv by bisection, double result (e88a81c75) | Feature: inverse of binomial distribution |
 | 66775 | 2025-02-10 | feature | Build | source poissoninv.c +1 | **fixed** — gsl_cdf_poisson_Pinv/Qinv by doubling + bisection, double result (e88a81c75) | Feature: inverse poisson distribution |
@@ -288,8 +288,9 @@ Two further new-API items have since been taken: `#66573`
 (`gsl_vector_complex_conjugate()`) and `#68367` (inverse Jacobi
 elliptic functions, where the posted prototype misused the modulus).
 `#60457` and its duplicate `#65932` (complex tridiagonal solvers) were
-taken as well, followed by the complex SVD suite `#66574` and `#66575`.
-They are no longer listed in the table; see `FORKNEWS`.
+taken as well, followed by the complex SVD suite `#66574` and `#66575`
+and the Feagin/Verner ODE steppers `#66695`.  They are no longer listed
+in the table; see `FORKNEWS`.
 
 `kind`: `feat` = new feature/API, `perf` = performance only, `test` =
 test-quality request, `doc` = documentation matter.  `patch`: `clean`/
@@ -299,7 +300,6 @@ test-quality request, `doc` = documentation matter.  `patch`: `clean`/
 | # | kind | patch | what it would add |
 |---|---|---|---|
 | 57173 | feat | - | zeta function for complex arguments |
-| 66695 | feat | clean | Feagin and Verner high-order ODE solvers |
 | 32257 | feat | - | integration routines imported from quadrule |
 | 41527 | feat | - | multimin functions return error codes |
 | 45782 | feat | - | configurable derivative epsilon |
