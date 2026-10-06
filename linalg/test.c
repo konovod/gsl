@@ -89,6 +89,7 @@ int test_TDS_cyc_solve_one(const unsigned long dim, const double * d, const doub
 int test_TDS_cyc_solve(void);
 int test_TDN_cyc_solve_dim(unsigned long dim, double d, double a, double b, const double * actual, double eps);
 int test_TDN_cyc_solve(void);
+int test_tridiag_complex(gsl_rng * r);
 int test_bidiag_decomp_dim(const gsl_matrix * m, double eps);
 int test_bidiag_decomp(void);
 
@@ -3066,6 +3067,299 @@ int test_TDN_cyc_solve(void)
   return s;
 }
 
+/* Complex tridiagonal solvers (Savannah bug #60457).  The reference
+ * solutions for the fixed systems are from numpy.linalg.solve; the
+ * random systems check the residual A x - b directly.  kind:
+ * 0 = symmetric, 1 = nonsymmetric, 2 = symmetric cyclic,
+ * 3 = nonsymmetric cyclic. */
+
+static double
+complex_tridiag_resid(const gsl_vector_complex * diag,
+                      const gsl_vector_complex * below,
+                      const gsl_vector_complex * above,
+                      const gsl_vector_complex * rhs,
+                      const gsl_vector_complex * x,
+                      int cyc)
+{
+  const size_t N = diag->size;
+  double maxr = 0.0;
+  size_t i;
+
+  for (i = 0; i < N; i++)
+    {
+      gsl_complex r = gsl_vector_complex_get(rhs, i);
+      gsl_complex xi = gsl_vector_complex_get(x, i);
+
+      r = gsl_complex_sub(r, gsl_complex_mul(gsl_vector_complex_get(diag, i), xi));
+
+      if (i + 1 < N)
+        {
+          r = gsl_complex_sub(r, gsl_complex_mul(gsl_vector_complex_get(above, i),
+                                                 gsl_vector_complex_get(x, i + 1)));
+        }
+      if (i > 0)
+        {
+          r = gsl_complex_sub(r, gsl_complex_mul(gsl_vector_complex_get(below, i - 1),
+                                                 gsl_vector_complex_get(x, i - 1)));
+        }
+      if (cyc)
+        {
+          if (i == 0)
+            {
+              r = gsl_complex_sub(r, gsl_complex_mul(gsl_vector_complex_get(below, N - 1),
+                                                     gsl_vector_complex_get(x, N - 1)));
+            }
+          if (i == N - 1)
+            {
+              r = gsl_complex_sub(r, gsl_complex_mul(gsl_vector_complex_get(above, N - 1),
+                                                     gsl_vector_complex_get(x, 0)));
+            }
+        }
+
+      {
+        double a = gsl_complex_abs(r);
+        if (a > maxr) maxr = a;
+      }
+    }
+
+  return maxr;
+}
+
+static int
+test_tridiag_complex_fixed(const char * desc,
+                           const gsl_complex * d,
+                           const gsl_complex * lo,
+                           const gsl_complex * up,
+                           const gsl_complex * b,
+                           const gsl_complex * expected,
+                           size_t N, int kind, double tol)
+{
+  int s = 0;
+  size_t i;
+  const size_t noff = (kind >= 2) ? N : N - 1;
+  const int cyc = (kind >= 2);
+  const int symm = (kind == 0 || kind == 2);
+  int status;
+  double resid;
+
+  gsl_vector_complex * diag = gsl_vector_complex_alloc(N);
+  gsl_vector_complex * below = gsl_vector_complex_alloc(noff);
+  gsl_vector_complex * above = gsl_vector_complex_alloc(noff);
+  gsl_vector_complex * rhs = gsl_vector_complex_alloc(N);
+  gsl_vector_complex * x = gsl_vector_complex_alloc(N);
+
+  for (i = 0; i < N; i++)
+    {
+      gsl_vector_complex_set(diag, i, d[i]);
+      gsl_vector_complex_set(rhs, i, b[i]);
+    }
+  for (i = 0; i < noff; i++)
+    {
+      gsl_vector_complex_set(below, i, lo[i]);
+      gsl_vector_complex_set(above, i, symm ? lo[i] : up[i]);
+    }
+
+  if (kind == 0)
+    status = gsl_linalg_complex_solve_symm_tridiag(diag, below, rhs, x);
+  else if (kind == 1)
+    status = gsl_linalg_complex_solve_tridiag(diag, above, below, rhs, x);
+  else if (kind == 2)
+    status = gsl_linalg_complex_solve_symm_cyc_tridiag(diag, below, rhs, x);
+  else
+    status = gsl_linalg_complex_solve_cyc_tridiag(diag, above, below, rhs, x);
+
+  gsl_test(status != GSL_SUCCESS, "%s: status %d", desc, status);
+  s += (status != GSL_SUCCESS);
+
+  if (expected != 0)
+    {
+      for (i = 0; i < N; i++)
+        {
+          gsl_complex xi = gsl_vector_complex_get(x, i);
+          int fr = check(GSL_REAL(xi), GSL_REAL(expected[i]), tol);
+          int fi = check(GSL_IMAG(xi), GSL_IMAG(expected[i]), tol);
+          if (fr || fi)
+            {
+              printf("%s [%lu]: %22.18g%+22.18gi   %22.18g%+22.18gi\n", desc,
+                     (unsigned long) i, GSL_REAL(xi), GSL_IMAG(xi),
+                     GSL_REAL(expected[i]), GSL_IMAG(expected[i]));
+            }
+          s += fr + fi;
+        }
+    }
+
+  resid = complex_tridiag_resid(diag, below, above, rhs, x, cyc);
+  gsl_test(resid > 1.0e-12, "%s: residual %g", desc, resid);
+  s += (resid > 1.0e-12);
+
+  gsl_vector_complex_free(x);
+  gsl_vector_complex_free(rhs);
+  gsl_vector_complex_free(above);
+  gsl_vector_complex_free(below);
+  gsl_vector_complex_free(diag);
+
+  return s;
+}
+
+int
+test_tridiag_complex(gsl_rng * r)
+{
+  int s = 0;
+  int f;
+
+  /* fixed 4x4 systems; reference solutions from numpy.linalg.solve */
+  {
+    gsl_complex d[4], b[4], off3[3], bel3[3], off4[4], bel4[4];
+    gsl_complex xsymm[4], xnonsym[4], xsymm_cyc[4], xcyc[4];
+
+    d[0] = gsl_complex_rect(4.0, 1.0);
+    d[1] = gsl_complex_rect(5.0, -2.0);
+    d[2] = gsl_complex_rect(3.0, 0.5);
+    d[3] = gsl_complex_rect(6.0, 1.0);
+
+    b[0] = gsl_complex_rect(1.0, 0.0);
+    b[1] = gsl_complex_rect(0.0, 2.0);
+    b[2] = gsl_complex_rect(3.0, 0.0);
+    b[3] = gsl_complex_rect(4.0, -1.0);
+
+    off3[0] = gsl_complex_rect(1.0, 1.0);
+    off3[1] = gsl_complex_rect(-0.5, 0.3);
+    off3[2] = gsl_complex_rect(2.0, -1.0);
+
+    bel3[0] = gsl_complex_rect(0.5, -0.2);
+    bel3[1] = gsl_complex_rect(1.0, -1.0);
+    bel3[2] = gsl_complex_rect(-1.0, 0.5);
+
+    off4[0] = gsl_complex_rect(1.0, 1.0);
+    off4[1] = gsl_complex_rect(-0.5, 0.3);
+    off4[2] = gsl_complex_rect(2.0, -1.0);
+    off4[3] = gsl_complex_rect(0.7, 0.2);
+
+    bel4[0] = gsl_complex_rect(0.5, -0.2);
+    bel4[1] = gsl_complex_rect(1.0, -1.0);
+    bel4[2] = gsl_complex_rect(-1.0, 0.5);
+    bel4[3] = gsl_complex_rect(-0.3, 0.8);
+
+    xsymm[0] = gsl_complex_rect(0.31640306985849015, -0.12173324429889956);
+    xsymm[1] = gsl_complex_rect(-0.10840780819787595, 0.2789377155349841);
+    xsymm[2] = gsl_complex_rect(0.8386298418526767, 0.11552594437213234);
+    xsymm[3] = gsl_complex_rect(0.34732065363901343, -0.12329045008843358);
+
+    xnonsym[0] = gsl_complex_rect(0.3323873564432506, -0.14872836904600195);
+    xnonsym[1] = gsl_complex_rect(-0.10787583753912369, 0.37040195727988084);
+    xnonsym[2] = gsl_complex_rect(0.5613541880543651, 0.19065212416461863);
+    xnonsym[3] = gsl_complex_rect(0.7256772035393914, -0.3026170289003259);
+
+    xsymm_cyc[0] = gsl_complex_rect(0.2587812457601201, -0.10990116356328511);
+    xsymm_cyc[1] = gsl_complex_rect(-0.09869298872205828, 0.2887742434088166);
+    xsymm_cyc[2] = gsl_complex_rect(0.8510052742937149, 0.0908777179462987);
+    xsymm_cyc[3] = gsl_complex_rect(0.31671168043439396, -0.10371454611516684);
+
+    xcyc[0] = gsl_complex_rect(0.2922219067988632, -0.3002134305161132);
+    xcyc[1] = gsl_complex_rect(-0.10359829074298238, 0.3817107148458363);
+    xcyc[2] = gsl_complex_rect(0.5693805997273235, 0.15602647803102626);
+    xcyc[3] = gsl_complex_rect(0.6843193542013873, -0.276879692672086);
+
+    f = test_tridiag_complex_fixed("  complex symm tridiag", d, off3, off3, b, xsymm, 4, 0, 1.0e-12);
+    gsl_test(f, "  complex symmetric tridiagonal solve");
+    s += f;
+
+    f = test_tridiag_complex_fixed("  complex nonsym tridiag", d, bel3, off3, b, xnonsym, 4, 1, 1.0e-12);
+    gsl_test(f, "  complex nonsymmetric tridiagonal solve");
+    s += f;
+
+    f = test_tridiag_complex_fixed("  complex symm cyc tridiag", d, off4, off4, b, xsymm_cyc, 4, 2, 1.0e-12);
+    gsl_test(f, "  complex symmetric cyclic tridiagonal solve");
+    s += f;
+
+    f = test_tridiag_complex_fixed("  complex cyc tridiag", d, bel4, off4, b, xcyc, 4, 3, 1.0e-12);
+    gsl_test(f, "  complex nonsymmetric cyclic tridiagonal solve");
+    s += f;
+  }
+
+  /* random diagonally dominant systems: residual check only */
+  {
+    size_t N;
+
+    for (N = 2; N <= 8; N++)
+      {
+        gsl_complex * d = (gsl_complex *) malloc(N * sizeof(gsl_complex));
+        gsl_complex * lo = (gsl_complex *) malloc(N * sizeof(gsl_complex));
+        gsl_complex * up = (gsl_complex *) malloc(N * sizeof(gsl_complex));
+        gsl_complex * b = (gsl_complex *) malloc(N * sizeof(gsl_complex));
+        size_t i;
+        int kind;
+
+        for (i = 0; i < N; i++)
+          {
+            d[i] = gsl_complex_rect(8.0 + 2.0 * gsl_rng_uniform(r),
+                                    2.0 * (gsl_rng_uniform(r) - 0.5));
+            b[i] = gsl_complex_rect(2.0 * (gsl_rng_uniform(r) - 0.5),
+                                    2.0 * (gsl_rng_uniform(r) - 0.5));
+          }
+        for (i = 0; i < N; i++)
+          {
+            lo[i] = gsl_complex_rect(gsl_rng_uniform(r) - 0.5,
+                                     gsl_rng_uniform(r) - 0.5);
+            up[i] = gsl_complex_rect(gsl_rng_uniform(r) - 0.5,
+                                     gsl_rng_uniform(r) - 0.5);
+          }
+
+        for (kind = 0; kind < 4; kind++)
+          {
+            char desc[64];
+            if (kind >= 2 && N < 3)
+              continue;
+            sprintf(desc, "  complex tridiag kind=%d N=%lu", kind, (unsigned long) N);
+            f = test_tridiag_complex_fixed(desc, d, lo, up, b, 0, N, kind, 1.0e-12);
+            gsl_test(f, "%s random", desc);
+            s += f;
+          }
+
+        free(b);
+        free(up);
+        free(lo);
+        free(d);
+      }
+  }
+
+  /* error paths */
+  {
+    gsl_vector_complex * d3 = gsl_vector_complex_alloc(3);
+    gsl_vector_complex * o2 = gsl_vector_complex_alloc(2);
+    gsl_vector_complex * r3 = gsl_vector_complex_alloc(3);
+    gsl_vector_complex * r4 = gsl_vector_complex_alloc(4);
+    gsl_vector_complex * x3 = gsl_vector_complex_alloc(3);
+    gsl_vector_complex * d2 = gsl_vector_complex_alloc(2);
+    gsl_vector_complex * o2b = gsl_vector_complex_alloc(2);
+    gsl_vector_complex * r2 = gsl_vector_complex_alloc(2);
+    gsl_vector_complex * x2 = gsl_vector_complex_alloc(2);
+    int status;
+
+    status = gsl_linalg_complex_solve_symm_tridiag(d3, o2, r4, x3);
+    gsl_test(status != GSL_EBADLEN, "  complex symm tridiag size mismatch returns GSL_EBADLEN");
+
+    status = gsl_linalg_complex_solve_cyc_tridiag(d2, o2b, o2b, r2, x2);
+    gsl_test(status != GSL_EBADLEN, "  complex cyclic tridiag N<3 returns GSL_EBADLEN");
+
+    gsl_vector_complex_set(d3, 0, gsl_complex_rect(0.0, 0.0));
+    status = gsl_linalg_complex_solve_symm_tridiag(d3, o2, r3, x3);
+    gsl_test(status != GSL_EZERODIV, "  complex symm tridiag zero pivot returns GSL_EZERODIV");
+
+    gsl_vector_complex_free(x2);
+    gsl_vector_complex_free(r2);
+    gsl_vector_complex_free(o2b);
+    gsl_vector_complex_free(d2);
+    gsl_vector_complex_free(x3);
+    gsl_vector_complex_free(r4);
+    gsl_vector_complex_free(r3);
+    gsl_vector_complex_free(o2);
+    gsl_vector_complex_free(d3);
+  }
+
+  return s;
+}
+
 int
 test_bidiag_decomp_dim(const gsl_matrix * m, double eps)
 {
@@ -3433,6 +3727,7 @@ main(void)
   gsl_test(test_TDS_cyc_solve(),         "Tridiagonal symmetric cyclic solve");
   gsl_test(test_TDN_solve(),             "Tridiagonal nonsymmetric solve");
   gsl_test(test_TDN_cyc_solve(),         "Tridiagonal nonsymmetric cyclic solve");
+  gsl_test(test_tridiag_complex(r),      "Complex tridiagonal solves");
 
   gsl_matrix_free(m11);
   gsl_matrix_free(m35);

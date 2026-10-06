@@ -332,6 +332,7 @@ set(GSL_SOURCES
     linalg/multiply.c
     linalg/exponential.c
     linalg/tridiag.c
+    linalg/tridiagcomplex.c
     linalg/lu.c
     linalg/lu_band.c
     linalg/luc.c

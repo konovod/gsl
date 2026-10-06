@@ -820,6 +820,10 @@ int gsl_linalg_solve_symm_tridiag (const gsl_vector * diag,
                                    const gsl_vector * offdiag,
                                    const gsl_vector * b,
                                    gsl_vector * x);
+int gsl_linalg_complex_solve_symm_tridiag (const gsl_vector_complex * diag,
+                                   const gsl_vector_complex * offdiag,
+                                   const gsl_vector_complex * b,
+                                   gsl_vector_complex * x);
 
 /* Linear solve for a nonsymmetric tridiagonal system.
 
@@ -836,6 +840,11 @@ int gsl_linalg_solve_tridiag (const gsl_vector * diag,
                                    const gsl_vector * belowdiag,
                                    const gsl_vector * b,
                                    gsl_vector * x);
+int gsl_linalg_complex_solve_tridiag (const gsl_vector_complex * diag,
+                                   const gsl_vector_complex * abovediag,
+                                   const gsl_vector_complex * belowdiag,
+                                   const gsl_vector_complex * b,
+                                   gsl_vector_complex * x);
 
 
 /* Linear solve for a symmetric cyclic tridiagonal system.
@@ -853,6 +862,10 @@ int gsl_linalg_solve_symm_cyc_tridiag (const gsl_vector * diag,
                                        const gsl_vector * offdiag,
                                        const gsl_vector * b,
                                        gsl_vector * x);
+int gsl_linalg_complex_solve_symm_cyc_tridiag (const gsl_vector_complex * diag,
+                                       const gsl_vector_complex * offdiag,
+                                       const gsl_vector_complex * b,
+                                       gsl_vector_complex * x);
 
 /* Linear solve for a nonsymmetric cyclic tridiagonal system.
 
@@ -870,6 +883,11 @@ int gsl_linalg_solve_cyc_tridiag (const gsl_vector * diag,
                                   const gsl_vector * belowdiag,
                                   const gsl_vector * b,
                                   gsl_vector * x);
+int gsl_linalg_complex_solve_cyc_tridiag (const gsl_vector_complex * diag,
+                                  const gsl_vector_complex * abovediag,
+                                  const gsl_vector_complex * belowdiag,
+                                  const gsl_vector_complex * b,
+                                  gsl_vector_complex * x);
 
 
 /* Bidiagonal decomposition */
