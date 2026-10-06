@@ -32,9 +32,9 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 25320 | 2009-01-14 | - | Accuracy problem | none | **rejected** — feature: no Fresnel in the tree; importing it is new API/algorithm | Import fresnel, bugs on GSL Extension Fresnel |
 | 28267 | 2009-12-11 | - | Accuracy problem | source hyperg1F1.c | **partial** — same defect as #43809 (52505315d); transition region `x ~ a^2` still loses digits | poor convergence region for gsl_sf_hyperg_1F1 |
 | 29834 | 2010-05-09 | - | Runtime error | source error_cblas_v2.h | **fixed** (inherited) — the report's cblas checking macros already live in `cblas/error_cblas*.h`; the wrappers check dimensions | insufficient argument checking in blas wrapper |
-| 30324 | 2010-07-02 | - | Accuracy problem | none | **deferred** — feature: extend 2F1 to x < -1 by transformation; new domain/algorithm, out of eligibility | improve range of 2F1 |
+| 30324 | 2010-07-02 | - | Accuracy problem | none | **fixed** — 2F1 continued to x < -1 by the Pfaff transformations, real and conjugate (b99ec4e7c, cfe9311cd) | improve range of 2F1 |
 | 30510 | 2010-07-21 | - | Runtime error | none | **fixed** — U(a,b,x) for x < 0, integer b, non-integer a, via the DLMF 13.2.9 limit (00859f816) | problems with hyperg_U(a,b,x) for x<0 |
-| 30540 | 2010-07-24 | feature | Accuracy problem | partial bug-ode2.c +2 | rejected — v1 runs three fixed iterations (secular energy drift reproduced); v2 rk2imp/rk4imp already check convergence (modnewton1) | please, add convergence checks in rk4imp/rk2imp |
+| 30540 | 2010-07-24 | feature | Accuracy problem | partial bug-ode2.c +2 | **fixed** — v1 rk2imp/rk4imp iterate to convergence; a non-converged step is rejected through yerr (fa1622e11) | please, add convergence checks in rk4imp/rk2imp |
 | 30583 | 2010-07-28 | doc | Documentation | none | **fixed** — Legendre/Carlson relations and the negative-parameter (imaginary-modulus) transformation documented (b0eec8bc6) | improve documentation for Elliptic functions |
 | 30885 | 2010-08-27 | - | Runtime error | none | **fixed** — Coulomb F recurrence rescaled, no overflow (25841970e) | nans from gsl_sf_coulomb_wave_FG_e(1.2693881947287221e-07, 0.0, lam_F=37, lam_G=36) |
 | 30947 | 2010-09-02 | - | - | clean 0001-Fixed-step-size-control-object.patch | rejected — new public API for the legacy v1 interface; v2 already provides evolve_apply_fixed_step/driver_apply_fixed_step | Please, include fixed step size control object for ode suite |
@@ -224,7 +224,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 67774 | 2025-12-05 | feature | Accuracy problem | none | rejected — extended domain/API (arctan integral for negative inputs); out of scope | Feature: arctan integral is also defined for negative inputs |
 | 68068 | 2026-02-19 | bug | Accuracy problem | none | **fixed** - quad_golden stored f_m in f_upper instead of f_lower (4260778fe) | Bug: incorrect straddling of area of convergence in quad_golden |
 | 68073 | 2026-02-20 | bug | Documentation | none | **fixed** — gsl_stats_select comment corrected from "k-th largest" to "k-th smallest" (521bed61d) | Bug: incorrect inline code comment on BASE FUNCTION(gsl_stats,select) |
-| 68098 | 2026-02-27 | feature | - | none | rejected — new behaviour/API (correlation div-by-zero handling); out of scope | Feature: division by zero when data is perfectly correlated |
+| 68098 | 2026-02-27 | feature | - | none | **fixed** — |rho| >= 1 rejected with GSL_EDOM in the bivariate Gaussian pdf and generator (6da0c08f3) | Feature: division by zero when data is perfectly correlated |
 | 68283 | 2026-04-26 | - | - | none | rejected — proposed guards break the `gsl_stats` equivalence in `rstat_test` | Correction to gsl_rstat_skew and gsl_rstat_kurtosis |
 | 68312 | 2026-05-07 | bug | Accuracy problem | none | **fixed** — same recurrence as #43256 (59fc479e2) | Wigner symbols inaccurate for large j |
 | 68367 | 2026-05-19 | feature | - | source invelljac.c | rejected — new API (inverse Jacobi elliptic integrals); out of scope | Feature: inverse Jacobi elliptic integrals |
@@ -244,7 +244,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 
 ## Future work backlog
 
-The first stage is complete: every open item is classified.  The 41 items
+The first stage is complete: every open item is classified.  The items
 below were **rejected or deferred under the eligibility rule that admitted
 only bug fixes, documentation corrections and test-quality improvements** -
 they are not defects, and most are wanted work nonetheless.  They are kept
@@ -270,6 +270,11 @@ API that add no new symbol: `#66800`, `#66834`, `#66842`, `#66850`,
 claimed to handle, so all six are now fixed; they are no longer listed in
 the table.  See `FORKNEWS`.
 
+Three further deferred items were taken once the filter was widened again:
+`#30324` (2F1 continued to `x < -1`), `#30540` (convergence checks in the
+v1 `rk2imp`/`rk4imp`) and `#68098` (the bivariate Gaussian `rho` range).
+They are no longer listed in the table.  See `FORKNEWS`.
+
 `kind`: `feat` = new feature/API, `perf` = performance only, `test` =
 test-quality request, `doc` = documentation matter.  `patch`: `clean`/
 `partial`/`source` if an attachment was collected by the sweep, `-` if none;
@@ -293,7 +298,6 @@ test-quality request, `doc` = documentation matter.  `patch`: `clean`/
 | 66695 | feat | clean | Feagin and Verner high-order ODE solvers |
 | 32257 | feat | - | integration routines imported from quadrule |
 | 67774 | feat | - | arctan integral extended to negative inputs |
-| 68098 | feat | - | correlation division-by-zero handling |
 | 41527 | feat | - | multimin functions return error codes |
 | 45782 | feat | - | configurable derivative epsilon |
 | 63519 | feat | - | `gsl_root_fsolver_set` variant returning `GSL_EINVAL` without the handler (per-call `_with_values`, #66576) |
@@ -304,10 +308,8 @@ test-quality request, `doc` = documentation matter.  `patch`: `clean`/
 | 65728 | feat | - | complex sparse matrix-vector product, resize, accumulating `_set` |
 | 68549 | feat | - | uniform argument lists across the distribution functions (breaking) |
 | 47402 | feat | - | Mathieu functions - library/test redesign |
-| 30540 | feat | partial | convergence checks in the v1 `rk4imp`/`rk2imp` (done in v2) |
 | 46677 | feat | - | port the Wigner d-matrix (`gsl_sf_wigner_drot`) from `contrib/` |
 | 65932 | feat | - | see #60457 (complex tridiagonal solvers) |
-| 30324 | feat | - | extend 2F1 to `x < -1` by transformation |
 | 21828 | perf | - | `gsl_fdfsolver_lmsder` - close the gap to netlib minpack |
 | 31109 | perf | - | `ode-initval/bsimp` order control |
 | 66742 | doc | clean | GAMS classification across 177 files |

@@ -1516,9 +1516,10 @@ Full CTest suite: 56/56 after the changes.
 Reviewed 2026-10-03 against the built `build-cmake/gsl.dll` (values read
 through ctypes) with independent references from mpmath at 40-60 digits.
 The reports were retrieved through the Wayback Machine, as the tracker was
-not reachable directly.  Three of the reports are fixed by code changes, one
-is partial, one is deferred, one was already fixed and one is not
-reproducible.
+not reachable directly.  Four of the reports are fixed by code changes, one
+is partial (the `c = a+b` case of #21835), one was already fixed and one is
+not reproducible.  #30324, deferred here, was taken later once the filter
+was widened.
 
 ### #50711, #53905, #21835 (x >= 1 half), #39056 (Wolpert) — one defect, fixed
 
@@ -1557,12 +1558,16 @@ documents this region as `GSL_EMAXITER`.  Adding the A&S 15.3.10 `c = a+b`
 formula is a separate, larger change and was not attempted; #21835 is
 recorded as **partial**.
 
-### #30324 — extend 2F1 to x < -1 — deferred (feature)
+### #30324 — extend 2F1 to x < -1 — fixed
 
 The report proposes the MathWorld/A&S transformations to cover `x < -1`,
-which GSL rejects at `hyperg_2F1.c` (`x < -1.0`).  The manual promises only
-`|x| < 1`, so this adds a new domain and a new evaluation path: a feature,
-outside the eligibility rule for this review.  Deferred, no code change.
+which GSL rejected at `hyperg_2F1.c` (`x < -1.0`).  Taken once the
+eligibility filter was widened: `gsl_sf_hyperg_2F1_e()` now uses the two
+Pfaff transformations [DLMF 15.8.1 and 15.8.2] to map `x < -1` to
+`z = x/(x-1)` in `(1/2, 1)`, and `gsl_sf_hyperg_2F1_conj_e()` does the same
+by summing the transformed (non-conjugate) pair with a new complex Gauss
+series.  The description is in `FORKNEWS`; commits `b99ec4e7c` and
+`cfe9311cd`.
 
 ### #30510 — `hyperg_U(a,b,x)` for x < 0 — fixed
 
@@ -2395,9 +2400,10 @@ Reviewed 2026-10-04 against the built `build-cmake/gsl.dll` (MSVC x64),
 with the reporters' own programs compiled against it.  Two reports are
 real latent division-by-zero defects and are fixed; one final-time
 rounding defect is fixed in both ODE interfaces; one is already fixed
-upstream; three are feature-shaped or too deep to fix and are recorded
-as rejected.  The fixes are commits `8640b846e` and `dda917296`; the
-full `ctest` suite is 56/56.
+upstream; the three remaining were feature-shaped or too deep to fix and
+were recorded as rejected.  Of those, `#30540` was taken later once the
+filter was widened.  The fixes are commits `8640b846e`, `dda917296` and
+`fa1622e11`; the full `ctest` suite is 56/56.
 
 ### `#42219` + `#42220` — division by zero at a root — fixed
 
@@ -2500,7 +2506,7 @@ time-boxed investigation - the cause is a numerical study of the `fvv`
 step and the acceleration, not a wrong-value defect.  Recorded
 `[rejected]`; the `#if 0` block is left as upstream has it.
 
-### `#30540` — convergence checks in `rk4imp`/`rk2imp` — rejected
+### `#30540` — convergence checks in `rk4imp`/`rk2imp` — fixed (taken later)
 
 The patch targets the legacy `ode-initval` (v1) steppers, which run a
 fixed three iterations and carry the comment "This method does not
@@ -2510,13 +2516,18 @@ error grows from `1.03e-6` (t in [0, 1000]) through `2.34e-6`
 ([4000, 5000]) to `4.07e-6` ([9000, 10000]) at `h = 0.1`, i.e. secular
 drift rather than the bounded error a symplectic method should show.
 
-However, the maintained `ode-initval2` steppers `rk2imp`/`rk4imp`
-already perform a convergence check (`modnewton1_solve`, the
-Hairer-Wanner criterion, at most seven iterations), which is exactly
-what the report asks for, and the manual recommends v2 over v1.  The
-patch is an accuracy/algorithm enhancement to a superseded module
-(categorised "feature" in the triage), so it is rejected under the
-eligibility rule; no code change.
+The maintained `ode-initval2` steppers already check convergence, so
+this was rejected as an enhancement to a superseded module.  It was
+taken later once the filter was widened: both v1 steppers now iterate
+until the stage increment satisfies
+`|delta| <= GSL_DBL_EPSILON (|Y| + 1)` (cap 1000), and a step that does
+not converge leaves `y` untouched and reports `yerr = GSL_DBL_MAX` so
+the adaptive control rejects it.  A hard failure was rejected because
+v1 `gsl_odeiv_evolve_apply()` does not retry on stepper failure and
+because `gear2` uses `rk4imp` as its primer.  On the fixed-step
+Henon-Heiles regression the energy error is now bounded (rk4imp about
+`1.0e-9`, rk2imp about `1.6e-5`).  Description in `FORKNEWS`; commit
+`fa1622e11`.
 
 ### `#30947` — fixed step size control object — rejected
 
@@ -2830,9 +2841,11 @@ Reviewed 2026-10-04 from the offline dossiers under
 `temp/savannah-store/dossiers/` and the `bug-gsl` mbox threads.  This is
 the tail the eligibility rule does not admit, recorded in one place so
 the index has no un-triaged item left.  **No code, test or documentation
-change follows from any of them.**  The detail is in `FORKNEWS` under
-"meta: the remaining feature, performance and API requests"; the groups
-below are the shape of the request, not a per-bug essay.
+change follows from any of them** at the time of writing; several were
+taken later once the filter was widened (the six special cases, `#68098`
+and some performance items; see `FORKNEWS`).  The detail is in `FORKNEWS`
+under "meta: the remaining feature, performance and API requests"; the
+groups below are the shape of the request, not a per-bug essay.
 
 * New distributions/generators (new public API): `#24252`, `#24871`,
   `#59900`, `#66767`, `#66775`, `#66816`, `#66949`.
@@ -2840,6 +2853,10 @@ below are the shape of the request, not a per-bug essay.
   `#68367`.
 * New special cases or API extensions: `#41527`, `#45782`, `#66800`,
   `#66834`, `#66842`, `#66850`, `#66922`, `#67359`, `#67774`, `#68098`.
+  **Partly reversed:** the six among them (`#66800`, `#66834`, `#66842`,
+  `#66850`, `#66922`, `#67359`) were taken as correctness fixes, and
+  `#68098` was taken later as an argument-range fix (`6da0c08f3`); the
+  rest remain out of scope.
 * Breaking/behaviour change: `#68549`.
 * Documentation/test/refactor with no patch, or a reorganisation:
   `#66742`, `#66826`, `#66844`, `#66874`, `#66877`, `#66880`, `#66886`.
