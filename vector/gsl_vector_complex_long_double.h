@@ -182,6 +182,7 @@ int gsl_vector_complex_long_double_add_constant (gsl_vector_complex_long_double 
 int gsl_vector_complex_long_double_axpby (const gsl_complex_long_double alpha, const gsl_vector_complex_long_double * x, const gsl_complex_long_double beta, gsl_vector_complex_long_double * y);
 
 int gsl_vector_complex_long_double_div_real (gsl_vector_complex_long_double * a, const gsl_vector_long_double * b);
+int gsl_vector_complex_long_double_conjugate (gsl_vector_complex_long_double * a);
 
 INLINE_DECL gsl_complex_long_double gsl_vector_complex_long_double_get (const gsl_vector_complex_long_double * v, const size_t i);
 INLINE_DECL void gsl_vector_complex_long_double_set (gsl_vector_complex_long_double * v, const size_t i, gsl_complex_long_double z);
