@@ -205,6 +205,10 @@ One line per change: date | tag | description | commit(s).
   2026-10-06 | [upstream] | cdf: inverse binomial and Poisson distributions   | e88a81c75
   2026-10-06 | [rejected] | randist: gamma-tail distribution (a < 1 branch wrong) | - (see below)
 
+  2026-10-06 | [upstream] | specfunc: complex exponential integrals E_n(z)   | c01e6b922
+  2026-10-06 | [upstream] | specfunc: test the complex exponential integrals  | 4416fe729
+  2026-10-06 | [upstream] | doc: complex exponential integrals                | ffad9c422
+
 
 ## [upstream] rng: make the random() generators produce the documented sequences
 
@@ -5475,5 +5479,57 @@ No change is made.  A correct truncated-gamma generator would be a
 separate feature, and the posted code is not a usable basis for it.
 
 See Savannah bug #24252.
+
+
+## [upstream] specfunc: complex exponential integrals E_n(z)
+
+Commits: c01e6b922, 4416fe729, ffad9c422
+
+The library had real exponential integrals only.  Savannah bug #24871
+(2008) asks for a complex argument and points at D. E. Amos,
+"Computation of Exponential Integrals of a Complex Argument", ACM
+Trans. Math. Software 16(2), 169-177, and Algorithm 683, ibid. 178-182
+(1990).  The new `specfunc/expint_complex.c` adds
+
+    gsl_sf_complex_expint_{E1,En,E1_scaled,En_scaled,Ei}_e
+
+where `En(z)` is the analytic continuation of the real integral to the
+cut plane `-pi < arg z <= pi` (negative real axis approached from
+above), `_scaled` is `exp(z) En(z)`, and `Ei` uses
+`Ei(z) = -E1(-z) + (log z - log(-z))`.
+
+The implementation is a C translation of the double-precision
+subroutines of the algorithm: a power series for `|z| <= 2`, a backward
+(Miller) recurrence for the confluent hypergeometric representation
+outside a strip about the negative real axis, and Taylor continuation
+inside it.  The original sequence interface is reduced to a single
+order, which is all the public API exposes; with a sequence length of
+one the continuation only ever steps upward from `min(n, round(|z|))`,
+so the downward-continuation branch is not needed.  The `I1MACH` /
+`D1MACH` constants are expressed with `float.h`, and `DPSIXN` is
+replaced by the `gsl_sf_psi_int` already in the library.  The Fortran
+error flags map to `GSL_EDOM`, `GSL_EUNDRFLW`, `GSL_EOVRFLW`,
+`GSL_ELOSS`, `GSL_EMAXITER` and `GSL_EFAILED`; a NaN argument
+propagates, `z -> +inf` on the real axis gives zero, and any other
+non-finite argument is a domain error.
+
+Verification: the routine agrees with independent 40-digit `mpmath`
+values to a maximum relative error of 1.1e-14 over a random sweep of
+8000 points spanning the series region, both half planes, the Taylor
+strip, both sides of the cut, large `|z|` and orders 1..60, and to the
+same accuracy on the hardcoded grid.  On the negative real axis the
+real part matches the real `E_n(x)` and the imaginary part the jump
+`-pi (-x)^(n-1)/(n-1)!`; `Ei` matches `gsl_sf_expint_Ei` on the
+positive axis.  The recurrence `n En+1(z) + z En(z) = exp(-z)` and the
+scaling identity hold.  Negative control: mutating the sign in the
+contiguous relation fails 31 of the new checks (30 vectors plus the
+aggregate), while the unmutated tree is clean.  Full ctest 56/56 on
+MSVC x64.
+
+Files: `specfunc/expint_complex.c`, `specfunc/gsl_sf_expint.h`,
+`specfunc/Makefile.am`, `cmake/gsl_sources.cmake`, `specfunc/test_sf.c`,
+`specfunc/test_sf.h`, both manuals.
+
+See Savannah bug #24871.
 
 
