@@ -2265,12 +2265,12 @@ already consistent, and `NaN` is the correct result for an estimator
 that is undefined with one observation.  Both manuals now state the
 `n >= 2` requirement (commit `65bc71664`).
 
-### `#65932` — complex tridiagonal solvers — deferred
+### `#65932` — complex tridiagonal solvers — fixed
 
-A duplicate of #60457, which is a feature request for complex
-tridiagonal solvers: new API and new algorithms, excluded by the
-eligibility rule.  It was already recorded as feature-shaped in the
-triage index and is left deferred.
+A duplicate of #60457, a feature request for complex tridiagonal
+solvers.  Both were taken once the filter admitted new public API; the
+four solvers are in `linalg/tridiagcomplex.c` (commit `dd5e0a0f2`), with
+numpy reference solutions and residual checks.  See `FORKNEWS`.
 
 ### `#63519` — `gsl_root_fsolver_set` straddle error — rejected
 
@@ -2854,9 +2854,10 @@ essay.
   taken later as a port of Amos Algorithm 683 (`c01e6b922`); see
   `FORKNEWS`.
 * New algorithms/solvers: `#32257`, `#66695`, `#57173`.
-  **Partly reversed:** `#66573` (`gsl_vector_complex_conjugate()`) and
-  `#68367` (inverse Jacobi elliptic functions) were taken once the filter
-  admitted new public API; see `FORKNEWS`.
+  **Partly reversed:** `#66573` (`gsl_vector_complex_conjugate()`),
+  `#68367` (inverse Jacobi elliptic functions) and `#60457`/`#65932`
+  (complex tridiagonal solvers) were taken once the filter admitted new
+  public API; see `FORKNEWS`.
 * New special cases or API extensions: `#41527`, `#45782`, `#66800`,
   `#66834`, `#66842`, `#66850`, `#66922`, `#67359`, `#67774`, `#68098`.
   **Partly reversed:** the six among them (`#66800`, `#66834`, `#66842`,

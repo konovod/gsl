@@ -9,10 +9,10 @@ Scratch index, not part of the fork's record of changes. Verdicts are curated fr
 
 | status | count |
 |---|---:|
-| fixed | 119 |
+| fixed | 121 |
 | partial | 5 |
-| rejected | 90 |
-| deferred | 4 |
+| rejected | 89 |
+| deferred | 3 |
 | superseded | 1 |
 | not reviewed | 0 |
 
@@ -167,7 +167,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 59914 | 2021-01-20 | - | - | none | rejected — no defect: a success story offering a build write-up; the fork's CMake+MSVC build and Windows CI/DLL workflows already cover the need | Native build of GSL-2.5 on windows 10 |
 | 60026 | 2021-02-09 | - | - | none | rejected — feature: new PRNG algorithm and API (MIXMAX); no defect alleged | Incorporate MIXMAX random number extension into GSL |
 | 60371 | 2021-04-11 | bug | Runtime error | partial bug_interp2d_domain_error_handling.c +1 | **fixed** — interp2d domain error writes NaN (2b4e2f1e5) | Interpolation domain error handling |
-| 60457 | 2021-04-26 | feature | - | clean 0001-ignore-test-files-and-doc-examples.patch +1 | rejected — new API/algorithm (complex tridiagonal solvers); feature | Feature request: complex tridiagonal solvers |
+| 60457 | 2021-04-26 | feature | - | clean 0001-ignore-test-files-and-doc-examples.patch +1 | **fixed** — four complex tridiagonal solvers in `linalg/tridiagcomplex.c`, verified against numpy and the residual (dd5e0a0f2, ee6eee516) | Feature request: complex tridiagonal solvers |
 | 60635 | 2021-05-19 | - | Accuracy problem | inline | **fixed** — const updated to CODATA 2022 (db695c8f2) | physical constants may need updating |
 | 60741 | 2021-06-07 | bug | Runtime error | clean bug_60741.patch | **fixed** — lambert_W0 small arguments (fb2b4e4cd) | Inaccurate Results for Lambert W function |
 | 61342 | 2021-10-16 | bug | Runtime error | inline | rejected — not-a-bug: test_c11 under -ffast-math | test_c11 test fails on ppc64 and sparc |
@@ -181,7 +181,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 65760 | 2024-05-19 | bug | Accuracy problem | clean erfc.c.patch | **fixed** — erfc/log_erfc overflow rewritten (708791c25) | gsl_sf_log_erfc (and gsl_sf_erc) return NaN for infinite or very large finite arguments |
 | 65868 | 2024-06-11 | - | - | clean 0001-bspline-Add-missing-definition-for-function.patch | **fixed** — gsl_bspline_eval_nonzero declared (ef3940132) | Missing definition for gsl_bspline_eval_nonzero |
 | 65912 | 2024-06-23 | bug | - | clean 0001-Correct-GSL_SET_COMPLEX-if-native-complex-available.patch +1 | **fixed** — GSL_SET_COMPLEX signed zero / non-finite (631da98f8) | GSL_SET_COMPLEX is wrong if complex.h has no support for imaginary numbers |
-| 65932 | 2024-06-30 | - | - | none | **deferred** — duplicate of feature #60457 (complex tridiagonal solvers); new API out of scope | Complex tridiagonal solvers - patch ignored? |
+| 65932 | 2024-06-30 | - | - | none | **fixed** - duplicate of #60457; the complex tridiagonal solvers are implemented (dd5e0a0f2) | Complex tridiagonal solvers - patch ignored? |
 | 66026 | 2024-07-26 | - | Runtime error | partial bug_66026.patch +1 | **fixed** — LU_decomp_L3 identity-initialises ipiv (d73ba5300) | gsl_linalg_LU_decomp using uninitialized memory |
 | 66128 | 2024-08-27 | doc | Documentation | clean specfunc.rst.patch | **fixed** — specfunc.rst result/val typo (066f5b747) | documentation of type gsl_sf_result: confused result and val |
 | 66573 | 2024-12-18 | feature | - | clean vector_complex_conjugate.patch | **fixed** — `gsl_vector_complex_conjugate()` for the float, double and long double complex types, with a strided test (ec04a1312, d127fe3b2) | Feature: gsl_vector_complex_conjugate() |
@@ -287,7 +287,8 @@ the table.
 Two further new-API items have since been taken: `#66573`
 (`gsl_vector_complex_conjugate()`) and `#68367` (inverse Jacobi
 elliptic functions, where the posted prototype misused the modulus).
-They are no longer listed in the table; see `FORKNEWS`.
+`#60457` and its duplicate `#65932` (complex tridiagonal solvers) were
+taken as well.  They are no longer listed in the table; see `FORKNEWS`.
 
 `kind`: `feat` = new feature/API, `perf` = performance only, `test` =
 test-quality request, `doc` = documentation matter.  `patch`: `clean`/
@@ -297,7 +298,6 @@ test-quality request, `doc` = documentation matter.  `patch`: `clean`/
 | # | kind | patch | what it would add |
 |---|---|---|---|
 | 57173 | feat | - | zeta function for complex arguments |
-| 60457 | feat | clean | complex tridiagonal solvers (also #65932) |
 | 66574 | feat | clean | complex SVD/QR suite (Householder, Givens, bidiag) |
 | 66575 | feat | clean | extension of the complex SVD |
 | 66695 | feat | clean | Feagin and Verner high-order ODE solvers |
@@ -313,7 +313,6 @@ test-quality request, `doc` = documentation matter.  `patch`: `clean`/
 | 68549 | feat | - | uniform argument lists across the distribution functions (breaking) |
 | 47402 | feat | - | Mathieu functions - library/test redesign |
 | 46677 | feat | - | port the Wigner d-matrix (`gsl_sf_wigner_drot`) from `contrib/` |
-| 65932 | feat | - | see #60457 (complex tridiagonal solvers) |
 | 31109 | perf | - | `ode-initval/bsimp` order control |
 | 66742 | doc | clean | GAMS classification across 177 files |
 | 66886 | doc | clean | refactor of `specfunc/trig.c` |
