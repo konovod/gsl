@@ -70,6 +70,62 @@ Ei(x)
 .. Domain: x != 0.0
 .. Exceptional Return Values: GSL_EOVRFLW, GSL_EUNDRFLW
 
+Complex Exponential Integrals
+-----------------------------
+.. index::
+   single: exponential integrals, complex
+   single: E1(z)
+   single: En(z)
+   single: Ei(z)
+
+.. function:: int gsl_sf_complex_expint_E1_e (double zr, double zi, gsl_sf_result * re, gsl_sf_result * im)
+              int gsl_sf_complex_expint_En_e (int n, double zr, double zi, gsl_sf_result * re, gsl_sf_result * im)
+
+   These routines compute the exponential integral :math:`E_n(z)` of order
+   :data:`n` for the complex argument :math:`z = zr + i zi`,
+
+   .. math:: E_n(z) := \int_1^\infty dt \exp(-z t)/t^n
+
+   continued analytically to the cut plane :math:`-\pi < \arg(z) \le \pi`,
+   with the branch cut along the negative real axis approached from above.
+   The order must satisfy :math:`n \ge 1`.
+   :math:`z = 0` with :math:`n = 1` is a branch point and is a domain
+   error; for :math:`n > 1` the value at :math:`z = 0` is
+   :math:`1/(n-1)`.
+
+   The real and imaginary parts are returned in :data:`re` and :data:`im`.
+   A NaN component of :data:`z` propagates, while :math:`z \to +\infty`
+   along the real axis has the limit zero.
+
+.. Exceptional Return Values: GSL_EDOM, GSL_EOVRFLW, GSL_EUNDRFLW, GSL_ELOSS, GSL_EMAXITER, GSL_EFAILED
+
+.. function:: int gsl_sf_complex_expint_E1_scaled_e (double zr, double zi, gsl_sf_result * re, gsl_sf_result * im)
+              int gsl_sf_complex_expint_En_scaled_e (int n, double zr, double zi, gsl_sf_result * re, gsl_sf_result * im)
+
+   These routines compute the scaled exponential integral
+   :math:`\exp(z) E_n(z)`, which removes the exponential behaviour of
+   :math:`E_n(z)` in both half-planes.
+
+.. Exceptional Return Values: GSL_EDOM, GSL_EOVRFLW, GSL_EUNDRFLW, GSL_ELOSS, GSL_EMAXITER, GSL_EFAILED
+
+.. function:: int gsl_sf_complex_expint_Ei_e (double zr, double zi, gsl_sf_result * re, gsl_sf_result * im)
+
+   This routine computes the exponential integral :math:`Ei(z)` for the
+   complex argument :math:`z = zr + i zi`,
+
+   .. math:: \hbox{Ei}(z) = - PV \left( \int_{-z}^\infty dt \exp(-t)/t \right)
+
+   with the same branch cut along the negative real axis approached from
+   above, so that :math:`Ei(x)` is real for real :math:`x > 0`.  The
+   origin is a branch point and is a domain error.
+
+.. Exceptional Return Values: GSL_EDOM, GSL_EOVRFLW, GSL_EUNDRFLW, GSL_ELOSS, GSL_EMAXITER, GSL_EFAILED
+
+The complex exponential integrals are computed with the algorithm of
+D. E. Amos, "Computation of Exponential Integrals of a Complex Argument",
+*ACM Transactions on Mathematical Software* 16(2), 169--177 (1990),
+Algorithm 683.
+
 Hyperbolic Integrals
 --------------------
 .. index::

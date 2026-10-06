@@ -8,6 +8,7 @@ Stegun, Chapter 5.  These functions are declared in the header file
 @menu
 * Exponential Integral::        
 * Ei(x)::                       
+* Complex Exponential Integrals::  
 * Hyperbolic Integrals::        
 * Ei_3(x)::                     
 * Trigonometric Integrals::     
@@ -118,6 +119,80 @@ where @math{PV} denotes the principal value of the integral.
 @comment Domain: x != 0.0
 @comment Exceptional Return Values: GSL_EOVRFLW, GSL_EUNDRFLW
 @end deftypefun
+
+
+@node Complex Exponential Integrals
+@subsection Complex Exponential Integrals
+@cindex exponential integrals, complex
+@cindex E1(z)
+@cindex En(z)
+@cindex Ei(z)
+
+@deftypefun int gsl_sf_complex_expint_E1_e (double @var{zr}, double @var{zi}, gsl_sf_result * @var{re}, gsl_sf_result * @var{im})
+@deftypefunx int gsl_sf_complex_expint_En_e (int @var{n}, double @var{zr}, double @var{zi}, gsl_sf_result * @var{re}, gsl_sf_result * @var{im})
+These routines compute the exponential integral @math{E_n(z)} of order
+@var{n} for the complex argument @math{z = zr + i zi},
+@tex
+\beforedisplay
+$$
+E_n(z) := \int_1^\infty dt \exp(-z t)/t^n
+$$
+\afterdisplay
+@end tex
+@ifinfo
+
+@example
+E_n(z) := \int_1^\infty dt \exp(-z t)/t^n
+@end example
+
+@end ifinfo
+@noindent
+continued analytically to the cut plane @math{-\pi < \arg(z) \le \pi},
+with the branch cut along the negative real axis approached from above.
+The order must satisfy @math{n \ge 1}.  @math{z = 0} with @math{n = 1} is
+a branch point and is a domain error; for @math{n > 1} the value at
+@math{z = 0} is @math{1/(n-1)}.  The real and imaginary parts are returned
+in @var{re} and @var{im}.  A NaN component of @math{z} propagates, while
+@math{z \to +\infty} along the real axis has the limit zero.
+@comment Exceptional Return Values: GSL_EDOM, GSL_EOVRFLW, GSL_EUNDRFLW, GSL_ELOSS, GSL_EMAXITER, GSL_EFAILED
+@end deftypefun
+
+@deftypefun int gsl_sf_complex_expint_E1_scaled_e (double @var{zr}, double @var{zi}, gsl_sf_result * @var{re}, gsl_sf_result * @var{im})
+@deftypefunx int gsl_sf_complex_expint_En_scaled_e (int @var{n}, double @var{zr}, double @var{zi}, gsl_sf_result * @var{re}, gsl_sf_result * @var{im})
+These routines compute the scaled exponential integral
+@math{\exp(z) E_n(z)}, which removes the exponential behaviour of
+@math{E_n(z)} in both half-planes.
+@comment Exceptional Return Values: GSL_EDOM, GSL_EOVRFLW, GSL_EUNDRFLW, GSL_ELOSS, GSL_EMAXITER, GSL_EFAILED
+@end deftypefun
+
+@deftypefun int gsl_sf_complex_expint_Ei_e (double @var{zr}, double @var{zi}, gsl_sf_result * @var{re}, gsl_sf_result * @var{im})
+This routine computes the exponential integral @math{Ei(z)} for the
+complex argument @math{z = zr + i zi},
+@tex
+\beforedisplay
+$$
+\hbox{Ei}(z) = - PV \left( \int_{-z}^\infty dt \exp(-t)/t \right)
+$$
+\afterdisplay
+@end tex
+@ifinfo
+
+@example
+Ei(z) = - PV(\int_{-z}^\infty dt \exp(-t)/t)
+@end example
+
+@end ifinfo
+@noindent
+with the same branch cut along the negative real axis approached from
+above, so that @math{Ei(x)} is real for real @math{x > 0}.  The origin is a
+branch point and is a domain error.
+@comment Exceptional Return Values: GSL_EDOM, GSL_EOVRFLW, GSL_EUNDRFLW, GSL_ELOSS, GSL_EMAXITER, GSL_EFAILED
+@end deftypefun
+
+The complex exponential integrals are computed with the algorithm of
+D. E. Amos, ``Computation of Exponential Integrals of a Complex
+Argument'', @emph{ACM Transactions on Mathematical Software}
+@strong{16}(2), 169--177 (1990), Algorithm 683.
 
 
 @node Hyperbolic Integrals
