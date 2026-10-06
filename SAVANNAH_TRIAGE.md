@@ -171,7 +171,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 60635 | 2021-05-19 | - | Accuracy problem | inline | **fixed** — const updated to CODATA 2022 (db695c8f2) | physical constants may need updating |
 | 60741 | 2021-06-07 | bug | Runtime error | clean bug_60741.patch | **fixed** — lambert_W0 small arguments (fb2b4e4cd) | Inaccurate Results for Lambert W function |
 | 61342 | 2021-10-16 | bug | Runtime error | inline | rejected — not-a-bug: test_c11 under -ffast-math | test_c11 test fails on ppc64 and sparc |
-| 63519 | 2022-12-13 | - | Performance | none | rejected — not-a-bug: GSL_ERROR returns the code and invokes the handler; documented aaecb86e6. Per-call API is feature #66576 | gsl_root_fsolver_set "endpoints do not straddle y=0" |
+| 63519 | 2022-12-13 | - | Performance | none | **fixed** — per-call `gsl_root_fsolver_set_with_values` added (33b79b362); the `GSL_ERROR` handler contract is unchanged and documented (aaecb86e6) | gsl_root_fsolver_set "endpoints do not straddle y=0" |
 | 63927 | 2023-03-14 | feature | Build | none | **fixed** — gsl-without-cblas.pc installed by both builds (442b7cbd2, 9ad4ed051) | Please add a gsl-without-cblas.pc |
 | 64549 | 2023-08-12 | test | Performance | clean testcases.patch | **fixed** — one clean wrapper test replaces the four leaky near-duplicates (7b6979126) | diff patch containing new testcases for the interpolation module |
 | 64613 | 2023-08-30 | - | Accuracy problem | inline | **fixed** — cdf beta_inc: 3 defects under fp-contract (1b1d94ee9) | fp-contract=fast stops convergence in beta_inc_AXPY/beta_cont_frac |
@@ -187,7 +187,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 66573 | 2024-12-18 | feature | - | clean vector_complex_conjugate.patch | **fixed** — `gsl_vector_complex_conjugate()` for the float, double and long double complex types, with a strided test (ec04a1312, d127fe3b2) | Feature: gsl_vector_complex_conjugate() |
 | 66574 | 2024-12-18 | feature | - | clean 2_givens_cmplx.patch +3 | **fixed** — complex Householder right, Givens, bidiagonal decomposition and `gsl_linalg_complex_SV_decomp` (5df7c9876, b5325c1df, e0993e48c, ac4a51535) | Feature: complex singular value decomposition |
 | 66575 | 2024-12-18 | feature | - | clean 5_svd_SV_solve_cmplx.patch +1 | **fixed** — `gsl_linalg_complex_SV_solve` and `_SV_decomp_mod` (77032d17c, 5a209fff9) | Feature: Extension to complex SVD |
-| 66576 | 2024-12-18 | feature | - | clean fsolver_set_with_values.patch | rejected — new API; docs record the GSL_EINVAL return (aaecb86e6) | Feature: gsl_root_fsolver_set_with_values() |
+| 66576 | 2024-12-18 | feature | - | clean fsolver_set_with_values.patch | **fixed** — `gsl_root_fsolver_set_with_values` for bisection/brent/falsepos, no ABI change (33b79b362) | Feature: gsl_root_fsolver_set_with_values() |
 | 66695 | 2025-01-22 | feature | - | clean feagin_verner.patch | **fixed** — Verner 7(6)/8(7)/9(8) and Feagin 10(8)/12(10)/14(12) steppers (d67eae92b, 6fa6706f4) | Feature: additional high order ODE solvers (Feagin, Verner) |
 | 66742 | 2025-01-31 | - | Documentation | clean gams.diff | rejected — large doc-only classification diff; not a correction, out of scope | GAMS classification |
 | 66767 | 2025-02-08 | feature | Build | source binomialinv.c +1 | **fixed** — gsl_cdf_binomial_Pinv/Qinv by bisection, double result (e88a81c75) | Feature: inverse of binomial distribution |
@@ -302,8 +302,6 @@ test-quality request, `doc` = documentation matter.  `patch`: `clean`/
 | # | kind | patch | what it would add |
 |---|---|---|---|
 | 41527 | feat | - | multimin functions return error codes |
-| 63519 | feat | - | `gsl_root_fsolver_set` variant returning `GSL_EINVAL` without the handler (per-call `_with_values`, #66576) |
-| 66576 | feat | clean | `gsl_root_fsolver_set_with_values()` |
 | 30947 | feat | clean | fixed step-size control object for the v1 ODE suite (exists in v2) |
 | 55965 | feat | - | PCG random number generator |
 | 60026 | feat | - | MIXMAX random number extension |

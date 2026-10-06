@@ -2272,17 +2272,17 @@ solvers.  Both were taken once the filter admitted new public API; the
 four solvers are in `linalg/tridiagcomplex.c` (commit `dd5e0a0f2`), with
 numpy reference solutions and residual checks.  See `FORKNEWS`.
 
-### `#63519` — `gsl_root_fsolver_set` straddle error — rejected
+### `#63519` — `gsl_root_fsolver_set` straddle error — fixed
 
 The request is to return `GSL_EINVAL` without invoking the error
 handler.  `GSL_ERROR` already returns the code - under
 `gsl_set_error_handler_off()` the call returns `GSL_EINVAL` (4),
 confirmed against the DLL - but it also calls the handler, whose
-default action is to abort.  That uniform contract is by design.  A
-per-call variant is the new API proposed as
-`gsl_root_fsolver_set_with_values()` (#66576).  Both manuals now
-document the `GSL_EINVAL` return and the handler behaviour (commit
-`aaecb86e6`).
+default action is to abort.  That uniform contract is by design and is
+documented in both manuals (commit `aaecb86e6`).  The per-call variant
+proposed as `gsl_root_fsolver_set_with_values()` (#66576) was taken
+later, once the eligibility rule was widened; it avoids re-evaluating
+an expensive `f` and is implemented without an ABI change (`33b79b362`).
 
 Verdicts recorded in `SAVANNAH_TRIAGE.md`; the applied changes and the
 rejections are in `FORKNEWS`.  Full CTest suite 56/56 on MSVC x64.
