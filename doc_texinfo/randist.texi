@@ -357,15 +357,17 @@ p(x,y) dx dy = @{1 \over 2 \pi \sigma_x \sigma_y \sqrt@{1-\rho^2@}@} \exp (-(x^2
 @end ifinfo
 @noindent
 for @math{x,y} in the range @math{-\infty} to @math{+\infty}.  The
-correlation coefficient @var{rho} should lie between @math{1} and
-@math{-1}.
+correlation coefficient @var{rho} must lie in the range
+@math{-1 < \rho < 1}.
 @end deftypefun
 
 @deftypefun double gsl_ran_bivariate_gaussian_pdf (double @var{x}, double @var{y}, double @var{sigma_x}, double @var{sigma_y}, double @var{rho})
 This function computes the probability density @math{p(x,y)} at
 (@var{x},@var{y}) for a bivariate Gaussian distribution with standard
 deviations @var{sigma_x}, @var{sigma_y} and correlation coefficient
-@var{rho}, using the formula given above.
+@var{rho}, using the formula given above.  A domain error is raised if
+@var{rho} is not in the range @math{-1 < \rho < 1}, where the density is
+undefined.
 @end deftypefun
 
 @sp 1

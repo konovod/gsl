@@ -33,6 +33,7 @@
 #include <gsl/gsl_linalg.h>
 #include <gsl/gsl_cdf.h>
 #include <gsl/gsl_statistics.h>
+#include <gsl/gsl_errno.h>
 
 #define N 100000
 
@@ -165,6 +166,7 @@ double test_bivariate_gaussian3 (void);
 double test_bivariate_gaussian3_pdf (double x);
 double test_bivariate_gaussian4 (void);
 double test_bivariate_gaussian4_pdf (double x);
+void test_bivariate_gaussian_domain (void);
 void test_multivariate_gaussian_log_pdf (void);
 void test_multivariate_gaussian_pdf (void);
 void test_multivariate_gaussian (void);
@@ -406,6 +408,7 @@ main (void)
   testPDF (FUNC2 (bivariate_gaussian2));
   testPDF (FUNC2 (bivariate_gaussian3));
   testPDF (FUNC2 (bivariate_gaussian4));
+  test_bivariate_gaussian_domain ();
 
   test_multivariate_gaussian_log_pdf ();
   test_multivariate_gaussian_pdf ();
@@ -1781,6 +1784,61 @@ test_bivariate_gaussian4_pdf (double x)
   double sigma = sqrt (su * su + sv * sv);
 
   return gsl_ran_gaussian_pdf (x, sigma);
+}
+
+static int bivariate_error_count = 0;
+static int bivariate_last_errno = 0;
+
+static void
+bivariate_error_handler (const char *reason, const char *file, int line,
+                         int gsl_errno)
+{
+  (void) reason;
+  (void) file;
+  (void) line;
+  bivariate_error_count++;
+  bivariate_last_errno = gsl_errno;
+}
+
+void
+test_bivariate_gaussian_domain (void)
+{
+  /* The bivariate Gaussian density is undefined at |rho| = 1, where the
+     formula divides by sqrt(1 - rho^2) and no two-dimensional density
+     exists, and for |rho| > 1.  Both the generator and the pdf used to
+     return NaN/Inf instead of signalling an error.  Savannah bug #68098. */
+  gsl_error_handler_t *old_handler
+    = gsl_set_error_handler (bivariate_error_handler);
+  const double rho_bad[] = { 1.0, -1.0, 2.0, -2.0 };
+  const size_t nbad = sizeof (rho_bad) / sizeof (rho_bad[0]);
+  double x = 0.0, y = 0.0;
+  size_t i;
+  int status = 0;
+
+  for (i = 0; i < nbad; i++)
+    {
+      bivariate_error_count = 0;
+      bivariate_last_errno = 0;
+      gsl_ran_bivariate_gaussian_pdf (1.0, 1.0, 1.0, 1.0, rho_bad[i]);
+      status |= !(bivariate_error_count == 1
+                  && bivariate_last_errno == GSL_EDOM);
+
+      bivariate_error_count = 0;
+      bivariate_last_errno = 0;
+      gsl_ran_bivariate_gaussian (r_global, 1.0, 1.0, rho_bad[i], &x, &y);
+      status |= !(bivariate_error_count == 1
+                  && bivariate_last_errno == GSL_EDOM);
+    }
+
+  /* In-range values must not raise an error. */
+  bivariate_error_count = 0;
+  gsl_ran_bivariate_gaussian_pdf (0.5, 0.5, 1.0, 1.0, 0.3);
+  gsl_ran_bivariate_gaussian (r_global, 1.0, 1.0, -0.75, &x, &y);
+  status |= (bivariate_error_count != 0);
+
+  gsl_set_error_handler (old_handler);
+
+  gsl_test (status, "bivariate Gaussian rho domain check");
 }
 
 /* Examples from R (GPL): http://www.r-project.org/
