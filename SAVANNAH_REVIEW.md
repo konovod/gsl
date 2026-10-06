@@ -3138,3 +3138,88 @@ A correct fix needs a stable evaluation for these polynomials (a scaled
 recurrence, a Laguerre/Whittaker route that handles the negative integer
 parameters, or an error-bounded series), plus re-derived expected values
 and an independent cross-check over a grid.  That is a separate task.
+
+
+## Group W - two already-classified items taken (2026-10-06)
+
+Reviewed against the built `build-cmake/gsl.dll` (MSVC x64 Release).
+Both were earlier set aside (`#67774` as an API extension, `#21828` as
+performance-only) and are now taken: `#67774` turned out to be a defect
+in behaviour the library already claimed, and `#21828` admits a
+result-preserving change.
+
+### `#67774` - the arctangent integral's error bar for x < 0 - fixed
+
+The 2025 report frames this as extending the domain, but the domain was
+never restricted: the manual defines
+`AtanInt(x) = int_0^x arctan(t)/t` with an empty `Domain`, and the code
+already took negative arguments.  What was wrong was the error bar.  In
+the `|x| <= 1` branch the series value and error come from a Chebyshev
+fit in `x*x`,
+
+    result->val = x * c.val;
+    result->err = x * c.err;
+
+so the error is multiplied by the signed `x` (`ax` was already computed
+for the branch tests).  Measured with the built DLL through ctypes:
+
+    x = -1    val = -0.91596559417721901   err = -2.93e-17
+    x = -0.5  val = -0.48722235829452237   err = -6.44e-18
+    x = -0.1  val = -0.099889286860336185  err = -1.39e-18
+    x = -2    val = -1.5760154034463234    err =  8.15e-16   (branch |x| > 1)
+
+The value is correct (the function is odd); only the error's sign is
+wrong.  The fix is `err = ax * c.err`; the `|x| > 1` branch already used
+a non-negative expression.
+
+Verification: four vectors (`-0.1`, `-1.0`, `-2.0`, `0.0`) added to
+`specfunc/test_sf.c` at `TEST_TOL0`, mirroring the existing positive
+values (which the report's `-1`/`-2` values also match).  Negative
+control: with the one-line change reverted, `specfunc_test` fails on
+`(-0.1)` and `(-1.0)` with both "reported error negative" and "value not
+consistent within reported error"; `(-2.0)` is unaffected because it
+takes the `|x| > 1` branch.  The expected values were checked
+independently against mpmath `quad(atan(t)/t, [0, x])` at 40 digits.
+Full ctest 56/56.  Commit `4220f05d9`.
+
+### `#21828` - the lmsder Householder cost - result-preserving rewrite
+
+The 2007 report compares `gsl_fdfsolver_lmsder` with netlib MINPACK and
+names the Householder transform (about 50 % of the run time); it has no
+patch and no wrong value.  Profiling the current source confirmed the
+location but also found a second, larger cause.
+
+`gsl_linalg_householder_hm()` (`linalg/householder.c`) applied
+`H = I - tau v v^T` to the target matrix **column by column**.  GSL
+matrices are row-major, so for a fixed column the inner loop over rows
+stepped with the row stride.  On the CMake/MSVC build the loop was worse
+still: `HAVE_INLINE` is undefined (`build-cmake/config.h`), so
+`gsl_matrix_get()`/`set()` and `gsl_vector_get()` were real out-of-line
+function calls in the innermost loop.  `householder_hm` is the dominant
+cost of `gsl_linalg_QRPT_decomp()`, which lmsder re-enters on every
+successful iteration (`multifit/lmset.c`, `multifit/lmiterate.c`).
+
+The non-BLAS branch now walks a block of 64 columns at a time using
+direct row pointers.  The dot product still accumulates in increasing
+row order and each element is updated with the same expression
+(`Aij - tau*vi*wj`), so the output is bit-for-bit identical; only the
+order in which independent columns are visited changes.  The `USE_BLAS`
+branch is untouched (the fork's builds never define `USE_BLAS`).
+
+Measured on a single `gsl_linalg_QRPT_decomp` of a 550 x 25 matrix
+(MSVC x64 Release, best of 5 x 400 calls):
+
+    original (column order, accessors)  1.43 ms
+    blocked row order, accessors        0.96 ms
+    blocked row order, direct pointers  0.21 ms
+
+Bit-identical check: the harness drives
+`gsl_linalg_QRPT_decomp` over six shapes (`5x4`, `20x10`, `37x36`,
+`64x30`, `100x3`, `550x25`) and three seeds, and compares the raw bytes
+of the full matrix, `tau`, the permutation and the column-norm vector
+between the pre-change and post-change DLLs; they are identical.  Full
+ctest 56/56.  A numerically neutral kernel has no negative-control
+vector to add.  Commit `cd9e31326`.
+
+Savannah bugs #67774 and #21828.
+

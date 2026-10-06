@@ -21,7 +21,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 
 | # | Date | Kind | Cat | Patch | Fork status | Notes |
 |---|---|---|---|---|---|---|
-| 21828 | 2007-12-18 | - | Performance | none | rejected — performance-only; netlib minpack comparison, no defect | suboptimal performance of gsl_fdfsolver_lmsder |
+| 21828 | 2007-12-18 | - | Performance | none | **fixed** — `gsl_linalg_householder_hm` applied the reflector column-by-column on row-major storage, and the accessors were out-of-line calls without `HAVE_INLINE`; rewritten to walk rows in storage order, bit-identical (cd9e31326) | suboptimal performance of gsl_fdfsolver_lmsder |
 | 21831 | 2007-12-18 | - | Accuracy problem | source levy.c | **rejected** — not a bug: the CMS transform is exact for alpha < 1 (characteristic-function check); `beta = 0` delegates to `gsl_ran_levy` | Levý random number generator for alpha < 1 |
 | 21833 | 2007-12-18 | - | Performance | none | **fixed** — the selection loop scans backward from the suffix (c382ed86e); the alleged quadratic behaviour is amortised O(1) per permutation and the 8! walk in `permutation/test.c` covers it | suboptimal performance of gsl permutation? |
 | 21835 | 2007-12-18 | - | Accuracy problem | clean test_hyperg.diff +1 | **partial** — non-positive-integer termination for x >= 1 fixed (2aa89bae8); c = a+b near x = 1 still returns GSL_EMAXITER | gsl_sf_hyperg_2F1 problematic arguments |
@@ -221,7 +221,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 67689 | 2025-11-10 | doc | Documentation | clean specfunc-psi.rst.patch | **fixed** — gsl_sf_complex_psi_e documented (345883172) | Incomplete documentation of digamma functions in GSL specfunc |
 | 67705 | 2025-11-15 | bug | Build | none | rejected — not reproducible; linalg passes with a fixed seed | ttest failure in linalg/QR_solve_r random |
 | 67728 | 2025-11-23 | bug | Accuracy problem | source psi_dropin.c | **fixed** — polygamma at negative arguments (e9f69933a) | gsl_sf_psi_n_e yields domain error |
-| 67774 | 2025-12-05 | feature | Accuracy problem | none | rejected — extended domain/API (arctan integral for negative inputs); out of scope | Feature: arctan integral is also defined for negative inputs |
+| 67774 | 2025-12-05 | bug | Accuracy problem | none | **fixed** — the value was already right for x < 0; the error bar was computed with the signed x and came back negative (4220f05d9) | Feature: arctan integral is also defined for negative inputs |
 | 68068 | 2026-02-19 | bug | Accuracy problem | none | **fixed** - quad_golden stored f_m in f_upper instead of f_lower (4260778fe) | Bug: incorrect straddling of area of convergence in quad_golden |
 | 68073 | 2026-02-20 | bug | Documentation | none | **fixed** — gsl_stats_select comment corrected from "k-th largest" to "k-th smallest" (521bed61d) | Bug: incorrect inline code comment on BASE FUNCTION(gsl_stats,select) |
 | 68098 | 2026-02-27 | feature | - | none | **fixed** — |rho| >= 1 rejected with GSL_EDOM in the bivariate Gaussian pdf and generator (6da0c08f3) | Feature: division by zero when data is perfectly correlated |
@@ -297,7 +297,6 @@ test-quality request, `doc` = documentation matter.  `patch`: `clean`/
 | 66575 | feat | clean | extension of the complex SVD |
 | 66695 | feat | clean | Feagin and Verner high-order ODE solvers |
 | 32257 | feat | - | integration routines imported from quadrule |
-| 67774 | feat | - | arctan integral extended to negative inputs |
 | 41527 | feat | - | multimin functions return error codes |
 | 45782 | feat | - | configurable derivative epsilon |
 | 63519 | feat | - | `gsl_root_fsolver_set` variant returning `GSL_EINVAL` without the handler (per-call `_with_values`, #66576) |
@@ -310,7 +309,6 @@ test-quality request, `doc` = documentation matter.  `patch`: `clean`/
 | 47402 | feat | - | Mathieu functions - library/test redesign |
 | 46677 | feat | - | port the Wigner d-matrix (`gsl_sf_wigner_drot`) from `contrib/` |
 | 65932 | feat | - | see #60457 (complex tridiagonal solvers) |
-| 21828 | perf | - | `gsl_fdfsolver_lmsder` - close the gap to netlib minpack |
 | 31109 | perf | - | `ode-initval/bsimp` order control |
 | 66742 | doc | clean | GAMS classification across 177 files |
 | 66886 | doc | clean | refactor of `specfunc/trig.c` |
