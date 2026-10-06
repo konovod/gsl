@@ -228,6 +228,9 @@ One line per change: date | tag | description | commit(s).
   2026-10-06 | [upstream] | ode-initval2: Feagin and Verner steppers          | d67eae92b
   2026-10-06 | [upstream] | doc: Feagin and Verner steppers                  | 6fa6706f4
 
+  2026-10-06 | [upstream] | multiroots: configurable fdjac step              | 8abbe2c30
+  2026-10-06 | [upstream] | doc: configurable fdjac step                     | 296f3b58a
+
 
 ## [upstream] rng: make the random() generators produce the documented sequences
 
@@ -5798,6 +5801,50 @@ Files: `ode-initval2/vern7.c`, `vern8.c`, `vern9.c`, `feagin108.c`,
 `ode-initval2/test.c`, both manuals.
 
 See Savannah bug #66695.
+
+
+## [upstream] multiroots: configurable finite-difference Jacobian step
+
+Commit: 8abbe2c30 (documentation: 296f3b58a)
+
+The derivative-free multiroot solvers compute their Jacobian by finite
+differences with a hard-coded relative step of
+`GSL_SQRT_DBL_EPSILON` (`fdjac.c`).  Savannah bug #45782 (2015) points
+out that when the function is only known to a limited accuracy the
+default step can be smaller than the evaluation error, so the
+difference quotient is dominated by noise.
+
+The step is now stored in a new `double fdjac_epsrel` field of
+`gsl_multiroot_fsolver`, initialised to `GSL_SQRT_DBL_EPSILON` in
+`gsl_multiroot_fsolver_alloc()` and accessed through
+
+    int gsl_multiroot_fsolver_set_fdjac_epsrel(gsl_multiroot_fsolver * s,
+                                               double epsrel);
+    double gsl_multiroot_fsolver_fdjac_epsrel(const gsl_multiroot_fsolver * s);
+
+The value is threaded through the `gsl_multiroot_fsolver_type` `set`
+and `iterate` callbacks to `gsl_multiroot_fdjacobian()` in the
+`dnewton`, `broyden`, `hybrid` and `hybrids` solvers.  The callback
+signatures gain a `double` argument; custom solver types would need to
+be updated, but the public solver API is unchanged and the default
+behaviour is bit-identical.
+
+Verification: a 1D function with a smooth high-frequency perturbation
+of order 1e-5 is solved from an initial point where the perturbation
+makes the default Jacobian negative.  With the default step the solver
+is deflected away from the root (`x = -0.749`), while with
+`epsrel = 1e-3` it reaches it (`|x - 1| < 1e-3`).  The default value,
+the rejection of a non-positive step with `GSL_EDOM` and the stored
+value are also checked.  Negative control: making the setter ignore its
+argument fails the tuned check, while the restored tree is clean.  Full
+ctest 56/56 on MSVC x64.
+
+Files: `multiroots/gsl_multiroots.h`, `multiroots/fsolver.c`,
+`multiroots/broyden.c`, `multiroots/dnewton.c`, `multiroots/hybrid.c`,
+`multiroots/test.c`, both manuals.
+
+See Savannah bug #45782.
+
 
 
 
