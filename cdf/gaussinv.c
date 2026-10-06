@@ -32,6 +32,7 @@
 #include <gsl/gsl_cdf.h>
 
 #include "rat_eval.h"
+#include "error.h"
 
 static double
 small (double q)
@@ -199,4 +200,40 @@ double
 gsl_cdf_gaussian_Qinv (const double Q, const double sigma)
 {
   return sigma * gsl_cdf_ugaussian_Qinv (Q);
+}
+
+/* Inverses of the truncated Gaussian cumulative distribution.  The
+   value P maps onto the Gaussian quantile at Phi(a) + P (Phi(b)-Phi(a)).
+   See Savannah bug #59900. */
+
+double
+gsl_cdf_tgaussian_Pinv (const double P, const double a, const double b, const double sigma)
+{
+  double Pa, Pb;
+
+  if (a >= b)
+    {
+      CDF_ERROR ("a >= b", GSL_EDOM);
+    }
+
+  Pa = gsl_cdf_gaussian_P (a, sigma);
+  Pb = gsl_cdf_gaussian_P (b, sigma);
+
+  return gsl_cdf_gaussian_Pinv (Pa + P * (Pb - Pa), sigma);
+}
+
+double
+gsl_cdf_tgaussian_Qinv (const double Q, const double a, const double b, const double sigma)
+{
+  double Pa, Pb;
+
+  if (a >= b)
+    {
+      CDF_ERROR ("a >= b", GSL_EDOM);
+    }
+
+  Pa = gsl_cdf_gaussian_P (a, sigma);
+  Pb = gsl_cdf_gaussian_P (b, sigma);
+
+  return gsl_cdf_gaussian_Pinv (Pb - Q * (Pb - Pa), sigma);
 }

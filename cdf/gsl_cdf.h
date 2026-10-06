@@ -46,6 +46,12 @@ double gsl_cdf_gaussian_Q (const double x, const double sigma);
 double gsl_cdf_gaussian_Pinv (const double P, const double sigma);
 double gsl_cdf_gaussian_Qinv (const double Q, const double sigma);
 
+double gsl_cdf_tgaussian_P (const double x, const double a, const double b, const double sigma);
+double gsl_cdf_tgaussian_Q (const double x, const double a, const double b, const double sigma);
+
+double gsl_cdf_tgaussian_Pinv (const double P, const double a, const double b, const double sigma);
+double gsl_cdf_tgaussian_Qinv (const double Q, const double a, const double b, const double sigma);
+
 double gsl_cdf_gamma_P (const double x, const double a, const double b);
 double gsl_cdf_gamma_Q (const double x, const double a, const double b);
 

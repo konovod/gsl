@@ -23,6 +23,7 @@
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
+#include <gsl/gsl_sf_erf.h>
 
 /* Of the two methods provided below, I think the Polar method is more
  * efficient, but only when you are actually producing two random
@@ -139,5 +140,45 @@ double
 gsl_ran_ugaussian_pdf (const double x)
 {
   return gsl_ran_gaussian_pdf (x, 1.0);
+}
+
+/* The truncated Gaussian distribution on [a,b] with standard deviation
+   sigma.  The density is the Gaussian density restricted to [a,b] and
+   normalized by Phi(b/sigma) - Phi(a/sigma).  Variates are drawn by
+   rejection from the untruncated Gaussian; the acceptance probability
+   is Phi(b/sigma) - Phi(a/sigma).
+
+   See Savannah bug #59900. */
+
+double
+gsl_ran_tgaussian (const gsl_rng * r, const double a, const double b, const double sigma)
+{
+  double x;
+
+  do
+    {
+      x = gsl_ran_gaussian (r, sigma);
+    }
+  while (x < a || x > b);
+
+  return x;
+}
+
+double
+gsl_ran_tgaussian_pdf (const double x, const double a, const double b, const double sigma)
+{
+  double N;
+
+  if (x <= a || x >= b)
+    {
+      return 0.0;
+    }
+
+  /* Phi(b) - Phi(a) = (1/2) (erfc(a/(sqrt(2) sigma)) - erfc(b/(sqrt(2) sigma))) */
+
+  N = 0.5 * (gsl_sf_erfc (a / (sqrt (2.0) * sigma))
+             - gsl_sf_erfc (b / (sqrt (2.0) * sigma)));
+
+  return gsl_ran_gaussian_pdf (x, sigma) / N;
 }
 

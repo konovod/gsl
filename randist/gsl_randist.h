@@ -92,6 +92,9 @@ double gsl_ran_gaussian_tail_pdf (const double x, const double a, const double s
 double gsl_ran_ugaussian_tail (const gsl_rng * r, const double a);
 double gsl_ran_ugaussian_tail_pdf (const double x, const double a);
 
+double gsl_ran_tgaussian (const gsl_rng * r, const double a, const double b, const double sigma);
+double gsl_ran_tgaussian_pdf (const double x, const double a, const double b, const double sigma);
+
 void gsl_ran_bivariate_gaussian (const gsl_rng * r, double sigma_x, double sigma_y, double rho, double *x, double *y);
 double gsl_ran_bivariate_gaussian_pdf (const double x, const double y, const double sigma_x, const double sigma_y, const double rho);
 

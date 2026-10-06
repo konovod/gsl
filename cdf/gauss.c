@@ -44,7 +44,10 @@
 #include <config.h>
 #include <math.h>
 #include <gsl/gsl_math.h>
+#include <gsl/gsl_errno.h>
 #include <gsl/gsl_cdf.h>
+
+#include "error.h"
 
 #ifndef M_1_SQRT2PI
 #define M_1_SQRT2PI (M_2_SQRTPI * M_SQRT1_2 / 2.0)
@@ -348,4 +351,60 @@ double
 gsl_cdf_gaussian_Q (const double x, const double sigma)
 {
   return gsl_cdf_ugaussian_Q (x / sigma);
+}
+
+/* The truncated Gaussian distribution on the interval [a,b] with
+   standard deviation sigma.  The density is the Gaussian density
+   restricted to [a,b] and normalized by Phi(b/sigma) - Phi(a/sigma).
+   See Savannah bug #59900. */
+
+double
+gsl_cdf_tgaussian_P (const double x, const double a, const double b, const double sigma)
+{
+  double Pa, Pb;
+
+  if (a >= b)
+    {
+      CDF_ERROR ("a >= b", GSL_EDOM);
+    }
+
+  if (x <= a)
+    {
+      return 0.0;
+    }
+  if (x >= b)
+    {
+      return 1.0;
+    }
+
+  Pa = gsl_cdf_gaussian_P (a, sigma);
+  Pb = gsl_cdf_gaussian_P (b, sigma);
+
+  return (gsl_cdf_gaussian_P (x, sigma) - Pa) / (Pb - Pa);
+}
+
+double
+gsl_cdf_tgaussian_Q (const double x, const double a, const double b, const double sigma)
+{
+  double Pa, Pb, Qb;
+
+  if (a >= b)
+    {
+      CDF_ERROR ("a >= b", GSL_EDOM);
+    }
+
+  if (x <= a)
+    {
+      return 1.0;
+    }
+  if (x >= b)
+    {
+      return 0.0;
+    }
+
+  Pa = gsl_cdf_gaussian_P (a, sigma);
+  Pb = gsl_cdf_gaussian_P (b, sigma);
+  Qb = gsl_cdf_gaussian_Q (b, sigma);
+
+  return (gsl_cdf_gaussian_Q (x, sigma) - Qb) / (Pb - Pa);
 }

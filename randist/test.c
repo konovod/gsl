@@ -161,6 +161,9 @@ double test_ugaussian_ratio_method (void);
 double test_ugaussian_ratio_method_pdf (double x);
 double test_ugaussian_tail (void);
 double test_ugaussian_tail_pdf (double x);
+double test_tgaussian (void);
+double test_tgaussian_pdf (double x);
+void test_tgaussian_pdf_reference (void);
 double test_bivariate_gaussian1 (void);
 double test_bivariate_gaussian1_pdf (double x);
 double test_bivariate_gaussian2 (void);
@@ -498,6 +501,15 @@ main (void)
   testMoments (FUNC (nakagami), 0.0, 3.0, 0.9963288682028443);
   testPDF (FUNC2 (nakagami));
   test_nakagami_pdf_reference ();
+
+  /* The truncated Gaussian tests also consume the shared stream. */
+  testMoments (FUNC (tgaussian), -3.0, 3.0, 1.0);
+  testMoments (FUNC (tgaussian), -9.0, -3.1, 0.0);
+  testMoments (FUNC (tgaussian), 3.1, 9.0, 0.0);
+  testMoments (FUNC (tgaussian), 0.0, 3.0, 0.5);
+  testMoments (FUNC (tgaussian), -3.0, 0.0, 0.5);
+  testPDF (FUNC2 (tgaussian));
+  test_tgaussian_pdf_reference ();
 
   test_binomial_seed ();
 
@@ -1752,6 +1764,38 @@ double
 test_ugaussian_tail_pdf (double x)
 {
   return gsl_ran_ugaussian_tail_pdf (x, 3.0);
+}
+
+double
+test_tgaussian (void)
+{
+  return gsl_ran_tgaussian (r_global, -3.0, 3.0, 1.5);
+}
+
+double
+test_tgaussian_pdf (double x)
+{
+  return gsl_ran_tgaussian_pdf (x, -3.0, 3.0, 1.5);
+}
+
+/* Independent reference values for the pdf, computed with scipy.
+   See Savannah bug #59900. */
+
+void
+test_tgaussian_pdf_reference (void)
+{
+  const double a = -3.0, b = 3.0, sigma = 1.5;
+  const double x[6] = { -2.5, -1.0, 0.0, 0.5, 1.5, 2.9 };
+  const double y[6] = { 0.06947942468713073, 0.22311722985303925,
+                        0.27863970015675643, 0.2635818627766257,
+                        0.16900352115820783, 0.04299271406864207 };
+  int i;
+
+  for (i = 0; i < 6; i++)
+    {
+      gsl_test_rel (gsl_ran_tgaussian_pdf (x[i], a, b, sigma), y[i], 1e-12,
+                    "gsl_ran_tgaussian_pdf(%g, %g, %g, %g)", x[i], a, b, sigma);
+    }
 }
 
 double
