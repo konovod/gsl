@@ -234,6 +234,9 @@ One line per change: date | tag | description | commit(s).
   2026-10-06 | [upstream] | specfunc: complex zeta, eta and Hurwitz zeta     | 2708ca0fa
   2026-10-06 | [upstream] | doc: complex zeta, eta and Hurwitz zeta          | a605f0c44
 
+  2026-10-06 | [upstream] | integration: Lobatto, Radau, Clenshaw-Curtis, Fejer | 7cdd25747
+  2026-10-06 | [upstream] | doc: the new fixed quadrature rules              | 4ad7f6f36
+
 
 ## [upstream] rng: make the random() generators produce the documented sequences
 
@@ -5888,6 +5891,46 @@ Files: `specfunc/zeta_complex.c`, `specfunc/gsl_sf_zeta.h`,
 `specfunc/test_sf.h`, both manuals.
 
 See Savannah bug #57173.
+
+
+## [upstream] integration: Gauss-Lobatto, Gauss-Radau, Clenshaw-Curtis and Fejer rules
+
+Commit: 7cdd25747 (documentation: 4ad7f6f36)
+
+Savannah bug #32257 (2011) points at the LGPL `quadrule` collection and
+suggests importing, in particular, Lobatto quadrature.  Four rules were
+added to the `gsl_integration_fixed` framework:
+
+    gsl_integration_fixed_lobatto          (exact to degree 2n-3)
+    gsl_integration_fixed_radau            (exact to degree 2n-2)
+    gsl_integration_fixed_clenshaw_curtis  (exact to degree n-1)
+    gsl_integration_fixed_fejer            (exact to degree n-1)
+
+Radau uses the standard Jacobi-matrix path with the last diagonal
+element set to `n/(2n-1)`, which places the right endpoint on the node
+set.  Lobatto, Clenshaw-Curtis and Fejer are not Gaussian quadratures of
+a positive weight, so the public `gsl_integration_fixed_type` gained an
+optional `nodes` callback that fills the nodes and weights directly;
+existing types leave it null and keep the previous behaviour.  The
+Lobatto interior nodes are the roots of `P'_{n-1}` (computed as the
+eigenvalues of the Jacobi(1,1) matrix) with weights
+`2/(n(n-1) P_{n-1}(x_i)^2)`, and the Clenshaw-Curtis and Fejer weights
+come from their closed-form cosine series.
+
+Verification: the four rules integrate a degree-5 monomial exactly on
+several intervals (including a reversed one) and `exp(x)` to the
+accuracy implied by their exactness degree; the weight formulas were
+checked against the mpmath moment equations.  Negative control:
+flipping the sign of the Fejer cosine series fails the new checks, while
+the restored tree is clean.  Full ctest 56/56 on MSVC x64.
+
+Files: `integration/lobatto.c`, `radau.c`, `clenshaw_curtis.c`,
+`fejer.c`, `integration/gsl_integration.h`, `integration/fixed.c`,
+`integration/Makefile.am`, `cmake/gsl_sources.cmake`,
+`integration/test.c`, both manuals.
+
+See Savannah bug #32257.
+
 
 
 
