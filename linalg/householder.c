@@ -191,34 +191,59 @@ gsl_linalg_householder_hm (double tau, const gsl_vector * v, gsl_matrix * A)
   }
 #else
   {
-    size_t i, j;
-    
-    for (j = 0; j < A->size2; j++)
+    /* GSL stores matrices in row-major order, so walk a block of
+       columns at a time to keep each row of A resident in the cache.
+       The arithmetic applied to a single column is unchanged, so the
+       result is bit-for-bit identical to the column-by-column version
+       (Savannah bug #21828). */
+
+    size_t i, j, j0;
+    const size_t nb = 64;
+    double w[64];
+
+    for (j0 = 0; j0 < A->size2; j0 += nb)
       {
+        size_t j1 = GSL_MIN (j0 + nb, A->size2);
+        size_t nj = j1 - j0;
+        double *row0 = A->data + j0;
+
         /* Compute wj = Akj vk */
-        
-        double wj = gsl_matrix_get(A,0,j);  
-        
+
+        for (j = 0; j < nj; j++)
+          {
+            w[j] = row0[j];
+          }
+
         for (i = 1; i < A->size1; i++)  /* note, computed for v(0) = 1 above */
           {
-            wj += gsl_matrix_get(A,i,j) * gsl_vector_get(v,i);
+            const double *row = A->data + (size_t) i * A->tda + j0;
+            double vi = v->data[(size_t) i * v->stride];
+
+            for (j = 0; j < nj; j++)
+              {
+                w[j] += row[j] * vi;
+              }
           }
-        
+
         /* Aij = Aij - tau vi wj */
-        
+
         /* i = 0 */
-        {
-          double A0j = gsl_matrix_get (A, 0, j);
-          gsl_matrix_set (A, 0, j, A0j - tau *  wj);
-        }
-        
+        for (j = 0; j < nj; j++)
+          {
+            row0[j] -= tau *  w[j];
+          }
+
         /* i = 1 .. M-1 */
-        
+
         for (i = 1; i < A->size1; i++)
           {
-            double Aij = gsl_matrix_get (A, i, j);
-            double vi = gsl_vector_get (v, i);
-            gsl_matrix_set (A, i, j, Aij - tau * vi * wj);
+            double *row = A->data + (size_t) i * A->tda + j0;
+            double vi = v->data[(size_t) i * v->stride];
+
+            for (j = 0; j < nj; j++)
+              {
+                row[j] -= tau * vi * w[j];
+              }
           }
       }
   }
