@@ -2853,8 +2853,10 @@ essay.
   **Partly reversed:** `#24871` (complex exponential integrals E_n) was
   taken later as a port of Amos Algorithm 683 (`c01e6b922`); see
   `FORKNEWS`.
-* New algorithms/solvers: `#32257`, `#66573`, `#66695`, `#57173`,
-  `#68367`.
+* New algorithms/solvers: `#32257`, `#66695`, `#57173`.
+  **Partly reversed:** `#66573` (`gsl_vector_complex_conjugate()`) and
+  `#68367` (inverse Jacobi elliptic functions) were taken once the filter
+  admitted new public API; see `FORKNEWS`.
 * New special cases or API extensions: `#41527`, `#45782`, `#66800`,
   `#66834`, `#66842`, `#66850`, `#66922`, `#67359`, `#67774`, `#68098`.
   **Partly reversed:** the six among them (`#66800`, `#66834`, `#66842`,

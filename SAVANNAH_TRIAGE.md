@@ -9,9 +9,9 @@ Scratch index, not part of the fork's record of changes. Verdicts are curated fr
 
 | status | count |
 |---|---:|
-| fixed | 117 |
+| fixed | 119 |
 | partial | 5 |
-| rejected | 92 |
+| rejected | 90 |
 | deferred | 4 |
 | superseded | 1 |
 | not reviewed | 0 |
@@ -184,7 +184,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 65932 | 2024-06-30 | - | - | none | **deferred** — duplicate of feature #60457 (complex tridiagonal solvers); new API out of scope | Complex tridiagonal solvers - patch ignored? |
 | 66026 | 2024-07-26 | - | Runtime error | partial bug_66026.patch +1 | **fixed** — LU_decomp_L3 identity-initialises ipiv (d73ba5300) | gsl_linalg_LU_decomp using uninitialized memory |
 | 66128 | 2024-08-27 | doc | Documentation | clean specfunc.rst.patch | **fixed** — specfunc.rst result/val typo (066f5b747) | documentation of type gsl_sf_result: confused result and val |
-| 66573 | 2024-12-18 | feature | - | clean vector_complex_conjugate.patch | rejected — new API (gsl_vector_complex_conjugate); out of scope | Feature: gsl_vector_complex_conjugate() |
+| 66573 | 2024-12-18 | feature | - | clean vector_complex_conjugate.patch | **fixed** — `gsl_vector_complex_conjugate()` for the float, double and long double complex types, with a strided test (ec04a1312, d127fe3b2) | Feature: gsl_vector_complex_conjugate() |
 | 66574 | 2024-12-18 | feature | - | clean 2_givens_cmplx.patch +3 | rejected — complex SVD/QR suite is new API/algorithm | Feature: complex singular value decomposition |
 | 66575 | 2024-12-18 | feature | - | clean 5_svd_SV_solve_cmplx.patch +1 | rejected — complex SVD is new API/algorithm | Feature: Extension to complex SVD |
 | 66576 | 2024-12-18 | feature | - | clean fsolver_set_with_values.patch | rejected — new API; docs record the GSL_EINVAL return (aaecb86e6) | Feature: gsl_root_fsolver_set_with_values() |
@@ -227,7 +227,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 68098 | 2026-02-27 | feature | - | none | **fixed** — |rho| >= 1 rejected with GSL_EDOM in the bivariate Gaussian pdf and generator (6da0c08f3) | Feature: division by zero when data is perfectly correlated |
 | 68283 | 2026-04-26 | - | - | none | rejected — proposed guards break the `gsl_stats` equivalence in `rstat_test` | Correction to gsl_rstat_skew and gsl_rstat_kurtosis |
 | 68312 | 2026-05-07 | bug | Accuracy problem | none | **fixed** — same recurrence as #43256 (59fc479e2) | Wigner symbols inaccurate for large j |
-| 68367 | 2026-05-19 | feature | - | source invelljac.c | rejected — new API (inverse Jacobi elliptic integrals); out of scope | Feature: inverse Jacobi elliptic integrals |
+| 68367 | 2026-05-19 | feature | - | source invelljac.c | **fixed** — `gsl_sf_elljac_arcsn_e/arccn_e/arcdn_e`, using Carlson RF with the parameter `m`; the posted prototype passed `m` where the modulus `k = sqrt(m)` was expected (183ca894f, 653c77bca) | Feature: inverse Jacobi elliptic integrals |
 | 68379 | 2026-05-21 | - | - | none | **fixed** — size_t for the accessor index (ae60e2883) | Histogram: expand scope of internal variables |
 | 68398 | 2026-05-26 | feature | - | none | **fixed** - eta_int leading term via gsl_ldexp, value correctly rounded, error halved (f774247e7) | Feature: use GSL native gsl_ldexp in eta fuction for integer argument |
 | 68415 | 2026-06-02 | bug | - | none | rejected — not-a-bug: variance/covariance/pvariance all return NaN at n=1; n >= 2 documented (65bc71664) | Bug: inconsistency in variance error handling in statictics module |
@@ -284,6 +284,11 @@ listed below were taken: `#59900` (truncated Gaussian), `#66816`
 later as a port of Amos Algorithm 683.  All six are no longer listed in
 the table.
 
+Two further new-API items have since been taken: `#66573`
+(`gsl_vector_complex_conjugate()`) and `#68367` (inverse Jacobi
+elliptic functions, where the posted prototype misused the modulus).
+They are no longer listed in the table; see `FORKNEWS`.
+
 `kind`: `feat` = new feature/API, `perf` = performance only, `test` =
 test-quality request, `doc` = documentation matter.  `patch`: `clean`/
 `partial`/`source` if an attachment was collected by the sweep, `-` if none;
@@ -292,8 +297,6 @@ test-quality request, `doc` = documentation matter.  `patch`: `clean`/
 | # | kind | patch | what it would add |
 |---|---|---|---|
 | 57173 | feat | - | zeta function for complex arguments |
-| 68367 | feat | source | inverse Jacobi elliptic integrals |
-| 66573 | feat | clean | `gsl_vector_complex_conjugate()` |
 | 60457 | feat | clean | complex tridiagonal solvers (also #65932) |
 | 66574 | feat | clean | complex SVD/QR suite (Householder, Givens, bidiag) |
 | 66575 | feat | clean | extension of the complex SVD |
