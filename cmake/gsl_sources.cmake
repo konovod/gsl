@@ -561,6 +561,7 @@ set(GSL_SOURCES
     randist/lognormal.c
     randist/multinomial.c
     randist/mvgauss.c
+    randist/nakagami.c
     randist/nbinomial.c
     randist/pareto.c
     randist/pascal.c

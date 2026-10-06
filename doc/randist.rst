@@ -720,6 +720,33 @@ The Gamma Distribution
 
 |newpage|
 
+The Nakagami Distribution
+=========================
+
+.. index:: Nakagami distribution
+
+.. function:: double gsl_ran_nakagami (const gsl_rng * r, double mu, double omega)
+
+   This function returns a random variate from the Nakagami distribution
+   with shape parameter :data:`mu` and scale parameter :data:`omega`.  The
+   distribution function is,
+
+   .. math:: p(x) dx = {2 \mu^\mu \over \Gamma(\mu) \omega^\mu}
+             x^{2\mu-1} \exp\left(-{\mu x^2 \over \omega}\right) dx
+
+   for :math:`x \ge 0`.  The distribution is normally restricted to
+   :math:`\mu \ge 1/2`.  If :math:`Y` is gamma distributed with shape
+   :data:`mu` and scale :data:`omega`/:data:`mu`, then
+   :math:`X = \sqrt{Y}` is Nakagami distributed.
+
+.. function:: double gsl_ran_nakagami_pdf (double x, double mu, double omega)
+
+   This function computes the probability density :math:`p(x)` at
+   :data:`x` for a Nakagami distribution with parameters :data:`mu` and
+   :data:`omega`, using the formula given above.
+
+|newpage|
+
 The Flat (Uniform) Distribution
 ===============================
 

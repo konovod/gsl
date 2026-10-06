@@ -140,6 +140,9 @@ double test_gamma_mt_small (void);
 double test_gamma_mt_small_pdf (double x);
 double test_gamma_knuth_vlarge (void);
 double test_gamma_knuth_vlarge_pdf (double x);
+double test_nakagami (void);
+double test_nakagami_pdf (double x);
+void test_nakagami_pdf_reference (void);
 double test_gaussian (void);
 double test_gaussian_pdf (double x);
 double test_gaussian_ratio_method (void);
@@ -488,6 +491,13 @@ main (void)
 
   testMoments (FUNC (beta_small), -0.5, 0.5, 0.5);
   testMoments (FUNC (beta_small),  0.5, 1.5, 0.5);
+
+  /* The Nakagami tests consume variates from the shared stream, so they
+     run after every other distribution test.  See Savannah bug #66816. */
+  testMoments (FUNC (nakagami), 0.0, 2.0, 0.8883897749052874);
+  testMoments (FUNC (nakagami), 0.0, 3.0, 0.9963288682028443);
+  testPDF (FUNC2 (nakagami));
+  test_nakagami_pdf_reference ();
 
   test_binomial_seed ();
 
@@ -1313,6 +1323,39 @@ double
 test_erlang_pdf (double x)
 {
   return gsl_ran_erlang_pdf (x, 3.0, 4.0);
+}
+
+double
+test_nakagami (void)
+{
+  return gsl_ran_nakagami (r_global, 1.5, 2.0);
+}
+
+double
+test_nakagami_pdf (double x)
+{
+  return gsl_ran_nakagami_pdf (x, 1.5, 2.0);
+}
+
+/* Independent reference values for the pdf, computed from the defining
+   formula with scipy/mpmath.  See Savannah bug #66816. */
+
+void
+test_nakagami_pdf_reference (void)
+{
+  const double mu = 1.5, omega = 2.0;
+  const double x[7] = { 0.1, 0.5, 1.0, 1.5, 2.0, 3.0, 4.0 };
+  const double y[7] = { 0.01454855102156251, 0.30379928218770474,
+                        0.6923984526245488, 0.6100810423876853,
+                        0.2919130399778488, 0.015446557544071668,
+                        0.00014409972429605346 };
+  int i;
+
+  for (i = 0; i < 7; i++)
+    {
+      gsl_test_rel (gsl_ran_nakagami_pdf (x[i], mu, omega), y[i], 1e-12,
+                    "gsl_ran_nakagami_pdf(%g, %g, %g)", x[i], mu, omega);
+    }
 }
 
 double

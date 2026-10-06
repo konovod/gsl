@@ -59,6 +59,7 @@ overflow.
 * The Levy alpha-Stable Distributions::  
 * The Levy skew alpha-Stable Distribution::  
 * The Gamma Distribution::      
+* The Nakagami Distribution::  
 * The Flat (Uniform) Distribution::  
 * The Lognormal Distribution::  
 * The Chi-squared Distribution::  
@@ -958,6 +959,40 @@ for @math{x > 0}.  The Erlang distribution is the gamma distribution
 with an integer shape parameter, @math{a = k}, and scale
 @math{b = 1/lambda}.  Note that @code{gsl_ran_erlang} takes the scale
 and the shape, in that order, as its two parameters.
+@end deftypefun
+
+@page
+@node The Nakagami Distribution
+@section The Nakagami Distribution
+@cindex Nakagami distribution
+
+@deftypefun double gsl_ran_nakagami (const gsl_rng * @var{r}, double @var{mu}, double @var{omega})
+This function returns a random variate from the Nakagami distribution
+with shape parameter @var{mu} and scale parameter @var{omega}.  The
+distribution function is,
+@tex
+\beforedisplay
+$$
+p(x)\,dx = {2 \mu^\mu \over \Gamma(\mu) \omega^\mu} x^{2\mu-1}
+           \exp\left(-{\mu x^2 \over \omega}\right) dx
+$$
+\afterdisplay
+@end tex
+@ifinfo
+@example
+p(x) dx = 2 mu^mu / (Gamma(mu) omega^mu) x^(2mu-1) exp(-mu x^2/omega) dx
+@end example
+@end ifinfo
+for @math{x >= 0}.  The distribution is normally restricted to
+@math{\mu >= 1/2}.  If @math{Y} is gamma distributed with shape
+@var{mu} and scale @var{omega}/@var{mu}, then @math{X = \sqrt{Y}} is
+Nakagami distributed.
+@end deftypefun
+
+@deftypefun double gsl_ran_nakagami_pdf (double @var{x}, double @var{mu}, double @var{omega})
+This function computes the probability density @math{p(x)} at @var{x}
+for a Nakagami distribution with parameters @var{mu} and @var{omega},
+using the formula given above.
 @end deftypefun
 
 @page

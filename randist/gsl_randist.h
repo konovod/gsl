@@ -160,6 +160,9 @@ double gsl_ran_multinomial_lnpdf (const size_t K,
                            const double p[], const unsigned int n[] );
 
 
+double gsl_ran_nakagami (const gsl_rng * r, const double mu, const double omega);
+double gsl_ran_nakagami_pdf (const double x, const double mu, const double omega);
+
 unsigned int gsl_ran_negative_binomial (const gsl_rng * r, double p, double n);
 double gsl_ran_negative_binomial_pdf (const unsigned int k, const double p, double n);
 
