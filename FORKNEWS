@@ -104,6 +104,7 @@ One line per change: date | tag | description | commit(s).
   2026-10-06 | [upstream] | roots: add gsl_root_fsolver_set_with_values           | 33b79b362
   2026-10-06 | [upstream] | ode-initval: add a fixed-step control object          | 379750b93
   2026-10-06 | [upstream] | rng: add the PCG32 generator                         | 3fd2c7475
+  2026-10-06 | [upstream] | spblas, spmatrix: complex sparse mat-vec + set_add   | f218d8c83
   2026-10-03 | [upstream] | specfunc: reject NaN in the complete elliptic integrals | 14d595eb8
   2026-10-03 | [upstream] | specfunc: terminate gamma_inc for large negative a    | 932087bcd
   2026-10-03 | [upstream] | specfunc: propagate NaN in gsl_sf_hyperg_1F1_e       | 99a73dd36
@@ -4370,19 +4371,51 @@ documentation file is touched.
   Rejected.
 
 * **#65728, add sparse functionalities** - a feature request for complex
-  sparse support.  Part of it already exists (complex `scale`,
+  sparse support.  Part of it already existed (complex `scale`,
   `scale_columns`, `scale_rows`, `memcpy`, `dense_add`/`dense_sub`,
-  `add_to_dense`); the parts that do not - a complex sparse matrix-vector
-  product (sparse BLAS offers only the real `gsl_spblas_dgemv`), a
-  `resize`, and an accumulating variant of `_set()` - are all new API or
-  new algorithm, and the request is phrased as a feature throughout.
-  Rejected as out of scope.
+  `add_to_dense`); the complex sparse matrix-vector product and the
+  accumulating `_set` variant were taken once the rule was widened.  The
+  `resize`, real-vector scaling and in-place unpack parts remain in the
+  backlog.
 
 The user's list also named "43159-style items"; #43159 is a GNU Octave
 bug (the Signal package's `specgram()`), closed as a duplicate of
 Octave #42043, and is not part of the GSL tracker.  It is dropped.
 
-Savannah bugs #42058, #45797, #59914, #60026 and #65728.
+Savannah bugs #42058, #45797, #59914 and #60026.
+
+
+## [upstream] spblas, spmatrix: complex sparse mat-vec and accumulating set
+
+Commit: f218d8c83
+
+Savannah bug #65728 asks for complex sparse support.  Two of its
+requests are implemented here.
+
+`gsl_spblas_zgemv()` is the complex analogue of `gsl_spblas_dgemv()`:
+`y <- alpha*op(A)*x + beta*y` with `op(A) = A`, `A^T` or `A^H`, for a
+complex sparse matrix in triplet, CCS or CRS format.  The interleaved
+real/imaginary storage is used directly.  Verified against
+`gsl_blas_zgemv` on the equivalent dense matrix for NoTrans, Trans and
+ConjTrans over sizes 1..10 and two (alpha, beta) pairs.  Negative
+control: dropping the conjugate handling fails every ConjTrans case.
+
+`gsl_spmatrix_*_set_add()` adds `x` to element (i,j) instead of
+replacing it (`gsl_spmatrix_*_set`), inserting the element if it is not
+already stored.  It is generated for all 12 real and 3 complex types and
+declared in every typed header.  Verified by accumulating 1 + 2 + 3 into
+each element and checking the value and `nnz`, plus a duplicate that must
+not grow `nnz`.  Negative control: making `set_add` replace fails the
+accumulation checks for all 15 types.
+
+The `resize`, real-vector scaling and in-place unpack parts of the
+request remain in the backlog.
+
+Files: `spblas/spzgemv.c`, `spblas/gsl_spblas.h`, `spblas/test.c`,
+`spmatrix/getset_source.c`, `spmatrix/getset_complex_source.c`, the 15
+typed `spmatrix` headers, both sparse test templates and both manuals.
+
+Savannah bug #65728.
 
 
 ## [rejected] meta: the last open-bug reports (51104, 53903, 53904)
