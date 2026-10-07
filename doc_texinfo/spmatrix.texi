@@ -183,6 +183,13 @@ This function sets element (@var{i},@var{j}) of the matrix @var{m} to
 the value @var{x}. The matrix must be in triplet representation.
 @end deftypefun
 
+@deftypefun int gsl_spmatrix_set_add (gsl_spmatrix * @var{m}, const size_t @var{i}, const size_t @var{j}, const double @var{x})
+This function adds the value @var{x} to element (@var{i},@var{j}) of the
+matrix @var{m}, inserting the element if it is not already stored.  It
+differs from @code{gsl_spmatrix_set}, which replaces the element.  The
+matrix must be in triplet representation.
+@end deftypefun
+
 @deftypefun {double *} gsl_spmatrix_ptr (gsl_spmatrix * @var{m}, const size_t @var{i}, const size_t @var{j})
 This function returns a pointer to the (@var{i},@var{j}) element of the matrix @var{m}.
 If the (@var{i},@var{j}) element is not explicitly stored in the matrix,

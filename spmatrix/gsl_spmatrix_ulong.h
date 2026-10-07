@@ -145,6 +145,7 @@ int gsl_spmatrix_ulong_fread (FILE * stream, gsl_spmatrix_ulong * m);
 
 unsigned long gsl_spmatrix_ulong_get (const gsl_spmatrix_ulong * m, const size_t i, const size_t j);
 int gsl_spmatrix_ulong_set (gsl_spmatrix_ulong * m, const size_t i, const size_t j, const unsigned long x);
+int gsl_spmatrix_ulong_set_add (gsl_spmatrix_ulong * m, const size_t i, const size_t j, const unsigned long x);
 unsigned long * gsl_spmatrix_ulong_ptr (const gsl_spmatrix_ulong * m, const size_t i, const size_t j);
 
 /* minmax */

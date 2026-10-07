@@ -47,6 +47,10 @@ __BEGIN_DECLS
 int gsl_spblas_dgemv(const CBLAS_TRANSPOSE_t TransA, const double alpha,
                      const gsl_spmatrix *A, const gsl_vector *x,
                      const double beta, gsl_vector *y);
+int gsl_spblas_zgemv(const CBLAS_TRANSPOSE_t TransA, const gsl_complex alpha,
+                     const gsl_spmatrix_complex *A,
+                     const gsl_vector_complex *x,
+                     const gsl_complex beta, gsl_vector_complex *y);
 int gsl_spblas_dgemm(const double alpha, const gsl_spmatrix *A,
                      const gsl_spmatrix *B, gsl_spmatrix *C);
 size_t gsl_spblas_scatter(const gsl_spmatrix *A, const size_t j,

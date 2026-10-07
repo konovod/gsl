@@ -145,6 +145,7 @@ int gsl_spmatrix_float_fread (FILE * stream, gsl_spmatrix_float * m);
 
 float gsl_spmatrix_float_get (const gsl_spmatrix_float * m, const size_t i, const size_t j);
 int gsl_spmatrix_float_set (gsl_spmatrix_float * m, const size_t i, const size_t j, const float x);
+int gsl_spmatrix_float_set_add (gsl_spmatrix_float * m, const size_t i, const size_t j, const float x);
 float * gsl_spmatrix_float_ptr (const gsl_spmatrix_float * m, const size_t i, const size_t j);
 
 /* minmax */

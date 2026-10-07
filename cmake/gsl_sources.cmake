@@ -656,6 +656,7 @@ set(GSL_SOURCES
     sort/subsetind.c
     spblas/spdgemm.c
     spblas/spdgemv.c
+    spblas/spzgemv.c
     specfunc/airy.c
     specfunc/airy_der.c
     specfunc/airy_zero.c

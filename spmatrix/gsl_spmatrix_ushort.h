@@ -145,6 +145,7 @@ int gsl_spmatrix_ushort_fread (FILE * stream, gsl_spmatrix_ushort * m);
 
 unsigned short gsl_spmatrix_ushort_get (const gsl_spmatrix_ushort * m, const size_t i, const size_t j);
 int gsl_spmatrix_ushort_set (gsl_spmatrix_ushort * m, const size_t i, const size_t j, const unsigned short x);
+int gsl_spmatrix_ushort_set_add (gsl_spmatrix_ushort * m, const size_t i, const size_t j, const unsigned short x);
 unsigned short * gsl_spmatrix_ushort_ptr (const gsl_spmatrix_ushort * m, const size_t i, const size_t j);
 
 /* minmax */

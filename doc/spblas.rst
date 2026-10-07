@@ -31,6 +31,15 @@ Sparse BLAS operations
    :data:`x` and :data:`y` must be distinct vectors.
    The matrix :data:`A` may be in triplet or compressed format.
 
+.. function:: int gsl_spblas_zgemv (const CBLAS_TRANSPOSE_t TransA, const gsl_complex alpha, const gsl_spmatrix_complex * A, const gsl_vector_complex * x, const gsl_complex beta, gsl_vector_complex * y)
+
+   This function computes the complex matrix-vector product and sum
+   :math:`y \leftarrow \alpha op(A) x + \beta y`, where
+   :math:`op(A) = A, A^T, A^H` for :data:`TransA` = :code:`CblasNoTrans`,
+   :code:`CblasTrans`, :code:`CblasConjTrans`.  In-place computations are
+   not supported, so :data:`x` and :data:`y` must be distinct vectors.
+   The matrix :data:`A` may be in triplet or compressed format.
+
 .. function:: int gsl_spblas_dgemm (const double alpha, const gsl_spmatrix * A, const gsl_spmatrix * B, gsl_spmatrix * C)
 
    This function computes the sparse matrix-matrix product

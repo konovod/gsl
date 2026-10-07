@@ -176,6 +176,128 @@ test_dgemv(const size_t N, const size_t M, const double alpha,
   gsl_vector_free(y_sp);
 } /* test_dgemv() */
 
+static gsl_spmatrix_complex *
+create_random_sparse_complex(const size_t M, const size_t N,
+                             const double density, const gsl_rng *r)
+{
+  size_t nnzwanted = (size_t) floor(M * N * GSL_MIN(density, 1.0));
+  gsl_spmatrix_complex *m =
+    gsl_spmatrix_complex_alloc_nzmax(M, N, nnzwanted, GSL_SPMATRIX_TRIPLET);
+
+  while (gsl_spmatrix_complex_nnz(m) < nnzwanted)
+    {
+      size_t i = gsl_rng_uniform(r) * M;
+      size_t j = gsl_rng_uniform(r) * N;
+      gsl_complex x;
+
+      GSL_SET_COMPLEX(&x, gsl_rng_uniform(r) - 0.5, gsl_rng_uniform(r) - 0.5);
+      gsl_spmatrix_complex_set(m, i, j, x);
+    }
+
+  return m;
+} /* create_random_sparse_complex() */
+
+static void
+create_random_vector_complex(gsl_vector_complex *v, const gsl_rng *r)
+{
+  size_t i;
+
+  for (i = 0; i < v->size; ++i)
+    {
+      gsl_complex z;
+
+      GSL_SET_COMPLEX(&z, gsl_rng_uniform(r) - 0.5, gsl_rng_uniform(r) - 0.5);
+      gsl_vector_complex_set(v, i, z);
+    }
+} /* create_random_vector_complex() */
+
+static int
+test_vectors_complex(gsl_vector_complex *observed,
+                     gsl_vector_complex *expected, const double tol,
+                     const char *str)
+{
+  int s = 0;
+  size_t N = observed->size;
+  size_t i;
+
+  for (i = 0; i < N; ++i)
+    {
+      gsl_complex z_obs = gsl_vector_complex_get(observed, i);
+      gsl_complex z_exp = gsl_vector_complex_get(expected, i);
+
+      gsl_test_rel(GSL_REAL(z_obs), GSL_REAL(z_exp), tol,
+                   "N=%zu i=%zu %s (real)", N, i, str);
+      gsl_test_rel(GSL_IMAG(z_obs), GSL_IMAG(z_exp), tol,
+                   "N=%zu i=%zu %s (imag)", N, i, str);
+    }
+
+  return s;
+} /* test_vectors_complex() */
+
+static void
+test_zgemv(const size_t N, const size_t M, const gsl_complex alpha,
+           const gsl_complex beta, const CBLAS_TRANSPOSE_t TransA,
+           const gsl_rng *r)
+{
+  gsl_spmatrix_complex *A = create_random_sparse_complex(M, N, 0.2, r);
+  gsl_spmatrix_complex *B, *C;
+  gsl_matrix_complex *A_dense = gsl_matrix_complex_alloc(M, N);
+  gsl_vector_complex *x, *y, *y_gsl, *y_sp;
+  size_t lenX, lenY;
+
+  if (TransA == CblasNoTrans)
+    {
+      lenX = N;
+      lenY = M;
+    }
+  else
+    {
+      lenX = M;
+      lenY = N;
+    }
+
+  x = gsl_vector_complex_alloc(lenX);
+  y = gsl_vector_complex_alloc(lenY);
+  y_gsl = gsl_vector_complex_alloc(lenY);
+  y_sp = gsl_vector_complex_alloc(lenY);
+
+  create_random_vector_complex(x, r);
+  create_random_vector_complex(y, r);
+
+  gsl_spmatrix_complex_sp2d(A_dense, A);
+
+  gsl_vector_complex_memcpy(y_gsl, y);
+  gsl_vector_complex_memcpy(y_sp, y);
+
+  /* compute y = alpha*op(A)*x + beta*y0 with gsl */
+  gsl_blas_zgemv(TransA, alpha, A_dense, x, beta, y_gsl);
+
+  /* compute y = alpha*op(A)*x + beta*y0 with spblas/triplet */
+  gsl_spblas_zgemv(TransA, alpha, A, x, beta, y_sp);
+  test_vectors_complex(y_sp, y_gsl, 1.0e-10, "test_zgemv: triplet format");
+
+  /* compute y = alpha*op(A)*x + beta*y0 with spblas/CCS */
+  B = gsl_spmatrix_complex_ccs(A);
+  gsl_vector_complex_memcpy(y_sp, y);
+  gsl_spblas_zgemv(TransA, alpha, B, x, beta, y_sp);
+  test_vectors_complex(y_sp, y_gsl, 1.0e-10, "test_zgemv: CCS format");
+
+  /* compute y = alpha*op(A)*x + beta*y0 with spblas/CRS */
+  C = gsl_spmatrix_complex_crs(A);
+  gsl_vector_complex_memcpy(y_sp, y);
+  gsl_spblas_zgemv(TransA, alpha, C, x, beta, y_sp);
+  test_vectors_complex(y_sp, y_gsl, 1.0e-10, "test_zgemv: CRS format");
+
+  gsl_spmatrix_complex_free(A);
+  gsl_spmatrix_complex_free(B);
+  gsl_spmatrix_complex_free(C);
+  gsl_matrix_complex_free(A_dense);
+  gsl_vector_complex_free(x);
+  gsl_vector_complex_free(y);
+  gsl_vector_complex_free(y_gsl);
+  gsl_vector_complex_free(y_sp);
+} /* test_zgemv() */
+
 static void
 test_dgemm(const double alpha, const size_t M, const size_t N,
            const gsl_rng *r)
@@ -248,6 +370,26 @@ main()
 
           test_dgemv(m, n, 0.1, 10.0, CblasNoTrans, r);
           test_dgemv(m, n, 0.1, 10.0, CblasTrans, r);
+        }
+    }
+
+  for (m = 1; m <= 10; ++m)
+    {
+      for (n = 1; n <= 10; ++n)
+        {
+          gsl_complex alpha, beta;
+
+          GSL_SET_COMPLEX(&alpha, 1.0, 0.0);
+          GSL_SET_COMPLEX(&beta, 0.0, 0.0);
+          test_zgemv(m, n, alpha, beta, CblasNoTrans, r);
+          test_zgemv(m, n, alpha, beta, CblasTrans, r);
+          test_zgemv(m, n, alpha, beta, CblasConjTrans, r);
+
+          GSL_SET_COMPLEX(&alpha, 0.3, -1.2);
+          GSL_SET_COMPLEX(&beta, 2.4, 0.7);
+          test_zgemv(m, n, alpha, beta, CblasNoTrans, r);
+          test_zgemv(m, n, alpha, beta, CblasTrans, r);
+          test_zgemv(m, n, alpha, beta, CblasConjTrans, r);
         }
     }
 

@@ -797,6 +797,51 @@ FUNCTION (test, io_binary) (const size_t M, const size_t N, const int sptype,
 }
 
 static void
+FUNCTION (test, set_add) (const size_t M, const size_t N)
+{
+  TYPE (gsl_spmatrix) * A =
+    FUNCTION (gsl_spmatrix, alloc_nzmax) (M, N, M * N, GSL_SPMATRIX_COO);
+  size_t i, j;
+  int status = 0;
+
+  /* accumulate three values into every element */
+  for (i = 0; i < M; ++i)
+    {
+      for (j = 0; j < N; ++j)
+        {
+          FUNCTION (gsl_spmatrix, set_add) (A, i, j, (BASE) 1);
+          FUNCTION (gsl_spmatrix, set_add) (A, i, j, (BASE) 2);
+          FUNCTION (gsl_spmatrix, set_add) (A, i, j, (BASE) 3);
+        }
+    }
+
+  for (i = 0; i < M; ++i)
+    {
+      for (j = 0; j < N; ++j)
+        {
+          if (FUNCTION (gsl_spmatrix, get) (A, i, j) != (BASE) 6)
+            status = 1;
+        }
+    }
+
+  gsl_test (status, NAME (gsl_spmatrix) "_set_add[%zu,%zu] accumulates", M, N);
+
+  status = FUNCTION (gsl_spmatrix, nnz) (A) != M * N;
+  gsl_test (status, NAME (gsl_spmatrix) "_set_add[%zu,%zu] nnz %zu/%zu",
+            M, N, FUNCTION (gsl_spmatrix, nnz) (A), M * N);
+
+  /* a duplicate set_add must accumulate without growing nnz */
+  FUNCTION (gsl_spmatrix, set_add) (A, 0, 0, (BASE) 1);
+  status = FUNCTION (gsl_spmatrix, nnz) (A) != M * N;
+  gsl_test (status, NAME (gsl_spmatrix) "_set_add duplicate[%zu,%zu] nnz %zu/%zu",
+            M, N, FUNCTION (gsl_spmatrix, nnz) (A), M * N);
+  status = FUNCTION (gsl_spmatrix, get) (A, 0, 0) != (BASE) 7;
+  gsl_test (status, NAME (gsl_spmatrix) "_set_add duplicate[%zu,%zu]", M, N);
+
+  FUNCTION (gsl_spmatrix, free) (A);
+}
+
+static void
 FUNCTION (test, all) (const size_t M, const size_t N, const double density, gsl_rng * r)
 {
   FUNCTION (test, alloc) (M, N, GSL_SPMATRIX_COO);
@@ -808,6 +853,8 @@ FUNCTION (test, all) (const size_t M, const size_t N, const double density, gsl_
   FUNCTION (test, getset) (M, N, GSL_SPMATRIX_COO);
   FUNCTION (test, getset) (M, N, GSL_SPMATRIX_CSC);
   FUNCTION (test, getset) (M, N, GSL_SPMATRIX_CSR);
+
+  FUNCTION (test, set_add) (M, N);
 
   FUNCTION (test, memcpy) (M, N, GSL_SPMATRIX_COO, density, r);
   FUNCTION (test, memcpy) (M, N, GSL_SPMATRIX_CSC, density, r);

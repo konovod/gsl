@@ -145,6 +145,7 @@ int gsl_spmatrix_complex_long_double_fread (FILE * stream, gsl_spmatrix_complex_
 
 gsl_complex_long_double gsl_spmatrix_complex_long_double_get (const gsl_spmatrix_complex_long_double * m, const size_t i, const size_t j);
 int gsl_spmatrix_complex_long_double_set (gsl_spmatrix_complex_long_double * m, const size_t i, const size_t j, const gsl_complex_long_double x);
+int gsl_spmatrix_complex_long_double_set_add (gsl_spmatrix_complex_long_double * m, const size_t i, const size_t j, const gsl_complex_long_double x);
 gsl_complex_long_double * gsl_spmatrix_complex_long_double_ptr (const gsl_spmatrix_complex_long_double * m, const size_t i, const size_t j);
 
 /* operations */

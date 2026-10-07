@@ -145,6 +145,7 @@ int gsl_spmatrix_complex_float_fread (FILE * stream, gsl_spmatrix_complex_float 
 
 gsl_complex_float gsl_spmatrix_complex_float_get (const gsl_spmatrix_complex_float * m, const size_t i, const size_t j);
 int gsl_spmatrix_complex_float_set (gsl_spmatrix_complex_float * m, const size_t i, const size_t j, const gsl_complex_float x);
+int gsl_spmatrix_complex_float_set_add (gsl_spmatrix_complex_float * m, const size_t i, const size_t j, const gsl_complex_float x);
 gsl_complex_float * gsl_spmatrix_complex_float_ptr (const gsl_spmatrix_complex_float * m, const size_t i, const size_t j);
 
 /* operations */

@@ -153,6 +153,79 @@ FUNCTION (gsl_spmatrix, set) (TYPE (gsl_spmatrix) * m, const size_t i,
     }
 }
 
+int
+FUNCTION (gsl_spmatrix, set_add) (TYPE (gsl_spmatrix) * m, const size_t i,
+                                  const size_t j, const BASE x)
+{
+  if (!GSL_SPMATRIX_ISCOO(m))
+    {
+      GSL_ERROR("matrix not in COO representation", GSL_EINVAL);
+    }
+  else if (!(m->spflags & GSL_SPMATRIX_FLG_GROW) && (i >= m->size1 || j >= m->size2))
+    {
+      GSL_ERROR ("indices out of range", GSL_EINVAL);
+    }
+  else if (m->spflags & GSL_SPMATRIX_FLG_FIXED)
+    {
+      /*
+       * sparsity pattern is fixed - no elements may be inserted, but existing
+       * elements can be accumulated into
+       */
+      void * ptr = FUNCTION (tree, find) (m, i, j);
+
+      if (ptr == NULL)
+        {
+          GSL_ERROR("attempt to add new matrix element to fixed sparsity pattern", GSL_EINVAL);
+        }
+      else
+        {
+          *(BASE *) ptr += x;
+        }
+
+      return GSL_SUCCESS;
+    }
+  else
+    {
+      int status = GSL_SUCCESS;
+      void *ptr;
+
+      /* check if matrix needs to be reallocated */
+      if (m->nz >= m->nzmax)
+        {
+          status = FUNCTION (gsl_spmatrix, realloc) (2 * m->nzmax, m);
+          if (status)
+            return status;
+        }
+
+      /* store the triplet (i, j, x) */
+      m->i[m->nz] = i;
+      m->p[m->nz] = j;
+      m->data[m->nz] = x;
+
+      ptr = gsl_bst_insert(&m->data[m->nz], m->tree);
+      if (ptr != NULL)
+        {
+          /* found duplicate entry (i,j), accumulate into it */
+          *((BASE *) ptr) += x;
+        }
+      else
+        {
+          /* no duplicate (i,j) found */
+
+          /* increase matrix dimensions if needed */
+          if (m->spflags & GSL_SPMATRIX_FLG_GROW)
+            {
+              m->size1 = GSL_MAX(m->size1, i + 1);
+              m->size2 = GSL_MAX(m->size2, j + 1);
+            }
+
+          ++(m->nz);
+        }
+
+      return status;
+    }
+}
+
 BASE *
 FUNCTION (gsl_spmatrix, ptr) (const TYPE (gsl_spmatrix) * m, const size_t i, const size_t j)
 {

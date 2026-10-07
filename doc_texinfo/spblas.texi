@@ -28,6 +28,15 @@ This function computes the matrix-vector product and sum
 The matrix @var{A} may be in triplet or compressed format.
 @end deftypefun
 
+@deftypefun int gsl_spblas_zgemv (const CBLAS_TRANSPOSE_t TransA, const gsl_complex @var{alpha}, const gsl_spmatrix_complex * @var{A}, const gsl_vector_complex * @var{x}, const gsl_complex @var{beta}, gsl_vector_complex * @var{y})
+This function computes the complex matrix-vector product and sum
+@math{y \leftarrow \alpha op(A) x + \beta y}, where
+@math{op(A) = A}, @math{A^T}, @math{A^H} for @var{TransA} =
+@code{CblasNoTrans}, @code{CblasTrans}, @code{CblasConjTrans}. In-place
+computations are not supported, so @var{x} and @var{y} must be distinct
+vectors.  The matrix @var{A} may be in triplet or compressed format.
+@end deftypefun
+
 @deftypefun int gsl_spblas_dgemm (const double @var{alpha}, const gsl_spmatrix * @var{A}, const gsl_spmatrix * @var{B}, gsl_spmatrix * @var{C})
 This function computes the sparse matrix-matrix product
 @math{C = \alpha A B}. The matrices must be in compressed format.

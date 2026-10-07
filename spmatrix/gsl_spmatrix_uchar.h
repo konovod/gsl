@@ -145,6 +145,7 @@ int gsl_spmatrix_uchar_fread (FILE * stream, gsl_spmatrix_uchar * m);
 
 unsigned char gsl_spmatrix_uchar_get (const gsl_spmatrix_uchar * m, const size_t i, const size_t j);
 int gsl_spmatrix_uchar_set (gsl_spmatrix_uchar * m, const size_t i, const size_t j, const unsigned char x);
+int gsl_spmatrix_uchar_set_add (gsl_spmatrix_uchar * m, const size_t i, const size_t j, const unsigned char x);
 unsigned char * gsl_spmatrix_uchar_ptr (const gsl_spmatrix_uchar * m, const size_t i, const size_t j);
 
 /* minmax */

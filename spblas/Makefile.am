@@ -4,7 +4,7 @@ check_PROGRAMS = test
 
 pkginclude_HEADERS = gsl_spblas.h
 
-libgslspblas_la_SOURCES = spdgemm.c spdgemv.c
+libgslspblas_la_SOURCES = spdgemm.c spdgemv.c spzgemv.c
 
 AM_CPPFLAGS = -I$(top_srcdir)
 

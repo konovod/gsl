@@ -145,6 +145,7 @@ int gsl_spmatrix_long_fread (FILE * stream, gsl_spmatrix_long * m);
 
 long gsl_spmatrix_long_get (const gsl_spmatrix_long * m, const size_t i, const size_t j);
 int gsl_spmatrix_long_set (gsl_spmatrix_long * m, const size_t i, const size_t j, const long x);
+int gsl_spmatrix_long_set_add (gsl_spmatrix_long * m, const size_t i, const size_t j, const long x);
 long * gsl_spmatrix_long_ptr (const gsl_spmatrix_long * m, const size_t i, const size_t j);
 
 /* minmax */

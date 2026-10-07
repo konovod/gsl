@@ -317,6 +317,15 @@ Accessing Matrix Elements
 
    Input matrix formats supported: :ref:`COO <sec_spmatrix-coo>`
 
+.. function:: int gsl_spmatrix_set_add (gsl_spmatrix * m, const size_t i, const size_t j, const double x)
+
+   This function adds the value :data:`x` to element (:data:`i`, :data:`j`)
+   of the matrix :data:`m`, inserting the element if it is not already
+   stored.  It differs from :func:`gsl_spmatrix_set`, which replaces the
+   element.
+
+   Input matrix formats supported: :ref:`COO <sec_spmatrix-coo>`
+
 .. function:: double * gsl_spmatrix_ptr (gsl_spmatrix * m, const size_t i, const size_t j)
 
    This function returns a pointer to the (:data:`i`, :data:`j`) element of the matrix :data:`m`.

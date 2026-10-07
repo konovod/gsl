@@ -775,6 +775,63 @@ FUNCTION (test, io_binary) (const size_t M, const size_t N, const int sptype,
 }
 
 static void
+FUNCTION (test, set_add) (const size_t M, const size_t N)
+{
+  TYPE (gsl_spmatrix) * A =
+    FUNCTION (gsl_spmatrix, alloc_nzmax) (M, N, M * N, GSL_SPMATRIX_COO);
+  size_t i, j;
+  int status = 0;
+  BASE one, two, three, six;
+
+  GSL_REAL (one) = (ATOMIC) 1.0;   GSL_IMAG (one) = (ATOMIC) 0.0;
+  GSL_REAL (two) = (ATOMIC) 0.0;   GSL_IMAG (two) = (ATOMIC) 2.0;
+  GSL_REAL (three) = (ATOMIC) 3.0; GSL_IMAG (three) = (ATOMIC) -1.0;
+  GSL_REAL (six) = (ATOMIC) 4.0;   GSL_IMAG (six) = (ATOMIC) 1.0;
+
+  /* accumulate three values into every element */
+  for (i = 0; i < M; ++i)
+    {
+      for (j = 0; j < N; ++j)
+        {
+          FUNCTION (gsl_spmatrix, set_add) (A, i, j, one);
+          FUNCTION (gsl_spmatrix, set_add) (A, i, j, two);
+          FUNCTION (gsl_spmatrix, set_add) (A, i, j, three);
+        }
+    }
+
+  for (i = 0; i < M; ++i)
+    {
+      for (j = 0; j < N; ++j)
+        {
+          BASE z = FUNCTION (gsl_spmatrix, get) (A, i, j);
+
+          if (GSL_REAL (z) != GSL_REAL (six) || GSL_IMAG (z) != GSL_IMAG (six))
+            status = 1;
+        }
+    }
+
+  gsl_test (status, NAME (gsl_spmatrix) "_set_add[%zu,%zu] accumulates", M, N);
+
+  status = FUNCTION (gsl_spmatrix, nnz) (A) != M * N;
+  gsl_test (status, NAME (gsl_spmatrix) "_set_add[%zu,%zu] nnz %zu/%zu",
+            M, N, FUNCTION (gsl_spmatrix, nnz) (A), M * N);
+
+  /* a duplicate set_add must accumulate without growing nnz */
+  FUNCTION (gsl_spmatrix, set_add) (A, 0, 0, one);
+  status = FUNCTION (gsl_spmatrix, nnz) (A) != M * N;
+  gsl_test (status, NAME (gsl_spmatrix) "_set_add duplicate[%zu,%zu] nnz %zu/%zu",
+            M, N, FUNCTION (gsl_spmatrix, nnz) (A), M * N);
+  {
+    BASE z = FUNCTION (gsl_spmatrix, get) (A, 0, 0);
+
+    status = (GSL_REAL (z) != (ATOMIC) 5.0 || GSL_IMAG (z) != (ATOMIC) 1.0);
+  }
+  gsl_test (status, NAME (gsl_spmatrix) "_set_add duplicate[%zu,%zu]", M, N);
+
+  FUNCTION (gsl_spmatrix, free) (A);
+}
+
+static void
 FUNCTION (test, all) (const size_t M, const size_t N, const double density, gsl_rng * r)
 {
   FUNCTION (test, alloc) (M, N, GSL_SPMATRIX_COO);
@@ -786,6 +843,8 @@ FUNCTION (test, all) (const size_t M, const size_t N, const double density, gsl_
   FUNCTION (test, getset) (M, N, GSL_SPMATRIX_COO);
   FUNCTION (test, getset) (M, N, GSL_SPMATRIX_CSC);
   FUNCTION (test, getset) (M, N, GSL_SPMATRIX_CSR);
+
+  FUNCTION (test, set_add) (M, N);
 
   FUNCTION (test, memcpy) (M, N, GSL_SPMATRIX_COO, density, r);
   FUNCTION (test, memcpy) (M, N, GSL_SPMATRIX_CSC, density, r);
