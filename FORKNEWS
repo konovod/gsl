@@ -110,6 +110,9 @@ One line per change: date | tag | description | commit(s).
   2026-10-07 | [upstream] | cdf: truncated-Gaussian inverse test tolerance       | ddb667963
   2026-10-07 | [upstream] | multimin: report GSL_EBADFUNC from the simplex minimizers | f007aa42c
   2026-10-07 | [upstream] | ode-initval: bsimp order from the driver tolerance | 1fbb40ca3
+  2026-10-07 | [upstream] | doc: correct the Mathieu return types and coeff docs | a31710cf6
+  2026-10-07 | [upstream] | specfunc: angular Mathieu ce/se derivatives        | 47727ca0e
+  2026-10-07 | [upstream] | specfunc: Mathieu coefficient caching (deferred design) | - (see below)
   2026-10-03 | [upstream] | specfunc: reject NaN in the complete elliptic integrals | 14d595eb8
   2026-10-03 | [upstream] | specfunc: terminate gamma_inc for large negative a    | 932087bcd
   2026-10-03 | [upstream] | specfunc: propagate NaN in gsl_sf_hyperg_1F1_e       | 99a73dd36
@@ -6229,6 +6232,93 @@ Files: `spmatrix/oper_complex_source.c`, `spmatrix/init_source.c`,
 `spmatrix`, `block` and `vector` test templates and both manuals.
 
 Savannah bug #65728.
+
+
+## [upstream] doc: correct the Mathieu return types and document the Fourier coefficients
+
+Commit: a31710cf6
+
+The manual declared `gsl_sf_mathieu_a`, `_b`, `_ce`, `_se`, `_Mc` and
+`_Ms` as returning `int`.  They return `double`; only the `_e` and
+`_array` forms return an error code.  The signatures were wrong in the
+characteristic-value, angular and radial sections of both manual trees
+(`doc/specfunc-mathieu.rst` and `doc_texinfo/specfunc-mathieu.texi`);
+they now match `specfunc/gsl_sf_mathieu.h`.
+
+The public Fourier-coefficient routines `gsl_sf_mathieu_a_coeff` and
+`gsl_sf_mathieu_b_coeff` were documented nowhere.  A new entry records
+the required array size (`GSL_SF_MATHIEU_COEFF`), the `GSL_FAILURE`
+return above the maximum order, and the even/odd order layouts exactly
+as `mathieu_coeff.c` produces them (`a_coeff`: `cos(2mx)` for even `n`
+and `cos((2m+1)x)` for odd `n`; `b_coeff`: `sin(2(m+1)x)` for even `n`
+and `sin((2m+1)x)` for odd `n`).
+
+No code or test change; the Sphinx build reports no new warnings for the
+file.
+
+Savannah bug #47402 (items 1 and 2).
+
+
+## [upstream] specfunc: derivatives of the angular Mathieu functions
+
+Commit: 47727ca0e
+
+Savannah bug #47402 also asks for Mathieu-function derivatives, which
+other packages provide and GSL did not.  Add
+
+    gsl_sf_mathieu_ce_deriv(_e)(n, q, x)
+    gsl_sf_mathieu_se_deriv(_e)(n, q, x)
+
+differentiating the normalized cosine and sine series of
+`gsl_sf_mathieu_ce_e` / `gsl_sf_mathieu_se_e` term by term:
+
+    ce_n'(x) = -(1/N) sum_m A_m k_m sin(k_m x)
+    se_n'(x) =  (1/N) sum_m B_m k_m cos(k_m x)
+
+where `k_m = 2m` or `2m+1` according to the parity of `n`, and `N` is
+the same normalization factor the value routines use (including the
+extra `A_0^2` in the even cosine case, which is where a first attempt
+went wrong).  The `q = 0` and `order = 0` special cases are handled
+explicitly.  The error estimate is a modest multiple of the sum of the
+term magnitudes, so the bar stays meaningful where the series cancels
+rather than collapsing to a couple of ulp.
+
+References were computed independently with SciPy's `mathieu_cem` /
+`mathieu_sem`, which use the same normalization as GSL (checked at
+`q = 0` and against the existing value vectors); the 16 new vectors in
+`specfunc/test_mathieu.c` agree to a few times 1e-14 relative for the
+high orders and use `TEST_TOL2` through `TEST_TOL5`.  Negative control:
+neutralising the two functions fails 15 of the 16 vectors (the survivor
+is `ce_deriv_e(0, 0, pi/3)`, whose reference is exactly zero).  Full
+`ctest` 56/56 on MSVC x64.
+
+Radial (`Mc`/`Ms`) derivatives are not added: they need the Bessel and
+Hankel derivative machinery and were not requested clearly enough to
+justify the risk.
+
+Files: `specfunc/gsl_sf_mathieu.h`, `specfunc/mathieu_angfunc.c`,
+`specfunc/test_mathieu.c` and both manuals.
+
+Savannah bug #47402 (item 4).
+
+
+## [upstream] specfunc: Mathieu coefficient caching (item 3 of #47402) - deferred
+
+Commit: none.
+
+The report's remaining request - recycle the Fourier coefficients for a
+fixed `q` across many evaluations - is a performance redesign, not a
+defect, and was investigated but not implemented.  The workspace already
+carries unused `qa`/`qb` caching placeholders, but the array routines
+rerun the eigendecomposition and the coefficient solve on every call and
+the scalar `ce`/`se` path repeats both as well.  The transparent
+workspace cache (add `ca`/`cb` storage and per-order validity flags, key
+on `qa`/`qb`, and skip the work when `q` is unchanged) is the
+recommended option; the cost, memory and invalidation analysis and the
+alternatives are in `SAVANNAH_REVIEW.md` under "Group X".  Left as a
+known follow-up rather than closed.
+
+Savannah bug #47402 (item 3).
 
 
 
