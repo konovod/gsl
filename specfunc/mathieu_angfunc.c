@@ -193,6 +193,187 @@ int gsl_sf_mathieu_se_e(int order, double qq, double zz, gsl_sf_result *result)
 }
 
 
+int gsl_sf_mathieu_ce_deriv_e(int order, double qq, double zz,
+                              gsl_sf_result *result)
+{
+  int even_odd, ii, status;
+  double coeff[GSL_SF_MATHIEU_COEFF], norm, dfn, mag, factor;
+  gsl_sf_result aa;
+
+
+  even_odd = 0;
+  if (order % 2 != 0)
+      even_odd = 1;
+
+  /* Handle the trivial case where q = 0. */
+  if (qq == 0.0)
+  {
+      norm = 1.0;
+      if (order == 0)
+          norm = sqrt(2.0);
+
+      dfn = -order*sin(order*zz)/norm;
+
+      result->val = dfn;
+      result->err = 2.0*GSL_DBL_EPSILON*(1.0 + fabs(order*zz));
+      factor = fabs(dfn);
+      if (factor > 1.0)
+          result->err *= factor;
+
+      return GSL_SUCCESS;
+  }
+
+  /* Use symmetry characteristics of the functions to handle cases with
+     negative order. */
+  if (order < 0)
+      order *= -1;
+
+  /* Compute the characteristic value. */
+  status = gsl_sf_mathieu_a_e(order, qq, &aa);
+  if (status != GSL_SUCCESS)
+  {
+      return status;
+  }
+
+  /* Compute the series coefficients. */
+  status = gsl_sf_mathieu_a_coeff(order, qq, aa.val, coeff);
+  if (status != GSL_SUCCESS)
+  {
+      return status;
+  }
+
+  /* Differentiate the cosine series term by term.  The normalization is
+     the same as in gsl_sf_mathieu_ce_e. */
+  dfn = 0.0;
+  mag = 0.0;
+  if (even_odd == 0)
+  {
+      norm = coeff[0]*coeff[0];
+      for (ii=0; ii<GSL_SF_MATHIEU_COEFF; ii++)
+      {
+          dfn -= coeff[ii]*2.0*ii*sin(2.0*ii*zz);
+          norm += coeff[ii]*coeff[ii];
+          mag += fabs(coeff[ii])*2.0*ii;
+      }
+  }
+  else
+  {
+      norm = 0.0;
+      for (ii=0; ii<GSL_SF_MATHIEU_COEFF; ii++)
+      {
+          dfn -= coeff[ii]*(2.0*ii + 1.0)*sin((2.0*ii + 1.0)*zz);
+          norm += coeff[ii]*coeff[ii];
+          mag += fabs(coeff[ii])*(2.0*ii + 1.0);
+      }
+  }
+
+  norm = sqrt(norm);
+  dfn /= norm;
+  mag /= norm;
+
+  result->val = dfn;
+
+  /* The derivative is a finite sum of terms no larger than |coeff[ii]|*k,
+     so the accumulated roundoff is bounded by a modest multiple of the
+     sum of the term magnitudes; mag carries that scale. */
+  result->err = 64.0*GSL_DBL_EPSILON*mag;
+  if (result->err < 2.0*GSL_DBL_EPSILON)
+      result->err = 2.0*GSL_DBL_EPSILON;
+
+  return GSL_SUCCESS;
+}
+
+
+int gsl_sf_mathieu_se_deriv_e(int order, double qq, double zz,
+                              gsl_sf_result *result)
+{
+  int even_odd, ii, status;
+  double coeff[GSL_SF_MATHIEU_COEFF], norm, dfn, mag, factor;
+  gsl_sf_result aa;
+
+
+  even_odd = 0;
+  if (order % 2 != 0)
+      even_odd = 1;
+
+  /* Handle the trivial cases where order = 0 and/or q = 0. */
+  if (order == 0)
+  {
+      result->val = 0.0;
+      result->err = 0.0;
+      return GSL_SUCCESS;
+  }
+
+  if (qq == 0.0)
+  {
+      norm = 1.0;
+      dfn = order*cos(order*zz);
+
+      result->val = dfn;
+      result->err = 2.0*GSL_DBL_EPSILON*(1.0 + fabs(order*zz));
+      factor = fabs(dfn);
+      if (factor > 1.0)
+          result->err *= factor;
+
+      return GSL_SUCCESS;
+  }
+
+  /* Use symmetry characteristics of the functions to handle cases with
+     negative order. */
+  if (order < 0)
+      order *= -1;
+
+  /* Compute the characteristic value. */
+  status = gsl_sf_mathieu_b_e(order, qq, &aa);
+  if (status != GSL_SUCCESS)
+  {
+      return status;
+  }
+
+  /* Compute the series coefficients. */
+  status = gsl_sf_mathieu_b_coeff(order, qq, aa.val, coeff);
+  if (status != GSL_SUCCESS)
+  {
+      return status;
+  }
+
+  /* Differentiate the sine series term by term.  The normalization is the
+     same as in gsl_sf_mathieu_se_e. */
+  dfn = 0.0;
+  mag = 0.0;
+  norm = 0.0;
+  if (even_odd == 0)
+  {
+      for (ii=0; ii<GSL_SF_MATHIEU_COEFF; ii++)
+      {
+          dfn += coeff[ii]*2.0*(ii + 1)*cos(2.0*(ii + 1)*zz);
+          norm += coeff[ii]*coeff[ii];
+          mag += fabs(coeff[ii])*2.0*(ii + 1);
+      }
+  }
+  else
+  {
+      for (ii=0; ii<GSL_SF_MATHIEU_COEFF; ii++)
+      {
+          dfn += coeff[ii]*(2.0*ii + 1.0)*cos((2.0*ii + 1.0)*zz);
+          norm += coeff[ii]*coeff[ii];
+          mag += fabs(coeff[ii])*(2.0*ii + 1.0);
+      }
+  }
+
+  norm = sqrt(norm);
+  dfn /= norm;
+  mag /= norm;
+
+  result->val = dfn;
+  result->err = 64.0*GSL_DBL_EPSILON*mag;
+  if (result->err < 2.0*GSL_DBL_EPSILON)
+      result->err = 2.0*GSL_DBL_EPSILON;
+
+  return GSL_SUCCESS;
+}
+
+
 int gsl_sf_mathieu_ce_array(int nmin, int nmax, double qq, double zz,
                             gsl_sf_mathieu_workspace *work,
                             double result_array[])
@@ -362,4 +543,14 @@ double gsl_sf_mathieu_ce(int order, double qq, double zz)
 double gsl_sf_mathieu_se(int order, double qq, double zz)
 {
 	EVAL_RESULT(gsl_sf_mathieu_se_e(order, qq, zz, &result));
+}
+
+double gsl_sf_mathieu_ce_deriv(int order, double qq, double zz)
+{
+	EVAL_RESULT(gsl_sf_mathieu_ce_deriv_e(order, qq, zz, &result));
+}
+
+double gsl_sf_mathieu_se_deriv(int order, double qq, double zz)
+{
+	EVAL_RESULT(gsl_sf_mathieu_se_deriv_e(order, qq, zz, &result));
 }

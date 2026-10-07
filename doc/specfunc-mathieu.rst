@@ -256,6 +256,15 @@ Angular Mathieu Functions
    :data:`nmin` to :data:`nmax` inclusive, storing the results in the array
    :data:`result_array`.
 
+.. function:: double gsl_sf_mathieu_ce_deriv (int n, double q, double x)
+              int gsl_sf_mathieu_ce_deriv_e (int n, double q, double x, gsl_sf_result * result)
+              double gsl_sf_mathieu_se_deriv (int n, double q, double x)
+              int gsl_sf_mathieu_se_deriv_e (int n, double q, double x, gsl_sf_result * result)
+
+   These routines compute the derivative with respect to :data:`x` of the
+   angular Mathieu functions :math:`ce_n(q,x)` and :math:`se_n(q,x)`,
+   respectively.
+
 Radial Mathieu Functions
 ------------------------
 .. index:: Radial Mathieu Functions

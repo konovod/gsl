@@ -93,6 +93,12 @@ int gsl_sf_mathieu_se_array(int nmin, int nmax, double qq, double zz,
                             gsl_sf_mathieu_workspace *work,
                             double result_array[]);
 
+/* Compute the derivative of an angular Mathieu function with respect to zz. */
+int gsl_sf_mathieu_ce_deriv_e(int order, double qq, double zz, gsl_sf_result *result);
+double gsl_sf_mathieu_ce_deriv(int order, double qq, double zz);
+int gsl_sf_mathieu_se_deriv_e(int order, double qq, double zz, gsl_sf_result *result);
+double gsl_sf_mathieu_se_deriv(int order, double qq, double zz);
+
 /* Compute a radial Mathieu function. */
 int gsl_sf_mathieu_Mc_e(int kind, int order, double qq, double zz,
                       gsl_sf_result *result);

@@ -179,6 +179,42 @@ int test_mathieu(void)
   TEST_SF(s, gsl_sf_mathieu_se_e, (15, 25.0, M_PI_2, &r),
           -0.9467086958780897, TEST_SNGL, GSL_SUCCESS);
 
+  /* Derivatives of the angular Mathieu functions.  The reference values
+     were computed independently with SciPy's mathieu_cem / mathieu_sem,
+     which use the same normalization. */
+  TEST_SF(s, gsl_sf_mathieu_ce_deriv_e, (0, 0.0, M_PI/3.0, &r),
+          0.0, TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_mathieu_ce_deriv_e, (1, 0.0, M_PI/3.0, &r),
+          -0.8660254037844387, TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_mathieu_ce_deriv_e, (2, 0.0, M_PI/3.0, &r),
+          -1.732050807568877, TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_mathieu_ce_deriv_e, (0, 5.0, M_PI/6.0, &r),
+          0.5821239463837029, TEST_TOL4, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_mathieu_ce_deriv_e, (1, 5.0, M_PI/3.0, &r),
+          0.034569441512660434, TEST_TOL4, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_mathieu_ce_deriv_e, (2, 5.0, M_PI/4.0, &r),
+          -0.8556109366879098, TEST_TOL4, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_mathieu_ce_deriv_e, (5, 10.0, M_PI/3.0, &r),
+          4.7709531870051185, TEST_TOL4, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_mathieu_ce_deriv_e, (10, 20.0, 0.7, &r),
+          2.610407628200331, TEST_TOL5, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_mathieu_ce_deriv_e, (15, 25.0, 0.4, &r),
+          11.162994569885711, TEST_TOL5, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_mathieu_se_deriv_e, (1, 0.0, M_PI/3.0, &r),
+          0.4999999999999999, TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_mathieu_se_deriv_e, (2, 0.0, M_PI/3.0, &r),
+          -1.0000000000000004, TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_mathieu_se_deriv_e, (1, 5.0, M_PI/6.0, &r),
+          0.6046025948049121, TEST_TOL4, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_mathieu_se_deriv_e, (2, 5.0, M_PI/3.0, &r),
+          0.10995093585992657, TEST_TOL4, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_mathieu_se_deriv_e, (5, 10.0, M_PI/4.0, &r),
+          -5.011863586592783, TEST_TOL4, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_mathieu_se_deriv_e, (10, 20.0, 0.7, &r),
+          9.424727484766912, TEST_TOL5, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_mathieu_se_deriv_e, (15, 25.0, 0.4, &r),
+          9.034647057850666, TEST_TOL5, GSL_SUCCESS);
+
   work = gsl_sf_mathieu_alloc(NVAL, 20.0);
   sa = 0;
   gsl_sf_mathieu_ce_array(0, 5, 0.0, M_PI_2, work, c);

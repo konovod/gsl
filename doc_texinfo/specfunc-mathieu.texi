@@ -263,6 +263,15 @@ These routines compute a series of the angular Mathieu functions
 @var{result_array}.
 @end deftypefun
 
+@deftypefun double gsl_sf_mathieu_ce_deriv (int @var{n}, double @var{q}, double @var{x})
+@deftypefunx int gsl_sf_mathieu_ce_deriv_e (int @var{n}, double @var{q}, double @var{x}, gsl_sf_result * @var{result})
+@deftypefunx double gsl_sf_mathieu_se_deriv (int @var{n}, double @var{q}, double @var{x})
+@deftypefunx int gsl_sf_mathieu_se_deriv_e (int @var{n}, double @var{q}, double @var{x}, gsl_sf_result * @var{result})
+These routines compute the derivative with respect to @var{x} of the
+angular Mathieu functions @math{ce_n(q,x)} and @math{se_n(q,x)},
+respectively.
+@end deftypefun
+
 @node Radial Mathieu Functions
 @subsection Radial Mathieu Functions
 @cindex Radial Mathieu Functions
