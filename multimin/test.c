@@ -24,6 +24,7 @@
 #include <gsl/gsl_test.h>
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_blas.h>
+#include <gsl/gsl_errno.h>
 #include <gsl/gsl_multimin.h>
 #include <gsl/gsl_ieee_utils.h>
 
@@ -41,6 +42,9 @@ test_f(const char * desc, gsl_multimin_function *f, initpt_function initpt,
 
 int
 test_quadratic(void);
+
+int
+test_error(const gsl_multimin_fminimizer_type * T);
 
 int
 main (void)
@@ -108,6 +112,11 @@ main (void)
      gets its own test rather than being run on the curved-valley test
      functions above. */
   test_quadratic ();
+
+  /* Savannah bug #41527: an error in the objective function must be
+     reported with its real error code, not masked as GSL_EFAILED. */
+  test_error (gsl_multimin_fminimizer_nmsimplex);
+  test_error (gsl_multimin_fminimizer_nmsimplex2);
 
   exit (gsl_test_summary());
 }
@@ -301,4 +310,66 @@ test_f(const char * desc, gsl_multimin_function *f, initpt_function initpt,
   gsl_vector_free(step_size);
 
   return status;
+}
+
+/* Objective that is finite only outside a central square.  The simplex
+   reflection and the one-dimensional contraction both land inside the
+   square, so the whole-simplex contraction is reached and evaluates the
+   midpoint of two corners there, yielding a non-finite value. */
+static double
+error_fn (const gsl_vector * v, void * params)
+{
+  const double x0 = gsl_vector_get (v, 0);
+  const double x1 = gsl_vector_get (v, 1);
+
+  (void) params;
+
+  if (fabs (x0) < 1.4 && fabs (x1) < 1.4)
+    return GSL_NAN;
+
+  return x0 + 2.0 * x1;
+}
+
+/* Savannah bug #41527: a non-finite objective encountered during the
+   contraction must be reported as GSL_EBADFUNC, not swallowed and
+   replaced by GSL_EFAILED. */
+int
+test_error (const gsl_multimin_fminimizer_type * T)
+{
+  gsl_multimin_function f;
+  gsl_multimin_fminimizer *s;
+  gsl_vector *x = gsl_vector_alloc (2);
+  gsl_vector *step_size = gsl_vector_alloc (2);
+  gsl_error_handler_t *old_handler;
+  int status;
+
+  f.f = &error_fn;
+  f.n = 2;
+  f.params = 0;
+
+  gsl_vector_set (x, 0, 1.5);
+  gsl_vector_set (x, 1, 1.5);
+  gsl_vector_set (step_size, 0, -1.0);
+  gsl_vector_set (step_size, 1, -1.0);
+
+  /* the reported use case runs with the error handler disabled so that
+     the returned status can be inspected */
+  old_handler = gsl_set_error_handler_off ();
+
+  s = gsl_multimin_fminimizer_alloc (T, 2);
+  gsl_multimin_fminimizer_set (s, &f, x, step_size);
+
+  status = gsl_multimin_fminimizer_iterate (s);
+
+  gsl_test (status != GSL_EBADFUNC,
+            "%s: non-finite objective gives GSL_EBADFUNC (got %d)",
+            gsl_multimin_fminimizer_name (s), status);
+
+  gsl_multimin_fminimizer_free (s);
+  gsl_vector_free (x);
+  gsl_vector_free (step_size);
+
+  gsl_set_error_handler (old_handler);
+
+  return status != GSL_EBADFUNC;
 }

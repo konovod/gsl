@@ -258,7 +258,9 @@ be substituted at runtime without modifications to the code.
    will be returned.  The error code :macro:`GSL_ENOPROG` signifies that
    the minimizer is unable to improve on its current estimate, either due
    to numerical difficulty or because a genuine local minimum has been
-   reached.
+   reached.  If the objective function returns a non-finite value during
+   an iteration, the simplex minimizers return :macro:`GSL_EBADFUNC`
+   rather than masking it as :macro:`GSL_EFAILED`.
 
 The minimizer maintains a current best estimate of the minimum at all
 times.  This information can be accessed with the following auxiliary

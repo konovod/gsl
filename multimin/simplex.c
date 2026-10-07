@@ -427,7 +427,9 @@ nmsimplex_iterate (void *vstate, gsl_multimin_function * f,
           status = nmsimplex_contract_by_best (state, lo, xc, f);
           if (status != GSL_SUCCESS)
             {
-              GSL_ERROR ("nmsimplex_contract_by_best failed", GSL_EFAILED);
+              /* propagate the actual failure (GSL_EBADFUNC for a
+                 non-finite function value) rather than masking it */
+              GSL_ERROR ("nmsimplex_contract_by_best failed", status);
             }
         }
     }

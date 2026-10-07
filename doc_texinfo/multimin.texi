@@ -272,7 +272,9 @@ If the iteration encounters an unexpected problem then an error code
 will be returned.  The error code @code{GSL_ENOPROG} signifies that
 the minimizer is unable to improve on its current estimate, either due
 to numerical difficulty or because a genuine local minimum has been
-reached.
+reached.  If the objective function returns a non-finite value during
+an iteration, the simplex minimizers return @code{GSL_EBADFUNC} rather
+than masking it as @code{GSL_EFAILED}.
 @end deftypefun
 
 @noindent
