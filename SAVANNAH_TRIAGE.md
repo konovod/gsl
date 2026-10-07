@@ -106,7 +106,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 47193 | 2016-02-18 | - | - | none | **fixed** — duplicate of #43326 (4f9f4f4fc); regression test 5346bba43 | gsl_ran_poisson_pdf with mu=0 |
 | 47345 | 2016-03-05 | bug | Accuracy problem | partial gsl_complex_arccosh.diff +1 | **fixed** — complex arccosh returns +0 (d6ec47d87) | arccosh(1) wrong sign |
 | 47348 | 2016-03-05 | bug | - | none | **fixed** - floor(x+0.5) -> rint; hyperg_1F1 integer test also missing fabs (b681165e1); coulomb keeps deliberate round-half-up | Use of incorrect ideom floor(x+0.5) |
-| 47402 | 2016-03-13 | - | - | none | rejected — Mathieu library/test design discussion, not a defect | Mathieu functions |
+| 47402 | 2016-03-13 | - | - | none | **fixed** — Mathieu return types + undocumented Fourier coefficients (a31710cf6) and angular ce/se derivatives (47727ca0e); item 3 (coefficient caching) deferred, design in SAVANNAH_REVIEW.md | Mathieu functions |
 | 47646 | 2016-04-07 | bug | Accuracy problem | partial test_beta_small.c +2 | **fixed** — code fix upstream (05c5b5179); regression test added (d64cc4d93) | gsl_ran_beta returns NaN for small arguments |
 | 48702 | 2016-08-04 | - | Runtime error | none | **fixed** — same NaN rejection as #31362 (14d595eb8) | gsl_sf_ellint_Kcomp stalls on GSL_NAN |
 | 48915 | 2016-08-26 | - | Runtime error | none | rejected — AIX-only; modules pass on x64 | some test failures on AIX system for GSL 2.1.91 |
@@ -319,7 +319,7 @@ test-quality request, `doc` = documentation matter.  `patch`: `clean`/
 | # | kind | patch | what it would add |
 |---|---|---|---|
 | 68549 | feat | - | uniform argument lists across the distribution functions (breaking) |
-| 47402 | feat | - | Mathieu functions - library/test redesign |
+| 47402 | perf | - | Mathieu coefficient caching in the workspace (items 1, 2 and 4 already done) |
 | 66742 | doc | clean | GAMS classification across 177 files |
 | 66886 | doc | clean | refactor of `specfunc/trig.c` |
 

@@ -3336,3 +3336,81 @@ would be separate work.  Recorded as `[rejected]` in `FORKNEWS`.
 
 Savannah bugs #66949, #66816, #59900, #66767, #66775 and #24252.
 
+
+## Group X - Mathieu functions: #47402 (docs and derivatives taken; coefficient caching designed only)
+
+Reviewed 2026-10-07 against the built `build-cmake/gsl.dll` (MSVC x64).
+The 2016 report has four parts; the earlier "not a defect" verdict was
+too coarse.  Items 1 and 2 are documentation defects, item 4 is new
+public API and item 3 is a performance redesign.
+
+### Items 1 and 2 - documentation - taken
+
+`gsl_sf_mathieu_a`, `_b`, `_ce`, `_se`, `_Mc` and `_Ms` return
+`double`; the manual declared all of them `int` (only the `_e` and
+`_array` forms return a code).  The public Fourier-coefficient routines
+`gsl_sf_mathieu_a_coeff` / `_b_coeff` were documented nowhere.  Both
+fixed in both manual trees.  Commit `a31710cf6`.
+
+### Item 4 - angular derivatives - taken
+
+Added `gsl_sf_mathieu_ce_deriv(_e)` and `gsl_sf_mathieu_se_deriv(_e)`,
+differentiating the normalized series term by term.  Reference values
+came from SciPy's `mathieu_cem` / `mathieu_sem`, which use the same
+normalization; agreement is a few times `1e-14` relative.  Negative
+control: stubbing the two routines fails 15 of the 16 new vectors (the
+survivor is `ce_deriv_e(0,0,pi/3)`, whose reference is exactly zero).
+Commit `47727ca0e`.  Radial derivatives (`Mc`/`Ms`) were left out: they
+need the Bessel/Hankel derivative machinery and were not asked for
+explicitly enough to justify the risk.
+
+### Item 3 - coefficient recycling - design only, deferred
+
+Request: for a fixed `q` and many `x`, do not recompute the Fourier
+coefficients on every call.  The workspace already intends this - the
+struct carries `qa`/`qb` with the comment "allow for caching of
+results: not implemented yet" - but nothing was ever built on it:
+
+* `gsl_sf_mathieu_alloc()` never initialises `qa`/`qb`, so they are
+  indeterminate; anything that reads them first has to fix this.
+* `gsl_sf_mathieu_a_array()` / `_b_array()` rerun the full
+  eigendecomposition on every call, whatever `q` is.
+* `gsl_sf_mathieu_ce_array()` / `_se_array()` call those and then
+  recompute `a_coeff` / `b_coeff` for every order on every call.
+* The scalar `gsl_sf_mathieu_ce()` / `_se()` path is worse: each call
+  rediscovers the characteristic value through `a_e` (a different,
+  non-workspace algorithm) and the coefficients again.
+
+So the reporter's "100000 identical calls" is real.  Three ways to fix
+it:
+
+* **A - transparent workspace cache.**  Add `double *ca, *cb` to the
+  workspace (one block of `GSL_SF_MATHIEU_COEFF` per order) plus
+  per-order validity flags, and use the existing `qa`/`qb` as the cache
+  key.  `ce_array` / `se_array` skip the eigendecomposition and the
+  coefficient solve when `q == work->qa` and the range is cached.
+  Callers keep using the array routines unchanged; results are
+  bit-for-bit identical.  Cost is `2*(nn+1)*100*8` bytes (about 160 kB
+  at `nn = 100`), comparable to the existing `zz` block; the public
+  struct grows, so a recompile is needed (no signature changes).
+* **B - A plus explicit API.**  Add `ce_coeff_array` / `se_coeff_array`
+  and cached evaluators (`ce_eval_e` etc.) so the scalar path can share
+  the cache too.  Much more public surface; storing user data in the
+  workspace may not be what upstream wants.
+* **C - documentation only.**  Document `a_coeff` / `b_coeff` (done in
+  item 2) with the user-side "compute once, sum yourself" pattern.  Does
+  not answer the request literally.
+
+Recommendation: implement **A** later as a result-preserving change,
+documented in the fork.  It is the only option with no API churn and it
+reuses the hooks the original author left behind.  Whatever is done,
+the cache must be invalidated when `q` changes (`ce_array`/`se_array`
+receive `q` on every call, so the comparison is against `work->qa`),
+and `nmin > 0` still needs the `aa[0..nmax]` block.  A test can only
+show the results are unchanged; "the cache was hit" needs a counter or
+timing, since a passing value check alone proves nothing.
+
+Deferred, not forgotten.  Recorded in `FORKNEWS` and
+`SAVANNAH_TRIAGE.md` as a known follow-up.
+
+
