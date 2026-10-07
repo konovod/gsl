@@ -2651,7 +2651,7 @@ SPECIALMUL.  MIXMAX is linear over GF(2^61 - 1) and so fails
 modular-rank tests, as MT19937 and PCG do; TestU01/PractRand are not in
 the suite.  Full CTest suite 56/56 on MSVC x64.
 
-### `#65728` - "Add sparse functionalities" - partly fixed
+### `#65728` - "Add sparse functionalities" - completed
 
 A feature request forwarded by the maintainer, asking for complex sparse
 support: scaling a complex sparse matrix by a *real* vector, complex
@@ -2665,12 +2665,14 @@ Moderate parts of this already existed: the complex sparse type has
 types have `alloc`/`calloc`.  Two of the missing pieces were taken once
 the eligibility rule was widened (`f218d8c83`): the complex sparse
 matrix-vector product `gsl_spblas_zgemv()` and the accumulating
-`gsl_spmatrix_*_set_add()`.  The `resize`, real-vector scaling and
-in-place unpack parts remain in the backlog.
+`gsl_spmatrix_*_set_add()`.
 
-Recorded in `FORKNEWS` under `[rejected]` (one combined entry).
-No code change, so the full CTest suite is unchanged at 56/56 on MSVC
-x64.
+The remaining four parts were taken once the filter admitted new public
+API: complex real-vector scaling (`3cdf34daa`), `gsl_spmatrix_resize`
+(`ae334370d`), `gsl_block_resize`/`gsl_vector_resize` (`4a1b3d616`) and
+`gsl_vector_complex_unpack` (`7e327561e`).  Each has an independent
+reference or invariant, a negative control and a regression test; full
+CTest 56/56 on MSVC x64.  The request is now complete.
 
 
 ## Group Q - the last open items: #51104, #53903, #53904

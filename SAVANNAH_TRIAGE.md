@@ -9,8 +9,8 @@ Scratch index, not part of the fork's record of changes. Verdicts are curated fr
 
 | status | count |
 |---|---:|
-| fixed | 130 |
-| partial | 5 |
+| fixed | 131 |
+| partial | 4 |
 | rejected | 81 |
 | deferred | 2 |
 | superseded | 1 |
@@ -177,7 +177,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 64613 | 2023-08-30 | - | Accuracy problem | inline | **fixed** — cdf beta_inc: 3 defects under fp-contract (1b1d94ee9) | fp-contract=fast stops convergence in beta_inc_AXPY/beta_cont_frac |
 | 64777 | 2023-10-14 | bug | Runtime error | inline | rejected — not-a-bug: reporter's matrix is singular | gsl_linalg_complex_LU_decomp returns incorrect results |
 | 64851 | 2023-11-03 | bug | - | clean inline gsl-config.in.patch | superseded — gsl-config exit status already done in the fork | gsl-config does not set correct status code |
-| 65728 | 2024-05-12 | feature | - | none | **partly fixed** — complex `gsl_spblas_zgemv` and accumulating `gsl_spmatrix_*_set_add` added (f218d8c83); resize/real-scaling/unpack remain in the backlog | Add sparse functionalities |
+| 65728 | 2024-05-12 | feature | - | none | **fixed** — complex `gsl_spblas_zgemv` and `gsl_spmatrix_*_set_add` (f218d8c83); complex real-vector scaling (3cdf34daa), sparse `_resize` (ae334370d), block/vector `_resize` (4a1b3d616) and complex `_unpack` (7e327561e) | Add sparse functionalities |
 | 65760 | 2024-05-19 | bug | Accuracy problem | clean erfc.c.patch | **fixed** — erfc/log_erfc overflow rewritten (708791c25) | gsl_sf_log_erfc (and gsl_sf_erc) return NaN for infinite or very large finite arguments |
 | 65868 | 2024-06-11 | - | - | clean 0001-bspline-Add-missing-definition-for-function.patch | **fixed** — gsl_bspline_eval_nonzero declared (ef3940132) | Missing definition for gsl_bspline_eval_nonzero |
 | 65912 | 2024-06-23 | bug | - | clean 0001-Correct-GSL_SET_COMPLEX-if-native-complex-available.patch +1 | **fixed** — GSL_SET_COMPLEX signed zero / non-finite (631da98f8) | GSL_SET_COMPLEX is wrong if complex.h has no support for imaginary numbers |
@@ -305,6 +305,12 @@ its extrapolation order from the driver control's error level, so a loose
 tolerance no longer pays for the highest order (`1fbb40ca3`).  It is no
 longer listed in the table.
 
+`#65728`, already partly fixed (`f218d8c83`), is now complete: complex
+real-vector scaling, `gsl_spmatrix_resize`, `gsl_block_resize`/
+`gsl_vector_resize` and `gsl_vector_complex_unpack` were added
+(`3cdf34daa`, `ae334370d`, `4a1b3d616`, `7e327561e`).  It is no longer
+listed in the table.
+
 `kind`: `feat` = new feature/API, `perf` = performance only, `test` =
 test-quality request, `doc` = documentation matter.  `patch`: `clean`/
 `partial`/`source` if an attachment was collected by the sweep, `-` if none;
@@ -312,7 +318,6 @@ test-quality request, `doc` = documentation matter.  `patch`: `clean`/
 
 | # | kind | patch | what it would add |
 |---|---|---|---|
-| 65728 | feat | - | complex sparse resize, real-vector scaling, in-place unpack (mat-vec and accumulating `_set` done, f218d8c83) |
 | 68549 | feat | - | uniform argument lists across the distribution functions (breaking) |
 | 47402 | feat | - | Mathieu functions - library/test redesign |
 | 66742 | doc | clean | GAMS classification across 177 files |
