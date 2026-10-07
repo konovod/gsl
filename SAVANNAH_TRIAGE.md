@@ -165,7 +165,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 59912 | 2021-01-20 | - | Documentation | none | **fixed** — gsl_permute/vector/matrix header files named in the permutation chapter (aa796e20b) | gsl_permutation header files |
 | 59913 | 2021-01-20 | - | - | none | **fixed** — cquad error estimate guarded against nc == 0 (f20496de6) | gsl 2.3.0 problem in gsl_integration_cquad |
 | 59914 | 2021-01-20 | - | - | none | rejected — no defect: a success story offering a build write-up; the fork's CMake+MSVC build and Windows CI/DLL workflows already cover the need | Native build of GSL-2.5 on windows 10 |
-| 60026 | 2021-02-09 | - | - | none | rejected — feature: new PRNG algorithm and API (MIXMAX); no defect alleged | Incorporate MIXMAX random number extension into GSL |
+| 60026 | 2021-02-09 | - | - | none | **deferred** — eligible under the widened rule but not yet implemented; MIXMAX needs a portable 128-bit multiply and a 32-bit output decision | Incorporate MIXMAX random number extension into GSL |
 | 60371 | 2021-04-11 | bug | Runtime error | partial bug_interp2d_domain_error_handling.c +1 | **fixed** — interp2d domain error writes NaN (2b4e2f1e5) | Interpolation domain error handling |
 | 60457 | 2021-04-26 | feature | - | clean 0001-ignore-test-files-and-doc-examples.patch +1 | **fixed** — four complex tridiagonal solvers in `linalg/tridiagcomplex.c`, verified against numpy and the residual (dd5e0a0f2, ee6eee516) | Feature request: complex tridiagonal solvers |
 | 60635 | 2021-05-19 | - | Accuracy problem | inline | **fixed** — const updated to CODATA 2022 (db695c8f2) | physical constants may need updating |

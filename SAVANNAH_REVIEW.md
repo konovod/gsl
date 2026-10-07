@@ -2626,7 +2626,7 @@ repository and not a bug fix or doc *correction* in the tree.
 Rejected - no defect and no actionable change; the Windows building path
 exists in the fork already.
 
-### `#60026` - "Incorporate MIXMAX random number extension into GSL" - rejected
+### `#60026` - "Incorporate MIXMAX random number extension into GSL" - deferred
 
 A request to add the MIXMAX family of PRNGs to GSL, citing its adoption
 in CLHEP/Geant4, CMS simulation and a NASA neutrino-telescope study.  The
@@ -2636,11 +2636,11 @@ C; a further reply asks for TestU01/PractRand evidence and states none of
 the MIXMAX variants are in the reviewer's own Dieharder quality table.
 
 This is a **feature request: a new algorithm and a new public generator
-API**, which the eligibility rule excludes outright.  No defect in the
-existing generators is alleged.  (The neighbouring PCG request, #55965,
-was taken once the rule was widened; MIXMAX is left in the backlog.)
-Rejected - new algorithm
-and API, out of scope.
+API**.  No defect in the existing generators is alleged.  (The
+neighbouring PCG request, #55965, was taken once the rule was widened;
+MIXMAX is left in the backlog.)
+Deferred - eligible under the widened rule, but it still needs a portable
+128-bit multiply and a decision on the 32-bit output.
 
 ### `#65728` - "Add sparse functionalities" - partly fixed
 
