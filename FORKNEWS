@@ -106,6 +106,7 @@ One line per change: date | tag | description | commit(s).
   2026-10-06 | [upstream] | rng: add the PCG32 generator                         | 3fd2c7475
   2026-10-07 | [upstream] | rng: add the MIXMAX17 generator                      | 260557ee9
   2026-10-06 | [upstream] | spblas, spmatrix: complex sparse mat-vec + set_add   | f218d8c83
+  2026-10-07 | [upstream] | spmatrix, block, vector: sparse request remainder | 3cdf34daa, ae334370d, 4a1b3d616, 7e327561e
   2026-10-07 | [upstream] | cdf: truncated-Gaussian inverse test tolerance       | ddb667963
   2026-10-07 | [upstream] | multimin: report GSL_EBADFUNC from the simplex minimizers | f007aa42c
   2026-10-07 | [upstream] | ode-initval: bsimp order from the driver tolerance | 1fbb40ca3
@@ -4436,8 +4437,9 @@ each element and checking the value and `nnz`, plus a duplicate that must
 not grow `nnz`.  Negative control: making `set_add` replace fails the
 accumulation checks for all 15 types.
 
-The `resize`, real-vector scaling and in-place unpack parts of the
-request remain in the backlog.
+The remaining parts of the request (complex real-vector scaling,
+sparse/vector/block `resize` and in-place unpack) were taken later; see
+the entry below.
 
 Files: `spblas/spzgemv.c`, `spblas/gsl_spblas.h`, `spblas/test.c`,
 `spmatrix/getset_source.c`, `spmatrix/getset_complex_source.c`, the 15
@@ -6180,6 +6182,53 @@ Files: `ode-initval2/bsimp.c`, `ode-initval2/test.c`,
 `doc/ode-initval.rst`, `doc_texinfo/ode-initval.texi`.
 
 Savannah bug #31109.
+
+
+## [upstream] spmatrix, block, vector: the remaining sparse request
+
+Commits: 3cdf34daa, ae334370d, 4a1b3d616, 7e327561e
+
+Savannah bug #65728 asked for several complex sparse facilities.  The
+complex sparse matrix-vector product and the accumulating `_set` were
+taken first (`f218d8c83`); the remaining four requests are implemented
+here.
+
+* `spmatrix/oper_complex_source.c`: `gsl_spmatrix_complex_scale_columns_real()`
+  (`A <- A*diag(x)`) and `gsl_spmatrix_complex_scale_rows_real()`
+  (`A <- diag(x)*A`) for a *real* vector `x`, in COO, CCS and CRS.  The
+  `float` and `long double` variants take the matching real vector type
+  through the template's `REAL_TYPE`/`REAL_FUNCTION` tokens.  Commit
+  `3cdf34daa`.
+* `spmatrix/init_source.c`: `gsl_spmatrix_resize()` (and the complex
+  form) changes the logical dimensions.  The number of stored elements
+  never changes: a shrink that would leave an element outside the new
+  bounds returns `GSL_EDOM`, so an entry is never silently dropped.
+  Growing a compressed matrix extends its pointer array with empty
+  trailing columns (CSC) or rows (CSR).  Commit `ae334370d`.
+* `block/init_source.c`, `vector/init_source.c`: `gsl_block_resize()` and
+  `gsl_vector_resize()`.  The block reallocates and preserves the
+  surviving elements; the vector resizes its owned block and rejects a
+  view (`owner == 0`) or a non-unit stride with `GSL_EINVAL`.  Commit
+  `4a1b3d616`.
+* `vector/oper_complex_source.c`: `gsl_vector_complex_unpack()` copies
+  the real and imaginary parts of a complex vector into two separate
+  real vectors (a copy, unlike the stride-2 `_real`/`_imag` views).
+  Commit `7e327561e`.
+
+Verification: each feature has an independent reference or invariant and
+a negative control that fails when the change is reverted - the complex
+product against a dense multiply, element preservation across a resize
+and `GSL_EDOM` for a discarding shrink, block/vector element preservation
+and `GSL_EINVAL` for a view, and the unpacked parts against
+`gsl_vector_complex_get`.  Negative controls are recorded in the
+individual commit messages.  Full CTest 56/56 on MSVC x64.
+
+Files: `spmatrix/oper_complex_source.c`, `spmatrix/init_source.c`,
+`block/init_source.c`, `vector/init_source.c`,
+`vector/oper_complex_source.c`, the typed headers of those modules, the
+`spmatrix`, `block` and `vector` test templates and both manuals.
+
+Savannah bug #65728.
 
 
 
