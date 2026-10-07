@@ -105,6 +105,7 @@ One line per change: date | tag | description | commit(s).
   2026-10-06 | [upstream] | ode-initval: add a fixed-step control object          | 379750b93
   2026-10-06 | [upstream] | rng: add the PCG32 generator                         | 3fd2c7475
   2026-10-06 | [upstream] | spblas, spmatrix: complex sparse mat-vec + set_add   | f218d8c83
+  2026-10-07 | [upstream] | cdf: truncated-Gaussian inverse test tolerance       | ddb667963
   2026-10-03 | [upstream] | specfunc: reject NaN in the complete elliptic integrals | 14d595eb8
   2026-10-03 | [upstream] | specfunc: terminate gamma_inc for large negative a    | 932087bcd
   2026-10-03 | [upstream] | specfunc: propagate NaN in gsl_sf_hyperg_1F1_e       | 99a73dd36
@@ -4416,6 +4417,45 @@ Files: `spblas/spzgemv.c`, `spblas/gsl_spblas.h`, `spblas/test.c`,
 typed `spmatrix` headers, both sparse test templates and both manuals.
 
 Savannah bug #65728.
+
+
+## [upstream] cdf: independent reference and realistic tolerance for the truncated-Gaussian inverses
+
+Commit: ddb667963
+
+The macOS CI job failed on one inverse truncated Gaussian vector,
+`gsl_cdf_tgaussian_Qinv(0.7424221428003318, -50.0, 50.0, 25.0)`:
+`-15.4257000000000062` observed against `-15.4257000000000151`
+expected, a `5.8e-16` relative difference just outside `TEST_TOL0`
+(`2 eps`).  Linux and Windows passed.
+
+The expected value is not an independent reference: it is this fork's
+own MSVC/x86-64 output, recorded when the vectors were added in
+`76f3b1db8`.  Computed at 60 digits with mpmath the exact inverse of the
+given double is `-15.42570000000000601...`, so arm64 macOS was returning
+the correctly rounded result and the stored reference was the outlier.
+The target probability is formed as `Pb - Q*(Pb - Pa)`; clang on arm64
+contracts that into an FMA, while MSVC and gcc at the x86-64 baseline do
+not, moving the intermediate by one ulp.  `gsl_cdf_gaussian_Pinv` is
+AS241 and itself only accurate to a few ulp, so the end result moves by
+a couple of ulp between targets - `TEST_TOL0` cannot cover that.
+
+The reference is replaced by the Burkardt value `-15.4257` and the
+inverse vectors (both `Pinv` and `Qinv`) use `TEST_TOL1` (`16 eps`);
+`TEST_TOL0` would also reject the MSVC result against the corrected
+reference.  The forward `P/Q` vectors keep `TEST_TOL2`.
+
+Verification: `ctest` 56/56 on MSVC x64.  Negative control: with the
+reference corrected but the tolerance left at `TEST_TOL0`, the MSVC
+result is `9.2e-16` relative from `-15.4257`, outside `2 eps`, so the
+vector fails; the macOS result was `5.8e-16` from the old reference,
+also outside `2 eps`, which is the failure the CI reported.  The arm64
+outcome is argued from the contraction difference and the CI numbers,
+not reproduced locally.
+
+Files: `cdf/test.c`.
+
+Savannah bug #59900.
 
 
 ## [rejected] meta: the last open-bug reports (51104, 53903, 53904)
