@@ -292,3 +292,43 @@ FUNCTION (gsl_vector, axpby) (const BASE alpha,
       return GSL_SUCCESS;
     }
 }
+
+/*
+gsl_vector_complex_unpack()
+  Copy the real and imaginary parts of a complex vector into two separate
+  real vectors.  This is a copy, not a view, so it is distinct from
+  gsl_vector_complex_real/imag, which return stride-2 views of the same
+  complex storage.
+
+Inputs: v    - complex vector
+        real - (output) real parts, length v->size
+        imag - (output) imaginary parts, length v->size
+*/
+
+int
+FUNCTION (gsl_vector, unpack) (const TYPE (gsl_vector) * v,
+                               REAL_TYPE (gsl_vector) * real,
+                               REAL_TYPE (gsl_vector) * imag)
+{
+  if (real->size != v->size || imag->size != v->size)
+    {
+      GSL_ERROR ("output vectors must have the same length as the input",
+                 GSL_EBADLEN);
+    }
+  else
+    {
+      const size_t N = v->size;
+      const size_t stride = v->stride;
+      const size_t stride_real = real->stride;
+      const size_t stride_imag = imag->stride;
+      size_t i;
+
+      for (i = 0; i < N; i++)
+        {
+          real->data[i * stride_real] = v->data[2 * i * stride];
+          imag->data[i * stride_imag] = v->data[2 * i * stride + 1];
+        }
+
+      return GSL_SUCCESS;
+    }
+}

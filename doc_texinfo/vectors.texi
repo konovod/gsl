@@ -545,6 +545,14 @@ The function @code{gsl_vector_complex_const_imag} is equivalent to
 declared @code{const}.
 @end deftypefun
 
+@deftypefun int gsl_vector_complex_unpack (const gsl_vector_complex * @var{v}, gsl_vector * @var{real}, gsl_vector * @var{imag})
+This function copies the real and imaginary parts of the complex vector
+@var{v} into the two real vectors @var{real} and @var{imag}, which must
+each have the same length as @var{v}.  Unlike the views returned by
+@code{gsl_vector_complex_real} and @code{gsl_vector_complex_imag}, this
+is a copy into separate storage.
+@end deftypefun
+
 @deftypefun gsl_vector_view gsl_vector_view_array (double * @var{base}, size_t @var{n}) 
 @deftypefunx {gsl_vector_const_view} gsl_vector_const_view_array (const double * @var{base}, size_t @var{n})
 These functions return a vector view of an array.  The start of the new

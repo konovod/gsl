@@ -487,6 +487,40 @@ FUNCTION (test, func) (size_t stride, size_t N)
     TEST (status, "_imag" DESC);
   }
 
+  /* test unpack: split into separate real and imaginary vectors */
+  {
+    REAL_TYPE (gsl_vector) * re = REAL_FUNCTION (gsl_vector, calloc) (N);
+    REAL_TYPE (gsl_vector) * im = REAL_FUNCTION (gsl_vector, calloc) (N);
+    int s = FUNCTION (gsl_vector, unpack) (v, re, im);
+
+    TEST (s != GSL_SUCCESS, "_unpack status");
+
+    s = 0;
+    for (i = 0; i < N; i++)
+      {
+        BASE z = FUNCTION (gsl_vector, get) (v, i);
+
+        if (REAL_FUNCTION (gsl_vector, get) (re, i) != GSL_REAL(z) ||
+            REAL_FUNCTION (gsl_vector, get) (im, i) != GSL_IMAG(z))
+          s = 1;
+      }
+    TEST (s, "_unpack real/imag parts");
+
+    /* mismatched output length is rejected */
+    {
+      REAL_TYPE (gsl_vector) * bad = REAL_FUNCTION (gsl_vector, alloc) (N + 1);
+      gsl_error_handler_t *old_handler = gsl_set_error_handler_off ();
+
+      s = FUNCTION (gsl_vector, unpack) (v, bad, im);
+      gsl_set_error_handler (old_handler);
+      TEST (s != GSL_EBADLEN, "_unpack rejects wrong length");
+      REAL_FUNCTION (gsl_vector, free) (bad);
+    }
+
+    REAL_FUNCTION (gsl_vector, free) (re);
+    REAL_FUNCTION (gsl_vector, free) (im);
+  }
+
 
   /* test resize on an owning vector, and its rejection on a view */
   if (stride == 1)

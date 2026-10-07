@@ -140,6 +140,13 @@ gsl_vector_complex_float_const_real (const gsl_vector_complex_float *v);
 _gsl_vector_float_const_view 
 gsl_vector_complex_float_const_imag (const gsl_vector_complex_float *v);
 
+/* unpack a complex vector into separate real and imaginary vectors */
+
+int
+gsl_vector_complex_float_unpack (const gsl_vector_complex_float * v,
+                                 gsl_vector_float * real,
+                                 gsl_vector_float * imag);
+
 
 /* Operations */
 

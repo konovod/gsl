@@ -506,6 +506,14 @@ vector.
    :func:`gsl_vector_complex_imag` but can be used for vectors which are
    declared :code:`const`.
 
+.. function:: int gsl_vector_complex_unpack (const gsl_vector_complex * v, gsl_vector * real, gsl_vector * imag)
+
+   This function copies the real and imaginary parts of the complex
+   vector :data:`v` into the two real vectors :data:`real` and
+   :data:`imag`, which must each have the same length as :data:`v`.
+   Unlike the views returned by :func:`gsl_vector_complex_real` and
+   :func:`gsl_vector_complex_imag`, this is a copy into separate storage.
+
 .. function:: gsl_vector_view gsl_vector_view_array (double * base, size_t n) 
               gsl_vector_const_view gsl_vector_const_view_array (const double * base, size_t n)
 

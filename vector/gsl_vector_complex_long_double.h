@@ -140,6 +140,13 @@ gsl_vector_complex_long_double_const_real (const gsl_vector_complex_long_double 
 _gsl_vector_long_double_const_view 
 gsl_vector_complex_long_double_const_imag (const gsl_vector_complex_long_double *v);
 
+/* unpack a complex vector into separate real and imaginary vectors */
+
+int
+gsl_vector_complex_long_double_unpack (const gsl_vector_complex_long_double * v,
+                                       gsl_vector_long_double * real,
+                                       gsl_vector_long_double * imag);
+
 
 /* Operations */
 
