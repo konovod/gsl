@@ -116,6 +116,7 @@ gsl_spmatrix_uint * gsl_spmatrix_uint_alloc_nzmax (const size_t n1, const size_t
                                                      const size_t nzmax, const int sptype);
 void gsl_spmatrix_uint_free (gsl_spmatrix_uint * m);
 int gsl_spmatrix_uint_realloc (const size_t nzmax, gsl_spmatrix_uint * m);
+int gsl_spmatrix_uint_resize (gsl_spmatrix_uint * m, const size_t n1, const size_t n2);
 size_t gsl_spmatrix_uint_nnz (const gsl_spmatrix_uint * m);
 const char * gsl_spmatrix_uint_type (const gsl_spmatrix_uint * m);
 int gsl_spmatrix_uint_set_zero (gsl_spmatrix_uint * m);

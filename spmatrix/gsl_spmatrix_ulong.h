@@ -116,6 +116,7 @@ gsl_spmatrix_ulong * gsl_spmatrix_ulong_alloc_nzmax (const size_t n1, const size
                                                      const size_t nzmax, const int sptype);
 void gsl_spmatrix_ulong_free (gsl_spmatrix_ulong * m);
 int gsl_spmatrix_ulong_realloc (const size_t nzmax, gsl_spmatrix_ulong * m);
+int gsl_spmatrix_ulong_resize (gsl_spmatrix_ulong * m, const size_t n1, const size_t n2);
 size_t gsl_spmatrix_ulong_nnz (const gsl_spmatrix_ulong * m);
 const char * gsl_spmatrix_ulong_type (const gsl_spmatrix_ulong * m);
 int gsl_spmatrix_ulong_set_zero (gsl_spmatrix_ulong * m);

@@ -292,6 +292,19 @@ to returning a null pointer.
 
    Input matrix formats supported: :ref:`COO <sec_spmatrix-coo>`, :ref:`CSC <sec_spmatrix-csc>`, :ref:`CSR <sec_spmatrix-csr>`
 
+.. function:: int gsl_spmatrix_resize (gsl_spmatrix * m, const size_t n1, const size_t n2)
+
+   This function changes the logical dimensions of :data:`m` to
+   :data:`n1`-by-:data:`n2`.  The number of stored elements does not
+   change.  A shrink that would leave a stored element outside the new
+   dimensions is rejected with :macro:`GSL_EDOM`, so an entry is never
+   silently discarded.  Growing a compressed matrix extends its pointer
+   array with empty trailing columns (CSC) or rows (CSR); a triplet
+   matrix only relabels its dimensions.  The complex variants
+   ``gsl_spmatrix_complex_*`` are also provided.
+
+   Input matrix formats supported: :ref:`COO <sec_spmatrix-coo>`, :ref:`CSC <sec_spmatrix-csc>`, :ref:`CSR <sec_spmatrix-csr>`
+
 .. function:: void gsl_spmatrix_free (gsl_spmatrix * m)
 
    This function frees the memory associated with the sparse matrix :data:`m`.

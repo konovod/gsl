@@ -258,6 +258,138 @@ FUNCTION (gsl_spmatrix, realloc) (const size_t nzmax, TYPE (gsl_spmatrix) * m)
   return status;
 }
 
+/*
+gsl_spmatrix_resize()
+  Change the logical dimensions of a matrix.
+
+The number of stored elements does not change.  A shrink that would
+leave a stored element outside the new dimensions is rejected, so the
+caller never silently loses an entry.  Growing a compressed matrix
+extends its pointer array with empty trailing columns (CSC) or rows
+(CSR).  A triplet matrix only relabels its dimensions.
+
+Inputs: m  - sparse matrix
+        n1 - new number of rows
+        n2 - new number of columns
+
+Return: success or error
+*/
+
+int
+FUNCTION (gsl_spmatrix, resize) (TYPE (gsl_spmatrix) * m,
+                                 const size_t n1, const size_t n2)
+{
+  if (GSL_SPMATRIX_ISCOO(m))
+    {
+      if (n1 < m->size1 || n2 < m->size2)
+        {
+          size_t n;
+
+          for (n = 0; n < m->nz; ++n)
+            {
+              if ((size_t) m->i[n] >= n1 || (size_t) m->p[n] >= n2)
+                {
+                  GSL_ERROR("new dimensions would discard matrix elements",
+                            GSL_EDOM);
+                }
+            }
+        }
+    }
+  else if (GSL_SPMATRIX_ISCSC(m))
+    {
+      if (n1 < m->size1)
+        {
+          size_t n;
+
+          for (n = 0; n < m->nz; ++n)
+            {
+              if ((size_t) m->i[n] >= n1)
+                {
+                  GSL_ERROR("new dimensions would discard matrix elements",
+                            GSL_EDOM);
+                }
+            }
+        }
+
+      if (n2 < m->size2 && m->nz > (size_t) m->p[n2])
+        {
+          GSL_ERROR("new dimensions would discard matrix elements", GSL_EDOM);
+        }
+
+      if (n2 != m->size2)
+        {
+          int *ptr = realloc(m->p, (n2 + 1) * sizeof(int));
+
+          if (ptr == NULL)
+            {
+              GSL_ERROR("failed to allocate space for column pointers",
+                        GSL_ENOMEM);
+            }
+
+          m->p = ptr;
+
+          if (n2 > m->size2)
+            {
+              size_t j;
+
+              for (j = m->size2; j <= n2; ++j)
+                m->p[j] = (int) m->nz;
+            }
+        }
+    }
+  else if (GSL_SPMATRIX_ISCSR(m))
+    {
+      if (n2 < m->size2)
+        {
+          size_t n;
+
+          for (n = 0; n < m->nz; ++n)
+            {
+              if ((size_t) m->i[n] >= n2)
+                {
+                  GSL_ERROR("new dimensions would discard matrix elements",
+                            GSL_EDOM);
+                }
+            }
+        }
+
+      if (n1 < m->size1 && m->nz > (size_t) m->p[n1])
+        {
+          GSL_ERROR("new dimensions would discard matrix elements", GSL_EDOM);
+        }
+
+      if (n1 != m->size1)
+        {
+          int *ptr = realloc(m->p, (n1 + 1) * sizeof(int));
+
+          if (ptr == NULL)
+            {
+              GSL_ERROR("failed to allocate space for row pointers",
+                        GSL_ENOMEM);
+            }
+
+          m->p = ptr;
+
+          if (n1 > m->size1)
+            {
+              size_t i;
+
+              for (i = m->size1; i <= n1; ++i)
+                m->p[i] = (int) m->nz;
+            }
+        }
+    }
+  else
+    {
+      GSL_ERROR("unknown sparse matrix type", GSL_EINVAL);
+    }
+
+  m->size1 = n1;
+  m->size2 = n2;
+
+  return GSL_SUCCESS;
+}
+
 size_t
 FUNCTION (gsl_spmatrix, nnz) (const TYPE (gsl_spmatrix) * m)
 {

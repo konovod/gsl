@@ -214,6 +214,86 @@ FUNCTION (test, realloc) (const size_t M, const size_t N)
 }
 
 static void
+FUNCTION (test, resize) (const size_t M, const size_t N, const int sptype,
+                         const double density, gsl_rng * r)
+{
+  TYPE (gsl_spmatrix) * A = FUNCTION (test, random_int) (M, N, density, 1.0, 20.0, r);
+  TYPE (gsl_spmatrix) * B = FUNCTION (gsl_spmatrix, compress) (A, sptype);
+  const size_t n1 = M + 5;
+  const size_t n2 = N + 3;
+  const size_t i0 = (size_t) A->i[0];
+  const size_t j0 = (size_t) A->p[0];
+  size_t i, j;
+  gsl_error_handler_t *old_handler;
+  int s;
+
+  /* grow: dimensions change, elements are preserved */
+  s = FUNCTION (gsl_spmatrix, resize) (B, n1, n2);
+  gsl_test (s, NAME (gsl_spmatrix) "_resize[%zu,%zu](%s) grow status",
+            M, N, FUNCTION (gsl_spmatrix, type) (B));
+
+  gsl_test (B->size1 != n1 || B->size2 != n2,
+            NAME (gsl_spmatrix) "_resize[%zu,%zu](%s) grow dimensions",
+            M, N, FUNCTION (gsl_spmatrix, type) (B));
+
+  status = 0;
+  for (i = 0; i < M; ++i)
+    for (j = 0; j < N; ++j)
+      {
+        BASE aij = FUNCTION (gsl_spmatrix, get) (A, i, j);
+        BASE bij = FUNCTION (gsl_spmatrix, get) (B, i, j);
+
+        if (GSL_REAL(aij) != GSL_REAL(bij) || GSL_IMAG(aij) != GSL_IMAG(bij))
+          status = 1;
+      }
+
+  gsl_test (status, NAME (gsl_spmatrix) "_resize[%zu,%zu](%s) grow elements",
+            M, N, FUNCTION (gsl_spmatrix, type) (B));
+
+  /* shrink back to the original dimensions */
+  s = FUNCTION (gsl_spmatrix, resize) (B, M, N);
+  gsl_test (s, NAME (gsl_spmatrix) "_resize[%zu,%zu](%s) shrink status",
+            M, N, FUNCTION (gsl_spmatrix, type) (B));
+
+  status = 0;
+  for (i = 0; i < M; ++i)
+    for (j = 0; j < N; ++j)
+      {
+        BASE aij = FUNCTION (gsl_spmatrix, get) (A, i, j);
+        BASE bij = FUNCTION (gsl_spmatrix, get) (B, i, j);
+
+        if (GSL_REAL(aij) != GSL_REAL(bij) || GSL_IMAG(aij) != GSL_IMAG(bij))
+          status = 1;
+      }
+
+  gsl_test (status, NAME (gsl_spmatrix) "_resize[%zu,%zu](%s) shrink elements",
+            M, N, FUNCTION (gsl_spmatrix, type) (B));
+
+  /* a shrink that would discard a stored element must be rejected and
+     leave the matrix unchanged */
+  old_handler = gsl_set_error_handler_off ();
+
+  s = FUNCTION (gsl_spmatrix, resize) (B, i0, N);
+  gsl_test (s != GSL_EDOM,
+            NAME (gsl_spmatrix) "_resize[%zu,%zu](%s) reject row shrink",
+            M, N, FUNCTION (gsl_spmatrix, type) (B));
+
+  s = FUNCTION (gsl_spmatrix, resize) (B, M, j0);
+  gsl_test (s != GSL_EDOM,
+            NAME (gsl_spmatrix) "_resize[%zu,%zu](%s) reject column shrink",
+            M, N, FUNCTION (gsl_spmatrix, type) (B));
+
+  gsl_set_error_handler (old_handler);
+
+  gsl_test (B->size1 != M || B->size2 != N,
+            NAME (gsl_spmatrix) "_resize[%zu,%zu](%s) preserved after reject",
+            M, N, FUNCTION (gsl_spmatrix, type) (B));
+
+  FUNCTION (gsl_spmatrix, free) (A);
+  FUNCTION (gsl_spmatrix, free) (B);
+}
+
+static void
 FUNCTION (test, getset) (const size_t M, const size_t N, const int sptype)
 {
   TYPE (gsl_spmatrix) * A = FUNCTION (gsl_spmatrix, alloc_nzmax) (M, N, M * N, GSL_SPMATRIX_COO);
@@ -897,6 +977,10 @@ FUNCTION (test, all) (const size_t M, const size_t N, const double density, gsl_
   FUNCTION (test, alloc) (M, N, GSL_SPMATRIX_CSR);
 
   FUNCTION (test, realloc) (M, N);
+
+  FUNCTION (test, resize) (M, N, GSL_SPMATRIX_COO, density, r);
+  FUNCTION (test, resize) (M, N, GSL_SPMATRIX_CSC, density, r);
+  FUNCTION (test, resize) (M, N, GSL_SPMATRIX_CSR, density, r);
 
   FUNCTION (test, getset) (M, N, GSL_SPMATRIX_COO);
   FUNCTION (test, getset) (M, N, GSL_SPMATRIX_CSC);

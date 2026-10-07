@@ -116,6 +116,7 @@ gsl_spmatrix_complex_long_double * gsl_spmatrix_complex_long_double_alloc_nzmax 
                                                                      const size_t nzmax, const int sptype);
 void gsl_spmatrix_complex_long_double_free (gsl_spmatrix_complex_long_double * m);
 int gsl_spmatrix_complex_long_double_realloc (const size_t nzmax, gsl_spmatrix_complex_long_double * m);
+int gsl_spmatrix_complex_long_double_resize (gsl_spmatrix_complex_long_double * m, const size_t n1, const size_t n2);
 size_t gsl_spmatrix_complex_long_double_nnz (const gsl_spmatrix_complex_long_double * m);
 const char * gsl_spmatrix_complex_long_double_type (const gsl_spmatrix_complex_long_double * m);
 int gsl_spmatrix_complex_long_double_set_zero (gsl_spmatrix_complex_long_double * m);

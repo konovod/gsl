@@ -158,6 +158,17 @@ This flag specifies compressed row storage.
 The allocated @code{gsl_spmatrix} structure is of size @math{O(nzmax)}.
 @end deftypefun
 
+@deftypefun int gsl_spmatrix_resize (gsl_spmatrix * @var{m}, const size_t @var{n1}, const size_t @var{n2})
+This function changes the logical dimensions of @var{m} to
+@var{n1}-by-@var{n2}.  The number of stored elements does not change.  A
+shrink that would leave a stored element outside the new dimensions is
+rejected with @code{GSL_EDOM}, so an entry is never silently discarded.
+Growing a compressed matrix extends its pointer array with empty trailing
+columns (CSC) or rows (CSR); a triplet matrix only relabels its
+dimensions.  The complex variants @code{gsl_spmatrix_complex_*} are also
+provided.
+@end deftypefn
+
 @deftypefun int gsl_spmatrix_realloc (const size_t @var{nzmax}, gsl_spmatrix * @var{m})
 This function reallocates the storage space for @var{m} to accomodate
 @var{nzmax} non-zero elements. It is typically called internally by

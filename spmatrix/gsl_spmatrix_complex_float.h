@@ -116,6 +116,7 @@ gsl_spmatrix_complex_float * gsl_spmatrix_complex_float_alloc_nzmax (const size_
                                                                      const size_t nzmax, const int sptype);
 void gsl_spmatrix_complex_float_free (gsl_spmatrix_complex_float * m);
 int gsl_spmatrix_complex_float_realloc (const size_t nzmax, gsl_spmatrix_complex_float * m);
+int gsl_spmatrix_complex_float_resize (gsl_spmatrix_complex_float * m, const size_t n1, const size_t n2);
 size_t gsl_spmatrix_complex_float_nnz (const gsl_spmatrix_complex_float * m);
 const char * gsl_spmatrix_complex_float_type (const gsl_spmatrix_complex_float * m);
 int gsl_spmatrix_complex_float_set_zero (gsl_spmatrix_complex_float * m);
