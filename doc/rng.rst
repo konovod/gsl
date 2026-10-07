@@ -658,6 +658,25 @@ randomness.
      generators", Computers in Physics, 12(4), Jul/Aug
      1998, pp 385--392.
 
+.. index:: PCG random number generator
+
+.. var:: gsl_rng_type * gsl_rng_pcg32
+
+   This is the 32-bit output member of the PCG family of O'Neill.  It
+   combines a 64-bit linear congruential generator,
+
+   .. math:: state_{n+1} = state_n \times 6364136223846793005 + inc
+
+   with an odd increment :math:`inc`, and applies a permutation to the
+   state to produce each 32-bit output.  The period is :math:`2^{64}`.
+   Seeding with :func:`gsl_rng_set` uses the seed for both the initial
+   state and the stream selector, so distinct seeds give distinct
+   streams.  For more information see,
+
+   * M. E. O'Neill, "PCG: A Family of Simple Fast Space-Efficient
+     Statistically Good Algorithms for Random Number Generation",
+     Harvey Mudd College, 2014.
+
 Unix random number generators
 =============================
 

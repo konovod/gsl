@@ -147,6 +147,14 @@ main (void)
   rng_test (gsl_rng_mt19937_1998, 4357, 1000, 1309179303);
   rng_test (gsl_rng_tt800, 0, 10000, 2856609219UL);
 
+  /* PCG32.  The reference implementation of the published algorithm
+     gives pcg32_srandom_r(42, 54) -> 0xa15c02b7, 0x7b47f409, ...; GSL
+     seeds with initstate = initseq = seed.  Values below are from an
+     independent transcription of the algorithm. */
+  rng_test (gsl_rng_pcg32, 1, 1, 0xc9828f91UL);
+  rng_test (gsl_rng_pcg32, 42, 5, 0xfc126e1cUL);
+  rng_test (gsl_rng_pcg32, 12345, 5, 0x0c0b2eeeUL);
+
   rng_test (gsl_rng_ran0, 0, 10000, 1115320064);
   rng_test (gsl_rng_ran1, 0, 10000, 1491066076);
   rng_test (gsl_rng_ran2, 0, 10000, 1701364455);

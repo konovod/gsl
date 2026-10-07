@@ -48,6 +48,7 @@ gsl_rng_types_setup (void)
   ADD(gsl_rng_mt19937);
   ADD(gsl_rng_mt19937_1999);
   ADD(gsl_rng_mt19937_1998);
+  ADD(gsl_rng_pcg32);
   ADD(gsl_rng_r250);
   ADD(gsl_rng_ran0);
   ADD(gsl_rng_ran1);

@@ -607,6 +607,7 @@ set(GSL_SOURCES
     rng/minstd.c
     rng/mrg.c
     rng/mt.c
+    rng/pcg.c
     rng/r250.c
     rng/ran0.c
     rng/ran1.c

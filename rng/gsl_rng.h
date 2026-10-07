@@ -75,6 +75,7 @@ GSL_VAR const gsl_rng_type *gsl_rng_mrg;
 GSL_VAR const gsl_rng_type *gsl_rng_mt19937;
 GSL_VAR const gsl_rng_type *gsl_rng_mt19937_1999;
 GSL_VAR const gsl_rng_type *gsl_rng_mt19937_1998;
+GSL_VAR const gsl_rng_type *gsl_rng_pcg32;
 GSL_VAR const gsl_rng_type *gsl_rng_r250;
 GSL_VAR const gsl_rng_type *gsl_rng_ran0;
 GSL_VAR const gsl_rng_type *gsl_rng_ran1;
