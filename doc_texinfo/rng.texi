@@ -783,6 +783,28 @@ Mudd College, 2014.
 @end itemize
 @end deffn
 
+@cindex MIXMAX random number generator
+@deffn {Generator} gsl_rng_mixmax17
+This is the MIXMAX generator with the 17-dimensional matrix over the
+Mersenne prime field @math{GF(2^{61}-1)}, the variant used as the default
+by CLHEP and Geant4.  The state is advanced by a matrix multiplication
+that folds each component into the running partial sum, giving a period
+of about @c{$10^{294}$}
+@math{10^294}.  Each draw is a 61-bit integer; @code{gsl_rng_get} returns
+its low 32 bits, while @code{gsl_rng_uniform} uses the full 61-bit value.
+Seeding with @code{gsl_rng_set} follows the reference @code{seed_spbox}
+procedure; a zero seed is replaced by 1.  For more information see,
+@itemize @w{}
+@item
+K. Savvidy, ``The MIXMAX random number generator'', @cite{Computer
+Physics Communications}, 196 (2015) 161--165.
+@item
+K. Savvidy and G. Savvidy, ``Spectrum and entropy of C-systems.  MIXMAX
+random number generator'', @cite{Chaos, Solitons & Fractals}, 91 (2016)
+33--38.
+@end itemize
+@end deffn
+
 @node Unix random number generators
 @section Unix random number generators
 

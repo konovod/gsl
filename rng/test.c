@@ -155,6 +155,18 @@ main (void)
   rng_test (gsl_rng_pcg32, 42, 5, 0xfc126e1cUL);
   rng_test (gsl_rng_pcg32, 12345, 5, 0x0c0b2eeeUL);
 
+  /* MIXMAX, N = 17 over 2^61-1, the CLHEP/Geant4 default.  The values
+     are the low 32 bits of the 61-bit output after n draws, obtained
+     from ROOT's independent MIXMAX implementation (builtins/mixmax) run
+     with N=17 and the seed_spbox seeding path. */
+  rng_test (gsl_rng_mixmax17, 1, 1, 0xfef2ce47UL);
+  rng_test (gsl_rng_mixmax17, 1, 10000, 0xab8205b8UL);
+  rng_test (gsl_rng_mixmax17, 42, 10000, 0x4f09faafUL);
+  rng_test (gsl_rng_mixmax17, 12345, 10000, 0x2ce4c245UL);
+  rng_test (gsl_rng_mixmax17, 1, 1000000, 0x3946b181UL);
+  rng_test (gsl_rng_mixmax17, 42, 1000000, 0xd273595dUL);
+  rng_test (gsl_rng_mixmax17, 12345, 1000000, 0x267f739aUL);
+
   rng_test (gsl_rng_ran0, 0, 10000, 1115320064);
   rng_test (gsl_rng_ran1, 0, 10000, 1491066076);
   rng_test (gsl_rng_ran2, 0, 10000, 1701364455);

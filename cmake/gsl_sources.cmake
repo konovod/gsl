@@ -605,6 +605,7 @@ set(GSL_SOURCES
     rng/knuthran2002.c
     rng/lecuyer21.c
     rng/minstd.c
+    rng/mixmax17.c
     rng/mrg.c
     rng/mt.c
     rng/pcg.c

@@ -677,6 +677,27 @@ randomness.
      Statistically Good Algorithms for Random Number Generation",
      Harvey Mudd College, 2014.
 
+.. index:: MIXMAX random number generator
+
+.. var:: gsl_rng_type * gsl_rng_mixmax17
+
+   This is the MIXMAX generator with the 17-dimensional matrix over the
+   Mersenne prime field :math:`\mathrm{GF}(2^{61}-1)`, the variant used
+   as the default by CLHEP and Geant4.  The state is advanced by a
+   matrix multiplication that folds each component into the running
+   partial sum, giving a period of about :math:`10^{294}`.  Each draw is
+   a 61-bit integer; :func:`gsl_rng_get` returns its low 32 bits, while
+   :func:`gsl_rng_uniform` uses the full 61-bit value.  Seeding with
+   :func:`gsl_rng_set` follows the reference ``seed_spbox`` procedure; a
+   zero seed is replaced by 1.  For more information see,
+
+   * K. Savvidy, "The MIXMAX random number generator",
+     Computer Physics Communications, 196 (2015) 161--165.
+
+   * K. Savvidy and G. Savvidy, "Spectrum and entropy of C-systems.
+     MIXMAX random number generator", Chaos, Solitons & Fractals,
+     91 (2016) 33--38.
+
 Unix random number generators
 =============================
 
