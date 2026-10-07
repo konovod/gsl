@@ -2878,7 +2878,11 @@ essay.
   `#66850`, `#66922`, `#67359`) were taken as correctness fixes,
   `#68098` was taken later as an argument-range fix (`6da0c08f3`) and
   `#45782` (configurable finite-difference Jacobian step) was taken as
-  new public API (`8abbe2c30`); the rest remain out of scope.
+  new public API (`8abbe2c30`).  `#41527` was taken later as a bug fix
+  once the filter admitted contract changes to existing API: the simplex
+  minimizers propagate `GSL_EBADFUNC` instead of masking a non-finite
+  objective as `GSL_EFAILED` (`f007aa42c`); it is no longer an API
+  extension.  `#67774` remains out of scope.
 * Breaking/behaviour change: `#68549`.
 * Documentation/test/refactor with no patch, or a reorganisation:
   `#66742`, `#66826`, `#66844`, `#66874`, `#66877`, `#66880`, `#66886`.

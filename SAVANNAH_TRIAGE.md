@@ -9,10 +9,10 @@ Scratch index, not part of the fork's record of changes. Verdicts are curated fr
 
 | status | count |
 |---|---:|
-| fixed | 127 |
+| fixed | 129 |
 | partial | 5 |
-| rejected | 83 |
-| deferred | 3 |
+| rejected | 82 |
+| deferred | 2 |
 | superseded | 1 |
 | not reviewed | 0 |
 
@@ -69,7 +69,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 40196 | 2013-10-07 | - | Documentation | none | **fixed** — the out-of-range key coercion (< 1 -> GAUSS15, > 6 -> GAUSS61) documented (6feb963d3) | Document gsl_integration_qag behavior on key out-of-range |
 | 40755 | 2013-11-30 | bug | Accuracy problem | none | **fixed** — double cast in the Jn/Yn asymptotics test (a43fc0055) | Sporadic nan's from gsl_sf_bessel_Jn an related functions |
 | 41457 | 2014-02-04 | - | Runtime error | none | rejected — already fixed upstream by 6ed874986 (memset covers the padding bytes) | valgrind finds errors in matrix/test.c |
-| 41527 | 2014-02-09 | bug | - | none | rejected — API/contract change (error codes from multimin); out of scope | Change/add multimin functions to return error codes |
+| 41527 | 2014-02-09 | bug | - | none | **fixed** — the simplex minimizers propagate GSL_EBADFUNC instead of masking a non-finite objective as GSL_EFAILED (f007aa42c) | Change/add multimin functions to return error codes |
 | 41605 | 2014-02-15 | - | Documentation | none | **fixed** — already complete in both manuals (histogram.rst / histogram.texi); no fork change needed | gsl_histogram_pdf docs |
 | 41837 | 2014-03-11 | - | Runtime error | none | **fixed** (inherited) — the three reported values are correct on the current build; the finite-sum-skip concern does not reproduce | bugs in gsl_sf_hyperg_U |
 | 42042 | 2014-04-03 | bug | Runtime error | none | **fixed** — non-vanishing half-integer Jnu endpoint (e6e34279a) | nan bug in bessel_Jnu |
@@ -294,6 +294,11 @@ finite-difference Jacobian step `#45782`, the complex zeta/eta/Hurwitz
 functions `#57173` and the new fixed quadrature rules `#32257`.  They
 are no longer listed in the table; see `FORKNEWS`.
 
+`#41527` was taken as a bug fix once the filter was widened to admit
+contract changes to existing API: the multimin simplex minimizers now
+return `GSL_EBADFUNC` for a non-finite objective instead of masking it as
+`GSL_EFAILED` (`f007aa42c`); it is no longer listed in the table.
+
 `kind`: `feat` = new feature/API, `perf` = performance only, `test` =
 test-quality request, `doc` = documentation matter.  `patch`: `clean`/
 `partial`/`source` if an attachment was collected by the sweep, `-` if none;
@@ -301,7 +306,6 @@ test-quality request, `doc` = documentation matter.  `patch`: `clean`/
 
 | # | kind | patch | what it would add |
 |---|---|---|---|
-| 41527 | feat | - | multimin functions return error codes |
 | 65728 | feat | - | complex sparse resize, real-vector scaling, in-place unpack (mat-vec and accumulating `_set` done, f218d8c83) |
 | 68549 | feat | - | uniform argument lists across the distribution functions (breaking) |
 | 47402 | feat | - | Mathieu functions - library/test redesign |
