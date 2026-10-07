@@ -117,6 +117,71 @@ FUNCTION (gsl_spmatrix, scale_columns) (TYPE (gsl_spmatrix) * m, const TYPE (gsl
     }
 }
 
+/* m := m * diag(x) for real x */
+int
+FUNCTION (gsl_spmatrix, scale_columns_real) (TYPE (gsl_spmatrix) * m,
+                                             const REAL_TYPE (gsl_vector) * x)
+{
+  if (m->size2 != x->size)
+    {
+      GSL_ERROR("x vector length does not match matrix", GSL_EBADLEN);
+    }
+  else
+    {
+      ATOMIC * Ad = m->data;
+
+      if (GSL_SPMATRIX_ISCSC(m))
+        {
+          const int *Ap = m->p;
+          int p;
+          size_t j;
+
+          for (j = 0; j < m->size2; ++j)
+            {
+              ATOMIC xj = REAL_FUNCTION (gsl_vector, get) (x, j);
+
+              for (p = Ap[j]; p < Ap[j + 1]; ++p)
+                {
+                  Ad[2 * p] *= xj;
+                  Ad[2 * p + 1] *= xj;
+                }
+            }
+        }
+      else if (GSL_SPMATRIX_ISCSR(m))
+        {
+          const int *Aj = m->i;
+          size_t i;
+
+          for (i = 0; i < m->nz; ++i)
+            {
+              ATOMIC y = REAL_FUNCTION (gsl_vector, get) (x, Aj[i]);
+
+              Ad[2 * i] *= y;
+              Ad[2 * i + 1] *= y;
+            }
+        }
+      else if (GSL_SPMATRIX_ISCOO(m))
+        {
+          const int *Aj = m->p;
+          size_t i;
+
+          for (i = 0; i < m->nz; ++i)
+            {
+              ATOMIC y = REAL_FUNCTION (gsl_vector, get) (x, Aj[i]);
+
+              Ad[2 * i] *= y;
+              Ad[2 * i + 1] *= y;
+            }
+        }
+      else
+        {
+          GSL_ERROR("unknown sparse matrix type", GSL_EINVAL);
+        }
+
+      return GSL_SUCCESS;
+    }
+}
+
 /* m := diag(x) * m */
 int
 FUNCTION (gsl_spmatrix, scale_rows) (TYPE (gsl_spmatrix) * m, const TYPE (gsl_vector) * x)
@@ -182,6 +247,71 @@ FUNCTION (gsl_spmatrix, scale_rows) (TYPE (gsl_spmatrix) * m, const TYPE (gsl_ve
 
               Ad[2 * i] = ar * yr - ai * yi;
               Ad[2 * i + 1] = ai * yr + ar * yi;
+            }
+        }
+      else
+        {
+          GSL_ERROR("unknown sparse matrix type", GSL_EINVAL);
+        }
+
+      return GSL_SUCCESS;
+    }
+}
+
+/* m := diag(x) * m for real x */
+int
+FUNCTION (gsl_spmatrix, scale_rows_real) (TYPE (gsl_spmatrix) * m,
+                                          const REAL_TYPE (gsl_vector) * x)
+{
+  if (m->size1 != x->size)
+    {
+      GSL_ERROR("x vector length does not match matrix", GSL_EBADLEN);
+    }
+  else
+    {
+      ATOMIC * Ad = m->data;
+
+      if (GSL_SPMATRIX_ISCSC(m))
+        {
+          const int *Ai = m->i;
+          size_t i;
+
+          for (i = 0; i < m->nz; ++i)
+            {
+              ATOMIC y = REAL_FUNCTION (gsl_vector, get) (x, Ai[i]);
+
+              Ad[2 * i] *= y;
+              Ad[2 * i + 1] *= y;
+            }
+        }
+      else if (GSL_SPMATRIX_ISCSR(m))
+        {
+          const int *Ap = m->p;
+          int p;
+          size_t i;
+
+          for (i = 0; i < m->size1; ++i)
+            {
+              ATOMIC y = REAL_FUNCTION (gsl_vector, get) (x, i);
+
+              for (p = Ap[i]; p < Ap[i + 1]; ++p)
+                {
+                  Ad[2 * p] *= y;
+                  Ad[2 * p + 1] *= y;
+                }
+            }
+        }
+      else if (GSL_SPMATRIX_ISCOO(m))
+        {
+          const int *Ai = m->i;
+          size_t i;
+
+          for (i = 0; i < m->nz; ++i)
+            {
+              ATOMIC y = REAL_FUNCTION (gsl_vector, get) (x, Ai[i]);
+
+              Ad[2 * i] *= y;
+              Ad[2 * i + 1] *= y;
             }
         }
       else

@@ -303,6 +303,19 @@ This function scales all elements of the matrix @var{m} by the constant
 factor @var{x}. The result @math{m(i,j) \leftarrow x m(i,j)} is stored in @var{m}.
 @end deftypefun
 
+@deftypefun int gsl_spmatrix_complex_scale_columns_real (gsl_spmatrix_complex * @var{A}, const gsl_vector * @var{x})
+@deftypefunx int gsl_spmatrix_complex_scale_rows_real (gsl_spmatrix_complex * @var{A}, const gsl_vector * @var{x})
+These functions scale a complex sparse matrix by the elements of a
+@emph{real} vector @var{x}.  @code{gsl_spmatrix_complex_scale_columns_real}
+multiplies the @math{j}-th column by @code{x[j]}
+(@math{A \rightarrow A X} with @math{X = \textrm{diag}(x)});
+@code{gsl_spmatrix_complex_scale_rows_real} multiplies the @math{i}-th row
+by @code{x[i]} (@math{A \rightarrow X A}).  The corresponding
+@code{gsl_spmatrix_complex_float_*} and
+@code{gsl_spmatrix_complex_long_double_*} variants take a
+@code{gsl_vector_float} and a @code{gsl_vector_long_double} respectively.
+@end deftypefun
+
 @node Sparse Matrices Properties
 @section Matrix Properties
 @cindex sparse matrices, properties

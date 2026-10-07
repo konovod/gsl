@@ -440,6 +440,7 @@ FUNCTION (test, scale) (const size_t M, const size_t N, const int sptype,
   TYPE (gsl_spmatrix) * A = FUNCTION (test, random_int) (M, N, density, 1.0, 20.0, r);
   TYPE (gsl_spmatrix) * B = FUNCTION (gsl_spmatrix, compress) (A, sptype);
   TYPE (gsl_vector) * x;
+  REAL_TYPE (gsl_vector) * xr;
   BASE s;
   size_t i, j;
 
@@ -533,6 +534,63 @@ FUNCTION (test, scale) (const size_t M, const size_t N, const int sptype,
     }
 
   FUNCTION (gsl_vector, free) (x);
+
+  /* reset B = A */
+  FUNCTION (gsl_spmatrix, free) (B);
+  B = FUNCTION (gsl_spmatrix, compress) (A, sptype);
+
+  /* test column scaling by a real vector */
+  xr = REAL_FUNCTION (gsl_vector, alloc) (A->size2);
+  for (i = 0; i < A->size2; ++i)
+    REAL_FUNCTION (gsl_vector, set) (xr, i, 0.5 + (double) i);
+
+  FUNCTION (gsl_spmatrix, scale_columns_real) (B, xr);
+
+  for (i = 0; i < A->nz; ++i)
+    {
+      BASE aij = *(BASE *) &A->data[2 * i];
+      BASE bij = FUNCTION (gsl_spmatrix, get) (B, A->i[i], A->p[i]);
+      ATOMIC xj = REAL_FUNCTION (gsl_vector, get) (xr, A->p[i]);
+
+      gsl_test_rel(GSL_REAL(bij), GSL_REAL(aij) * xj, 10.0 * GSL_DBL_EPSILON,
+                   NAME (gsl_spmatrix) "_scale_columns_real[%zu,%zu](%s) real",
+                   M, N, FUNCTION (gsl_spmatrix, type) (B));
+
+      gsl_test_rel(GSL_IMAG(bij), GSL_IMAG(aij) * xj, 10.0 * GSL_DBL_EPSILON,
+                   NAME (gsl_spmatrix) "_scale_columns_real[%zu,%zu](%s) imag",
+                   M, N, FUNCTION (gsl_spmatrix, type) (B));
+    }
+
+  REAL_FUNCTION (gsl_vector, free) (xr);
+
+  /* reset B = A */
+  FUNCTION (gsl_spmatrix, free) (B);
+  B = FUNCTION (gsl_spmatrix, compress) (A, sptype);
+
+  /* test row scaling by a real vector */
+  xr = REAL_FUNCTION (gsl_vector, alloc) (A->size1);
+  for (i = 0; i < A->size1; ++i)
+    REAL_FUNCTION (gsl_vector, set) (xr, i, 0.5 + (double) i);
+
+  FUNCTION (gsl_spmatrix, scale_rows_real) (B, xr);
+
+  for (i = 0; i < A->nz; ++i)
+    {
+      BASE aij = *(BASE *) &A->data[2 * i];
+      BASE bij = FUNCTION (gsl_spmatrix, get) (B, A->i[i], A->p[i]);
+      ATOMIC xi = REAL_FUNCTION (gsl_vector, get) (xr, A->i[i]);
+
+      gsl_test_rel(GSL_REAL(bij), GSL_REAL(aij) * xi, 10.0 * GSL_DBL_EPSILON,
+                   NAME (gsl_spmatrix) "_scale_rows_real[%zu,%zu](%s) real",
+                   M, N, FUNCTION (gsl_spmatrix, type) (B));
+
+      gsl_test_rel(GSL_IMAG(bij), GSL_IMAG(aij) * xi, 10.0 * GSL_DBL_EPSILON,
+                   NAME (gsl_spmatrix) "_scale_rows_real[%zu,%zu](%s) imag",
+                   M, N, FUNCTION (gsl_spmatrix, type) (B));
+    }
+
+  REAL_FUNCTION (gsl_vector, free) (xr);
+
   FUNCTION (gsl_spmatrix, free) (A);
   FUNCTION (gsl_spmatrix, free) (B);
 }

@@ -484,6 +484,21 @@ Matrix Operations
 
    Input matrix formats supported: :ref:`COO <sec_spmatrix-coo>`, :ref:`CSC <sec_spmatrix-csc>`, :ref:`CSR <sec_spmatrix-csr>`
 
+.. function:: int gsl_spmatrix_complex_scale_columns_real (gsl_spmatrix_complex * A, const gsl_vector * x)
+              int gsl_spmatrix_complex_scale_rows_real (gsl_spmatrix_complex * A, const gsl_vector * x)
+
+   These functions scale a complex sparse matrix by the elements of a
+   *real* vector :data:`x`.  :func:`gsl_spmatrix_complex_scale_columns_real`
+   multiplies the :math:`j`-th column by :code:`x[j]`
+   (:math:`A \rightarrow A X` with :math:`X = \textrm{diag}(x)`);
+   :func:`gsl_spmatrix_complex_scale_rows_real` multiplies the
+   :math:`i`-th row by :code:`x[i]` (:math:`A \rightarrow X A`).  The
+   corresponding ``gsl_spmatrix_complex_float_*`` and
+   ``gsl_spmatrix_complex_long_double_*`` variants take a
+   ``gsl_vector_float`` and a ``gsl_vector_long_double`` respectively.
+
+   Input matrix formats supported: :ref:`COO <sec_spmatrix-coo>`, :ref:`CSC <sec_spmatrix-csc>`, :ref:`CSR <sec_spmatrix-csr>`
+
 .. function:: int gsl_spmatrix_add (gsl_spmatrix * c, const gsl_spmatrix * a, const gsl_spmatrix * b)
 
    This function computes the sum :math:`c = a + b`. The three matrices must
