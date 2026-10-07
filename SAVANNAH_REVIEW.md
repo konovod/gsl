@@ -2544,11 +2544,11 @@ Recorded in `FORKNEWS` under `[upstream]` (two changes) and
 `[rejected]` (three reports).  Full CTest suite 56/56 on MSVC x64.
 
 
-## Group P - off-track / likely reject: #42058, #45797, #59914, #60026,
+## Group P - off-track / likely reject: #42058, #45797, #59914,
 ## #65728
 
 Reviewed 2026-10-04 against the built `build-cmake/gsl.dll` (MSVC x64).
-This is the low-value tail: five reports that, on their face, ask for
+This is the low-value tail: four reports that, on their face, ask for
 nothing that the eligibility rule admits.  The review confirms that for
 each of them, from the offline dossiers under
 `temp/savannah-store/dossiers/` and the `bug-gsl` mbox threads, and
@@ -2556,13 +2556,13 @@ records the reasoning so they are not revisited.  **No code, test or
 documentation change follows from any of them.**
 
 The scope note: the user's working list named "43159-style items"
-alongside these five.  #43159 is **not a GSL bug** - it is a GNU Octave
+alongside these four.  #43159 is **not a GSL bug** - it is a GNU Octave
 bug ("The Signal package (1.3.0) specgram() function is broken ..."),
 closed as a duplicate of Octave #42043, and it is absent from the GSL
 triage index and from every GSL source.  It is therefore dropped, not
 reviewed.
 
-Deferred for lack of offline text: none of these five is deferred;
+Deferred for lack of offline text: none of these four is deferred;
 each has a dossier.  (The four GSL bugs that were once thought to have
 no local copy at all are now all covered: `50712` by Group O, and
 `51104`, `53903` and `53904` by Group Q below.)
@@ -2626,7 +2626,7 @@ repository and not a bug fix or doc *correction* in the tree.
 Rejected - no defect and no actionable change; the Windows building path
 exists in the fork already.
 
-### `#60026` - "Incorporate MIXMAX random number extension into GSL" - deferred
+### `#60026` - "Incorporate MIXMAX random number extension into GSL" - fixed
 
 A request to add the MIXMAX family of PRNGs to GSL, citing its adoption
 in CLHEP/Geant4, CMS simulation and a NASA neutrino-telescope study.  The
@@ -2635,12 +2635,21 @@ in CLHEP/Geant4, CMS simulation and a NASA neutrino-telescope study.  The
 C; a further reply asks for TestU01/PractRand evidence and states none of
 the MIXMAX variants are in the reviewer's own Dieharder quality table.
 
-This is a **feature request: a new algorithm and a new public generator
-API**.  No defect in the existing generators is alleged.  (The
-neighbouring PCG request, #55965, was taken once the rule was widened;
-MIXMAX is left in the backlog.)
-Deferred - eligible under the widened rule, but it still needs a portable
-128-bit multiply and a decision on the 32-bit output.
+Taken once the rule was widened (like the neighbouring PCG request,
+#55965).  The N = 17, one-parameter variant over GF(2^61 - 1), the
+configuration CLHEP selects by default, is added as `gsl_rng_mixmax17`
+(260557ee9).  The native draw is 61 bits; `gsl_rng_get` returns the low
+32 bits, so the value fits `unsigned long` on LLP64 and LP64, while
+`gsl_rng_uniform` uses the full 61-bit value.  Seeding uses the reference
+`seed_spbox` procedure, which needs no 128-bit multiply, so the
+portability concern that kept the ticket in the backlog does not arise.
+
+Verified against ROOT's independent bundled MIXMAX implementation with
+N = 17 and the `seed_spbox` path (embedded vectors for seeds 1, 42 and
+12345 after 1, 10^4 and 10^6 draws), with a negative control on
+SPECIALMUL.  MIXMAX is linear over GF(2^61 - 1) and so fails
+modular-rank tests, as MT19937 and PCG do; TestU01/PractRand are not in
+the suite.  Full CTest suite 56/56 on MSVC x64.
 
 ### `#65728` - "Add sparse functionalities" - partly fixed
 
