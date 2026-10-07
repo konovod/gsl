@@ -2642,7 +2642,7 @@ was taken once the rule was widened; MIXMAX is left in the backlog.)
 Rejected - new algorithm
 and API, out of scope.
 
-### `#65728` - "Add sparse functionalities" - rejected
+### `#65728` - "Add sparse functionalities" - partly fixed
 
 A feature request forwarded by the maintainer, asking for complex sparse
 support: scaling a complex sparse matrix by a *real* vector, complex
@@ -2650,17 +2650,14 @@ sparse matrix-vector multiplication, in-place unpacking of a complex
 vector, resize operations on blocks/vectors, and an accumulating variant
 of `_set()` that does `*ptr += x` rather than replacing.
 
-Moderate parts of this already exist, which sharpens the verdict: the
-complex sparse type has `gsl_spmatrix_complex_scale`,
-`_scale_columns`, `_scale_rows`, `_memcpy`, `_dense_add`/`_dense_sub`
-and `add_to_dense`, and the complex block/vector types have
-`alloc`/`calloc`.  What does **not** exist is a complex sparse
-matrix-vector product (sparse BLAS offers only the real
-`gsl_spblas_dgemv`) and a `resize`, and the accumulating `_set()` is a
-new function ("copy the entire code to a new name").  Every one of these
-is **new API or new algorithm**, excluded by the eligibility rule; the
-request itself is phrased as a feature ("could be added", "could it be
-possible").  Rejected - feature request, out of scope.
+Moderate parts of this already existed: the complex sparse type has
+`gsl_spmatrix_complex_scale`, `_scale_columns`, `_scale_rows`, `_memcpy`,
+`_dense_add`/`_dense_sub` and `add_to_dense`, and the complex block/vector
+types have `alloc`/`calloc`.  Two of the missing pieces were taken once
+the eligibility rule was widened (`f218d8c83`): the complex sparse
+matrix-vector product `gsl_spblas_zgemv()` and the accumulating
+`gsl_spmatrix_*_set_add()`.  The `resize`, real-vector scaling and
+in-place unpack parts remain in the backlog.
 
 Recorded in `FORKNEWS` under `[rejected]` (one combined entry).
 No code change, so the full CTest suite is unchanged at 56/56 on MSVC
