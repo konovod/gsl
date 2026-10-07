@@ -46,6 +46,7 @@ typedef struct gsl_block_char_struct gsl_block_char;
 gsl_block_char *gsl_block_char_alloc (const size_t n);
 gsl_block_char *gsl_block_char_calloc (const size_t n);
 void gsl_block_char_free (gsl_block_char * b);
+int gsl_block_char_resize (gsl_block_char * b, const size_t n);
 
 int gsl_block_char_fread (FILE * stream, gsl_block_char * b);
 int gsl_block_char_fwrite (FILE * stream, const gsl_block_char * b);

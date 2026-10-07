@@ -154,6 +154,29 @@ FUNCTION (gsl_vector, free) (TYPE (gsl_vector) * v)
   free (v);
 }
 
+int
+FUNCTION (gsl_vector, resize) (TYPE (gsl_vector) * v, const size_t n)
+{
+  if (!v->owner || v->stride != 1)
+    {
+      GSL_ERROR ("only an owning vector can be resized", GSL_EINVAL);
+    }
+
+  {
+    int status = FUNCTION (gsl_block, resize) (v->block, n);
+
+    if (status)
+      {
+        return status;
+      }
+  }
+
+  v->data = v->block->data;
+  v->size = n;
+
+  return GSL_SUCCESS;
+}
+
 
 void
 FUNCTION (gsl_vector, set_all) (TYPE (gsl_vector) * v, BASE x)

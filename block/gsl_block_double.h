@@ -46,6 +46,7 @@ typedef struct gsl_block_struct gsl_block;
 gsl_block *gsl_block_alloc (const size_t n);
 gsl_block *gsl_block_calloc (const size_t n);
 void gsl_block_free (gsl_block * b);
+int gsl_block_resize (gsl_block * b, const size_t n);
 
 int gsl_block_fread (FILE * stream, gsl_block * b);
 int gsl_block_fwrite (FILE * stream, const gsl_block * b);

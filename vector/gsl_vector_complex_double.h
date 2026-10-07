@@ -82,6 +82,7 @@ gsl_vector_complex_alloc_from_vector (gsl_vector_complex * v,
                                              const size_t stride);
 
 void gsl_vector_complex_free (gsl_vector_complex * v);
+int gsl_vector_complex_resize (gsl_vector_complex * v, const size_t n);
 
 /* Views */
 

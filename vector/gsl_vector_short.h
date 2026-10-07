@@ -80,6 +80,7 @@ gsl_vector_short *gsl_vector_short_alloc_from_vector (gsl_vector_short * v,
                                                       const size_t stride);
 
 void gsl_vector_short_free (gsl_vector_short * v);
+int gsl_vector_short_resize (gsl_vector_short * v, const size_t n);
 
 /* Views */
 

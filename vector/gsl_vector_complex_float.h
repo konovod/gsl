@@ -82,6 +82,7 @@ gsl_vector_complex_float_alloc_from_vector (gsl_vector_complex_float * v,
                                              const size_t stride);
 
 void gsl_vector_complex_float_free (gsl_vector_complex_float * v);
+int gsl_vector_complex_float_resize (gsl_vector_complex_float * v, const size_t n);
 
 /* Views */
 

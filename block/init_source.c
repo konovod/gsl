@@ -73,3 +73,21 @@ FUNCTION (gsl_block, free) (TYPE (gsl_block) * b)
   free (b->data);
   free (b);
 }
+
+int
+FUNCTION (gsl_block, resize) (TYPE (gsl_block) * b, const size_t n)
+{
+  ATOMIC * ptr;
+
+  ptr = realloc (b->data, MULTIPLICITY * n * sizeof (ATOMIC));
+
+  if (ptr == 0 && n > 0)
+    {
+      GSL_ERROR ("failed to allocate space for block data", GSL_ENOMEM);
+    }
+
+  b->data = ptr;
+  b->size = n;
+
+  return GSL_SUCCESS;
+}

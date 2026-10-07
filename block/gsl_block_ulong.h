@@ -46,6 +46,7 @@ typedef struct gsl_block_ulong_struct gsl_block_ulong;
 gsl_block_ulong *gsl_block_ulong_alloc (const size_t n);
 gsl_block_ulong *gsl_block_ulong_calloc (const size_t n);
 void gsl_block_ulong_free (gsl_block_ulong * b);
+int gsl_block_ulong_resize (gsl_block_ulong * b, const size_t n);
 
 int gsl_block_ulong_fread (FILE * stream, gsl_block_ulong * b);
 int gsl_block_ulong_fwrite (FILE * stream, const gsl_block_ulong * b);

@@ -63,6 +63,36 @@ FUNCTION (test, func) (void)
   
   gsl_test (status, NAME (gsl_block) "_calloc initializes array to zero");
 
+  /* test resize */
+  v = FUNCTION (gsl_block, alloc) (10);
+
+  for (i = 0; i < 10; i++)
+    v->data[i] = (ATOMIC) i;
+
+  status = FUNCTION (gsl_block, resize) (v, 25);
+  gsl_test (status, NAME (gsl_block) "_resize grow status");
+  gsl_test (v->size != 25, NAME (gsl_block) "_resize grow size");
+
+  status = 0;
+  for (i = 0; i < 10; i++)
+    {
+      if (v->data[i] != (ATOMIC) i)
+        status = 1;
+    }
+  gsl_test (status, NAME (gsl_block) "_resize grow preserves elements");
+
+  status = FUNCTION (gsl_block, resize) (v, 4);
+  gsl_test (status, NAME (gsl_block) "_resize shrink status");
+  gsl_test (v->size != 4, NAME (gsl_block) "_resize shrink size");
+
+  status = 0;
+  for (i = 0; i < 4; i++)
+    {
+      if (v->data[i] != (ATOMIC) i)
+        status = 1;
+    }
+  gsl_test (status, NAME (gsl_block) "_resize shrink preserves elements");
+
   FUNCTION (gsl_block, free) (v);       /* free whatever is in v */
 }
 

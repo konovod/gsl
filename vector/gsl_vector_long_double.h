@@ -80,6 +80,7 @@ gsl_vector_long_double *gsl_vector_long_double_alloc_from_vector (gsl_vector_lon
                                                       const size_t stride);
 
 void gsl_vector_long_double_free (gsl_vector_long_double * v);
+int gsl_vector_long_double_resize (gsl_vector_long_double * v, const size_t n);
 
 /* Views */
 

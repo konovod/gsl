@@ -118,6 +118,15 @@ This function frees the memory used by a block @var{b} previously
 allocated with @code{gsl_block_alloc} or @code{gsl_block_calloc}.
 @end deftypefun
 
+@deftypefun int gsl_block_resize (gsl_block * @var{b}, size_t @var{n})
+This function changes the size of the block @var{b} to @var{n}
+elements, reallocating the storage.  The existing elements are preserved
+(up to the smaller of the old and new lengths) and any new elements are
+undefined.  Note that vectors created from @var{b} with
+@code{gsl_vector_alloc_from_block} share its storage and become invalid
+when the block is resized.
+@end deftypefun
+
 @node Reading and writing blocks
 @subsection Reading and writing blocks
 
@@ -268,6 +277,15 @@ vector was created using @code{gsl_vector_alloc} then the block
 underlying the vector will also be deallocated.  If the vector has
 been created from another object then the memory is still owned by
 that object and will not be deallocated.
+@end deftypefun
+
+@deftypefun int gsl_vector_resize (gsl_vector * @var{v}, size_t @var{n})
+This function changes the length of the vector @var{v} to @var{n},
+reallocating the underlying block.  The existing elements are preserved
+(up to the smaller of the old and new lengths).  Only a vector that owns
+its block with unit stride, as created by @code{gsl_vector_alloc}, can
+be resized; a view of another vector or block returns
+@code{GSL_EINVAL}.
 @end deftypefun
 
 @node Accessing vector elements

@@ -80,6 +80,7 @@ gsl_vector_ulong *gsl_vector_ulong_alloc_from_vector (gsl_vector_ulong * v,
                                                       const size_t stride);
 
 void gsl_vector_ulong_free (gsl_vector_ulong * v);
+int gsl_vector_ulong_resize (gsl_vector_ulong * v, const size_t n);
 
 /* Views */
 

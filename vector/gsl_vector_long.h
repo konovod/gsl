@@ -80,6 +80,7 @@ gsl_vector_long *gsl_vector_long_alloc_from_vector (gsl_vector_long * v,
                                                       const size_t stride);
 
 void gsl_vector_long_free (gsl_vector_long * v);
+int gsl_vector_long_resize (gsl_vector_long * v, const size_t n);
 
 /* Views */
 

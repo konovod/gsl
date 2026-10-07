@@ -620,6 +620,50 @@ FUNCTION (test, func) (size_t stride, size_t N)
 
   }
 
+  /* test resize on an owning vector, and its rejection on a view */
+  if (stride == 1)
+    {
+      TYPE (gsl_vector) * u = FUNCTION (gsl_vector, alloc) (10);
+      QUALIFIED_VIEW(gsl_vector,view) uview;
+      gsl_error_handler_t *old_handler;
+      int s;
+
+      for (i = 0; i < 10; i++)
+        FUNCTION (gsl_vector, set) (u, i, (ATOMIC) i);
+
+      s = FUNCTION (gsl_vector, resize) (u, 25);
+      TEST (s != GSL_SUCCESS, "_resize grow status");
+      TEST (u->size != 25, "_resize grow size");
+
+      s = 0;
+      for (i = 0; i < 10; i++)
+        {
+          if (FUNCTION (gsl_vector, get) (u, i) != (ATOMIC) i)
+            s = 1;
+        }
+      TEST (s, "_resize grow preserves elements");
+
+      s = FUNCTION (gsl_vector, resize) (u, 3);
+      TEST (s != GSL_SUCCESS, "_resize shrink status");
+      TEST (u->size != 3, "_resize shrink size");
+
+      s = 0;
+      for (i = 0; i < 3; i++)
+        {
+          if (FUNCTION (gsl_vector, get) (u, i) != (ATOMIC) i)
+            s = 1;
+        }
+      TEST (s, "_resize shrink preserves elements");
+
+      uview = FUNCTION (gsl_vector, subvector) (u, 0, 2);
+      old_handler = gsl_set_error_handler_off ();
+      s = FUNCTION (gsl_vector, resize) (&uview.vector, 5);
+      gsl_set_error_handler (old_handler);
+      TEST (s != GSL_EINVAL, "_resize rejects a view");
+
+      FUNCTION (gsl_vector, free) (u);
+    }
+
   FUNCTION (gsl_vector, free) (v0);      /* free whatever is in v */
 }
 

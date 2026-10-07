@@ -107,6 +107,15 @@ then it isn't necessary to check every :code:`alloc`.
    This function frees the memory used by a block :data:`b` previously
    allocated with :func:`gsl_block_alloc` or :func:`gsl_block_calloc`.
 
+.. function:: int gsl_block_resize (gsl_block * b, size_t n)
+
+   This function changes the size of the block :data:`b` to :data:`n`
+   elements, reallocating the storage.  The existing elements are
+   preserved (up to the smaller of the old and new lengths) and any new
+   elements are undefined.  Note that vectors created from :data:`b` with
+   :func:`gsl_vector_alloc_from_block` share its storage and become
+   invalid when the block is resized.
+
 Reading and writing blocks
 --------------------------
 
@@ -239,6 +248,15 @@ then it isn't necessary to check every :code:`alloc`.
    underlying the vector will also be deallocated.  If the vector has
    been created from another object then the memory is still owned by
    that object and will not be deallocated.
+
+.. function:: int gsl_vector_resize (gsl_vector * v, size_t n)
+
+   This function changes the length of the vector :data:`v` to
+   :data:`n`, reallocating the underlying block.  The existing elements
+   are preserved (up to the smaller of the old and new lengths).  Only a
+   vector that owns its block with unit stride, as created by
+   :func:`gsl_vector_alloc`, can be resized; a view of another vector or
+   block returns :macro:`GSL_EINVAL`.
 
 .. index::
    single: vectors, range-checking

@@ -46,6 +46,7 @@ typedef struct gsl_block_complex_struct gsl_block_complex;
 gsl_block_complex *gsl_block_complex_alloc (const size_t n);
 gsl_block_complex *gsl_block_complex_calloc (const size_t n);
 void gsl_block_complex_free (gsl_block_complex * b);
+int gsl_block_complex_resize (gsl_block_complex * b, const size_t n);
 
 int gsl_block_complex_fread (FILE * stream, gsl_block_complex * b);
 int gsl_block_complex_fwrite (FILE * stream, const gsl_block_complex * b);

@@ -46,6 +46,7 @@ typedef struct gsl_block_complex_long_double_struct gsl_block_complex_long_doubl
 gsl_block_complex_long_double *gsl_block_complex_long_double_alloc (const size_t n);
 gsl_block_complex_long_double *gsl_block_complex_long_double_calloc (const size_t n);
 void gsl_block_complex_long_double_free (gsl_block_complex_long_double * b);
+int gsl_block_complex_long_double_resize (gsl_block_complex_long_double * b, const size_t n);
 
 int gsl_block_complex_long_double_fread (FILE * stream, gsl_block_complex_long_double * b);
 int gsl_block_complex_long_double_fwrite (FILE * stream, const gsl_block_complex_long_double * b);
