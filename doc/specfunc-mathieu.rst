@@ -182,9 +182,9 @@ Mathieu Function Characteristic Values
 --------------------------------------
 .. index:: Mathieu Function Characteristic Values
 
-.. function:: int gsl_sf_mathieu_a (int n, double q)
+.. function:: double gsl_sf_mathieu_a (int n, double q)
               int gsl_sf_mathieu_a_e (int n, double q, gsl_sf_result * result)
-              int gsl_sf_mathieu_b (int n, double q)
+              double gsl_sf_mathieu_b (int n, double q)
               int gsl_sf_mathieu_b_e (int n, double q, gsl_sf_result * result)
 
    These routines compute the characteristic values :math:`a_n(q)`,
@@ -198,6 +198,41 @@ Mathieu Function Characteristic Values
    :math:`a_n(q)`, :math:`b_n(q)` for :math:`n` from :data:`order_min` to
    :data:`order_max` inclusive, storing the results in the array :data:`result_array`.
 
+Mathieu Function Fourier Coefficients
+-------------------------------------
+.. index:: Mathieu Function Fourier Coefficients
+
+.. macro:: GSL_SF_MATHIEU_COEFF
+
+   The number of Fourier coefficients for which storage is required by the
+   coefficient routines below.
+
+.. function:: int gsl_sf_mathieu_a_coeff (int n, double q, double a, double coeff[])
+              int gsl_sf_mathieu_b_coeff (int n, double q, double b, double coeff[])
+
+   These routines compute the Fourier coefficients of the angular Mathieu
+   functions :math:`ce_n(q,x)` and :math:`se_n(q,x)` of order :data:`n`
+   which belong to the characteristic value :data:`a` (respectively
+   :data:`b`) at the parameter :data:`q`; the characteristic values are the
+   ones returned by :func:`gsl_sf_mathieu_a` and :func:`gsl_sf_mathieu_b`.
+   The coefficients are stored in the array :data:`coeff`, which must have
+   room for at least :macro:`GSL_SF_MATHIEU_COEFF` elements.
+
+   The return value is :macro:`GSL_SUCCESS` on success.  If the order is
+   larger than :macro:`GSL_SF_MATHIEU_COEFF` the routine returns
+   :macro:`GSL_FAILURE` without storing a result.
+
+   For :func:`gsl_sf_mathieu_a_coeff` the array holds the coefficients
+   :math:`A_m` of the cosine series of :math:`ce_n(q,x)`: for even
+   :data:`n` the entry ``coeff[m]`` multiplies :math:`\cos(2mx)`,
+   while for odd :data:`n` it multiplies :math:`\cos((2m+1)x)`.
+   For :func:`gsl_sf_mathieu_b_coeff` the array holds the coefficients
+   :math:`B_m` of the sine series of :math:`se_n(q,x)`: for even
+   :data:`n` the entry ``coeff[m]`` multiplies :math:`\sin(2(m+1)x)`,
+   while for odd :data:`n` it multiplies :math:`\sin((2m+1)x)`.
+   Coefficients beyond the point at which the series has converged are set
+   to zero.
+
 Angular Mathieu Functions
 -------------------------
 .. index::
@@ -205,9 +240,9 @@ Angular Mathieu Functions
    single: ce(q,x), Mathieu function
    single: se(q,x), Mathieu function
 
-.. function:: int gsl_sf_mathieu_ce (int n, double q, double x)
+.. function:: double gsl_sf_mathieu_ce (int n, double q, double x)
               int gsl_sf_mathieu_ce_e (int n, double q, double x, gsl_sf_result * result)
-              int gsl_sf_mathieu_se (int n, double q, double x)
+              double gsl_sf_mathieu_se (int n, double q, double x)
               int gsl_sf_mathieu_se_e (int n, double q, double x, gsl_sf_result * result)
 
    These routines compute the angular Mathieu functions :math:`ce_n(q,x)`
@@ -225,9 +260,9 @@ Radial Mathieu Functions
 ------------------------
 .. index:: Radial Mathieu Functions
 
-.. function:: int gsl_sf_mathieu_Mc (int j, int n, double q, double x)
+.. function:: double gsl_sf_mathieu_Mc (int j, int n, double q, double x)
               int gsl_sf_mathieu_Mc_e (int j, int n, double q, double x, gsl_sf_result * result)
-              int gsl_sf_mathieu_Ms (int j, int n, double q, double x)
+              double gsl_sf_mathieu_Ms (int j, int n, double q, double x)
               int gsl_sf_mathieu_Ms_e (int j, int n, double q, double x, gsl_sf_result * result)
 
    These routines compute the radial :data:`j`-th kind Mathieu functions
