@@ -107,6 +107,7 @@ One line per change: date | tag | description | commit(s).
   2026-10-07 | [upstream] | rng: add the MIXMAX17 generator                      | 260557ee9
   2026-10-06 | [upstream] | spblas, spmatrix: complex sparse mat-vec + set_add   | f218d8c83
   2026-10-07 | [upstream] | cdf: truncated-Gaussian inverse test tolerance       | ddb667963
+  2026-10-07 | [upstream] | multimin: report GSL_EBADFUNC from the simplex minimizers | f007aa42c
   2026-10-03 | [upstream] | specfunc: reject NaN in the complete elliptic integrals | 14d595eb8
   2026-10-03 | [upstream] | specfunc: terminate gamma_inc for large negative a    | 932087bcd
   2026-10-03 | [upstream] | specfunc: propagate NaN in gsl_sf_hyperg_1F1_e       | 99a73dd36
@@ -6103,6 +6104,43 @@ Files: `integration/lobatto.c`, `radau.c`, `clenshaw_curtis.c`,
 `integration/test.c`, both manuals.
 
 See Savannah bug #32257.
+
+
+## [upstream] multimin: report GSL_EBADFUNC from the simplex minimizers
+
+Commit: f007aa42c
+
+Savannah bug #41527 reports that a non-finite value returned by the
+objective function during `gsl_multimin_fminimizer_iterate()` was always
+reported as `GSL_EFAILED`, so a caller could not distinguish it from any
+other failure.  In both `nmsimplex_iterate()` (`simplex.c`) and
+`nmsimplex2_iterate()` (`simplex2.c`) the whole-simplex contraction
+already detects a non-finite value and returns `GSL_EBADFUNC`, but the
+caller immediately rewrote it:
+
+    status = contract_by_best (state, lo, xc, f);
+    if (status != GSL_SUCCESS)
+      GSL_ERROR ("contraction failed", GSL_EFAILED);
+
+Both routines now pass the actual `status` to `GSL_ERROR`, so the
+returned code is `GSL_EBADFUNC`.  The objective function returns only a
+`double`, so GSL cannot recover a caller-specific code such as the
+`GSL_ERANGE` in the report; `GSL_EBADFUNC` is the correct signal for a
+non-finite objective, and the reported failure mode is now observable
+with `gsl_set_error_handler_off()`.
+
+Regression test: `multimin/test.c` minimises an objective that is finite
+only outside a central square, started so that the reflection and the
+one-dimensional contraction both land inside it and the whole-simplex
+contraction is reached.  `iterate` must return `GSL_EBADFUNC` for both
+`nmsimplex` and `nmsimplex2`.  Negative control: with the status restored
+to `GSL_EFAILED`, both checks report status 5 (`GSL_EFAILED`) instead of
+6 (`GSL_EBADFUNC`).  Full CTest 56/56 on MSVC x64.
+
+Files: `multimin/simplex.c`, `multimin/simplex2.c`, `multimin/test.c`,
+`doc/multimin.rst`, `doc_texinfo/multimin.texi`.
+
+Savannah bug #41527.
 
 
 
