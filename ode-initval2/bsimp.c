@@ -56,6 +56,10 @@ typedef struct
   double h_next;
   double eps;
 
+  /* driver object, used to obtain the requested error tolerance; NULL
+     when the stepper is driven without a driver object */
+  const gsl_odeiv2_driver *driver;
+
   /* workspace for extrapolation step */
   double *yp;
   double *y_save;
@@ -386,8 +390,19 @@ bsimp_alloc (size_t dim)
   }
 
   state->h_next = -GSL_SQRT_DBL_MAX;
+  state->driver = NULL;
 
   return state;
+}
+
+static int
+bsimp_set_driver (void *vstate, const gsl_odeiv2_driver * d)
+{
+  bsimp_state_t *state = (bsimp_state_t *) vstate;
+
+  state->driver = d;
+
+  return GSL_SUCCESS;
 }
 
 /* Perform the basic semi-implicit extrapolation
@@ -453,6 +468,40 @@ bsimp_apply (void *vstate,
       {
         return s;
       }
+  }
+
+  /*
+   * Choose the extrapolation order from the requested error tolerance,
+   * using the Deuflhard criterion.  The tolerance is not part of the
+   * stepper interface; when the stepper is driven through a driver
+   * object its control object supplies the current error level, which
+   * is what the criterion needs.  Without a driver (a bare
+   * gsl_odeiv2_step_apply) fall back to the previous fixed choice based
+   * on the machine epsilon.
+   */
+
+  {
+    double eps = GSL_SQRT_DBL_EPSILON;
+
+    if (state->driver != NULL)
+      {
+        double errlev;
+
+        for (i = 0; i < dim; i++)
+          {
+            int s = gsl_odeiv2_control_errlevel (state->driver->c,
+                                                 y[i], yp[i], h, i,
+                                                 &errlev);
+
+            if (s == GSL_SUCCESS && errlev > eps)
+              eps = errlev;
+          }
+      }
+
+    state->eps = eps;
+    state->k_choice = bsimp_deuf_kchoice (eps, dim);
+    state->k_current = state->k_choice;
+    state->order = 2 * state->k_choice;
   }
 
   /* Make a series of refined extrapolations,
@@ -566,7 +615,7 @@ static const gsl_odeiv2_step_type bsimp_type = {
   1,                            /* gives exact dydt_out */
   &bsimp_alloc,
   &bsimp_apply,
-  &stepper_set_driver_null,
+  &bsimp_set_driver,
   &bsimp_reset,
   &bsimp_order,
   &bsimp_free

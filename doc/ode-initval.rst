@@ -318,7 +318,10 @@ the new state :data:`y`.
 
       Implicit Bulirsch-Stoer method of Bader and Deuflhard. The method is
       generally suitable for stiff problems. This stepper requires the
-      Jacobian.
+      Jacobian.  The extrapolation order is chosen from the error
+      tolerances of the driver's control object, so a loose tolerance
+      uses a lower order and fewer function evaluations than the highest
+      order would.
 
    .. index::
       single: Adams method

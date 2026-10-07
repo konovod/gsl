@@ -2540,6 +2540,48 @@ test_evolve_temp (const gsl_odeiv2_step_type * T, double h, double err)
   test_evolve_system (T, &rhs_func_stiff, 0.0, 1.0, h, y, yfin, err, "temp");
 }
 
+/* Savannah bug #31109: bsimp chooses its extrapolation order from the
+   requested error tolerance instead of always using the highest order.
+   A loose tolerance must select a lower order and take fewer function
+   evaluations than a tight one. */
+
+static void
+test_bsimp_order (void)
+{
+  const double h = 1.0e-3;
+  const gsl_odeiv2_step_type *T = gsl_odeiv2_step_bsimp;
+  gsl_odeiv2_driver *d;
+  double t, y[1];
+  unsigned int order_loose, order_tight;
+  int evals_loose, evals_tight;
+
+  nfe = 0;
+  d = gsl_odeiv2_driver_alloc_y_new (&rhs_func_lin, T, h, 1e-4, 1e-4);
+  t = 0.0;
+  y[0] = 0.0;
+  gsl_odeiv2_driver_apply (d, &t, 1.0, y);
+  order_loose = gsl_odeiv2_step_order (d->s);
+  evals_loose = nfe;
+  gsl_odeiv2_driver_free (d);
+
+  nfe = 0;
+  d = gsl_odeiv2_driver_alloc_y_new (&rhs_func_lin, T, h, 1e-10, 1e-10);
+  t = 0.0;
+  y[0] = 0.0;
+  gsl_odeiv2_driver_apply (d, &t, 1.0, y);
+  order_tight = gsl_odeiv2_step_order (d->s);
+  evals_tight = nfe;
+  gsl_odeiv2_driver_free (d);
+
+  gsl_test (order_loose >= order_tight,
+            "bsimp order from tolerance: loose %u < tight %u",
+            order_loose, order_tight);
+
+  gsl_test (evals_loose >= evals_tight,
+            "bsimp evaluations from tolerance: loose %d < tight %d",
+            evals_loose, evals_tight);
+}
+
 /**********************************************************/
 /* Main function                                          */
 /**********************************************************/
@@ -2662,6 +2704,10 @@ main (void)
   test_stiff_problems ();
 
   test_extreme_problems ();
+
+  /* Savannah bug #31109: bsimp selects its order from the tolerance. */
+
+  test_bsimp_order ();
 
   exit (gsl_test_summary ());
 }
