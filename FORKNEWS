@@ -102,6 +102,7 @@ One line per change: date | tag | description | commit(s).
   2026-10-03 | [upstream] | specfunc: drop unreachable GSL_EOVRFLW from docs     | 8cce813ef
   2026-10-06 | [upstream] | specfunc: add the Wigner d-matrix                      | 17e39bcbd
   2026-10-06 | [upstream] | roots: add gsl_root_fsolver_set_with_values           | 33b79b362
+  2026-10-06 | [upstream] | ode-initval: add a fixed-step control object          | 379750b93
   2026-10-03 | [upstream] | specfunc: reject NaN in the complete elliptic integrals | 14d595eb8
   2026-10-03 | [upstream] | specfunc: terminate gamma_inc for large negative a    | 932087bcd
   2026-10-03 | [upstream] | specfunc: propagate NaN in gsl_sf_hyperg_1F1_e       | 99a73dd36
@@ -4235,6 +4236,36 @@ Files: `ode-initval2/evolve.c`, `ode-initval2/bsimp.c`,
 See Savannah bug #66849.
 
 
+## [upstream] ode-initval: add a fixed-step control object
+
+Commit: 379750b93
+
+Savannah bug #30947 asks for a v1 step-size control object that keeps
+the step fixed, so that a fixed-step integration can use the same
+`gsl_odeiv_evolve_apply()` loop as an adaptive one instead of the
+low-level `gsl_odeiv_step_apply()` loop.
+
+`ode-initval/cfxd.c` adds the `gsl_odeiv_control_fixed` type and the
+constructor `gsl_odeiv_control_fixed_new()`.  Its `hadjust()` method
+always returns `GSL_ODEIV_HADJ_NIL` and never touches `h`; the object
+carries no parameters.  The constructor is declared in `gsl_odeiv.h`,
+the source is registered in both builds (the CMake list is regenerated
+from automake), and the object is mentioned in the compatibility note of
+both manuals.
+
+Verification: rk4 on `y' = 2` over `[0, 4]` reports NIL and leaves `h`
+unchanged, keeps `h = 0.01` for every non-final step, rejects no step,
+and returns `8`.  Negative control: making `hadjust()` double `h` and
+return `GSL_ODEIV_HADJ_INC` fails the NIL check, the unchanged-`h` check
+and every step-size check.  The `ode-initval` test is green.
+
+Files: `ode-initval/cfxd.c`, `ode-initval/gsl_odeiv.h`,
+`ode-initval/Makefile.am`, `cmake/gsl_sources.cmake`,
+`ode-initval/test.c`, both `ode-initval` manuals.
+
+Savannah bug #30947.
+
+
 ## [rejected] roots/ode: the Group O reports needing no code change
 
 Kept for the record; each report was checked before it was set aside.
@@ -4259,12 +4290,6 @@ Kept for the record; each report was checked before it was set aside.
   **Reversed.**  Both v1 steppers were later iterated to convergence once
   the filter was widened; see the entry appended at the end of this file.
 
-* **#30947, fixed step size control object** - a request for new public
-  API (`gsl_odeiv_control_fixed_new()`) on the legacy v1 interface.  New
-  API is out of scope, and v2 already offers
-  `gsl_odeiv2_evolve_apply_fixed_step()` and
-  `gsl_odeiv2_driver_apply_fixed_step()`.  Rejected.
-
 * **#50712, lm+accel with a finite-difference fvv** - the test is disabled
   under `#if 0` in `multifit_nlinear/test_fdf.c`.  Enabling it reproduces
   the failure on MSVC x64: `levenberg-marquardt+accel` with the
@@ -4274,7 +4299,7 @@ Kept for the record; each report was checked before it was set aside.
   investigation; a proper fix is a numerical study of the `fvv` step and
   the acceleration.  Rejected.
 
-Savannah bugs #39713, #30540, #30947 and #50712.
+Savannah bugs #39713, #30540 and #50712.
 
 
 ## [rejected] meta: the Group P off-track reports
