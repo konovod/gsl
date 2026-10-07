@@ -2357,11 +2357,13 @@ bytes that `long_double_fwrite` reads.  `valgrind` is not available on
 the Windows review machine, so the fixed source was inspected rather
 than re-run.
 
-### `#55965` — PCG random number generator — rejected (feature)
+### `#55965` — PCG random number generator — fixed
 
 A new generator is a new algorithm and a new public API, which the
-eligibility rule excludes.  The ticket's thread is about the licensing of
-the PCG reference code, not about a defect.  Deferred.
+eligibility rule originally excluded.  It was taken once the rule was
+widened: `rng/pcg.c` provides PCG32 as `gsl_rng_pcg32` (`3fd2c7475`),
+implemented from the published algorithm rather than from the Apache-2.0
+reference code.
 
 ### `#50382` — CMake and NuGet for Windows — rejected (partly done)
 
@@ -2636,7 +2638,8 @@ the MIXMAX variants are in the reviewer's own Dieharder quality table.
 This is a **feature request: a new algorithm and a new public generator
 API**, which the eligibility rule excludes outright.  No defect in the
 existing generators is alleged.  (The neighbouring PCG request, #55965,
-was rejected on the same ground in Group N.)  Rejected - new algorithm
+was taken once the rule was widened; MIXMAX is left in the backlog.)
+Rejected - new algorithm
 and API, out of scope.
 
 ### `#65728` - "Add sparse functionalities" - rejected

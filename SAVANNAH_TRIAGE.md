@@ -139,7 +139,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 54925 | 2018-10-31 | - | Performance | clean 0001-Reduce-cache-misses-for-source_gemm_r.patch | **fixed** — loops reordered so a row of C stays resident (39cde03e2); numerically neutral | Reduce cache misses for source_gemm_r |
 | 54998 | 2018-11-10 | - | Accuracy problem | none | **fixed** — same 2F1 integer-d fix (e4c4ac326, 882c8361d) | Bugs in gsl_sf_hyperg_2F1 |
 | 55687 | 2019-02-10 | bug | - | none | **fixed** — NaN propagates; the `b = NaN` recursion crashed (99a73dd36) | Bad error handling in gsl_sf_hyperg_1F1_e with NaN arguments |
-| 55965 | 2019-03-20 | feature | - | none | rejected — feature: PCG is a new algorithm and API, out of scope | Implement PCG random number generator |
+| 55965 | 2019-03-20 | feature | - | none | **fixed** — PCG32 added as `gsl_rng_pcg32` (3fd2c7475) | Implement PCG random number generator |
 | 56843 | 2019-08-31 | - | Accuracy problem | none | rejected — non-x86 eigen accuracy; x64 passes | Unit Tests in linalg eigen fail on non-x86 hardware due to slight accuracy differences |
 | 57173 | 2019-11-05 | feature | Accuracy problem | none | **fixed** — complex `gsl_sf_complex_zeta_e`, `_hzeta_e` and `_eta_e` via Euler-Maclaurin and reflection (2708ca0fa, a605f0c44) | Feature request: zeta function for complex arguments |
 | 57978 | 2020-03-09 | bug | Accuracy problem | clean sincos_pi.c.patch | **fixed** — sin_pi/cos_pi(inf) -> EDOM (7c27b358b) | Incorrect result from cosine function with inf input |
@@ -302,7 +302,6 @@ test-quality request, `doc` = documentation matter.  `patch`: `clean`/
 | # | kind | patch | what it would add |
 |---|---|---|---|
 | 41527 | feat | - | multimin functions return error codes |
-| 55965 | feat | - | PCG random number generator |
 | 60026 | feat | - | MIXMAX random number extension |
 | 65728 | feat | - | complex sparse matrix-vector product, resize, accumulating `_set` |
 | 68549 | feat | - | uniform argument lists across the distribution functions (breaking) |
