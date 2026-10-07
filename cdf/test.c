@@ -1543,31 +1543,35 @@ void test_tgaussian (void)
 
   /* Tests for the inverse truncated Gaussian cumulative distribution
      function.  Expected values from Burkardt, page 24, checked
-     independently with mpmath. */
+     independently with mpmath.  The inverse runs through the AS241
+     rational approximation, which is only accurate to a few ulp, and
+     the target probability is formed with a subtraction that compilers
+     may or may not fuse into an FMA; TEST_TOL1 absorbs the resulting
+     last-ulp differences between platforms. */
 
 void test_tgaussianinv (void)
 {
-  TEST (gsl_cdf_tgaussian_Pinv, (0.218418626765711305, -50.0, 50.0, 25.0), -18.37, TEST_TOL0);
-  TEST (gsl_cdf_tgaussian_Pinv, (0.956315769095676504, -50.0, 50.0, 25.0), 37.961999999999982, TEST_TOL0);
-  TEST (gsl_cdf_tgaussian_Pinv, (0.82951388212098065, -50.0, 50.0, 25.0), 22.367, TEST_TOL0);
-  TEST (gsl_cdf_tgaussian_Pinv, (0.561699074822187949, -50.0, 50.0, 25.0), 3.7039999999999913, TEST_TOL0);
-  TEST (gsl_cdf_tgaussian_Pinv, (0.415307593603450431, -50.0, 50.0, 25.0), -5.1009999999999982, TEST_TOL0);
-  TEST (gsl_cdf_tgaussian_Pinv, (0.0661185873044326383, -50.0, 50.0, 25.0), -34.1674, TEST_TOL0);
-  TEST (gsl_cdf_tgaussian_Pinv, (0.257577857199668192, -50.0, 50.0, 25.0), -15.4257, TEST_TOL0);
-  TEST (gsl_cdf_tgaussian_Pinv, (0.109956874884255498, -50.0, 50.0, 25.0), -28.4328, TEST_TOL0);
-  TEST (gsl_cdf_tgaussian_Pinv, (0.0438289787355652244, -50.0, 50.0, 25.0), -37.9346, TEST_TOL0);
-  TEST (gsl_cdf_tgaussian_Pinv, (0.633958632430714042, -50.0, 50.0, 25.0), 8.155, TEST_TOL0);
+  TEST (gsl_cdf_tgaussian_Pinv, (0.218418626765711305, -50.0, 50.0, 25.0), -18.37, TEST_TOL1);
+  TEST (gsl_cdf_tgaussian_Pinv, (0.956315769095676504, -50.0, 50.0, 25.0), 37.961999999999982, TEST_TOL1);
+  TEST (gsl_cdf_tgaussian_Pinv, (0.82951388212098065, -50.0, 50.0, 25.0), 22.367, TEST_TOL1);
+  TEST (gsl_cdf_tgaussian_Pinv, (0.561699074822187949, -50.0, 50.0, 25.0), 3.7039999999999913, TEST_TOL1);
+  TEST (gsl_cdf_tgaussian_Pinv, (0.415307593603450431, -50.0, 50.0, 25.0), -5.1009999999999982, TEST_TOL1);
+  TEST (gsl_cdf_tgaussian_Pinv, (0.0661185873044326383, -50.0, 50.0, 25.0), -34.1674, TEST_TOL1);
+  TEST (gsl_cdf_tgaussian_Pinv, (0.257577857199668192, -50.0, 50.0, 25.0), -15.4257, TEST_TOL1);
+  TEST (gsl_cdf_tgaussian_Pinv, (0.109956874884255498, -50.0, 50.0, 25.0), -28.4328, TEST_TOL1);
+  TEST (gsl_cdf_tgaussian_Pinv, (0.0438289787355652244, -50.0, 50.0, 25.0), -37.9346, TEST_TOL1);
+  TEST (gsl_cdf_tgaussian_Pinv, (0.633958632430714042, -50.0, 50.0, 25.0), 8.155, TEST_TOL1);
 
-  TEST (gsl_cdf_tgaussian_Qinv, (0.7815813732342887, -50.0, 50.0, 25.0), -18.37, TEST_TOL0);
-  TEST (gsl_cdf_tgaussian_Qinv, (0.043684230904323496, -50.0, 50.0, 25.0), 37.961999999999982, TEST_TOL0);
-  TEST (gsl_cdf_tgaussian_Qinv, (0.17048611787901935, -50.0, 50.0, 25.0), 22.3669999999999902, TEST_TOL0);
-  TEST (gsl_cdf_tgaussian_Qinv, (0.43830092517781205, -50.0, 50.0, 25.0), 3.7039999999999913, TEST_TOL0);
-  TEST (gsl_cdf_tgaussian_Qinv, (0.5846924063965495, -50.0, 50.0, 25.0), -5.10099999999999554, TEST_TOL0);
-  TEST (gsl_cdf_tgaussian_Qinv, (0.9338814126955673, -50.0, 50.0, 25.0), -34.1674, TEST_TOL0);
-  TEST (gsl_cdf_tgaussian_Qinv, (0.7424221428003318, -50.0, 50.0, 25.0), -15.4257000000000151, TEST_TOL0);
-  TEST (gsl_cdf_tgaussian_Qinv, (0.8900431251157445, -50.0, 50.0, 25.0), -28.4328, TEST_TOL0);
-  TEST (gsl_cdf_tgaussian_Qinv, (0.9561710212644348, -50.0, 50.0, 25.0), -37.9345999999999819, TEST_TOL0);
-  TEST (gsl_cdf_tgaussian_Qinv, (0.36604136756928596, -50.0, 50.0, 25.0), 8.155, TEST_TOL0);
+  TEST (gsl_cdf_tgaussian_Qinv, (0.7815813732342887, -50.0, 50.0, 25.0), -18.37, TEST_TOL1);
+  TEST (gsl_cdf_tgaussian_Qinv, (0.043684230904323496, -50.0, 50.0, 25.0), 37.961999999999982, TEST_TOL1);
+  TEST (gsl_cdf_tgaussian_Qinv, (0.17048611787901935, -50.0, 50.0, 25.0), 22.3669999999999902, TEST_TOL1);
+  TEST (gsl_cdf_tgaussian_Qinv, (0.43830092517781205, -50.0, 50.0, 25.0), 3.7039999999999913, TEST_TOL1);
+  TEST (gsl_cdf_tgaussian_Qinv, (0.5846924063965495, -50.0, 50.0, 25.0), -5.10099999999999554, TEST_TOL1);
+  TEST (gsl_cdf_tgaussian_Qinv, (0.9338814126955673, -50.0, 50.0, 25.0), -34.1674, TEST_TOL1);
+  TEST (gsl_cdf_tgaussian_Qinv, (0.7424221428003318, -50.0, 50.0, 25.0), -15.4257, TEST_TOL1);
+  TEST (gsl_cdf_tgaussian_Qinv, (0.8900431251157445, -50.0, 50.0, 25.0), -28.4328, TEST_TOL1);
+  TEST (gsl_cdf_tgaussian_Qinv, (0.9561710212644348, -50.0, 50.0, 25.0), -37.9345999999999819, TEST_TOL1);
+  TEST (gsl_cdf_tgaussian_Qinv, (0.36604136756928596, -50.0, 50.0, 25.0), 8.155, TEST_TOL1);
 }
 
   /* Tests for the inverse binomial cumulative distribution function.
