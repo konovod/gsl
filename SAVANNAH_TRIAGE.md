@@ -37,7 +37,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 30540 | 2010-07-24 | feature | Accuracy problem | partial bug-ode2.c +2 | **fixed** — v1 rk2imp/rk4imp iterate to convergence; a non-converged step is rejected through yerr (fa1622e11) | please, add convergence checks in rk4imp/rk2imp |
 | 30583 | 2010-07-28 | doc | Documentation | none | **fixed** — Legendre/Carlson relations and the negative-parameter (imaginary-modulus) transformation documented (b0eec8bc6) | improve documentation for Elliptic functions |
 | 30885 | 2010-08-27 | - | Runtime error | none | **fixed** — Coulomb F recurrence rescaled, no overflow (25841970e) | nans from gsl_sf_coulomb_wave_FG_e(1.2693881947287221e-07, 0.0, lam_F=37, lam_G=36) |
-| 30947 | 2010-09-02 | - | - | clean 0001-Fixed-step-size-control-object.patch | rejected — new public API for the legacy v1 interface; v2 already provides evolve_apply_fixed_step/driver_apply_fixed_step | Please, include fixed step size control object for ode suite |
+| 30947 | 2010-09-02 | - | - | clean 0001-Fixed-step-size-control-object.patch | **fixed** — `gsl_odeiv_control_fixed_new` for the legacy v1 interface (379750b93) | Please, include fixed step size control object for ode suite |
 | 31109 | 2010-09-23 | - | Performance | none | rejected — performance-only; bsimp order is by design | ode-initval/bsimp is always high order |
 | 31362 | 2010-10-18 | bug | Runtime error | none | **fixed** — NaN rejected as GSL_EDOM in the complete elliptic integrals (14d595eb8) | The Complete Elliptic Integrals (gsl_sf_ellint_Ecomp and _Kcomp) Loop Forever with NaN Argument |
 | 31426 | 2010-10-23 | - | Runtime error | none | **fixed** — rescaled/bounded symmetric QR iteration (7d586d89b) | infinite loop in gsl_eigen_symm |
@@ -302,7 +302,6 @@ test-quality request, `doc` = documentation matter.  `patch`: `clean`/
 | # | kind | patch | what it would add |
 |---|---|---|---|
 | 41527 | feat | - | multimin functions return error codes |
-| 30947 | feat | clean | fixed step-size control object for the v1 ODE suite (exists in v2) |
 | 55965 | feat | - | PCG random number generator |
 | 60026 | feat | - | MIXMAX random number extension |
 | 65728 | feat | - | complex sparse matrix-vector product, resize, accumulating `_set` |

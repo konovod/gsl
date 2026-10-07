@@ -2529,13 +2529,14 @@ Henon-Heiles regression the energy error is now bounded (rk4imp about
 `1.0e-9`, rk2imp about `1.6e-5`).  Description in `FORKNEWS`; commit
 `fa1622e11`.
 
-### `#30947` — fixed step size control object — rejected
+### `#30947` — fixed step size control object — fixed
 
 A feature request for a new public object and constructor,
-`gsl_odeiv_control_fixed_new()`, in the legacy v1 API.  New API is out
-of scope.  The capability already exists in v2 as
+`gsl_odeiv_control_fixed_new()`, in the legacy v1 API.  It was taken
+once the eligibility rule was widened: `ode-initval/cfxd.c` provides the
+controller (`379750b93`).  The v2 interface already had
 `gsl_odeiv2_evolve_apply_fixed_step()` and
-`gsl_odeiv2_driver_apply_fixed_step()`.  Rejected, no code change.
+`gsl_odeiv2_driver_apply_fixed_step()`.
 
 Recorded in `FORKNEWS` under `[upstream]` (two changes) and
 `[rejected]` (three reports).  Full CTest suite 56/56 on MSVC x64.
