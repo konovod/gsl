@@ -9,9 +9,9 @@ Scratch index, not part of the fork's record of changes. Verdicts are curated fr
 
 | status | count |
 |---|---:|
-| fixed | 129 |
+| fixed | 130 |
 | partial | 5 |
-| rejected | 82 |
+| rejected | 81 |
 | deferred | 2 |
 | superseded | 1 |
 | not reviewed | 0 |
@@ -38,7 +38,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 30583 | 2010-07-28 | doc | Documentation | none | **fixed** — Legendre/Carlson relations and the negative-parameter (imaginary-modulus) transformation documented (b0eec8bc6) | improve documentation for Elliptic functions |
 | 30885 | 2010-08-27 | - | Runtime error | none | **fixed** — Coulomb F recurrence rescaled, no overflow (25841970e) | nans from gsl_sf_coulomb_wave_FG_e(1.2693881947287221e-07, 0.0, lam_F=37, lam_G=36) |
 | 30947 | 2010-09-02 | - | - | clean 0001-Fixed-step-size-control-object.patch | **fixed** — `gsl_odeiv_control_fixed_new` for the legacy v1 interface (379750b93) | Please, include fixed step size control object for ode suite |
-| 31109 | 2010-09-23 | - | Performance | none | rejected — performance-only; bsimp order is by design | ode-initval/bsimp is always high order |
+| 31109 | 2010-09-23 | - | Performance | none | **fixed** — bsimp derives its order from the driver control's error level; loose tolerances drop from order 12 to 8 (1fbb40ca3) | ode-initval/bsimp is always high order |
 | 31362 | 2010-10-18 | bug | Runtime error | none | **fixed** — NaN rejected as GSL_EDOM in the complete elliptic integrals (14d595eb8) | The Complete Elliptic Integrals (gsl_sf_ellint_Ecomp and _Kcomp) Loop Forever with NaN Argument |
 | 31426 | 2010-10-23 | - | Runtime error | none | **fixed** — rescaled/bounded symmetric QR iteration (7d586d89b) | infinite loop in gsl_eigen_symm |
 | 32257 | 2011-01-26 | - | - | none | **fixed** — Gauss-Lobatto, Gauss-Radau, Clenshaw-Curtis and Fejer fixed quadrature rules (7cdd25747, 4ad7f6f36) | RFE: Import integration routines from quadrule |
@@ -299,6 +299,12 @@ contract changes to existing API: the multimin simplex minimizers now
 return `GSL_EBADFUNC` for a non-finite objective instead of masking it as
 `GSL_EFAILED` (`f007aa42c`); it is no longer listed in the table.
 
+`#31109` was taken as a result-preserving-enough performance fix once the
+`ode-initval2` framework's driver/control link was used: `bsimp` derives
+its extrapolation order from the driver control's error level, so a loose
+tolerance no longer pays for the highest order (`1fbb40ca3`).  It is no
+longer listed in the table.
+
 `kind`: `feat` = new feature/API, `perf` = performance only, `test` =
 test-quality request, `doc` = documentation matter.  `patch`: `clean`/
 `partial`/`source` if an attachment was collected by the sweep, `-` if none;
@@ -309,7 +315,6 @@ test-quality request, `doc` = documentation matter.  `patch`: `clean`/
 | 65728 | feat | - | complex sparse resize, real-vector scaling, in-place unpack (mat-vec and accumulating `_set` done, f218d8c83) |
 | 68549 | feat | - | uniform argument lists across the distribution functions (breaking) |
 | 47402 | feat | - | Mathieu functions - library/test redesign |
-| 31109 | perf | - | `ode-initval/bsimp` order control |
 | 66742 | doc | clean | GAMS classification across 177 files |
 | 66886 | doc | clean | refactor of `specfunc/trig.c` |
 

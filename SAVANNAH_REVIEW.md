@@ -2890,8 +2890,10 @@ essay.
   alleged): `#21828`, `#21833`, `#31109`, `#40092`, `#51104`.
   **Partly reversed:** `#21833`, `#40092` and `#51104` were taken later
   as result-preserving fixes (`c382ed86e`, `0697ba772`); `#54925` was
-  taken too (`39cde03e2`).  `#21828` and `#31109` remain out of scope.
-  See Group V at the end of this file.
+  taken too (`39cde03e2`).  `#21828` remains out of scope.  `#31109` was
+  taken later, once the `ode-initval2` driver/control link was used to
+  give `bsimp` the requested tolerance (`1fbb40ca3`); see Group V at the
+  end of this file.
 * Not a defect: `#47402` (Mathieu design discussion).
 
 Two of these deserve a note:
@@ -3087,9 +3089,10 @@ evaluations; `roots/test.c` counts evaluations on the same function and
 requires at most 60.  Negative control: with the skip removed the count
 is 98 and the test fails.  Full `ctest` 56/56.  Commit `0697ba772`.
 
-### `#21828` (lmsder) and `#31109` (bsimp) - still out of scope
+### `#21828` (lmsder) and `#31109` (bsimp)
 
-Neither admits a result-preserving change from the current source:
+`#21828` still admits no result-preserving change from the current
+source:
 
 * `#21828` is a 2007 comparison against netlib MINPACK with no patch and
   no wrong value.  The likely costs are the column-oriented Householder
@@ -3097,11 +3100,21 @@ Neither admits a result-preserving change from the current source:
   a duplicated `compute_gradient_direction()` in `lmiterate.c`/
   `lmpar.c`; confirming either needs a profiling build and an
   independent reference, which was not done here.
-* `#31109` needs the requested tolerance inside `bsimp_apply()`, which
-  is an interface change; there is no internal signal to key the order
-  on.  Left as a design item.
 
-Savannah bugs #54925, #51104 and #21833, and #40092.
+`#31109` was revisited and taken.  The earlier verdict - "there is no
+internal signal to key the order on" - overlooked that the
+`ode-initval2` framework lets a stepper reach its driver's control object
+through `gsl_odeiv2_step_set_driver()`, exactly as `rk1imp`/`rk2imp`/
+`rk4imp`/`msadams`/`msbdf` already do.  `bsimp` now stores the driver and
+derives its Deuflhard order from `gsl_odeiv2_control_errlevel()` on every
+call, so no public interface change is needed: a bare
+`gsl_odeiv2_step_apply` keeps the old fixed order and only the driver
+path adapts.  On `y' = -y` over [0,10] the loose tolerance 1e-4 drops
+from order 12 and 974 evaluations to order 8 and 441, while the tight
+tolerances are unchanged.  Commit `1fbb40ca3`; regression test in
+`ode-initval2/test.c`.
+
+Savannah bugs #54925, #51104 and #21833, #40092 and #31109.
 
 
 ## Open defect: `gsl_sf_hyperg_1F1_int_e` for negative integer b
