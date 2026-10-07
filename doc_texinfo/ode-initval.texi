@@ -16,7 +16,9 @@ This is a new interface in version 1.15 and uses the prefix
 @code{gsl_odeiv2} for all functions.  It is recommended over the
 previous @code{gsl_odeiv} implementation defined in @file{gsl_odeiv.h}
 The old interface has been retained under the original name for
-backwards compatibility.
+backwards compatibility.  It includes a fixed-step control object,
+@code{gsl_odeiv_control_fixed_new}, declared in @file{gsl_odeiv.h},
+for integrations that must not change the step size.
 
 @menu
 * Defining the ODE System::     

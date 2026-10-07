@@ -1369,6 +1369,69 @@ test_evolve_final_time (const gsl_odeiv_step_type * T, double h)
   gsl_odeiv_step_free (step);
 }
 
+void
+test_evolve_fixed_control (const gsl_odeiv_step_type * T)
+{
+  /* Savannah bug #30947: the v1 suite had no fixed-step control object.
+     Check that gsl_odeiv_control_fixed_new() keeps h constant, never
+     rejects a step, and still integrates correctly. */
+
+  const double t0 = 0.0;
+  const double t1 = 4.0;
+  const double h0 = 0.01;
+
+  gsl_odeiv_step * step = gsl_odeiv_step_alloc (T, 1);
+  gsl_odeiv_control * c = gsl_odeiv_control_fixed_new ();
+  gsl_odeiv_evolve * e = gsl_odeiv_evolve_alloc (1);
+
+  double t = t0;
+  double h = h0;
+  double y = 0.0;               /* y' = 2, y(0) = 0  =>  y = 2t */
+  int steps = 0;
+
+  gsl_test (c == 0, "%s fixed control allocated", T->name);
+  gsl_test (strcmp (gsl_odeiv_control_name (c), "fixed") != 0,
+            "%s fixed control name is 'fixed'", T->name);
+
+  /* The controller must always report "no change" and leave h alone. */
+  {
+    double y[1] = {0.0}, yerr[1] = {1.0}, dydt[1] = {2.0};
+    double h_test = 0.5;
+    int adj = gsl_odeiv_control_hadjust (c, step, y, yerr, dydt, &h_test);
+
+    gsl_test (adj != GSL_ODEIV_HADJ_NIL,
+              "%s fixed control hadjust returns NIL", T->name);
+    gsl_test_abs (h_test, 0.5, 0.0,
+                  "%s fixed control hadjust leaves h unchanged", T->name);
+  }
+
+  while (t < t1 && steps < 10000)
+    {
+      double h_used = h;
+      int status = gsl_odeiv_evolve_apply (e, c, step, &rhs_func_lin,
+                                           &t, t1, &h, &y);
+      gsl_test (status, "%s fixed control evolve_apply status", T->name);
+
+      /* The controller never changes the step, except when the final
+         step is clamped to the end of the interval. */
+      if (t < t1)
+        gsl_test_abs (h, h_used, 0.0,
+                      "%s fixed control keeps the step size", T->name);
+
+      steps++;
+    }
+
+  gsl_test_abs (y, 2.0 * t1, 1e-10,
+                "%s fixed control integration", T->name);
+  gsl_test (e->failed_steps != 0,
+            "%s fixed control has no failed steps (%lu)",
+            T->name, e->failed_steps);
+
+  gsl_odeiv_evolve_free (e);
+  gsl_odeiv_control_free (c);
+  gsl_odeiv_step_free (step);
+}
+
 int
 main (void)
 {
@@ -1424,6 +1487,8 @@ main (void)
       test_evolve_negative_h (p[i].type, p[i].h, 1e-7);
       test_evolve_final_time (p[i].type, p[i].h);
     }
+
+  test_evolve_fixed_control (gsl_odeiv_step_rk4);
 
   test_compare_vanderpol();
   test_compare_oregonator();

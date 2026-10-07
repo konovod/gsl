@@ -203,6 +203,11 @@ gsl_odeiv_control * gsl_odeiv_control_yp_new(double eps_abs, double eps_rel);
  */
 gsl_odeiv_control * gsl_odeiv_control_scaled_new(double eps_abs, double eps_rel, double a_y, double a_dydt, const double scale_abs[], size_t dim);
 
+/* This controller keeps the step size fixed: gsl_odeiv_control_hadjust()
+ * always reports GSL_ODEIV_HADJ_NIL.  It has no parameters.
+ */
+gsl_odeiv_control * gsl_odeiv_control_fixed_new(void);
+
 /* General evolution object.
  */
 typedef struct {

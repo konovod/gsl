@@ -493,6 +493,7 @@ set(GSL_SOURCES
     ode-initval/control.c
     ode-initval/cstd.c
     ode-initval/cscal.c
+    ode-initval/cfxd.c
     ode-initval/evolve.c
     ode-initval/step.c
     ode-initval/rk2.c
