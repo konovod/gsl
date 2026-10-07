@@ -108,6 +108,7 @@ One line per change: date | tag | description | commit(s).
   2026-10-06 | [upstream] | spblas, spmatrix: complex sparse mat-vec + set_add   | f218d8c83
   2026-10-07 | [upstream] | cdf: truncated-Gaussian inverse test tolerance       | ddb667963
   2026-10-07 | [upstream] | multimin: report GSL_EBADFUNC from the simplex minimizers | f007aa42c
+  2026-10-07 | [upstream] | ode-initval: bsimp order from the driver tolerance | 1fbb40ca3
   2026-10-03 | [upstream] | specfunc: reject NaN in the complete elliptic integrals | 14d595eb8
   2026-10-03 | [upstream] | specfunc: terminate gamma_inc for large negative a    | 932087bcd
   2026-10-03 | [upstream] | specfunc: propagate NaN in gsl_sf_hyperg_1F1_e       | 99a73dd36
@@ -6141,6 +6142,44 @@ Files: `multimin/simplex.c`, `multimin/simplex2.c`, `multimin/test.c`,
 `doc/multimin.rst`, `doc_texinfo/multimin.texi`.
 
 Savannah bug #41527.
+
+
+## [upstream] ode-initval: select the bsimp extrapolation order from the tolerance
+
+Commit: 1fbb40ca3
+
+Savannah bug #31109 reports that the implicit Bulirsch-Stoer (`bsimp`)
+stepper always ran at its highest order, because `bsimp_alloc()` fixed
+the order once with `bsimp_deuf_kchoice(GSL_SQRT_DBL_EPSILON, dim)` and
+nothing ever changed it.  Even at a loose tolerance the whole
+extrapolation sequence was evaluated - the reporter measured 140
+function evaluations per step - with no interface to change it.
+
+The Deuflhard order criterion needs the requested local error level,
+which the stepper interface does not carry.  The ode-initval2 framework
+already lets a stepper reach the driver and its control object through
+`gsl_odeiv2_step_set_driver()`; `rk1imp`, `rk2imp`, `rk4imp`, `msadams`
+and `msbdf` use this for their iteration tolerances.  `bsimp` now stores
+the driver and, on every call, derives the error level from
+`gsl_odeiv2_control_errlevel()` (the maximum over the components) and
+recomputes its order with it.  Driven without a driver object (a bare
+`gsl_odeiv2_step_apply`) it keeps the previous fixed choice, so the
+contract only changes for callers using a driver.
+
+Verification: on `y' = -y` over [0,10] through a driver, the loose
+tolerance 1e-4 now selects order 8 and 441 evaluations, against order 12
+and 974 evaluations before, while the final error stays within the
+tolerance (9.7e-8 < 1e-4); the tight tolerances 1e-6 to 1e-10 are
+unchanged.  Regression: `ode-initval2/test.c` runs `bsimp` through a
+driver at 1e-4 and 1e-10 and requires a strictly lower order and fewer
+function evaluations at the loose tolerance.  Negative control: with
+the order selection reverted both checks fail with loose 12 = tight 12
+and 835 = 835 evaluations.  Full CTest 56/56 on MSVC x64.
+
+Files: `ode-initval2/bsimp.c`, `ode-initval2/test.c`,
+`doc/ode-initval.rst`, `doc_texinfo/ode-initval.texi`.
+
+Savannah bug #31109.
 
 
 
