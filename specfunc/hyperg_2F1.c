@@ -372,6 +372,166 @@ hyperg_2F1_conj_luke(const double aR, const double aI, const double c,
 }
 
 
+/* Integer d = c-a-b.  The connection formula then carries logarithmic
+ * terms; it is the limit of [A&S 15.3.6] as c-a-b -> m, given by
+ * [A&S 15.3.10] for m = 0 and [A&S 15.3.11] for m >= 1:
+ *
+ *   F(a,b;a+b+m;z)
+ *     = Gamma(m)Gamma(a+b+m)/(Gamma(a+m)Gamma(b+m))
+ *         sum_{n=0}^{m-1} (a)_n(b)_n (m-n-1)!/n! (z-1)^n
+ *     - Gamma(a+b+m)/(Gamma(a)Gamma(b)m!) (z-1)^m
+ *         sum_{n=0}^inf (a+m)_n(b+m)_n/(n!(n+m)!)
+ *           (1-z)^n [ln(1-z) - psi(n+1) - psi(n+m+1)
+ *                    + psi(a+n+m) + psi(b+n+m)].
+ *
+ * The factor 1/m! on the second term comes from the residue of
+ * Gamma(-d) at d = -m; the formula as usually printed omits it and is
+ * then only correct for m = 0 and m = 1.  Each gamma factor carries its
+ * sign explicitly, which the Moshier construction did not do.
+ *
+ * Assumes m = rint(c-a-b) >= 0, x >= 0.995, and that the caller's
+ * dispatch has excluded the pole cases (a, b, c and a+m, b+m not
+ * non-positive integers).
+ */
+static int
+hyperg_2F1_reflect_dint(const double a, const double b, const double c,
+                        const int m, const double x, gsl_sf_result * result)
+{
+  const int maxiter = 2000;
+  const double omx = 1.0 - x;
+  const double ln_omx = log(omx);
+  const double zm1 = x - 1.0;
+
+  gsl_sf_result lng_c, lng_a, lng_b, lng_am, lng_bm;
+  double sg_c, sg_a, sg_b, sg_am, sg_bm;
+  int stat = 0;
+
+  stat |= gsl_sf_lngamma_sgn_e(c,     &lng_c,  &sg_c);
+  stat |= gsl_sf_lngamma_sgn_e(a,     &lng_a,  &sg_a);
+  stat |= gsl_sf_lngamma_sgn_e(b,     &lng_b,  &sg_b);
+  stat |= gsl_sf_lngamma_sgn_e(a + m, &lng_am, &sg_am);
+  stat |= gsl_sf_lngamma_sgn_e(b + m, &lng_bm, &sg_bm);
+
+  if(m == 0) {
+    /* [A&S 15.3.10] */
+    const double ln_pre = lng_c.val - lng_a.val - lng_b.val;
+    const double ln_pre_err = lng_c.err + lng_a.err + lng_b.err
+                            + GSL_DBL_EPSILON * fabs(ln_pre);
+    const double sgn_pre = sg_c * sg_a * sg_b;
+    double term = 1.0;
+    double sum = 0.0;
+    double sum_err = 0.0;
+    double abs_sum = 0.0;
+    gsl_sf_result pre;
+    int stat_e;
+    int n;
+
+    for(n = 0; n < maxiter; n++) {
+      gsl_sf_result psi_n1, psi_an, psi_bn;
+      double bracket, term_val;
+
+      stat |= gsl_sf_psi_e((double)(n+1), &psi_n1);
+      stat |= gsl_sf_psi_e(a + n,        &psi_an);
+      stat |= gsl_sf_psi_e(b + n,        &psi_bn);
+
+      bracket = 2.0*psi_n1.val - psi_an.val - psi_bn.val - ln_omx;
+      term_val = term * bracket;
+      sum += term_val;
+      abs_sum += fabs(term_val);
+      sum_err += fabs(term) * (psi_n1.err + psi_an.err + psi_bn.err);
+
+      if(n > 20 && fabs(term) < GSL_DBL_EPSILON * fabs(sum)) break;
+      term *= (a + n) * (b + n) / ((double)(n+1) * (double)(n+1)) * omx;
+    }
+    sum_err += 2.0 * GSL_DBL_EPSILON * abs_sum;
+
+    stat_e = gsl_sf_exp_err_e(ln_pre, ln_pre_err, &pre);
+    pre.val *= sgn_pre;
+    result->val = pre.val * sum;
+    result->err = fabs(pre.val) * sum_err + fabs(sum) * pre.err
+                + 2.0 * GSL_DBL_EPSILON * fabs(result->val);
+    return GSL_ERROR_SELECT_2(stat, stat_e);
+  }
+  else {
+    /* [A&S 15.3.11] */
+    double lgamma_m;
+    double fact_m_inv = 1.0;
+    double ln_pre1, ln_pre1_err, ln_pre2, ln_pre2_err;
+    double sgn_pre1, sgn_pre2;
+    double term, sum1 = 0.0, sum1_err = 0.0, abs_sum1 = 0.0;
+    double sum2 = 0.0, sum2_err = 0.0, abs_sum2 = 0.0;
+    gsl_sf_result pre1, pre2;
+    int stat_e1, stat_e2;
+    int n;
+
+    lgamma_m = gsl_sf_lngamma((double) m);
+
+    /* P1 = Gamma(c)/(Gamma(a+m)Gamma(b+m)); the Gamma(m) of the
+     * printed formula is already carried by the finite sum, whose
+     * first term is (m-1)!. */
+    ln_pre1 = lng_c.val - lng_am.val - lng_bm.val;
+    ln_pre1_err = lng_c.err + lng_am.err + lng_bm.err
+                + 2.0 * GSL_DBL_EPSILON * fabs(ln_pre1);
+    sgn_pre1 = sg_c * sg_am * sg_bm;
+
+    /* P2 = -Gamma(c)/(Gamma(a)Gamma(b)) (z-1)^m.  The 1/m! of the
+     * printed second series is carried by its first term. */
+    ln_pre2 = lng_c.val - lng_a.val - lng_b.val
+            + m * log(fabs(zm1));
+    ln_pre2_err = lng_c.err + lng_a.err + lng_b.err
+                + 2.0 * GSL_DBL_EPSILON * (fabs(ln_pre2) + m);
+    sgn_pre2 = -sg_c * sg_a * sg_b;
+    if(GSL_IS_ODD(m)) sgn_pre2 = -sgn_pre2;
+
+    /* Finite sum: term_n = (a)_n(b)_n (m-n-1)!/n! (z-1)^n. */
+    term = exp(lgamma_m);  /* (m-1)! */
+    for(n = 0; n < m; n++) {
+      sum1 += term;
+      abs_sum1 += fabs(term);
+      if(n + 1 < m)
+        term *= (a + n) * (b + n) / ((double)(m - n - 1) * (double)(n + 1)) * zm1;
+    }
+    sum1_err = 2.0 * GSL_DBL_EPSILON * abs_sum1;
+
+    /* Infinite sum: term_n = (a+m)_n(b+m)_n/(n!(n+m)!) (1-z)^n. */
+    for(n = 0; n <= m; n++)  /* 1/m! */
+      fact_m_inv /= (double)(n == 0 ? 1 : n);
+    term = fact_m_inv;
+    for(n = 0; n < maxiter; n++) {
+      gsl_sf_result psi_n1, psi_nm1, psi_anm, psi_bnm;
+      double bracket, delta;
+
+      stat |= gsl_sf_psi_e((double)(n+1),     &psi_n1);
+      stat |= gsl_sf_psi_e((double)(n+m+1),   &psi_nm1);
+      stat |= gsl_sf_psi_e(a + n + m,         &psi_anm);
+      stat |= gsl_sf_psi_e(b + n + m,         &psi_bnm);
+
+      bracket = ln_omx - psi_n1.val - psi_nm1.val + psi_anm.val + psi_bnm.val;
+      delta = term * bracket;
+      sum2 += delta;
+      abs_sum2 += fabs(delta);
+      sum2_err += fabs(term) * (psi_n1.err + psi_nm1.err + psi_anm.err + psi_bnm.err);
+
+      if(n > 20 && fabs(term) < GSL_DBL_EPSILON * fabs(sum2)) break;
+      term *= (a + m + n) * (b + m + n)
+            / ((double)(n+1) * (double)(n + m + 1)) * omx;
+    }
+    sum2_err += 2.0 * GSL_DBL_EPSILON * abs_sum2;
+
+    stat_e1 = gsl_sf_exp_err_e(ln_pre1, ln_pre1_err, &pre1);
+    stat_e2 = gsl_sf_exp_err_e(ln_pre2, ln_pre2_err, &pre2);
+    pre1.val *= sgn_pre1;
+    pre2.val *= sgn_pre2;
+
+    result->val = pre1.val * sum1 + pre2.val * sum2;
+    result->err = fabs(pre1.val) * sum1_err + fabs(pre2.val) * sum2_err
+                + fabs(sum1) * pre1.err + fabs(sum2) * pre2.err
+                + 2.0 * GSL_DBL_EPSILON * fabs(result->val);
+    return GSL_ERROR_SELECT_4(stat, stat_e1, stat_e2, GSL_SUCCESS);
+  }
+}
+
+
 /* Do the reflection described in [Moshier, p. 334].
  * Assumes a,b,c != neg integer.
  */
@@ -385,159 +545,25 @@ hyperg_2F1_reflect(const double a, const double b, const double c,
   const int d_integer = ( fabs(d - intd) < locEPS );
 
   if(d_integer) {
-    const double ln_omx = log(1.0 - x);
-    const double ad = fabs(d);
-    int stat_F2 = GSL_SUCCESS;
-    double sgn_2;
-    gsl_sf_result F1;
-    gsl_sf_result F2;
-    double d1, d2;
-    gsl_sf_result lng_c;
-    gsl_sf_result lng_ad2;
-    gsl_sf_result lng_bd2;
-    int stat_c;
-    int stat_ad2;
-    int stat_bd2;
-
-    if(d >= 0.0) {
-      d1 = d;
-      d2 = 0.0;
+    if(intd == 0) {
+      return hyperg_2F1_reflect_dint(a, b, c, 0, x, result);
+    }
+    else if(intd > 0) {
+      return hyperg_2F1_reflect_dint(a, b, c, intd, x, result);
     }
     else {
-      d1 = 0.0;
-      d2 = d;
+      /* c-a-b = -m < 0: apply the [A&S 15.3.12] shift (1-z)^m first,
+       * which turns it into the m > 0 case. */
+      const int m = -intd;
+      gsl_sf_result F;
+      gsl_sf_result p;
+      int stat_F = hyperg_2F1_reflect_dint(a - m, b - m, c, m, x, &F);
+      int stat_p = pow_omx(x, -(double)m, &p);
+      result->val = p.val * F.val;
+      result->err = fabs(p.val) * F.err + fabs(F.val) * p.err
+                  + 2.0 * GSL_DBL_EPSILON * fabs(result->val);
+      return GSL_ERROR_SELECT_2(stat_F, stat_p);
     }
-
-    stat_ad2 = gsl_sf_lngamma_e(a+d2, &lng_ad2);
-    stat_bd2 = gsl_sf_lngamma_e(b+d2, &lng_bd2);
-    stat_c   = gsl_sf_lngamma_e(c,    &lng_c);
-
-    /* Evaluate F1.
-     */
-    if(ad < GSL_DBL_EPSILON) {
-      /* d = 0 */
-      F1.val = 0.0;
-      F1.err = 0.0;
-    }
-    else {
-      gsl_sf_result lng_ad;
-      gsl_sf_result lng_ad1;
-      gsl_sf_result lng_bd1;
-      int stat_ad  = gsl_sf_lngamma_e(ad,   &lng_ad);
-      int stat_ad1 = gsl_sf_lngamma_e(a+d1, &lng_ad1);
-      int stat_bd1 = gsl_sf_lngamma_e(b+d1, &lng_bd1);
-
-      if(stat_ad1 == GSL_SUCCESS && stat_bd1 == GSL_SUCCESS && stat_ad == GSL_SUCCESS) {
-        /* Gamma functions in the denominator are ok.
-         * Proceed with evaluation.
-         */
-        int i;
-        double sum1 = 1.0;
-        double term = 1.0;
-        double ln_pre1_val = lng_ad.val + lng_c.val + d2*ln_omx - lng_ad1.val - lng_bd1.val;
-        double ln_pre1_err = lng_ad.err + lng_c.err + lng_ad1.err + lng_bd1.err + GSL_DBL_EPSILON * fabs(ln_pre1_val);
-        int stat_e;
-
-        /* Do F1 sum.
-         */
-        for(i=1; i<ad; i++) {
-          int j = i-1;
-          term *= (a + d2 + j) * (b + d2 + j) / (1.0 + d2 + j) / i * (1.0-x);
-          sum1 += term;
-        }
-        
-        stat_e = gsl_sf_exp_mult_err_e(ln_pre1_val, ln_pre1_err,
-                                       sum1, GSL_DBL_EPSILON*fabs(sum1),
-                                       &F1);
-        if(stat_e == GSL_EOVRFLW) {
-          OVERFLOW_ERROR(result);
-        }
-      }
-      else {
-        /* Gamma functions in the denominator were not ok.
-         * So the F1 term is zero.
-         */
-        F1.val = 0.0;
-        F1.err = 0.0;
-      }
-    } /* end F1 evaluation */
-
-
-    /* Evaluate F2.
-     */
-    if(stat_ad2 == GSL_SUCCESS && stat_bd2 == GSL_SUCCESS) {
-      /* Gamma functions in the denominator are ok.
-       * Proceed with evaluation.
-       */
-      const int maxiter = 2000;
-      double psi_1 = -M_EULER;
-      gsl_sf_result psi_1pd; 
-      gsl_sf_result psi_apd1;
-      gsl_sf_result psi_bpd1;
-      int stat_1pd  = gsl_sf_psi_e(1.0 + ad, &psi_1pd);
-      int stat_apd1 = gsl_sf_psi_e(a + d1,   &psi_apd1);
-      int stat_bpd1 = gsl_sf_psi_e(b + d1,   &psi_bpd1);
-      int stat_dall = GSL_ERROR_SELECT_3(stat_1pd, stat_apd1, stat_bpd1);
-
-      double psi_val = psi_1 + psi_1pd.val - psi_apd1.val - psi_bpd1.val - ln_omx;
-      double psi_err = psi_1pd.err + psi_apd1.err + psi_bpd1.err + GSL_DBL_EPSILON*fabs(psi_val);
-      double fact = 1.0;
-      double sum2_val = psi_val;
-      double sum2_err = psi_err;
-      double ln_pre2_val = lng_c.val + d1*ln_omx - lng_ad2.val - lng_bd2.val;
-      double ln_pre2_err = lng_c.err + lng_ad2.err + lng_bd2.err + GSL_DBL_EPSILON * fabs(ln_pre2_val);
-      int stat_e;
-
-      int j;
-
-      /* Do F2 sum.
-       */
-      for(j=1; j<maxiter; j++) {
-        /* values for psi functions use recurrence; Abramowitz+Stegun 6.3.5 */
-        double term1 = 1.0/(double)j  + 1.0/(ad+j);
-        double term2 = 1.0/(a+d1+j-1.0) + 1.0/(b+d1+j-1.0);
-        double delta = 0.0;
-        psi_val += term1 - term2;
-        psi_err += GSL_DBL_EPSILON * (fabs(term1) + fabs(term2));
-        fact *= (a+d1+j-1.0)*(b+d1+j-1.0)/((ad+j)*j) * (1.0-x);
-        delta = fact * psi_val;
-        sum2_val += delta;
-        sum2_err += fabs(fact * psi_err) + GSL_DBL_EPSILON*fabs(delta);
-        if(fabs(delta) < GSL_DBL_EPSILON * fabs(sum2_val)) break;
-      }
-
-      if(j == maxiter) stat_F2 = GSL_EMAXITER;
-
-      if(sum2_val == 0.0) {
-        F2.val = 0.0;
-        F2.err = 0.0;
-      }
-      else {
-        stat_e = gsl_sf_exp_mult_err_e(ln_pre2_val, ln_pre2_err,
-                                       sum2_val, sum2_err,
-                                       &F2);
-        if(stat_e == GSL_EOVRFLW) {
-          result->val = 0.0;
-          result->err = 0.0;
-          GSL_ERROR ("error", GSL_EOVRFLW);
-        }
-      }
-      stat_F2 = GSL_ERROR_SELECT_2(stat_F2, stat_dall);
-    }
-    else {
-      /* Gamma functions in the denominator not ok.
-       * So the F2 term is zero.
-       */
-      F2.val = 0.0;
-      F2.err = 0.0;
-    } /* end F2 evaluation */
-
-    sgn_2 = ( GSL_IS_ODD(intd) ? -1.0 : 1.0 );
-    result->val  = F1.val + sgn_2 * F2.val;
-    result->err  = F1.err + F2. err;
-    result->err += 2.0 * GSL_DBL_EPSILON * (fabs(F1.val) + fabs(F2.val));
-    result->err += 2.0 * GSL_DBL_EPSILON * fabs(result->val);
-    return stat_F2;
   }
   else {
     /* d not an integer */

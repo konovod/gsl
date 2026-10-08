@@ -961,6 +961,29 @@ TEST_SF(s, gsl_sf_hyperg_U_e, (2, -6.4, 1, &r),1.2141502795806162484648638e-02
     gsl_test(!(er.err < 1e-6), "gsl_sf_hyperg_2F1_e (-0.5,1.5,1,0.4) error estimate (err=%g)", er.err);
   }
 
+  /* Reflection at x >= 0.995 with integer d = c-a-b (Savannah bug
+   * #32306).  The Moshier construction dropped the signs of the gamma
+   * factors and its finite sum was in error for d >= 2, so
+   * 2F1(-0.5,1.5,1,x) was negated and large |d| cases were off by
+   * orders of magnitude.  The branch now uses the [A&S 15.3.10 /
+   * 15.3.11] limits (with the 1/m! supplied by the first term of the
+   * second series) and [A&S 15.3.12] for d < 0.  References from
+   * mpmath at 40 digits. */
+
+  TEST_SF(s, gsl_sf_hyperg_2F1_e, (-0.5, 1.5, 1.0, 0.995,  &r), -1.2869602643036353395, TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_2F1_e, (-0.5, 1.5, 1.0, 0.9999, &r), -2.5407750881294536806, TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_2F1_e, (-2.5, -0.5, 1.0, 0.995, &r),  2.03293515595306258944, TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_2F1_e, (-2.5, -0.5, 1.0, 0.999, &r),  2.03633428601845505554, TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_2F1_e, (3.5, -0.5, 5.0, 0.995,  &r),  0.521803601596699500429, TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_2F1_e, (3.5, -0.5, 5.0, 0.999,  &r),  0.518279566225858769705, TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_2F1_e, (2.0, 3.0, 6.0, 0.995,   &r),  9.07492169116340341092, TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_2F1_e, (1.7, 1.3, 5.0, 0.999,   &r),  2.1397850541370432836, TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_2F1_e, (4.5, 1.5, 3.0, 0.995,   &r),  3121794.67818662392033, TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_2F1_e, (4.5, 1.5, 3.0, 0.999,   &r),  388471719.998838541693, TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_2F1_e, (-1.5, 2.5, 4.0, 0.995,  &r),  0.261125593529339832961, TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_2F1_e, (2.5, 1.5, 3.0, 0.995,   &r),  333.864712385621421742, TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_2F1_e, (2.5, 1.5, 3.0, 0.9999,  &r),  16965.9365798282991119, TEST_TOL2, GSL_SUCCESS);
+
   /* 2F1 terminates when a or b is zero or a negative integer.  The
    * resulting polynomial is finite for every x, including |x| >= 1
    * where the Gauss series does not converge; the dispatch used to
