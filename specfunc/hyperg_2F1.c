@@ -532,6 +532,9 @@ hyperg_2F1_reflect_dint(const double a, const double b, const double c,
 }
 
 
+static int pow_omx(const double x, const double p, gsl_sf_result * result);
+
+
 /* Do the reflection described in [Moshier, p. 334].
  * Assumes a,b,c != neg integer.
  */
