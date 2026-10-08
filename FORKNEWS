@@ -113,6 +113,7 @@ One line per change: date | tag | description | commit(s).
   2026-10-07 | [upstream] | doc: correct the Mathieu return types and coeff docs | a31710cf6
   2026-10-07 | [upstream] | specfunc: angular Mathieu ce/se derivatives        | 47727ca0e
   2026-10-07 | [upstream] | specfunc: Mathieu coefficient caching (deferred design) | - (see below)
+  2026-10-08 | [upstream] | specfunc: finite hazard error estimate at the limits | 9c43a759f
   2026-10-03 | [upstream] | specfunc: reject NaN in the complete elliptic integrals | 14d595eb8
   2026-10-03 | [upstream] | specfunc: terminate gamma_inc for large negative a    | 932087bcd
   2026-10-03 | [upstream] | specfunc: propagate NaN in gsl_sf_hyperg_1F1_e       | 99a73dd36
@@ -685,10 +686,13 @@ Files: `specfunc/erfc.c`, `specfunc/test_sf.c`,
 
 See Savannah bugs #53919 and #65760.
 
-Related, not done: `gsl_sf_hazard_e()` takes its `x >= 25` branch for
-`|x|` beyond `sqrt(DBL_MAX)`, where `1/(x*x)` underflows and the result is
-`+-inf` with a zero error.  Same family, same file, but neither bug
-reports it, so it is left alone here rather than widened in.
+Related, done later: `gsl_sf_hazard_e()` takes its `x >= 25` branch for
+`|x|` beyond `sqrt(DBL_MAX)`, where `1/(x*x)` underflows.  The value is
+correct there (`x` for positive `x`), but the error estimate was broken:
+`3 (1 + |x|) eps |val|` overflowed to `Inf` before the multiply by a zero
+`val`, giving `err = NaN` for very negative `x` and `x = -Inf`, and
+`err = Inf` for `x = +Inf`.  Fixed in 9c43a759f (see the separate entry
+below); the error is now zero at the underflow and infinity limits.
 
 
 ## [rejected] specfunc: the duplicated complex sin and cos implementations
@@ -6319,6 +6323,41 @@ alternatives are in `SAVANNAH_REVIEW.md` under "Group X".  Left as a
 known follow-up rather than closed.
 
 Savannah bug #47402 (item 3).
+
+
+## [upstream] specfunc: finite hazard error estimate at the limits
+
+Commit: 9c43a759f
+
+`gsl_sf_hazard_e()` built its error estimate from `3 (1 + |x|) eps
+|val|`.  For `x` far to the left the exponential underflows and `val`
+becomes zero, but `3 (1 + |x|)` overflows to `+Inf` first, so the
+reported error was `Inf * 0 = NaN` for `|x|` beyond about `DBL_MAX/3`
+and for `x = -Inf`.  At `x = +Inf` the value is `+Inf` and
+`2 eps |val|` is `+Inf`, so the error bar was infinite there too.  The
+values were already correct; only the error estimates were broken.
+
+The error is now zero when the exponential has underflowed (all the
+remaining terms are multiples of `val`) and when the result is infinite,
+matching the convention already used by `gsl_sf_log_erfc_e()` and
+`gsl_sf_erf_Z_e()`.  Measured after the fix:
+
+    hazard(1.5e154) -> 1.5e154, err = 6.7e138
+    hazard(1e300)   -> 1e300,   err = 4.4e284
+    hazard(+Inf)    -> +Inf,    err = 0
+    hazard(-1e300)  -> 0,       err = 0    (GSL_EUNDRFLW)
+    hazard(-Inf)    -> 0,       err = 0    (GSL_EUNDRFLW)
+
+Six vectors were added to `specfunc/test_sf.c`.  Because `TEST_SF` does
+not inspect the error bar of a finite zero result, the `NaN`/`Inf` error
+estimates are also checked explicitly.  Negative control: with the
+change reverted, `specfunc_test` fails on `gsl_sf_hazard_e(-1e308)`,
+`gsl_sf_hazard_e(-Inf)` and `gsl_sf_hazard_e(Inf)`.  Full suite 56/56.
+
+Files: `specfunc/erfc.c`, `specfunc/test_sf.c`, `doc/specfunc-erf.rst`,
+`doc_texinfo/specfunc-erf.texi`.
+
+See Savannah bug #53919.
 
 
 

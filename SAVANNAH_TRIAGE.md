@@ -132,7 +132,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 53903 | 2018-05-14 | bug | Runtime error | none | rejected — 32-bit x87 musl `pow` returns 0; the reported value/error are exactly the terms that survive | Test failure with gsl_sf_synchrotron_1_e on x86 |
 | 53904 | 2018-05-14 | bug | - | none | rejected — not a bug: uninitialized matrix; direct-call and variable forms of `gsl_complex_rect` are equivalent | Bug gsl_matrix_complex_set |
 | 53905 | 2018-05-14 | bug | - | none | **fixed** — terminating 2F1 for a non-positive-integer order (2aa89bae8) | Bug in Hypergeometric function |
-| 53919 | 2018-05-16 | - | Runtime error | clean v2-erf.diff +1 | **fixed** — erfc/log_erfc overflow rewritten (708791c25) | handle large values correctly in (log_)erf(c) functions |
+| 53919 | 2018-05-16 | - | Runtime error | clean v2-erf.diff +1 | **fixed** — erfc/log_erfc overflow rewritten (708791c25); the related hazard error-bar defect also fixed (9c43a759f) | handle large values correctly in (log_)erf(c) functions |
 | 54077 | 2018-06-07 | - | Runtime error | clean 0001-replace-atol-by-strtoul-in-gsl-randist.c.patch | **fixed** — gsl-randist seed via strtoul (aebe57a5c) | usage of atol in gsl-randistdoes not allow to pass big seed |
 | 54919 | 2018-10-30 | bug | Build | none | rejected — icc-only; modules pass on MSVC and gcc | gsl 2.5+ test fails with icc (2016.4 and later) |
 | 54925 | 2018-10-31 | - | Performance | clean 0001-Reduce-cache-misses-for-source_gemm_r.patch | **fixed** — loops reordered so a row of C stays resident (39cde03e2); numerically neutral | Reduce cache misses for source_gemm_r |
@@ -342,7 +342,6 @@ report was closed test-only, but the library defect it exposed is open.
 | 66826 | bug | `gsl_sf_hyperg_1F1_int_e` returns the Kummer value rather than the terminating polynomial for negative integer `b` (`(-10,-20,-100)`: `1.6e-35` against a true `4.9e7`); the three existing vectors assert the wrong value and must be corrected with it.  Analysis under "Open defect" in `SAVANNAH_REVIEW.md`. |
 | 30510 | bug | `hyperg_U(a,b,x)` for non-integer `b` and `x < 0` returns `NaN` with `GSL_SUCCESS` (silent). |
 | 32306 | bug | 2F1 reflection at `x >= 0.995` with integer `d` keeps the sign/accuracy defect that the `x < 0.995` series fix only worked around. |
-| 53919 | bug | `gsl_sf_hazard_e()` beyond `\|x\| > sqrt(DBL_MAX)` returns `±inf` with `err = 0` (recorded as "related, not done" in the erfc entry). |
 | 28267 | bug | 1F1 in the transition region `x ~ a^2` still loses most digits (e.g. `(-37.8, 2.01, 103.58)` at ~2%). |
 | 21835 | bug | 2F1 at `c = a+b` near `x = 1` exhausts the series (`GSL_EMAXITER`) despite ~9 good digits; needs the A&S 15.3.10 form. |
 | 50712 | bug | `lm+accel` with a finite-difference `fvv` on `box3d` fails to converge; reproduces on MSVC x64 and is disabled under `#if 0`. |
