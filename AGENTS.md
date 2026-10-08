@@ -47,10 +47,10 @@ The classification of every change is recorded in `FORKNEWS`.
 
 ## Remotes and branches
 
-| remote | repository | role |
-|---|---|---|
-| `fork` | `https://github.com/konovod/gsl.git` | this fork; the push target |
-| `origin` | `https://github.com/BrianGladman/gsl` | fork origin (CMake work) |
+| remote     | repository                                 | role                                  |
+| ---------- | ------------------------------------------ | ------------------------------------- |
+| `fork`     | `https://github.com/konovod/gsl.git`       | this fork; the push target            |
+| `origin`   | `https://github.com/BrianGladman/gsl`      | fork origin (CMake work)              |
 | `savannah` | `https://git.savannah.gnu.org/git/gsl.git` | upstream GNU GSL; read-only reference |
 
 `master` tracks `fork/master` and is a direct descendant of
@@ -62,18 +62,18 @@ The classification of every change is recorded in `FORKNEWS`.
 `FORKNEWS` (no extension) is the fork's change log, deliberately separate
 from `NEWS`. It has two parts:
 
-* **Summary** — one line per change:
+- **Summary** — one line per change:
   `date | tag | description | commit(s)`.
-* **Per-change entries** — a short essay: what was wrong, what the fix does,
+- **Per-change entries** — a short essay: what was wrong, what the fix does,
   which files/commits, how it was verified, and the Savannah bug id when
   there is one.
 
 Tags and their meaning:
 
-* `[upstream]` — intended for or suitable for upstream GSL; written in a
+- `[upstream]` — intended for or suitable for upstream GSL; written in a
   style upstream would accept.
-* `[fork]` — specific to this fork (CMake, CI) and not intended upstream.
-* `[rejected]` — evaluated and deliberately not applied; the entry records
+- `[fork]` — specific to this fork (CMake, CI) and not intended upstream.
+- `[rejected]` — evaluated and deliberately not applied; the entry records
   the reasoning so a future reader does not re-investigate.
 
 A `[fork]` change may be promoted to `[upstream]` later. When something is
@@ -91,20 +91,23 @@ no `Signed-off-by` trailer.
 ## Savannah bug review
 
 The tracker is <https://savannah.gnu.org/bugs/?group=gsl>.
-Texts for all bugs are available offline at `/temp/savannah-store/dossiers/NNN.txt` 
+Texts for all bugs are available offline at `/temp/savannah-store/dossiers/NNN.txt`
 
-* `scripts/savannah_bugs.py` walks the open bugs, downloads patch-like
+- `scripts/savannah_bugs.py` walks the open bugs, downloads patch-like
   attachments, and runs `git apply --check` against the tree. It writes an
   inventory and the patches under a temp directory (default
   `%TEMP%/savannah-gsl`), never into the tree. A full sweep is a few minutes;
   results are cached in `cache.json`.
-* `SAVANNAH_REVIEW.md` holds the working notes and verdicts for each bug.
+- `SAVANNAH_REVIEW.md` holds the working notes and verdicts for each bug.
   It is deliberately **not** part of the fork's record of changes and is
   kept out of `FORKNEWS`; it records both applied and rejected items, plus
   method notes.
-* `/temp/` (git-ignored) is the scratch area for patch and reference files
+- `/temp/` (git-ignored) is the scratch area for patch and reference files
   being evaluated.
-* `SAVANNAH_TRIAGE.md` consists of two parts - big table with short description and status of each bug and backlog with items remaining to process.
+- `SAVANNAH_TRIAGE.md` consists of two parts - big table with short description
+  and status of each bug and backlog with items remaining to process. Also there
+  is a total count of issues in each category at start of file - keep it updated
+  when something is removed from backlog.
 
 **Eligibility rule.** A candidate is in scope if **any action can be
 taken** on it: a bug fix, a documentation correction, a test-quality
@@ -115,7 +118,6 @@ from CI - and reports that name no defect in this repository at all (for
 example Savannah's own feed, or an external LAPACK build). A wide scope does
 not lower the bar: reproduce the behaviour first and check against an
 independent reference.
-
 
 **Review method** (this is the hard-won part — follow it):
 
@@ -165,12 +167,12 @@ cmd /c '"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxil
 
 Options (from `CMake.md`):
 
-| option | default | meaning |
-|---|---|---|
-| `BUILD_SHARED_LIBS` | `ON` | shared library (DLL) vs static |
-| `GSL_BUILD_TOOLS` | `ON` | build `gsl-randist` and `gsl-histogram` |
-| `GSL_BUILD_TESTS` | `OFF` | build and register the per-module test programs |
-| `GSL_ENABLE_RANGE_CHECK` | `OFF` | run-time range checking inside the library |
+| option                   | default | meaning                                         |
+| ------------------------ | ------- | ----------------------------------------------- |
+| `BUILD_SHARED_LIBS`      | `ON`    | shared library (DLL) vs static                  |
+| `GSL_BUILD_TOOLS`        | `ON`    | build `gsl-randist` and `gsl-histogram`         |
+| `GSL_BUILD_TESTS`        | `OFF`   | build and register the per-module test programs |
+| `GSL_ENABLE_RANGE_CHECK` | `OFF`   | run-time range checking inside the library      |
 
 Run tests through CTest, not the executables directly: several tests read and
 write data files in their module source directory, which CTest sets up.
@@ -206,34 +208,34 @@ The generated files say so in their header.
 GSL is C89-flavoured portable C with GNU style. Follow the surrounding code;
 do not introduce a new style.
 
-* 2-space indentation, braces on their own line indented one level for
+- 2-space indentation, braces on their own line indented one level for
   functions and blocks; GNU brace placement.
-* Prefer `/* ... */` comments; the codebase is C89-compatible.
-* Every source starts with `#include <config.h>` before the system and GSL
+- Prefer `/* ... */` comments; the codebase is C89-compatible.
+- Every source starts with `#include <config.h>` before the system and GSL
   headers.
-* Public symbols are prefixed `gsl_` / `GSL_`; internal helpers are
+- Public symbols are prefixed `gsl_` / `GSL_`; internal helpers are
   `static`. Keep new internal names static unless exporting is required.
-* Report errors with the `GSL_ERROR` / `GSL_ERROR_VAL` / `DOMAIN_ERROR`
+- Report errors with the `GSL_ERROR` / `GSL_ERROR_VAL` / `DOMAIN_ERROR`
   family and return the documented `GSL_*` code. Do not `printf` and do not
   call `abort`.
-* **Do not add `isnan` guards.** In `specfunc` and elsewhere, a `NaN`
+- **Do not add `isnan` guards.** In `specfunc` and elsewhere, a `NaN`
   argument is intentionally propagated, not treated as a domain error. A
   non-finite argument that has no finite limit (e.g. `sin_pi(inf)`) is a
   domain error (`GSL_EDOM`); one that does have a limit is not.
-* Keep error estimates (`result->err`) meaningful. A reported error of
+- Keep error estimates (`result->err`) meaningful. A reported error of
   exactly zero for an inexact computation is a bug — the test harness
   rejects expected values that fall outside the reported error bar.
 
 ## Tests
 
-* Tests live next to the module (`<module>/test.c` and helpers) and use the
+- Tests live next to the module (`<module>/test.c` and helpers) and use the
   `TEST_SF` / `TEST_*` harness with tolerances `TEST_TOL0` (tightest) through
   `TEST_TOL6`. Pick a tolerance that reflects the conditioning of the
   computation and the accuracy of the reference — not the tightest that
   happens to pass on your machine.
-* Add a vector that specifically exercises the bug, and verify it fails with
+- Add a vector that specifically exercises the bug, and verify it fails with
   the fix reverted. Record the failure count in `FORKNEWS`.
-* Expected values must lie inside the library's own reported error bar, or
+- Expected values must lie inside the library's own reported error bar, or
   `TEST_SF` reports `TEST_SF_INCONS`. At exact zeros there is no relative
   scale; use an absolute-aware tolerance rather than `TEST_TOL0`.
 
@@ -241,8 +243,8 @@ do not introduce a new style.
 
 There are two manual trees and they mirror each other:
 
-* `doc/*.rst` — the Sphinx manual (current).
-* `doc_texinfo/*.texi` — the Texinfo manual.
+- `doc/*.rst` — the Sphinx manual (current).
+- `doc_texinfo/*.texi` — the Texinfo manual.
 
 When a change alters documented behaviour, update **both** where the
 corresponding entry exists, and update the examples under `doc/examples/`
@@ -257,22 +259,22 @@ it.
 This fork is built and tested on Windows (MSVC), Linux and macOS. Changes
 must pass on all of them.
 
-* **`long` width differs.** Windows/MSVC is LLP64 (`long` = 32 bit); Linux
+- **`long` width differs.** Windows/MSVC is LLP64 (`long` = 32 bit); Linux
   and macOS are LP64. Code that relies on `long` overflow or on
   `unsigned long` holding a 64-bit value is wrong on one family. Use
   `int32_t`/`uint32_t` or the `GSL_*` types.
-* **Extended precision is not uniform.** x86-64 keeps intermediates in 80-bit
+- **Extended precision is not uniform.** x86-64 keeps intermediates in 80-bit
   x87 registers; MSVC and arm64 macOS round to `double`. A test that passes
   only because of x87 excess precision will fail on macOS; widen the
   tolerance or restructure the computation.
-* **FMA / `-ffp-contract=fast`** is a default in many compiler setups and
+- **FMA / `-ffp-contract=fast`** is a default in many compiler setups and
   changes rounding. Tests must not depend on a single contraction mode.
   `-ffast-math` is unsupported by GSL and is never an acceptable fix.
-* **Non-ASCII build paths.** The Windows temp path here contains non-ASCII
+- **Non-ASCII build paths.** The Windows temp path here contains non-ASCII
   characters, which can break linking test programs against the DLL import
   library. The reliable workaround (archive the `.obj` files with `ar`) is
   written up in the "Method notes" section of `SAVANNAH_REVIEW.md`.
-* On MSVC the DLL exports are produced with `WINDOWS_EXPORT_ALL_SYMBOLS`;
+- On MSVC the DLL exports are produced with `WINDOWS_EXPORT_ALL_SYMBOLS`;
   `cmake/msvc-compat/` supplies minimal `unistd.h`/`getopt.h` shims and the
   Windows IEEE implementation.
 
@@ -294,14 +296,14 @@ HACKING            upstream developer notes (releases, checks, portability)
 
 ## Do not
 
-* Do not mix `[upstream]` and `[fork]` changes in one commit.
-* Do not touch `NEWS` for fork-only changes.
-* Do not edit `cmake/gsl_sources.cmake` or `cmake/gsl_tests.cmake` by hand.
-* Do not skip a Savannah report because it is a feature, new API or
+- Do not mix `[upstream]` and `[fork]` changes in one commit.
+- Do not touch `NEWS` for fork-only changes.
+- Do not edit `cmake/gsl_sources.cmake` or `cmake/gsl_tests.cmake` by hand.
+- Do not skip a Savannah report because it is a feature, new API or
   performance change; under the eligibility rule a candidate is dropped only
   when no action can be taken or its platform cannot be built and tested
   here.
-* Do not trust a patch because it applies cleanly; reproduce and test it.
-* Do not push to `origin` or `savannah`.
-* Do not delete or overwrite unfamiliar files or uncommitted work — check
+- Do not trust a patch because it applies cleanly; reproduce and test it.
+- Do not push to `origin` or `savannah`.
+- Do not delete or overwrite unfamiliar files or uncommitted work — check
   first.
