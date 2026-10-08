@@ -2428,10 +2428,11 @@ Reviewed 2026-10-04 against the built `build-cmake/gsl.dll` (MSVC x64),
 with the reporters' own programs compiled against it.  Two reports are
 real latent division-by-zero defects and are fixed; one final-time
 rounding defect is fixed in both ODE interfaces; one is already fixed
-upstream; the three remaining were feature-shaped or too deep to fix and
-were recorded as rejected.  Of those, `#30540` was taken later once the
-filter was widened.  The fixes are commits `8640b846e`, `dda917296` and
-`fa1622e11`; the full `ctest` suite is 56/56.
+upstream; the three remaining were first recorded as rejected.  Of those,
+`#30540` was taken later once the filter was widened, and `#50712` was
+reopened as a small step-floor defect and fixed once the failure mechanism
+was traced (commit `5ed006141`).  The fixes are commits `8640b846e`,
+`dda917296`, `fa1622e11` and `5ed006141`; the full `ctest` suite is 56/56.
 
 ### `#42219` + `#42220` — division by zero at a root — fixed
 
@@ -2513,26 +2514,38 @@ The reporter's own `gsl-secant64.c` (the "almost linear" case with a
 `0.001*eps` offset) converges on the built DLL to
 `# f(x_i) = 2.2204e-19`.  No fork change.
 
-### `#50712` — lm+accel with a finite-difference `fvv` — rejected
+### `#50712` — lm+accel with a finite-difference `fvv` — fixed
 
-The corresponding test is disabled under `#if 0` in
-`multifit_nlinear/test_fdf.c` with the comment "box3d test fails on
-MacOS here", and `multifit_nlinear/TODO` item 5 records it.  Enabling
-it temporarily reproduces the failure on MSVC x64, so it is not
-i586-only:
+The test was disabled under `#if 0` in `multifit_nlinear/test_fdf.c` with
+the comment "box3d test fails on MacOS here", and `multifit_nlinear/TODO`
+item 5 recorded it.  Enabling it reproduces the failure on MSVC x64, so it
+is not i586-only:
 
     FAIL: trust-region/levenberg-marquardt+accel/scale=more/
           solver=cholesky/fdfvv/box3d did not converge,
           status=exceeded max number of iterations
 
-(the report named the svd solver; several fail).  The failing path is
-the finite-difference second directional derivative
-`gsl_multifit_nlinear_fdfvv()` (`h_fvv = 0.02`) with the `lmaccel`
-trust region and the `box3d` problem.  The report and the upstream TODO
-both leave it disabled, and no small, defensible fix was found in the
-time-boxed investigation - the cause is a numerical study of the `fvv`
-step and the acceleration, not a wrong-value defect.  Recorded
-`[rejected]`; the `#if 0` block is left as upstream has it.
+(the report named the svd solver; which solver fails is platform- and
+rounding-dependent).
+
+The root cause is a step-size roundoff floor, not the acceleration model.
+`gsl_multifit_nlinear_fdfvv()` estimates `D_v^2 f` from the perturbation
+`x + h v`, `h = h_fvv`.  On `box3d` with the More scaling the LM
+parameter is rejected up to ~`1e3`, dropping `||v||` to ~`3e-14`; then
+`h ||v|| ~ 6e-16` is below the ulp of `x ~ 6.45` (`~8.9e-16`), so
+`f(x + h v)` is evaluated at a point indistinguishable from `x` and
+`fvv` becomes roundoff (`||fvv|| ~ 4e-13` against a true ~`1e-27`).  The
+bogus acceleration is concentrated in the null direction of the
+rank-deficient Jacobian, so every trial step fails to reduce the residual
+and the near-zero component converges linearly at rate ~`0.999` until the
+iteration limit.
+
+`fdfvv()` now floors the step to
+`max(h, sqrt(eps)(1 + ||x||) / ||v||)`, which leaves the normal regime
+unchanged and mirrors `fdjac.c`.  With the fix the re-enabled test
+converges in 5 iterations, matching the analytic-fvv path; the negative
+control (floor reverted) fails on eight vectors.  See `FORKNEWS` and
+commit `5ed006141`.
 
 ### `#30540` — convergence checks in `rk4imp`/`rk2imp` — fixed (taken later)
 

@@ -5,14 +5,14 @@ Generated 2026-10-02 from the `scripts/savannah_bugs.py` sweep (`inventory.tsv`)
 Scratch index, not part of the fork's record of changes. Verdicts are curated from
 `FORKNEWS`, `SAVANNAH_REVIEW.md` and the git history; every other row is un-triaged.
 
-**219 open items: 219 triaged, 0 never reviewed — 192 closed or rejected, 27 parked in the backlog below.**
+**219 open items: 219 triaged, 0 never reviewed — 193 closed or rejected, 26 parked in the backlog below.**
 
 | status | count |
 |---|---:|
-| fixed | 151 |
+| fixed | 152 |
 | partial | 0 |
 | rejected | 40 |
-| backlog | 27 |
+| backlog | 26 |
 | superseded | 1 |
 | not reviewed | 0 |
 
@@ -119,7 +119,7 @@ below; it is not counted as rejected.
 | 50382 | 2017-02-22 | feature | Build | none | **backlog** — CMake build already in the fork; NuGet packaging is new distribution surface, wanted but out of scope of the report | Add CMAKE and NUGET support for Windows |
 | 50459 | 2017-03-04 | - | - | none | **fixed** — negative-a recurrence guard for abs(a) > 2^53 (932087bcd) | Non termination of the incomplete gamma function due to floating-point rounding errors |
 | 50711 | 2017-04-03 | - | - | none | **fixed** — terminating 2F1 for a non-positive-integer order (2aa89bae8) | Gauss hypergeometric function : gsl_sf_hyperg_2F1 gives up (GSL_EUNIMPL) |
-| 50712 | 2017-04-03 | bug | - | none | **backlog** — reproduces on MSVC x64 (lmaccel + finite-difference fvv on box3d); the test is disabled with `#if 0` and no small fix has been found (residual defect below) | Test failure for lm+accel and fdfvv |
+| 50712 | 2017-04-03 | bug | - | none | **fixed** — floor the finite-difference `fvv` step at the parameter scale (5ed006141); the disabled `#if 0` test is re-enabled | Test failure for lm+accel and fdfvv |
 | 50734 | 2017-04-05 | - | Performance | clean 0001-initialize-newton-steffenson-solvers-with-GSL_FN_FDF.patch | **fixed** — same fix as #49465 (4eac6584f) | initialize newton, steffenson solvers with GSL_FN_FDF_EVAL_F_DF |
 | 51000 | 2017-05-11 | bug | Accuracy problem | none | **fixed** — airy_deriv at huge arguments (ac5f72d98) | Incorrect results of gsl_airy_deriv function |
 | 51104 | 2017-05-24 | - | Performance | none | **fixed** — the Algorithm L selection loop scans backward from the suffix (c382ed86e) | gsl_permutation_next efficiency |
@@ -353,7 +353,6 @@ test-only, but the library defect it exposed was later fixed (75fcaf1b3).
 
 | # | kind | what remains |
 |---|---|---|
-| 50712 | bug | `lm+accel` with a finite-difference `fvv` on `box3d` fails to converge; reproduces on MSVC x64 and is disabled under `#if 0`. |
 | 43259 | assess | re-verdict the `pochrel` and `ellint_P` inputs dismissed as "degenerate"; they may be a genuine limitation rather than evaluation on a pole. |
 | 66808 | accuracy | Airy oscillatory accuracy beyond `eps*\|x\|^{3/2}` (a double-double prototype recovered only 5-10x, capped by the double coefficient tables). |
 | 36152 | test | `gsl_sf_sinc_e` large-`x` vector (the behaviour is fixed as a side effect; no vector yet). |
