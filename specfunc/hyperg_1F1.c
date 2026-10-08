@@ -37,6 +37,149 @@
 #define _1F1_INT_THRESHOLD (100.0*GSL_DBL_EPSILON)
 
 
+/* Minimal double-double arithmetic (Dekker 1971, no FMA) used by
+ * hyperg_1F1_series_dd() below.  The double version of the 1F1 series
+ * loses all its digits when the terms cancel to the result; in the
+ * transition region x ~ |a|^2 the largest term can be 1e16 times the
+ * result, so double-double (about 31 decimal digits) is enough to
+ * recover the full double precision.  See Savannah bug #28267. */
+
+typedef struct { double hi, lo; } dd_t;
+
+static dd_t
+dd_set(double x)
+{
+  dd_t r;
+  r.hi = x;
+  r.lo = 0.0;
+  return r;
+}
+
+static dd_t
+dd_add(dd_t a, dd_t b)
+{
+  dd_t r;
+  double s, e;
+  s = a.hi + b.hi;
+  if(fabs(a.hi) > fabs(b.hi))
+    e = (a.hi - s) + b.hi;
+  else
+    e = (b.hi - s) + a.hi;
+  e += a.lo + b.lo;
+  r.hi = s + e;
+  r.lo = e - (r.hi - s);
+  return r;
+}
+
+static dd_t
+dd_mul(dd_t a, dd_t b)
+{
+  const double split = 134217729.0;  /* 2^27 + 1 */
+  double ca, ahi, alo, cb, bhi, blo, p, e, t;
+  dd_t r;
+
+  ca = split * a.hi;
+  ahi = ca - (ca - a.hi);
+  alo = a.hi - ahi;
+  cb = split * b.hi;
+  bhi = cb - (cb - b.hi);
+  blo = b.hi - bhi;
+
+  p = a.hi * b.hi;
+  e = ((ahi*bhi - p) + ahi*blo + alo*bhi) + alo*blo;
+  e += a.hi*b.lo + a.lo*b.hi;
+  t = p + e;
+  r.hi = t;
+  r.lo = e - (t - p);
+  return r;
+}
+
+static dd_t
+dd_div(dd_t a, dd_t b)
+{
+  dd_t q, p, rem, negp;
+  double q1, q2;
+  dd_t r;
+
+  q1 = a.hi / b.hi;
+  q = dd_set(q1);
+  p = dd_mul(q, b);
+  negp.hi = -p.hi;
+  negp.lo = -p.lo;
+  rem = dd_add(a, negp);
+  q2 = (rem.hi + rem.lo) / b.hi;
+  r.hi = q1 + q2;
+  r.lo = (q1 - r.hi) + q2;
+  return r;
+}
+
+
+/* Taylor series for M(a,b,x) in double-double arithmetic.  Called from
+ * the a < 0, b > 0 branch where the double series has cancelled too much
+ * to be trusted.  Returns GSL_EOVRFLW if a term overflows (the terms
+ * grow like e^x, so this limits the method to |x| below ~700). */
+static int
+hyperg_1F1_series_dd(const double a, const double b, const double x,
+                     gsl_sf_result * result)
+{
+  const int maxiter = 100000;
+  dd_t sum = dd_set(0.0);
+  dd_t term = dd_set(1.0);
+  dd_t xdd = dd_set(x);
+  double maxterm = 0.0;
+  int k;
+
+  for(k = 0; k < maxiter; k++) {
+    sum = dd_add(sum, term);
+    if(fabs(term.hi) > maxterm) maxterm = fabs(term.hi);
+    if(!gsl_finite(term.hi) || maxterm > 1.0e300) {
+      result->val = GSL_NAN;
+      result->err = GSL_NAN;
+      GSL_ERROR("overflow in the double-double 1F1 series", GSL_EOVRFLW);
+    }
+
+    if(k > 10 && fabs(term.hi) <= GSL_DBL_EPSILON * fabs(sum.hi)) break;
+
+    /* term *= (a+k)/(b+k) * x/(k+1).  a+k and b+k are formed in
+     * double-double: with a plain double sum their own rounding error
+     * (~eps) would cap the result at eps * maxterm / |sum| and defeat
+     * the point of the double-double accumulation. */
+    {
+      dd_t ak = dd_add(dd_set(a), dd_set((double) k));
+      dd_t bk = dd_add(dd_set(b), dd_set((double) k));
+      dd_t num = dd_mul(ak, xdd);
+      dd_t den = dd_mul(bk, dd_set((double)(k + 1)));
+      dd_t factor = dd_div(num, den);
+      term = dd_mul(term, factor);
+    }
+  }
+
+  if(k >= maxiter) {
+    result->val = GSL_NAN;
+    result->err = GSL_NAN;
+    GSL_ERROR("the double-double 1F1 series failed to converge", GSL_EMAXITER);
+  }
+
+  result->val = sum.hi + sum.lo;
+  result->err = fabs(term.hi)                     /* truncation */
+              + 4.0 * (double)(k + 1) * GSL_DBL_EPSILON * GSL_DBL_EPSILON * maxterm
+              + GSL_DBL_EPSILON * fabs(result->val);
+  if(result->err == 0.0) result->err = GSL_DBL_EPSILON * fabs(result->val);
+
+  /* Double-double resolves about 32 decimal digits.  If the terms cancel
+   * by more than that the accumulated rounding swamps the result, and the
+   * caller should keep the Kummer value instead.  Require at least six
+   * significant digits from the double-double evaluation. */
+  if(result->val == 0.0 || result->err > 1.0e-6 * fabs(result->val)) {
+    result->val = GSL_NAN;
+    result->err = GSL_NAN;
+    GSL_ERROR("the double-double 1F1 series cancels too much", GSL_EFAILED);
+  }
+
+  return GSL_SUCCESS;
+}
+
+
 /* Asymptotic result for 1F1(a, b, x)  x -> -Infinity.
  * Assumes b-a != neg integer and b != neg integer.
  */
@@ -2096,6 +2239,20 @@ gsl_sf_hyperg_1F1_e(const double a, const double b, const double x,
           if(err_rat_s < 1.0e-10) {
             *result = series;
             return stat_s;
+          }
+        }
+
+        /* The double series cancelled too much of its own value to be
+         * trusted (the reported case loses about 16 digits).  Recompute
+         * it in double-double, which recovers the full double precision;
+         * if a term overflows (|x| beyond about 700) the Kummer value is
+         * kept.  See Savannah bug #28267. */
+        {
+          gsl_sf_result dd;
+          int stat_dd = hyperg_1F1_series_dd(a, b, x, &dd);
+          if(stat_dd == GSL_SUCCESS) {
+            *result = dd;
+            return stat_dd;
           }
         }
       }

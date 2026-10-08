@@ -517,13 +517,16 @@ int test_hyperg(void)
   TEST_SF(s, gsl_sf_hyperg_1F1_e, (-31.950611846591684, 2.0, 60.6969002369791873, &r), -14772039614.295877959, TEST_TOL3, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_hyperg_1F1_e, (-31.950611846591684, 2.0, 242.787600947916749, &r), 7.5105570468237970099e+60, TEST_TOL2, GSL_SUCCESS);
 
-  /* Savannah bug #28267 is the same defect in the transition region
-     x ~ |a|^2.  There neither the Kummer recurrence nor the direct
-     series is accurate enough for this test to be enabled. */
-
-#ifdef FIXME
-  TEST_SF(s, gsl_sf_hyperg_1F1_e, (-37.8, 2.01, 103.58, &r), -6.21927211009e17, TEST_TOL1, GSL_SUCCESS);
-#endif
+  /* Savannah bug #28267: the same defect in the transition region
+     x ~ |a|^2, where the double-precision series cancels by up to 16
+     digits and both the Kummer recurrence and the double series lose
+     most of the result.  The series is now recomputed in double-double
+     when the double one is not trustworthy.  References from mpmath at
+     60 digits. */
+  TEST_SF(s, gsl_sf_hyperg_1F1_e, (-37.8, 2.01, 103.58, &r), -6.21927211008464974956e+17, TEST_TOL1, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_1F1_e, (-26.1, 2.0, 100.0, &r), 1.34155719957598482804e+19, TEST_TOL1, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_1F1_e, (-30.0, 1.5, 300.0, &r), 4.07603670051455917683e+39, TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_1F1_e, (-45.6, 2.0, 400.0, &r), 1.54052132984955282411e+109, TEST_TOL2, GSL_SUCCESS);
 
   /* Testing BJG */
 
