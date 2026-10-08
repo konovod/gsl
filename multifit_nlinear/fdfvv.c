@@ -57,19 +57,51 @@ fdfvv(const double h, const gsl_vector *x, const gsl_vector *v,
   int status;
   const size_t n = fdf->n;
   const size_t p = fdf->p;
-  const double hinv = 1.0 / h;
+  const double vnorm = gsl_blas_dnrm2(v);
+  double hstep = h;
+  double hinv;
   size_t i;
 
-  /* compute work = x + h*v */
+  /*
+   * The step h scales the velocity v, so the perturbation is x + h v.
+   * When ||v|| is very small (near convergence, or when the LM parameter
+   * is large) that perturbation can fall below the rounding unit of x;
+   * f(x + h v) is then evaluated at a point indistinguishable from x and
+   * the resulting fvv is dominated by roundoff rather than by the second
+   * directional derivative.  Ensure the perturbation retains a meaningful
+   * size relative to the parameters, as the finite difference Jacobian
+   * does for each parameter in fdjac.c.
+   *
+   * If v is exactly zero the acceleration contributes nothing, so fvv = 0.
+   */
+  if (vnorm == 0.0)
+    {
+      gsl_vector_set_zero(fvv);
+      return GSL_SUCCESS;
+    }
+  else
+    {
+      const double xnorm = gsl_blas_dnrm2(x);
+      const double hmin = GSL_SQRT_DBL_EPSILON * (1.0 + xnorm) / vnorm;
+
+      /* hmin can overflow for a denormal ||v||; leave h unchanged then,
+       * since such a velocity is numerically zero anyway */
+      if (hstep < hmin && gsl_finite(hmin))
+        hstep = hmin;
+    }
+
+  hinv = 1.0 / hstep;
+
+  /* compute work = x + hstep*v */
   for (i = 0; i < p; ++i)
     {
       double xi = gsl_vector_get(x, i);
       double vi = gsl_vector_get(v, i);
 
-      gsl_vector_set(work, i, xi + h * vi);
+      gsl_vector_set(work, i, xi + hstep * vi);
     }
 
-  /* compute f(x + h*v) */
+  /* compute f(x + hstep*v) */
   status = gsl_multifit_nlinear_eval_f (fdf, work, swts, fvv);
   if (status)
     return status;
@@ -77,11 +109,11 @@ fdfvv(const double h, const gsl_vector *x, const gsl_vector *v,
   for (i = 0; i < n; ++i)
     {
       double fi = gsl_vector_get(f, i);    /* f_i(x) */
-      double fip = gsl_vector_get(fvv, i); /* f_i(x + h*v) */
+      double fip = gsl_vector_get(fvv, i); /* f_i(x + hstep*v) */
       gsl_vector_const_view row = gsl_matrix_const_row(J, i);
       double u, fvvi;
 
-      /* compute u = sum_{ij} J_{ij} D v_j */
+      /* compute u = sum_j J_{ij} v_j */
       gsl_blas_ddot(&row.vector, v, &u);
 
       fvvi = (2.0 * hinv) * ((fip - fi) * hinv - u);
