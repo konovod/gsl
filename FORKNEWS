@@ -120,6 +120,7 @@ One line per change: date | tag | description | commit(s).
   2026-10-08 | [upstream] | specfunc: double-double 1F1 series for x ~ a^2    | 135c6eb27
   2026-10-08 | [upstream] | specfunc: terminating 1F1 when the Kummer factor under/overflows | 43dedeaed
   2026-10-08 | [upstream] | specfunc: declare pow_omx before its first use     | d9b4d31fb
+  2026-10-08 | [upstream] | specfunc: integer-d 2F1 near x = 1 by A&S limits      | 39e4204eb
   2026-10-03 | [upstream] | specfunc: reject NaN in the complete elliptic integrals | 14d595eb8
   2026-10-03 | [upstream] | specfunc: terminate gamma_inc for large negative a    | 932087bcd
   2026-10-03 | [upstream] | specfunc: propagate NaN in gsl_sf_hyperg_1F1_e       | 99a73dd36
@@ -6597,6 +6598,63 @@ No behaviour change; the file compiles cleanly under gcc and clang with
 Files: `specfunc/hyperg_2F1.c`.
 
 See Savannah bug #32306.
+
+
+## [upstream] specfunc: evaluate the integer-d 2F1 near x = 1 by the A&S limits
+
+Commit: 39e4204eb
+
+`gsl_sf_hyperg_2F1_e()` reached the integer-`d` reflection -- and with it
+the [A&S 15.3.10] (`d = 0`) and [A&S 15.3.11] (`d = m > 0`) limits added
+in 58936d413 -- only through the `|a|,|b| < 10` branch.  The integer
+`c-a-b` case near `x = 1` with `|a|` or `|b| >= 10`, or `|c| > 10`,
+instead fell into the "either a or b large" branch and was summed by the
+Gauss series.  That series converges too slowly near `x = 1`: the
+reported
+
+    2F1(1,13,14,0.999227196008978)
+
+returned `GSL_EMAXITER` after 30000 terms with the partial sum
+`53.464514418746` (true `53.464514418791509505...`, the value quoted on
+Savannah), and for `x` nearer 1 the value is simply wrong --
+`2F1(1,20,21,0.999999)` came back as `146.22` instead of `205.3599...`.
+Related small-`|a|,|b|` cases with `|c| > 10` (`2F1(5,5,11,0.99999)`,
+`2F1(9,9,19,0.99999)`) and the large-parameter `2F1(9,10,20,0.99999)`
+(which gave up with `GSL_EUNIMPL`) were affected too.
+
+The integer-`d` reflection is now taken before the `|a|,|b| < 10` gate
+when `x >= 0.995`.  Two guards keep it inside the region where the
+`(1-x)` series is accurate: `|d| < 100` bounds the `(m-1)!` finite sum of
+the `m > 0` form (which overflows past about 170), and
+`max(1, (|a|+|d|)(|b|+|d|)) (1-x) < 20` bounds the growth of the `(1-x)`
+terms relative to their sum.  A grid against mpmath (40+ digits, with `x`
+passed as the exact double) shows every admitted case accurate to better
+than `1e-8`, the reported region to a few ulp, and the error estimates
+covering the true error.  Outside the guards the previous dispatch is
+unchanged, so the cases where the Gauss partial sum is the best
+available result are left alone.
+
+The `d < 0` shift, `2F1(a,b;c;z) = (1-z)^(-m) 2F1(a-m,b-m;c;z)`, had a
+latent defect of its own: when `a-m` or `b-m` is zero or a negative
+integer the shifted function terminates, but `hyperg_2F1_reflect_dint()`
+forms its prefactors from `lngamma` at those arguments, where they are
+poles.  `2F1(1,3,3,0.996)` therefore returned `NaN` with `GSL_EDOM`, and
+the `d < 0` cases of the new dispatch would have hit the same pole.  The
+terminating shifted function is now evaluated with the Gauss series,
+which is exact.
+
+Eight vectors were added (`specfunc/test_hyperg.c`).  The auxiliary `x`
+values are dyadic, so the double argument equals the reference; near
+`x = 1` these functions are sensitive to the last bit of `x`, and the
+first version of the vectors failed on that alone.  Negative control:
+with the dispatch and the shift repair reverted, all eight fail -- the
+report case with `GSL_EMAXITER`, `(9,10,20,0.99999)` with `GSL_EUNIMPL`,
+and `(1,3,3,...)` with `NaN`/`GSL_EDOM`.  Full suite 56/56.
+
+Files: `specfunc/hyperg_2F1.c`, `specfunc/test_hyperg.c`,
+`doc/specfunc-hyperg.rst`, `doc_texinfo/specfunc-hyperg.texi`.
+
+See Savannah bug #21835.
 
 
 
