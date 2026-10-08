@@ -91,6 +91,11 @@ Hypergeometric functions are described in Abramowitz & Stegun, Chapters
               int gsl_sf_hyperg_U_e (double a, double b, double x, gsl_sf_result * result)
 
    These routines compute the confluent hypergeometric function :math:`U(a,b,x)`.
+
+   For :math:`x < 0` the principal value of :math:`U(a,b,x)` is complex,
+   with a branch cut on the negative real axis.  These real-valued
+   routines return the real part of the principal value, the real
+   continuous solution of Kummer's equation.
 .. exceptions:
 
 .. function:: int gsl_sf_hyperg_U_e10_e (double a, double b, double x, gsl_sf_result_e10 * result)

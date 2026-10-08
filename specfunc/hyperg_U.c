@@ -1737,7 +1737,21 @@ hyperg_U_negx (const double a, const double b, const double x, gsl_sf_result_e10
           
           if (T2 != 0.0) 
             {
-              double x1mb = pow(x, 1-b);
+              double x1mb;
+              if(x > 0.0) {
+                x1mb = pow(x, 1.0 - b);
+              }
+              else {
+                /* x < 0.  The principal branch of x^(1-b) is complex
+                 * and u(a,b,x) has a branch cut on the negative real
+                 * axis; a real-valued routine returns the real part of
+                 * the principal value, |x|^(1-b) cos(pi (1-b)), the
+                 * same real continuous solution that the integer-b
+                 * branch selects with ln|x| (Savannah bug #30510).
+                 * For integer 1-b this reduces to the old pow(x,1-b),
+                 * since cos(pi n) = (-1)^n. */
+                x1mb = pow(-x, 1.0 - b) * cos(M_PI * (1.0 - b));
+              }
               T2 = x1mb * T2;
               T2_err = fabs(x1mb) * T2_err;
             }

@@ -825,6 +825,25 @@ int test_hyperg(void)
   TEST_SF(s, gsl_sf_hyperg_U_e, (-1.5, 4, -0.5, &r), -2.54643936959610509, TEST_TOL2, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_hyperg_U_e, ( 0.25, 3, -1.2, &r), 0.557601404286371362, TEST_TOL2, GSL_SUCCESS);
 
+  /* Tests for non-integer b and x < 0.  Here the principal value of
+   * U(a,b,x) is complex (branch cut on the negative real axis), and the
+   * [A&S 13.1.3] reduction uses the complex power x^(1-b).  The routine
+   * previously evaluated pow(x,1-b) directly, which is NaN for x < 0 and
+   * non-integer 1-b, and returned NaN with GSL_SUCCESS.  It now takes the
+   * real part of the principal value, |x|^(1-b) cos(pi(1-b)) - the same
+   * real continuous solution used by the integer-b branch.  References
+   * are Re(KummerU) from mpmath at 50 digits. */
+
+  TEST_SF(s, gsl_sf_hyperg_U_e, (-0.5, 2.7, -1,   &r), -0.0237179432492498601, TEST_TOL4, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_U_e, ( 0.5, 2.7, -1,   &r),  0.0807454667553399545, TEST_TOL4, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_U_e, (-1.5, 2.7, -1,   &r),  0.0226543198406003895, TEST_TOL4, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_U_e, (-0.5, 2.7, -0.5, &r), -0.174443785039978736,  TEST_TOL4, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_U_e, (-0.5, 3.3, -1,   &r), -0.0368304344716909536, TEST_TOL4, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_U_e, ( 2.7, 3.3, -1,   &r),  0.376529976257493522,  TEST_TOL4, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_U_e, ( 0.5, 1.7, -1,   &r), -0.0811668807364666456, TEST_TOL4, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_U_e, (-2.7, 3.3, -2,   &r), -87.7676325314062926,   TEST_TOL4, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_U_e, ( 1.3, 4.7, -3,   &r), -0.0539211637612099641, TEST_TOL4, GSL_SUCCESS);
+
   /* Tests for integer a */
 
   TEST_SF(s, gsl_sf_hyperg_U_e, (-3, 0.5, -0.5, &r), -9.5, TEST_TOL2, GSL_SUCCESS);
