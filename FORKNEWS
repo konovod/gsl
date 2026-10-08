@@ -114,6 +114,7 @@ One line per change: date | tag | description | commit(s).
   2026-10-07 | [upstream] | specfunc: angular Mathieu ce/se derivatives        | 47727ca0e
   2026-10-07 | [upstream] | specfunc: Mathieu coefficient caching (deferred design) | - (see below)
   2026-10-08 | [upstream] | specfunc: finite hazard error estimate at the limits | 9c43a759f
+  2026-10-08 | [upstream] | specfunc: hyperg_U on the real branch for x < 0    | 77388cb67
   2026-10-03 | [upstream] | specfunc: reject NaN in the complete elliptic integrals | 14d595eb8
   2026-10-03 | [upstream] | specfunc: terminate gamma_inc for large negative a    | 932087bcd
   2026-10-03 | [upstream] | specfunc: propagate NaN in gsl_sf_hyperg_1F1_e       | 99a73dd36
@@ -6358,6 +6359,47 @@ Files: `specfunc/erfc.c`, `specfunc/test_sf.c`, `doc/specfunc-erf.rst`,
 `doc_texinfo/specfunc-erf.texi`.
 
 See Savannah bug #53919.
+
+
+## [upstream] specfunc: real branch of hyperg_U for non-integer b and x < 0
+
+Commit: 77388cb67
+
+`gsl_sf_hyperg_U_e()` reduces `U(a,b,x)` for `x < 0` with the
+[A&S 13.1.3] connection formula, whose second term carries the factor
+`x^(1-b)`.  For non-integer `b` and `x < 0` that power is complex and
+`pow(x,1-b)` returns `NaN`, so the routine returned `NaN` with
+`GSL_SUCCESS` - a silent failure for every call in the region, e.g.
+`U(-0.5, 2.7, -1)`.
+
+The real part of the principal value is `|x|^(1-b) cos(pi (1-b))`, the
+same real continuous solution that the integer-`b` branch (00859f816)
+already selects by replacing `ln x` with `ln|x|`.  For integer `1-b`
+this reduces to the old `pow(x,1-b)`, since `cos(pi n) = (-1)^n`, so the
+integer-`b` behaviour is unchanged.
+
+The first few values measured after the fix, against `Re(KummerU)` from
+mpmath at 50 digits:
+
+    U(-0.5, 2.7, -1)   = -0.023717943249249860
+    U( 0.5, 2.7, -1)   =  0.080745466755339955
+    U(-0.5, 2.7, -0.5) = -0.174443785039978736
+    U(-0.5, 3.3, -1)   = -0.036830434471690954
+    U(-2.7, 3.3, -2)   = -87.767632531406293
+
+Nine vectors were added; the worst relative difference over them is
+about `1e-12`, so they use `TEST_TOL4`.  Negative control: with the
+change reverted, all nine fail with `val = NaN`.  Full suite 56/56.
+
+Half-integer `b` (`cos(pi(1-b)) = 0`, real part exactly zero) is not
+tested: the library returns a `~1e-16` residue with a much smaller
+reported error there, an error-bar inconsistency that predates this
+change and is not addressed by it.
+
+Files: `specfunc/hyperg_U.c`, `specfunc/test_hyperg.c`,
+`doc/specfunc-hyperg.rst`, `doc_texinfo/specfunc-hyperg.texi`.
+
+See Savannah bug #30510.
 
 
 

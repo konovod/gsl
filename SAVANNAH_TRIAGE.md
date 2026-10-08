@@ -32,7 +32,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 28267 | 2009-12-11 | - | Accuracy problem | source hyperg1F1.c | **partial** — same defect as #43809 (52505315d); transition region `x ~ a^2` still loses digits | poor convergence region for gsl_sf_hyperg_1F1 |
 | 29834 | 2010-05-09 | - | Runtime error | source error_cblas_v2.h | **fixed** (inherited) — the report's cblas checking macros already live in `cblas/error_cblas*.h`; the wrappers check dimensions | insufficient argument checking in blas wrapper |
 | 30324 | 2010-07-02 | - | Accuracy problem | none | **fixed** — 2F1 continued to x < -1 by the Pfaff transformations, real and conjugate (b99ec4e7c, cfe9311cd) | improve range of 2F1 |
-| 30510 | 2010-07-21 | - | Runtime error | none | **fixed** — U(a,b,x) for x < 0, integer b, non-integer a, via the DLMF 13.2.9 limit (00859f816) | problems with hyperg_U(a,b,x) for x<0 |
+| 30510 | 2010-07-21 | - | Runtime error | none | **fixed** — U(a,b,x) for x < 0, integer b (00859f816) and non-integer b (77388cb67), on the real branch | problems with hyperg_U(a,b,x) for x<0 |
 | 30540 | 2010-07-24 | feature | Accuracy problem | partial bug-ode2.c +2 | **fixed** — v1 rk2imp/rk4imp iterate to convergence; a non-converged step is rejected through yerr (fa1622e11) | please, add convergence checks in rk4imp/rk2imp |
 | 30583 | 2010-07-28 | doc | Documentation | none | **fixed** — Legendre/Carlson relations and the negative-parameter (imaginary-modulus) transformation documented (b0eec8bc6) | improve documentation for Elliptic functions |
 | 30885 | 2010-08-27 | - | Runtime error | none | **fixed** — Coulomb F recurrence rescaled, no overflow (25841970e) | nans from gsl_sf_coulomb_wave_FG_e(1.2693881947287221e-07, 0.0, lam_F=37, lam_G=36) |
@@ -340,7 +340,6 @@ report was closed test-only, but the library defect it exposed is open.
 | # | kind | what remains |
 |---|---|---|
 | 66826 | bug | `gsl_sf_hyperg_1F1_int_e` returns the Kummer value rather than the terminating polynomial for negative integer `b` (`(-10,-20,-100)`: `1.6e-35` against a true `4.9e7`); the three existing vectors assert the wrong value and must be corrected with it.  Analysis under "Open defect" in `SAVANNAH_REVIEW.md`. |
-| 30510 | bug | `hyperg_U(a,b,x)` for non-integer `b` and `x < 0` returns `NaN` with `GSL_SUCCESS` (silent). |
 | 32306 | bug | 2F1 reflection at `x >= 0.995` with integer `d` keeps the sign/accuracy defect that the `x < 0.995` series fix only worked around. |
 | 28267 | bug | 1F1 in the transition region `x ~ a^2` still loses most digits (e.g. `(-37.8, 2.01, 103.58)` at ~2%). |
 | 21835 | bug | 2F1 at `c = a+b` near `x = 1` exhausts the series (`GSL_EMAXITER`) despite ~9 good digits; needs the A&S 15.3.10 form. |
