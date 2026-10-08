@@ -235,7 +235,10 @@ int gsl_sf_exp_mult_err_e(const double x, const double dx,
 
   if(y == 0.0) {
     result->val = 0.0;
-    result->err = fabs(dy * exp(x));
+    /* The product is identically zero, so the error is |dy| e^x.  Writing
+     * it as fabs(dy*exp(x)) gives Inf*0 = NaN when dy = 0 and e^x has
+     * overflowed; guard that case explicitly. */
+    result->err = (dy == 0.0) ? 0.0 : fabs(dy) * exp(x);
     return GSL_SUCCESS;
   }
   else if(   ( x < 0.5*GSL_LOG_DBL_MAX   &&   x > 0.5*GSL_LOG_DBL_MIN)
@@ -283,7 +286,8 @@ int gsl_sf_exp_mult_err_e10_e(const double x, const double dx,
 
   if(y == 0.0) {
     result->val = 0.0;
-    result->err = fabs(dy * exp(x));
+    /* See gsl_sf_exp_mult_err_e(): avoid Inf*0 = NaN for the error. */
+    result->err = (dy == 0.0) ? 0.0 : fabs(dy) * exp(x);
     result->e10 = 0;
     return GSL_SUCCESS;
   }

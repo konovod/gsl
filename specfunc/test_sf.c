@@ -1302,6 +1302,18 @@ int test_exp(void)
   TEST_SF(s, gsl_sf_exp_mult_err_e, (-10.0, TEST_SQRT_TOL0, 2.0, TEST_SQRT_TOL0, &r), 2.0*exp(-10.0), TEST_SQRT_TOL0, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_exp_mult_err_e, (x, TEST_SQRT_TOL0*x, exp(-x)*exp(M_LN2), TEST_SQRT_TOL0*exp(-x)*exp(M_LN2), &r),  2.0, TEST_SQRT_TOL0, GSL_SUCCESS );
 
+  /* y == 0 with an overflowing exp(x): the old error estimate was
+     fabs(dy*exp(x)) = Inf*0 = NaN.  TEST_SF does not inspect the error
+     bar of a finite zero result, so check it explicitly. */
+  {
+    int stat = gsl_sf_exp_mult_err_e(1000.0, 1.0e-12, 0.0, 0.0, &r);
+    gsl_test(stat != GSL_SUCCESS || r.val != 0.0 || !gsl_finite(r.err),
+             "gsl_sf_exp_mult_err_e(1000, 1e-12, 0, 0) finite error bar");
+    stat = gsl_sf_exp_mult_err_e10_e(1000.0, 1.0e-12, 0.0, 0.0, &re);
+    gsl_test(stat != GSL_SUCCESS || re.val != 0.0 || !gsl_finite(re.err),
+             "gsl_sf_exp_mult_err_e10_e(1000, 1e-12, 0, 0) finite error bar");
+  }
+
   sa = 0;
   sa += gsl_sf_exp_mult_e10_e(1.0, 1.0, &re);
   sa += ( test_sf_frac_diff(re.val, M_E ) > TEST_TOL0 );

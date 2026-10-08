@@ -2050,27 +2050,48 @@ gsl_sf_hyperg_1F1_int_e(const int a, const int b, const double x, gsl_sf_result 
     /* Standard domain error due to singularity. */
     DOMAIN_ERROR(result);
   }
+  else if(a < 0 && b < 0) {
+    return hyperg_1F1_ab_negint(a, b, x, result);
+  }
+  else if(a < 0 && b > 0) {
+    /* a is a negative integer, so the series terminates at degree -a.
+     * The x -> +Inf asymptotic expansion assumes a is not a negative
+     * integer and must not be used; the x -> -Inf one is valid here
+     * (b > 0 and b-a > 0 are not negative integers). */
+    if(x < -100.0 && GSL_MAX_DBL(1.0,abs(a))*GSL_MAX_DBL(1.0,abs(1+a-b)) < 0.5 * fabs(x)) {
+      return hyperg_1F1_asymp_negx(a, b, x, result);
+    }
+    else {
+      /* Use Kummer to reduce it to the positive integer case.
+       * Note that b > a, strictly, since we already trapped b = a.
+       */
+      gsl_sf_result Kummer_1F1;
+      int stat_K = hyperg_1F1_ab_posint(b-a, b, -x, &Kummer_1F1);
+      int stat_e;
+
+      if(!gsl_finite(Kummer_1F1.val) || Kummer_1F1.val == 0.0) {
+        /* The Kummer factor M(b-a,b,-x) underflowed or overflowed even
+         * though e^x times it may be representable (the two factors are
+         * extreme and nearly reciprocal).  The terminating polynomial,
+         * evaluated through the Laguerre relation, has no such
+         * underflow. */
+        return hyperg_1F1_a_negint_lag(a, (double) b, x, result);
+      }
+
+      stat_e = gsl_sf_exp_mult_err_e(x, GSL_DBL_EPSILON * fabs(x),
+                                     Kummer_1F1.val, Kummer_1F1.err,
+                                     result); 
+      return GSL_ERROR_SELECT_2(stat_e, stat_K);
+    }
+  }
   else if(x > 100.0  && GSL_MAX_DBL(1.0,abs(b-a))*GSL_MAX_DBL(1.0,abs(1-a)) < 0.5 * x) {
-    /* x -> +Inf asymptotic */
+    /* x -> +Inf asymptotic.  a is non-negative here: a < 0 was handled
+     * above, and the asymptotic assumes a is not a negative integer. */
     return hyperg_1F1_asymp_posx(a, b, x, result);
   }
   else if(x < -100.0 && GSL_MAX_DBL(1.0,abs(a))*GSL_MAX_DBL(1.0,abs(1+a-b)) < 0.5 * fabs(x)) {
     /* x -> -Inf asymptotic */
     return hyperg_1F1_asymp_negx(a, b, x, result);
-  }
-  else if(a < 0 && b < 0) {
-    return hyperg_1F1_ab_negint(a, b, x, result);
-  }
-  else if(a < 0 && b > 0) {
-    /* Use Kummer to reduce it to the positive integer case.
-     * Note that b > a, strictly, since we already trapped b = a.
-     */
-    gsl_sf_result Kummer_1F1;
-    int stat_K = hyperg_1F1_ab_posint(b-a, b, -x, &Kummer_1F1);
-    int stat_e = gsl_sf_exp_mult_err_e(x, GSL_DBL_EPSILON * fabs(x),
-                                      Kummer_1F1.val, Kummer_1F1.err,
-                                      result); 
-    return GSL_ERROR_SELECT_2(stat_e, stat_K);
   }
   else {
     /* a > 0 and b > 0 */

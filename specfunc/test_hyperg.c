@@ -528,6 +528,20 @@ int test_hyperg(void)
   TEST_SF(s, gsl_sf_hyperg_1F1_e, (-30.0, 1.5, 300.0, &r), 4.07603670051455917683e+39, TEST_TOL2, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_hyperg_1F1_e, (-45.6, 2.0, 400.0, &r), 1.54052132984955282411e+109, TEST_TOL2, GSL_SUCCESS);
 
+  /* For a non-positive integer a the series terminates, but the Kummer
+     reduction e^x M(b-a,b,-x) multiplies two nearly reciprocal extreme
+     factors: the Kummer factor can underflow or overflow while the product
+     is representable, so the routine used to return 0 or NaN with
+     GSL_SUCCESS.  The terminating Laguerre relation is now used when that
+     happens.  References from mpmath at 60 digits. */
+  TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (-100, 2, 1000, &r), 1.28078180058525050599e+135, TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (-50, 2, 1000, &r), 4.37916333595225743272e+82, TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (-100, 2, 900, &r), 7.98971747572988925485e+129, TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (-100, 3, 1000, &r), 2.2279928293618893629e+133, TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (-1, 1, 200, &r), -199.0, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (-1, 1, -1000, &r), 1001.0, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (-5, 100, -1000, &r), 148485.22443549103845, TEST_TOL2, GSL_SUCCESS);
+
   /* Testing BJG */
 
 #ifdef COMPARISON_WITH_MATHEMATICA
