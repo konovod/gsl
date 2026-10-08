@@ -16,7 +16,7 @@ It is even done not with a top-tier model (most of code written with deepseek-4.
 
 - CMake support to build it in a modern way on all supported platform (Windows/Linux/macOS)
 - Github Actions to actually test in on all supported platforms
-- Right now i'm going to fix all 219 open issues of GSL bug tracker. All reproducible bugs are already fixed, now in process of checking performance related and new feature requests. I'm trying to make fixes a separate commits to be able at least in theory merge them to upstream.
+- Right now i'm going to fix open issues of GSL bug tracker. 151/219 currently fixed, 28 in backlog.
 
 ## What to look
 
