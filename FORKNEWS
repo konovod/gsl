@@ -117,6 +117,7 @@ One line per change: date | tag | description | commit(s).
   2026-10-08 | [upstream] | specfunc: hyperg_U on the real branch for x < 0    | 77388cb67
   2026-10-08 | [upstream] | specfunc: integer-d 2F1 reflection near x = 1       | 58936d413
   2026-10-08 | [upstream] | specfunc: terminating 1F1 for negative integer b    | 75fcaf1b3
+  2026-10-08 | [upstream] | specfunc: double-double 1F1 series for x ~ a^2    | 135c6eb27
   2026-10-03 | [upstream] | specfunc: reject NaN in the complete elliptic integrals | 14d595eb8
   2026-10-03 | [upstream] | specfunc: terminate gamma_inc for large negative a    | 932087bcd
   2026-10-03 | [upstream] | specfunc: propagate NaN in gsl_sf_hyperg_1F1_e       | 99a73dd36
@@ -6491,6 +6492,46 @@ Files: `specfunc/hyperg_1F1.c`, `specfunc/hyperg_U.c`,
 `specfunc/test_hyperg.c`.
 
 See Savannah bug #66826.
+
+
+## [upstream] specfunc: double-double 1F1 series for x ~ a^2
+
+Commit: 135c6eb27
+
+The direct series for `M(a,b,x)` loses all its digits in the transition
+region `a < 0`, `b > 0`, `x ~ |a|^2` because the terms cancel to the
+result; for `(-37.8, 2.01, 103.58)` the largest term is about `2e16`
+times the result.  The alternatives the library could reach there - the
+backward recurrence on `b` and the large-`x` asymptotic - are not
+accurate either, so the routine returned a value 62 % too large
+(Savannah bug #28267):
+
+    1F1(-37.8, 2.01, 103.58)  library -1.0078e18  true -6.2193e17
+    1F1(-26.1, 2.0, 100.0)    library  1.3087e19  true  1.3416e19
+
+The new `hyperg_1F1_series_dd()` recomputes the series in double-double
+arithmetic (Dekker 1971, no FMA; two doubles give about 32 decimal
+digits).  The term recurrence forms `a+k` and `b+k` with a two-sum as
+well, because a plain double sum would carry an `eps` relative error per
+step and cap the result at `eps * maxterm / |sum|`, defeating the point.
+
+It is used when the double series is not trustworthy, but only if its
+error estimate reaches at least six significant digits and no term
+overflows (`|x|` beyond about 700); otherwise the Kummer value is kept.
+The reported parameters are now accurate to a few ulp:
+
+    1F1(-37.8, 2.01, 103.58) = -6.2192721100846497e17
+    1F1(-26.1, 2.0, 100.0)   =  1.3415571995759848e19
+
+Over a 1344-point grid with non-integer `a` the change rescues 105
+points and makes none worse; a handful of very high-cancellation cases
+(`a` near `-50`, `x` near 104) are still not resolved by either method
+and are left as they were.  Four vectors were added; two fail with the
+change reverted.  Full suite 56/56.
+
+Files: `specfunc/hyperg_1F1.c`, `specfunc/test_hyperg.c`.
+
+See Savannah bug #28267.
 
 
 

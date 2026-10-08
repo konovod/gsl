@@ -89,7 +89,7 @@ has to be tested against the built library.  See `#52321` below.
 | `#68495` | **fixed 2026-10-02** (commit 41b1e2c00): the reported `-n` at `gsl_pow_int` is UB for `n = INT_MIN`; fixed as posted, and the identical negation in `gsl_sf_pow_int_e` - which `9493ac014` missed and which loops forever - is fixed with it |
 | `#32306` | **fixed 2026-10-02** (commits e4c4ac326, 882c8361d): the integer-`c-a-b` branch of `hyperg_2F1_reflect` forms every gamma factor with `gsl_sf_lngamma_e()` and applies a single global sign, so `2F1(-1/2,3/2;1;x)` came back negated for `x >= 1/2`; integer-`d` cases with `x < 0.995` now use the Gauss series instead.  The `err = 1` for a one-signed series (`a < 0`) is fixed as well.  Also covers #54998 and the Monajemi case of #39056.  **Residual fixed 2026-10-08** (58936d413): the reflection at `x >= 0.995` now uses the A&S 15.3.10/15.3.11/15.3.12 limits with `lngamma_sgn_e`, so the sign and the `m >= 2` finite sum are correct |
 | `#43809` | **fixed 2026-10-02** (commit 52505315d): the `a < 0, b > 0` branch reduced to Kummer and evaluated the transformed call with an unstable backward recurrence on `b`; for the reported parameters that returned `3.39e80` instead of `7.51e60`.  The direct series is now evaluated too and preferred when it reports `err / abs(val) < 1e-10`.  Regression test added. |
-| `#28267` | partly addressed by the `#43809` fix — the transition region `x ~ abs(a)^2` still loses most digits (e.g. `(-37.8, 2.01, 103.58)` at ~2%); neither the recurrence nor the series is accurate enough there, so it stays open |
+| `#28267` | **fixed 2026-10-08** (commit 135c6eb27): the transition region `x ~ |a|^2` loses most digits to cancellation that neither the recurrence nor the double series can recover; the series is now recomputed in double-double when the double one is not trustworthy.  The reported `(-37.8, 2.01, 103.58)` is accurate to a few ulp |
 | `#39372` | **fixed 2026-10-02** (commit c1df353ae): `gsl_hypot3` divided by `max(|x|,|y|,|z|)`, so an infinite argument produced `inf/inf = NaN`; the function now returns `+Inf` for any infinite argument. The reporter's suggested `gsl_hypot(gsl_hypot(x,y),z)` was not used: `gsl_hypot` raised a range error for infinities at the time (the companion `#57979` fix) |
 | `#57979` | **fixed 2026-10-02** (commit 1a470222a): `gsl_sf_hypot(NaN, y)` returned `sqrt(2)*y` and `gsl_sf_hypot(inf, y)` reported overflow, because `GSL_MIN_DBL`/`GSL_MAX_DBL` never select a NaN; both cases now follow the C99 spec (`+Inf` / NaN, `GSL_SUCCESS`) |
 | `#37894` | already fixed upstream, inherited unchanged — commits `ae19e3e8b` (`LT_INIT([win32-dll])`, `LT_LIB_M`) and `1d002ee93` ("add cygwin patch from J.P. Flori") turn the old MinGW-only conditionals into a `*-*-cygwin* | *-*-mingw*` test that adds `-no-undefined` and `GSL_LIBADD=cblas/libgslcblas.la` to the shared libraries.  Both commits are ancestors of `savannah/master`, so the posted `gsl-autotools.diff` is fully present; no fork change is made |
@@ -493,7 +493,7 @@ Files: `linalg/hh.c`, `linalg/test.c`, `doc/linalg.rst`,
 `doc_texinfo/linalg.texi`.  Commit `1f84bed77`.
 
 
-### `#43809` (+ `#28267`) — `gsl_sf_hyperg_1F1` for negative `a`, large `x` — fixed; `#28267` still open
+### `#43809` (+ `#28267`) — `gsl_sf_hyperg_1F1` for negative `a`, large `x` — fixed
 
 Both reports carry only a test program as the attachment (`gsl_hyperg.c`,
 `hyperg1F1.c`), not a proposed patch.
@@ -528,11 +528,13 @@ bug's own parameters and fails on the pre-fix library with `3.39e80`;
 full suite 56/56.  Files: `specfunc/hyperg_1F1.c`,
 `specfunc/test_hyperg.c`.  Commit `52505315d`.
 
-`#28267` is the same defect.  Its `(-26.1, 2, 100)` vector improves from
-2.5% to `3.1e-10`, but `(-37.8, 2.01, 103.58)` stays at ~2%: in the
-transition region `x ~ abs(a)^2` the series loses too many digits and its
-estimate is too poor to be trusted, so the fix deliberately does not use
-it there.  `#28267` remains open.
+`#28267` was the same defect.  Its `(-26.1, 2, 100)` vector improved from
+2.5% to `3.1e-10` with the `#43809` fix, but `(-37.8, 2.01, 103.58)`
+stayed at ~62%: in the transition region `x ~ |a|^2` the double series
+loses too many digits and its estimate is too poor to be trusted, so that
+fix deliberately did not use it.  This is now **fixed** (135c6eb27) by
+recomputing the series in double-double when the double one is not
+trustworthy; both vectors are accurate to a few ulp.
 
 
 ### `#39057` - `gsl_cdf_chisq_Pinv` "fails for some values" - fixed, but the report's expected value is wrong

@@ -29,7 +29,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 24252 | 2008-09-12 | feature | - | source gamma_tail_jpl_080908.c | rejected — the posted truncated-gamma sampler's a<1 branch uses the wrong rejection constant (a instead of tail) and does not reproduce Gamma(a); see FORKNEWS | suggestion: add gamma tail distribution |
 | 24871 | 2008-11-18 | feature | - | none | **fixed** — complex exponential integrals E1(z), En(z), their exp(z)-scaled variants and Ei(z), by a port of Amos Algorithm 683 (c01e6b922, 4416fe729, ffad9c422) | suggestion, add support for E_n |
 | 25320 | 2009-01-14 | - | Accuracy problem | none | **rejected** — feature: no Fresnel in the tree; importing it is new API/algorithm | Import fresnel, bugs on GSL Extension Fresnel |
-| 28267 | 2009-12-11 | - | Accuracy problem | source hyperg1F1.c | **partial** — same defect as #43809 (52505315d); transition region `x ~ a^2` still loses digits | poor convergence region for gsl_sf_hyperg_1F1 |
+| 28267 | 2009-12-11 | - | Accuracy problem | source hyperg1F1.c | **fixed** — same defect as #43809 (52505315d); the transition region `x ~ a^2` is handled by a double-double series (135c6eb27) | poor convergence region for gsl_sf_hyperg_1F1 |
 | 29834 | 2010-05-09 | - | Runtime error | source error_cblas_v2.h | **fixed** (inherited) — the report's cblas checking macros already live in `cblas/error_cblas*.h`; the wrappers check dimensions | insufficient argument checking in blas wrapper |
 | 30324 | 2010-07-02 | - | Accuracy problem | none | **fixed** — 2F1 continued to x < -1 by the Pfaff transformations, real and conjugate (b99ec4e7c, cfe9311cd) | improve range of 2F1 |
 | 30510 | 2010-07-21 | - | Runtime error | none | **fixed** — U(a,b,x) for x < 0, integer b (00859f816) and non-integer b (77388cb67), on the real branch | problems with hyperg_U(a,b,x) for x<0 |
@@ -339,7 +339,6 @@ test-only, but the library defect it exposed was later fixed (75fcaf1b3).
 
 | # | kind | what remains |
 |---|---|---|
-| 28267 | bug | 1F1 in the transition region `x ~ a^2` still loses most digits (e.g. `(-37.8, 2.01, 103.58)` at ~2%). |
 | 21835 | bug | 2F1 at `c = a+b` near `x = 1` exhausts the series (`GSL_EMAXITER`) despite ~9 good digits; needs the A&S 15.3.10 form. |
 | 50712 | bug | `lm+accel` with a finite-difference `fvv` on `box3d` fails to converge; reproduces on MSVC x64 and is disabled under `#if 0`. |
 | 43259 | assess | re-verdict the `pochrel` and `ellint_P` inputs dismissed as "degenerate"; they may be a genuine limitation rather than evaluation on a pole. |
