@@ -119,6 +119,7 @@ One line per change: date | tag | description | commit(s).
   2026-10-08 | [upstream] | specfunc: terminating 1F1 for negative integer b    | 75fcaf1b3
   2026-10-08 | [upstream] | specfunc: double-double 1F1 series for x ~ a^2    | 135c6eb27
   2026-10-08 | [upstream] | specfunc: terminating 1F1 when the Kummer factor under/overflows | 43dedeaed
+  2026-10-08 | [upstream] | specfunc: declare pow_omx before its first use     | d9b4d31fb
   2026-10-03 | [upstream] | specfunc: reject NaN in the complete elliptic integrals | 14d595eb8
   2026-10-03 | [upstream] | specfunc: terminate gamma_inc for large negative a    | 932087bcd
   2026-10-03 | [upstream] | specfunc: propagate NaN in gsl_sf_hyperg_1F1_e       | 99a73dd36
@@ -6572,6 +6573,31 @@ No tracker report; found while fixing #28267.
 
 Files: `specfunc/exp.c`, `specfunc/hyperg_1F1.c`,
 `specfunc/test_hyperg.c`, `specfunc/test_sf.c`.
+
+
+## [upstream] specfunc: declare pow_omx before its first use
+
+Commit: d9b4d31fb
+
+`hyperg_2F1_reflect()` calls `pow_omx()` from the integer-`d` branch
+added in 58936d413, but the helper is defined below it.  C99 removed the
+implicit function declaration that MSVC still tolerates, so the Linux
+and macOS CI jobs failed to build with
+
+    error: call to undeclared function 'pow_omx';
+           ISO C99 and later do not support implicit function declarations
+
+followed by `static declaration of 'pow_omx' follows non-static
+declaration`.  The static forward declaration is added above the caller,
+as `specfunc/mathieu_charv.c` already does.
+
+No behaviour change; the file compiles cleanly under gcc and clang with
+`-Werror=implicit-function-declaration`, and the full suite is 56/56.
+
+Files: `specfunc/hyperg_2F1.c`.
+
+See Savannah bug #32306.
+
 
 
 
