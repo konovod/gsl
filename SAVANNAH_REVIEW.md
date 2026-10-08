@@ -536,6 +536,24 @@ fix deliberately did not use it.  This is now **fixed** (135c6eb27) by
 recomputing the series in double-double when the double one is not
 trustworthy; both vectors are accurate to a few ulp.
 
+A related terminating-branch defect was found in the same file and
+**fixed** in 43dedeaed.  For a non-positive integer `a` with `b > 0` the
+series terminates, but `gsl_sf_hyperg_1F1_int_e` reduced it with the
+Kummer map `e^x M(b-a,b,-x)`.  The two factors are extreme and nearly
+reciprocal, so for large `|x|` the Kummer factor can underflow or
+overflow while the product is representable; the call then returned `0`
+or `NaN` with `GSL_SUCCESS`:
+
+    1F1(-100, 2, 1000)  library 0     true 1.2808e135
+    1F1(-5, 100, -1000) library inf   true 148485
+    1F1(-1, 1, 200)     library NaN   true -199
+
+The dispatch now handles the terminating cases (`a < 0`) before the
+asymptotics, and falls back to the terminating Laguerre relation when the
+Kummer factor is not finite or is zero.  `gsl_sf_exp_mult_err_e()` also
+formed its `y = 0` error as `fabs(dy*exp(x))`, i.e. `Inf*0 = NaN`; that is
+fixed too.  There is no Savannah report for this one.
+
 
 ### `#39057` - `gsl_cdf_chisq_Pinv` "fails for some values" - fixed, but the report's expected value is wrong
 

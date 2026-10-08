@@ -327,6 +327,16 @@ real-vector scaling, `gsl_spmatrix_resize`, `gsl_block_resize`/
 (`3cdf34daa`, `ae334370d`, `4a1b3d616`, `7e327561e`).  It is no longer
 listed in the table.
 
+A defect in the same 1F1 family was found while fixing `#28267`: for a
+non-positive integer `a` with `b > 0` and large `|x|`, the terminating
+value went through two nearly reciprocal Kummer factors, which can
+under/overflow while the product is representable, so
+`gsl_sf_hyperg_1F1_int_e` returned `0` or `NaN` with `GSL_SUCCESS`
+(`1F1(-100, 2, 1000)` against a true `1.2808e135`), and the
+`x -> +Inf` asymptotic was reached for a negative integer `a`, where it
+is invalid.  It has no Savannah report; fixed in `43dedeaed` (see
+`FORKNEWS`).
+
 `kind`: `feat` = new feature/API, `perf` = performance only, `test` =
 test-quality request, `doc` = documentation matter, `build` = packaging or
 distribution, `refactor` = internal restructuring, `accuracy` = accuracy
