@@ -106,10 +106,15 @@ Texts for all bugs are available offline at `/temp/savannah-store/dossiers/NNN.t
   being evaluated.
 * `SAVANNAH_TRIAGE.md` consists of two parts - big table with short description and status of each bug and backlog with items remaining to process.
 
-**Eligibility rule.** A candidate is in scope if it is a **bug fix,
-documentation correction, or test-quality improvement**. Feature requests,
-new API, new algorithms and performance-only changes was out of scope and
-deferred, however cleanly they apply. We are widening our eligibility rule now, starting from changes with minimal impact on backward compatibility.
+**Eligibility rule.** A candidate is in scope if **any action can be
+taken** on it: a bug fix, a documentation correction, a test-quality
+improvement, a new feature or API, a new algorithm, a performance change or
+a refactor. The only reports left out are those about **platforms that
+cannot be built and tested here** - 32-bit targets and architectures absent
+from CI - and reports that name no defect in this repository at all (for
+example Savannah's own feed, or an external LAPACK build). A wide scope does
+not lower the bar: reproduce the behaviour first and check against an
+independent reference.
 
 
 **Review method** (this is the hard-won part — follow it):
@@ -292,7 +297,10 @@ HACKING            upstream developer notes (releases, checks, portability)
 * Do not mix `[upstream]` and `[fork]` changes in one commit.
 * Do not touch `NEWS` for fork-only changes.
 * Do not edit `cmake/gsl_sources.cmake` or `cmake/gsl_tests.cmake` by hand.
-* Do not take feature, new-API or performance patches from Savannah.
+* Do not skip a Savannah report because it is a feature, new API or
+  performance change; under the eligibility rule a candidate is dropped only
+  when no action can be taken or its platform cannot be built and tested
+  here.
 * Do not trust a patch because it applies cleanly; reproduce and test it.
 * Do not push to `origin` or `savannah`.
 * Do not delete or overwrite unfamiliar files or uncommitted work — check
