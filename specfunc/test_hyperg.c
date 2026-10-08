@@ -1012,6 +1012,29 @@ TEST_SF(s, gsl_sf_hyperg_U_e, (2, -6.4, 1, &r),1.2141502795806162484648638e-02
   TEST_SF(s, gsl_sf_hyperg_2F1_e, (2.5, 1.5, 3.0, 0.995,   &r),  333.864712385621421742, TEST_TOL2, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_hyperg_2F1_e, (2.5, 1.5, 3.0, 0.9999,  &r),  16965.9365798282991119, TEST_TOL2, GSL_SUCCESS);
 
+  /* 2F1 at c - a - b an integer and x close to 1.  The Gauss series
+   * stalls here (GSL_EMAXITER) even when its partial sum happens to be
+   * accurate, and is simply wrong for x nearer 1; the [A&S 15.3.10]
+   * (c = a+b), [A&S 15.3.11] (c = a+b+m) and [A&S 15.3.12] (c = a+b-m)
+   * limits are used instead.  The reported vector is
+   * 2F1(1,13,14,0.999227196008978) from Savannah bug #21835; the
+   * expected values come from mpmath at 40 digits (the report itself
+   * quotes 53.46451441879150950530608621).  The other x values are
+   * dyadic, so the double argument matches the reference exactly; near
+   * x = 1 these functions are sensitive to the last bit of x. */
+
+  TEST_SF(s, gsl_sf_hyperg_2F1_e, (1.0, 13.0, 14.0, 0.999227196008978, &r), 53.4645144187915095053, TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_2F1_e, (1.0, 20.0, 21.0, 0.99999904632568359375, &r), 206.308376460136572340, TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_2F1_e, (0.5, 12.5, 13.0, 0.999755859375, &r), 13.1361851678310223649, TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_2F1_e, (9.0, 9.0, 19.0, 0.99993896484375, &r), 47402.4022834923096976, TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_2F1_e, (9.0, 10.0, 20.0, 0.99993896484375, &r), 89857.4302982847035502, TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_2F1_e, (2.0, 13.0, 14.0, 0.99951171875, &r), 25913.2490588045421691, TEST_TOL2, GSL_SUCCESS);
+  /* d < 0 with a-m or b-m a non-positive integer: the shifted 2F1
+   * terminates and the reflection prefactors would be poles.  Here
+   * 2F1(1,3,3,x) = 2F1(1,13,13,x) = 1/(1-x) exactly. */
+  TEST_SF(s, gsl_sf_hyperg_2F1_e, (1.0, 3.0, 3.0, 0.9990234375, &r), 1024.0, TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_2F1_e, (1.0, 13.0, 13.0, 0.9990234375, &r), 1024.0, TEST_TOL2, GSL_SUCCESS);
+
   /* 2F1 terminates when a or b is zero or a negative integer.  The
    * resulting polynomial is finite for every x, including |x| >= 1
    * where the Gauss series does not converge; the dispatch used to

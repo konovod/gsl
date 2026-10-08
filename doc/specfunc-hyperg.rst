@@ -120,10 +120,18 @@ Hypergeometric functions are described in Abramowitz & Stegun, Chapters
          
    for :math:`|x| < 1`.  The range is extended to :math:`x < -1` by the
    Pfaff transformations [DLMF 15.8.1 and 15.8.2], which map the argument
-   into :math:`(1/2, 1)`.  If the arguments :math:`(a,b,c,x)` are too close to a singularity then
-   the function can return the error code :macro:`GSL_EMAXITER` when the
-   series approximation converges too slowly.  This occurs in the region of
-   :math:`x = 1`, :math:`c - a - b = m` for integer m.
+   into :math:`(1/2, 1)`.  When :math:`c - a - b` is an integer and
+   :math:`x` is close to 1, where the Gauss series converges too slowly,
+   the value is computed from the logarithmic connection formula:
+   the [A&S 15.3.10] limit for :math:`c = a + b` and [A&S 15.3.11] for
+   :math:`c = a + b + m`, with the [A&S 15.3.12] shift for
+   :math:`c = a + b - m`.
+
+   If the arguments :math:`(a,b,c,x)` are too close to a singularity then
+   the function can still return the error code :macro:`GSL_EMAXITER` when
+   the series approximation converges too slowly.  This can happen near
+   :math:`x = 1` when the parameters are too large for the connection
+   formula above, or when :math:`c - a - b` is not an integer.
 
    The contiguous cases :math:`c = a - 1` and :math:`c = b - 1` are
    evaluated from the closed forms

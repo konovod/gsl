@@ -558,10 +558,26 @@ hyperg_2F1_reflect(const double a, const double b, const double c,
       /* c-a-b = -m < 0: apply the [A&S 15.3.12] shift (1-z)^m first,
        * which turns it into the m > 0 case. */
       const int m = -intd;
+      const double am = a - m;
+      const double bm = b - m;
+      const double rintam = rint(am);
+      const double rintbm = rint(bm);
       gsl_sf_result F;
       gsl_sf_result p;
-      int stat_F = hyperg_2F1_reflect_dint(a - m, b - m, c, m, x, &F);
-      int stat_p = pow_omx(x, -(double)m, &p);
+      int stat_F;
+      int stat_p;
+      if(   (am <= 0.0 && fabs(am - rintam) < locEPS)
+         || (bm <= 0.0 && fabs(bm - rintbm) < locEPS)) {
+        /* The shifted function terminates: a-m or b-m is zero or a
+         * negative integer.  hyperg_2F1_reflect_dint() forms its
+         * prefactors from lngamma at those arguments, which are poles
+         * there, so evaluate the terminating series directly instead. */
+        stat_F = hyperg_2F1_series(am, bm, c, x, &F);
+      }
+      else {
+        stat_F = hyperg_2F1_reflect_dint(am, bm, c, m, x, &F);
+      }
+      stat_p = pow_omx(x, -(double)m, &p);
       result->val = p.val * F.val;
       result->err = fabs(p.val) * F.err + fabs(F.val) * p.err
                   + 2.0 * GSL_DBL_EPSILON * fabs(result->val);
@@ -856,6 +872,26 @@ gsl_sf_hyperg_2F1_e(double a, double b, const double c,
 
   if(fabs(c-a) < locEPS) {
     return pow_omx(x, d, result);  /* 2F1(a,b,a,x) = (1-x)^(c-a-b) */
+  }
+
+  /* When c-a-b is an integer the connection formula carries logarithmic
+   * terms.  For x close to 1 the Gauss series converges too slowly to
+   * meet its iteration cap, but the [A&S 15.3.10] (d = 0), [A&S 15.3.11]
+   * (d = m > 0) and [A&S 15.3.12] (d = -m < 0) limits implemented in
+   * hyperg_2F1_reflect() expand in (1-x) and converge rapidly there.
+   * Savannah bug #21835.
+   *
+   * Two guards keep the reflection within the region where it is
+   * accurate.  |d| bounds the (m-1)! finite sum of the m > 0 form; the
+   * product (|a|+|d|)(|b|+|d|)(1-x) bounds the growth of the (1-x)
+   * terms relative to their sum, so that the cancellation stays below
+   * about 1e-12.  Outside it the existing dispatch (Gauss series, Luke
+   * or the large-parameter branches) is retained unchanged. */
+  if(d_integer && x >= 0.995
+     && fabs(rintd) < 100.0
+     && GSL_MAX_DBL(1.0, (fabs(a)+fabs(rintd))*(fabs(b)+fabs(rintd)))
+          * (1.0 - x) < 20.0) {
+    return hyperg_2F1_reflect(a, b, c, x, result);
   }
 
   if(a >= 0.0 && b >= 0.0 && c >=0.0 && x >= 0.0 && x < 0.995) {
