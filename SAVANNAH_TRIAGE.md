@@ -194,7 +194,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 66800 | 2025-02-15 | feature | Accuracy problem | partial nbinomial-2.diff +1 | **fixed** — negative_binomial_pdf degenerate at p = 1 and p = 0 (957708351) | Feature: gsl_ran_negative_binomial_pdf with p = 1 |
 | 66808 | 2025-02-17 | bug | Accuracy problem | source test_airy_zeroes_derivs.c | **partial** — Airy accuracy not improved; sub-defects fixed (ac5f72d98) | Bug: Airy Ai function values inaccurate |
 | 66816 | 2025-02-19 | feature | Build | source nakagami_.c | **fixed** — gsl_ran_nakagami + pdf, sqrt of a gamma variate (999d53bbe) | Feature: Nakagami random distribution |
-| 66826 | 2025-02-21 | feature | Build | none | **fixed** — test vectors added (728206d82); the negative-integer-`b` library defect the report exposes is open, see `SAVANNAH_REVIEW.md` | Feature: test cases for function hyperg_1F1() |
+| 66826 | 2025-02-21 | feature | Build | none | **fixed** — test vectors added (728206d82) and the negative-integer-`b` defect they exposed fixed (75fcaf1b3) | Feature: test cases for function hyperg_1F1() |
 | 66834 | 2025-02-23 | feature | Build | clean specfunc_gamma_test.diff | **fixed** — gamma_inc(0,0) = +Inf (062b15fc3) | Feature: gamma_inc(0, 0) handling and test cases |
 | 66842 | 2025-02-24 | feature | Build | clean expint_infinity.diff | **fixed** — exponential integrals at the origin (9a00ba0ed) | Feature: exponential integrals at origin |
 | 66844 | 2025-02-25 | feature | Build | none | **fixed** — dilog endpoint identities tested (25a16f928) | Feature: test cases for dilogarithm function |
@@ -334,12 +334,11 @@ improvement, `assess` = needs a fresh verdict.  `patch`: `clean`/`partial`/
 
 Real defects, or work left open by a partly applied fix.  Most are already
 analysed in `SAVANNAH_REVIEW.md`; the reader is referred there for the
-reproduction.  `#66826` is the one that has no triage row of its own: the
-report was closed test-only, but the library defect it exposed is open.
+reproduction.  `#66826` had no triage row of its own: the report was closed
+test-only, but the library defect it exposed was later fixed (75fcaf1b3).
 
 | # | kind | what remains |
 |---|---|---|
-| 66826 | bug | `gsl_sf_hyperg_1F1_int_e` returns the Kummer value rather than the terminating polynomial for negative integer `b` (`(-10,-20,-100)`: `1.6e-35` against a true `4.9e7`); the three existing vectors assert the wrong value and must be corrected with it.  Analysis under "Open defect" in `SAVANNAH_REVIEW.md`. |
 | 28267 | bug | 1F1 in the transition region `x ~ a^2` still loses most digits (e.g. `(-37.8, 2.01, 103.58)` at ~2%). |
 | 21835 | bug | 2F1 at `c = a+b` near `x = 1` exhausts the series (`GSL_EMAXITER`) despite ~9 good digits; needs the A&S 15.3.10 form. |
 | 50712 | bug | `lm+accel` with a finite-difference `fvv` on `box3d` fails to converge; reproduces on MSVC x64 and is disabled under `#if 0`. |

@@ -116,6 +116,7 @@ One line per change: date | tag | description | commit(s).
   2026-10-08 | [upstream] | specfunc: finite hazard error estimate at the limits | 9c43a759f
   2026-10-08 | [upstream] | specfunc: hyperg_U on the real branch for x < 0    | 77388cb67
   2026-10-08 | [upstream] | specfunc: integer-d 2F1 reflection near x = 1       | 58936d413
+  2026-10-08 | [upstream] | specfunc: terminating 1F1 for negative integer b    | 75fcaf1b3
   2026-10-03 | [upstream] | specfunc: reject NaN in the complete elliptic integrals | 14d595eb8
   2026-10-03 | [upstream] | specfunc: terminate gamma_inc for large negative a    | 932087bcd
   2026-10-03 | [upstream] | specfunc: propagate NaN in gsl_sf_hyperg_1F1_e       | 99a73dd36
@@ -5083,22 +5084,24 @@ Not taken, and the reason the change is test-only:
 
   These are recorded as a comment rather than enabled.
 
-* The same defect makes three existing vectors in
+* The same defect made three existing vectors in
   `specfunc/test_hyperg.c` assert the wrong value:
 
       (-10,-20,-10)   test 0.00357079636732993491  true 0.00357201182794578047
       (-10,-20,-100)  test 1.64284868563391159e-35 true 49303272.262405369733
       (-10,-100,-100) test 8.19512187960476424e-09 true 4.4148250205403363517e-7
 
-  They are left as they are because correcting them without fixing the
+  They were left as they were because correcting them without fixing the
   library would fail the suite.
 
-Fixing the library is a separate piece of work.  A simple switch to the
+Fixing the library was a separate piece of work.  A simple switch to the
 direct terminating polynomial is not safe: for large degree and `|x|`
 the polynomial suffers catastrophic cancellation (`1F1(-100,-200,-100)`
 evaluates to `58.6` in double against a true value of `4.34e-25`), and
 the Kummer map is not an identity there either, so no clean validity
 test exists.  The full analysis is in `SAVANNAH_REVIEW.md`.
+
+**Now fixed** in 75fcaf1b3 (see the entry below).
 
 Files: `specfunc/test_hyperg.c`.
 
@@ -6437,6 +6440,57 @@ fail, four with the wrong sign.  Full suite 56/56.
 Files: `specfunc/hyperg_2F1.c`, `specfunc/test_hyperg.c`.
 
 See Savannah bug #32306.
+
+
+## [upstream] specfunc: terminating 1F1 for negative integer b and x < 0
+
+Commit: 75fcaf1b3
+
+`gsl_sf_hyperg_1F1_int_e()` returned the Kummer value rather than the
+terminating polynomial when `a` and `b` are negative integers with
+`b <= a` and `x < 0`, and returned `exp(x)` when `a == b` (Savannah bug
+#66826).  The direct polynomial is not usable there because it cancels
+catastrophically for large degree and `|x|` (`1F1(-100,-200,-100)` is
+`4.34e-25` against terms of order `1e18`), and the Kummer map is not an
+identity for the terminating branch:
+
+    1F1(-10,-20,-100)  library 1.64e-35   true 49303272.26
+    1F1(-1,-1,-1)      library 0.3679     true 0
+    1F1(-1,-2,-1)      library 0.5518     true 0.5
+
+The `x < 0` branch now evaluates the exact correction term of the
+[A&S 13.6.9] / [A&S 13.1.3] reduction,
+
+    M(-n,-m,x) = K(x)
+               + ((m-n)!/m!) poch(-n,n-m-1) x^(1-b) M(m-n+1,m+2,x),
+
+where `K(x) = e^x M(b-a,b,-x)` is the existing Kummer value and
+`x^(1-b) = (-1)^(1+m)|x|^(1+m)` for `x < 0`.  The prefactor, `poch` and
+`M` are folded into a single exponent, so neither `x^(1-b)` nor `poch`
+overflows; if the correction cannot be formed (or under/overflows) the
+branch falls back to the Kummer value, as before.  The `a == b` case is
+routed into the same branch, in both the integer and floating entry
+points, and is now the truncated exponential.
+
+`gsl_sf_hyperg_U_e()` reduces `U` with [A&S 13.1.3], which is an
+identity for the Kummer branch of `M(a,b,x)` and not for the terminating
+polynomial.  The new `hyperg_U_M()` helper in `specfunc/hyperg_U.c`
+supplies that branch to the reduction, so every U result is unchanged;
+without it the change broke nineteen U test cases.
+
+The three existing wrong vectors are corrected, the two `a == b`
+vectors at `(-1,-1,-1)` and `(-1,-1,1)` now assert `0` and `2`, the four
+previously disabled terminating cases are enabled and larger
+`(-10,-10,-100)`, `(-10,-10,-10)` and `(-200,-400,-100)` vectors are
+added (references from mpmath at 300 digits).  Negative control: with
+the branch reverted, 12 of the 13 fail.  A grid of terminating calls
+with `x >= -100` agrees to better than `1e-7` with `GSL_SUCCESS`.  Full
+suite 56/56.
+
+Files: `specfunc/hyperg_1F1.c`, `specfunc/hyperg_U.c`,
+`specfunc/test_hyperg.c`.
+
+See Savannah bug #66826.
 
 
 

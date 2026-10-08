@@ -101,7 +101,7 @@ has to be tested against the built library.  See `#52321` below.
 | `#67058` | **fixed 2026-10-03** (commit 68fc3c752): `gsl_stats_mean` returned 0.0 for an empty data set (the recurrence leaves the accumulator at zero) and the variance/sd family returned 0.0 through it; R and numpy return `NaN`.  `gsl_stats_mean` and `compute_variance` now raise `GSL_EBADLEN`, returning `NaN` with the handler off; `tss` is left at 0.  Both manuals updated.  99 new failures with the guards reverted |
 | `#42502` | **rejected** (not a bug): `gsl_cdf_ugaussian_Pinv(0.5)` returns exactly 0.0 on the built DLL and is covered by `cdf/test.c:498`.  The reporter's program omits `<gsl/gsl_cdf.h>`, so the function is implicitly declared `int` and `printf`'s second `%f` reads a stale vararg slot (the `1.000000`) |
 | `#66844` | applied - two exact dilog endpoint identities added at `TEST_TOL0` (commit 25a16f928) |
-| `#66826` | test vectors applied (commit 728206d82); the negative-integer-`b` defect the report exposes is **open**, see the section below |
+| `#66826` | test vectors applied (commit 728206d82); the negative-integer-`b` defect the report exposes was **fixed 2026-10-08** (commit 75fcaf1b3), see the section below |
 | `#66877` | applied - `gsl_sf_hyperg_0F1_e` now reports an exact zero error at `x = 0` (commit fe7285909), and the `x = 0` / half-integer-`b` vectors are added (commit 2d6cf433c) |
 | `#66880` | applied with corrections - `M_CUBEROOT2` written out, two vectors the reporter disabled are enabled, two inaccurate ones left out (commit 153a149d4) |
 | `#64549` | applied as a single clean wrapper test instead of the four leaky near-duplicates (commit 7b6979126) |
@@ -3119,11 +3119,13 @@ tolerances are unchanged.  Commit `1fbb40ca3`; regression test in
 Savannah bugs #54925, #51104 and #21833, #40092 and #31109.
 
 
-## Open defect: `gsl_sf_hyperg_1F1_int_e` for negative integer b
+## Defect: `gsl_sf_hyperg_1F1_int_e` for negative integer b - fixed
 
-Reported through Savannah bug #66826 but not fixed there (the change for
-that bug is test-only; see `FORKNEWS`).  Recorded here with the full
-analysis so the next reader does not have to re-derive it.
+Reported through Savannah bug #66826.  The test-only change for that bug
+is in `FORKNEWS`; the library defect it exposed is analysed below and was
+**fixed on 2026-10-08 in 75fcaf1b3** (the `x < 0` branch now adds the
+reflection correction; see the corresponding `FORKNEWS` entry).  The
+analysis is kept so the next reader does not have to re-derive it.
 
 For a nonpositive integer `a` and a negative integer `b` with `b <= a`,
 `1F1(a,b,x)` is the terminating polynomial of DLMF 13.2.2,
@@ -3172,13 +3174,14 @@ equals the terminating series for some parameters and not others:
     (-10,-20,-100)  1.64284868563391159e-35 vs true 49303272.262405369733
     (-10,-100,-100) 8.19512187960476424e-09 vs true 4.4148250205403363517e-7
 
-They pass today because the library returns the same wrong number, and
-must be corrected when the library is fixed.
+They passed today because the library returned the same wrong number;
+they were corrected in 75fcaf1b3.
 
-A correct fix needs a stable evaluation for these polynomials (a scaled
-recurrence, a Laguerre/Whittaker route that handles the negative integer
-parameters, or an error-bounded series), plus re-derived expected values
-and an independent cross-check over a grid.  That is a separate task.
+The fix does not evaluate the polynomial directly (which cancels for
+large degree and `|x|`), but adds the correction term of the
+[A&S 13.6.9] / [A&S 13.1.3] reduction to the Kummer value, folded into
+one exponent.  The expected values were re-derived with mpmath at 300
+digits and cross-checked over a grid; see the `FORKNEWS` entry.
 
 
 ## Group W - two already-classified items taken (2026-10-06)
