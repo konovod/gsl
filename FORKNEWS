@@ -118,6 +118,7 @@ One line per change: date | tag | description | commit(s).
   2026-10-08 | [upstream] | specfunc: integer-d 2F1 reflection near x = 1       | 58936d413
   2026-10-08 | [upstream] | specfunc: terminating 1F1 for negative integer b    | 75fcaf1b3
   2026-10-08 | [upstream] | specfunc: double-double 1F1 series for x ~ a^2    | 135c6eb27
+  2026-10-08 | [upstream] | specfunc: terminating 1F1 when the Kummer factor under/overflows | 43dedeaed
   2026-10-03 | [upstream] | specfunc: reject NaN in the complete elliptic integrals | 14d595eb8
   2026-10-03 | [upstream] | specfunc: terminate gamma_inc for large negative a    | 932087bcd
   2026-10-03 | [upstream] | specfunc: propagate NaN in gsl_sf_hyperg_1F1_e       | 99a73dd36
@@ -6532,6 +6533,45 @@ change reverted.  Full suite 56/56.
 Files: `specfunc/hyperg_1F1.c`, `specfunc/test_hyperg.c`.
 
 See Savannah bug #28267.
+
+
+## [upstream] specfunc: terminating 1F1 when the Kummer factors under/overflow
+
+Commit: 43dedeaed
+
+For a non-positive integer `a` with `b > 0` the series terminates, but
+`gsl_sf_hyperg_1F1_int_e()` reduced it with the Kummer map
+`M(a,b,x) = e^x M(b-a,b,-x)`.  The two factors are extreme and nearly
+reciprocal, so for large `|x|` the Kummer factor can underflow or
+overflow while the product is representable, and the routine returned
+`0` (or `NaN`) with `GSL_SUCCESS`; in other cases the `x -> +Inf`
+asymptotic was reached, which is invalid for a negative integer `a`
+because its second term needs `Gamma(a)`:
+
+    1F1(-100,2,1000)  library 0        true 1.2808e135
+    1F1(-1,1,200)     library NaN      true -199
+
+The integer dispatch now handles the terminating cases (`a < 0`) before
+the asymptotics, and when the Kummer factor is not finite or is zero it
+falls back to the terminating Laguerre relation, which is stable for
+`b > 0`.  The `x -> -Inf` asymptotic is kept for `a < 0`, `b > 0`,
+where it is valid (it only assumes `b` and `b-a` are not negative
+integers), which avoids the overflow of `M(b-a,b,-x)` for large `|x|`.
+Over a grid of 988 integer calls the change rescues 259 points and makes
+none worse.
+
+`gsl_sf_exp_mult_err_e()` and its e10 variant formed the `y = 0` error
+estimate as `fabs(dy*exp(x))`, which is `Inf*0 = NaN` when `dy = 0` and
+`exp(x)` overflows; the error is now zero there.
+
+Seven vectors (the reported one among them) and two explicit error-bar
+checks were added; the negative control fails on eight of them.  Full
+suite 56/56.
+
+No tracker report; found while fixing #28267.
+
+Files: `specfunc/exp.c`, `specfunc/hyperg_1F1.c`,
+`specfunc/test_hyperg.c`, `specfunc/test_sf.c`.
 
 
 
