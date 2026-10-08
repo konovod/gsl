@@ -5,14 +5,14 @@ Generated 2026-10-02 from the `scripts/savannah_bugs.py` sweep (`inventory.tsv`)
 Scratch index, not part of the fork's record of changes. Verdicts are curated from
 `FORKNEWS`, `SAVANNAH_REVIEW.md` and the git history; every other row is un-triaged.
 
-**219 open items: 219 triaged, 0 never reviewed — 191 closed or rejected, 28 parked in the backlog below.**
+**219 open items: 219 triaged, 0 never reviewed — 192 closed or rejected, 27 parked in the backlog below.**
 
 | status | count |
 |---|---:|
-| fixed | 150 |
+| fixed | 151 |
 | partial | 0 |
 | rejected | 40 |
-| backlog | 28 |
+| backlog | 27 |
 | superseded | 1 |
 | not reviewed | 0 |
 
@@ -26,7 +26,7 @@ below; it is not counted as rejected.
 | 21828 | 2007-12-18 | - | Performance | none | **fixed** — `gsl_linalg_householder_hm` applied the reflector column-by-column on row-major storage, and the accessors were out-of-line calls without `HAVE_INLINE`; rewritten to walk rows in storage order, bit-identical (cd9e31326) | suboptimal performance of gsl_fdfsolver_lmsder |
 | 21831 | 2007-12-18 | - | Accuracy problem | source levy.c | **rejected** — not a bug: the CMS transform is exact for alpha < 1 (characteristic-function check); `beta = 0` delegates to `gsl_ran_levy` | Levý random number generator for alpha < 1 |
 | 21833 | 2007-12-18 | - | Performance | none | **fixed** — the selection loop scans backward from the suffix (c382ed86e); the alleged quadratic behaviour is amortised O(1) per permutation and the 8! walk in `permutation/test.c` covers it | suboptimal performance of gsl permutation? |
-| 21835 | 2007-12-18 | - | Accuracy problem | clean test_hyperg.diff +1 | **backlog** — non-positive-integer termination for `x >= 1` fixed (2aa89bae8); the `c = a+b` near `x = 1` case still returns `GSL_EMAXITER` (residual defect below) | gsl_sf_hyperg_2F1 problematic arguments |
+| 21835 | 2007-12-18 | - | Accuracy problem | clean test_hyperg.diff +1 | **fixed** — non-positive-integer termination for `x >= 1` fixed (2aa89bae8); the integer `c-a-b` near `x = 1` case now uses the [A&S 15.3.10/11/12] limits with conditioning guards, and the `d < 0` shift pole is repaired (39e4204eb) | gsl_sf_hyperg_2F1 problematic arguments |
 | 21836 | 2007-12-18 | - | Accuracy problem | none | **fixed** — Q returns exact complement of P in the series window (6f23a4cb5) | gamma_inc_P and gamma_inc_Q only satisfy P+Q=1 within errors |
 | 21837 | 2007-12-18 | - | Runtime error | none | **backlog** — docs corrected (9418afa5f); a zero-diagonal permutation path is new algorithm work | gsl_linalg_solve_symm_tridiag requires positive definite matrix |
 | 24252 | 2008-09-12 | feature | - | source gamma_tail_jpl_080908.c | **backlog** — the posted truncated-gamma sampler is wrong (the `a<1` branch uses `a` instead of the tail); a correct gamma-tail generator is wanted work; see FORKNEWS | suggestion: add gamma tail distribution |
@@ -353,7 +353,6 @@ test-only, but the library defect it exposed was later fixed (75fcaf1b3).
 
 | # | kind | what remains |
 |---|---|---|
-| 21835 | bug | 2F1 at `c = a+b` near `x = 1` exhausts the series (`GSL_EMAXITER`) despite ~9 good digits; needs the A&S 15.3.10 form. |
 | 50712 | bug | `lm+accel` with a finite-difference `fvv` on `box3d` fails to converge; reproduces on MSVC x64 and is disabled under `#if 0`. |
 | 43259 | assess | re-verdict the `pochrel` and `ellint_P` inputs dismissed as "degenerate"; they may be a genuine limitation rather than evaluation on a pole. |
 | 66808 | accuracy | Airy oscillatory accuracy beyond `eps*\|x\|^{3/2}` (a double-double prototype recovered only 5-10x, capped by the double coefficient tables). |

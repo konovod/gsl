@@ -1536,10 +1536,10 @@ Full CTest suite: 56/56 after the changes.
 Reviewed 2026-10-03 against the built `build-cmake/gsl.dll` (values read
 through ctypes) with independent references from mpmath at 40-60 digits.
 The reports were retrieved through the Wayback Machine, as the tracker was
-not reachable directly.  Four of the reports are fixed by code changes, one
-is partial (the `c = a+b` case of #21835), one was already fixed and one is
-not reproducible.  #30324, deferred here, was taken later once the filter
-was widened.
+not reachable directly.  Four of the reports are fixed by code changes; the
+once-partial `c = a+b` case of #21835 was closed later (39e4204eb).  One was
+already fixed and one is not reproducible.  #30324, deferred here, was taken
+later once the filter was widened.
 
 ### #50711, #53905, #21835 (x >= 1 half), #39056 (Wolpert) — one defect, fixed
 
@@ -1567,16 +1567,22 @@ block passes either way and was enabled too.
 that only covered the Monajemi case; its Wolpert vector was still disabled
 at `test_hyperg.c:688-696`.  The triage row is corrected to name both cases.
 
-### #21835 (c = a + b near x = 1) — still a limitation, documented
+### #21835 (integer c - a - b near x = 1) — fixed
 
 The other half of #21835, `2F1(1,13,14,0.999227196008978)`, is the nearby
-singularity `c = a + b` at `x = 1`.  On the current build it returns the
-right value, `53.4645144...` (mpmath: `53.464514418791908495`), but with
-status `GSL_EMAXITER` (11), so the convergence is exhausted while the
-partial sum is accurate to ~9 digits.  `doc/specfunc-hyperg.rst` already
-documents this region as `GSL_EMAXITER`.  Adding the A&S 15.3.10 `c = a+b`
-formula is a separate, larger change and was not attempted; #21835 is
-recorded as **partial**.
+singularity `c = a + b` at `x = 1`.  It used to return the right value,
+`53.4645144...`, but with status `GSL_EMAXITER` (11), the convergence
+exhausted while the partial sum was accurate to ~9 digits; closer to
+`x = 1` the partial sum is wrong outright (`2F1(1,20,21,0.999999)` gave
+`146.22` instead of `205.3599...`).  The A&S 15.3.10/15.3.11/15.3.12
+limits already implemented for the `|a|,|b| < 10` branch (58936d413) are
+now dispatched for every integer `c - a - b` with `x >= 0.995`, subject
+to two conditioning guards, and the `d < 0` shift no longer hits its
+`lngamma` poles when `a-m` or `b-m` terminates.  Fixed in commit
+`39e4204eb`; eight vectors added, all failing with the dispatch reverted.
+Full suite 56/56.  (The value recorded here earlier,
+`53.464514418791908495`, was mistyped; the report and mpmath both give
+`53.464514418791509505...`.)
 
 ### #30324 — extend 2F1 to x < -1 — fixed
 
