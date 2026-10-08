@@ -92,6 +92,12 @@ h(x) = Z(x)/Q(x) = \sqrt@{2/\pi@} \exp(-x^2 / 2) / \erfc(x/\sqrt 2)
 It decreases rapidly as @math{x} approaches @math{-\infty} and asymptotes
 to @math{h(x) \sim x} as @math{x} approaches @math{+\infty}.
 
+For very large @math{|x|} (beyond the square root of the largest
+representable number) the correction terms underflow: the value is
+@math{x} for positive @math{x} and zero, reported as
+@code{GSL_EUNDRFLW}, for negative @math{x}.  The reported error estimate
+is zero in both cases.
+
 @deftypefun double gsl_sf_hazard (double @var{x})
 @deftypefunx int gsl_sf_hazard_e (double @var{x}, gsl_sf_result * @var{result})
 These routines compute the hazard function for the normal distribution.

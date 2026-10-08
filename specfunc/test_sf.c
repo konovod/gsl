@@ -1213,6 +1213,31 @@ int test_erf(void)
   TEST_SF(s, gsl_sf_hazard_e, (1001.0, &r), 1001.0009989990049990, TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_hazard_e, (2000.0, &r), 2000.0004999997500003, TEST_TOL0, GSL_SUCCESS);
 
+  /* Beyond sqrt(DBL_MAX) the correction terms underflow and the hazard
+     function is simply x for positive arguments and zero (an underflow)
+     for negative ones.  The old code produced err = NaN for very
+     negative x and for -Inf, and err = Inf for +Inf. */
+  TEST_SF(s, gsl_sf_hazard_e, (1.5e154, &r), 1.5e154, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hazard_e, (1e300, &r), 1e300, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hazard_e, (GSL_POSINF, &r), GSL_POSINF, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hazard_e, (-1.5e154, &r), 0.0, TEST_TOL0, GSL_EUNDRFLW);
+  TEST_SF(s, gsl_sf_hazard_e, (-1e300, &r), 0.0, TEST_TOL0, GSL_EUNDRFLW);
+  TEST_SF(s, gsl_sf_hazard_e, (GSL_NEGINF, &r), 0.0, TEST_TOL0, GSL_EUNDRFLW);
+
+  /* TEST_SF does not inspect the error bar of a finite zero result, so
+     the NaN/Inf error estimates are checked explicitly here. */
+  {
+    int status = gsl_sf_hazard_e(-1e308, &r);
+    gsl_test(status != GSL_EUNDRFLW || r.val != 0.0 || !gsl_finite(r.err),
+             "gsl_sf_hazard_e(-1e308) finite error bar");
+    status = gsl_sf_hazard_e(GSL_NEGINF, &r);
+    gsl_test(status != GSL_EUNDRFLW || r.val != 0.0 || !gsl_finite(r.err),
+             "gsl_sf_hazard_e(-Inf) finite error bar");
+    status = gsl_sf_hazard_e(GSL_POSINF, &r);
+    gsl_test(status != GSL_SUCCESS || !gsl_isinf(r.val) || r.err != 0.0,
+             "gsl_sf_hazard_e(Inf) zero error bar");
+  }
+
   return s;
 }
 

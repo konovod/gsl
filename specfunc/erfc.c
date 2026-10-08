@@ -449,8 +449,21 @@ int gsl_sf_hazard_e(double x, gsl_sf_result * result)
     const double lnc = -0.22579135264472743236; /* ln(sqrt(2/pi)) */
     const double arg = lnc - 0.5*x*x - result_ln_erfc.val;
     const int stat_e = gsl_sf_exp_e(arg, result);
-    result->err += 3.0 * (1.0 + fabs(x)) * GSL_DBL_EPSILON * fabs(result->val);
-    result->err += fabs(result_ln_erfc.err * result->val);
+
+    if(result->val == 0.0) {
+      /* The exponential underflowed: x is far enough to the left (or
+       * -Inf) that the hazard function is below the smallest
+       * representable number.  Every remaining error term is a multiple
+       * of result->val, so the relative error carries no information.
+       * The old expression 3(1+|x|) also overflowed to Inf before being
+       * multiplied by the zero value, giving err = Inf*0 = NaN for
+       * |x| beyond about DBL_MAX/3 and for x = -Inf. */
+      result->err = 0.0;
+    }
+    else {
+      result->err += 3.0 * (1.0 + fabs(x)) * GSL_DBL_EPSILON * fabs(result->val);
+      result->err += fabs(result_ln_erfc.err * result->val);
+    }
     return GSL_ERROR_SELECT_2(stat_l, stat_e);
   }
   else
@@ -460,7 +473,16 @@ int gsl_sf_hazard_e(double x, gsl_sf_result * result)
     const double corrM = 1.0 - 5.0*ix2 * (1.0 - 7.0*ix2 * corrB);
     const double corrT = 1.0 - ix2 * (1.0 - 3.0*ix2*corrM);
     result->val = x / corrT;
-    result->err = 2.0 * GSL_DBL_EPSILON * fabs(result->val);
+
+    if(gsl_isinf(result->val)) {
+      /* x = +Inf: the hazard function grows without bound, so +Inf is
+       * the correct limit and the relative error of an infinite result
+       * carries no information. */
+      result->err = 0.0;
+    }
+    else {
+      result->err = 2.0 * GSL_DBL_EPSILON * fabs(result->val);
+    }
     return GSL_SUCCESS;
   }
 }

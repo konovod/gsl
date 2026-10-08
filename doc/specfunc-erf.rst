@@ -97,6 +97,12 @@ also known as the inverse Mills' ratio, is defined as,
 It decreases rapidly as :math:`x` approaches :math:`-\infty` and asymptotes
 to :math:`h(x) \sim x` as :math:`x` approaches :math:`+\infty`.
 
+For very large :math:`|x|` (beyond the square root of the largest
+representable number) the correction terms underflow: the value is
+:math:`x` for positive :math:`x` and zero, reported as
+:code:`GSL_EUNDRFLW`, for negative :math:`x`.  The reported error estimate
+is zero in both cases.
+
 .. function:: double gsl_sf_hazard (double x)
               int gsl_sf_hazard_e (double x, gsl_sf_result * result)
 
