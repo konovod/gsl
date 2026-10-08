@@ -257,6 +257,8 @@ One line per change: date | tag | description | commit(s).
   2026-10-06 | [upstream] | integration: Lobatto, Radau, Clenshaw-Curtis, Fejer | 7cdd25747
   2026-10-06 | [upstream] | doc: the new fixed quadrature rules              | 4ad7f6f36
 
+  2026-10-08 | [upstream] | multifit_nlinear: floor the finite-difference fvv step | 5ed006141
+
 
 ## [upstream] rng: make the random() generators produce the documented sequences
 
@@ -4336,16 +4338,11 @@ Kept for the record; each report was checked before it was set aside.
   **Reversed.**  Both v1 steppers were later iterated to convergence once
   the filter was widened; see the entry appended at the end of this file.
 
-* **#50712, lm+accel with a finite-difference fvv** - the test is disabled
-  under `#if 0` in `multifit_nlinear/test_fdf.c`.  Enabling it reproduces
-  the failure on MSVC x64: `levenberg-marquardt+accel` with the
-  finite-difference second directional derivative on the `box3d` problem
-  exceeds the iteration limit.  The report and the upstream `TODO` both
-  leave it disabled, and no small fix was found in the time-boxed
-  investigation; a proper fix is a numerical study of the `fvv` step and
-  the acceleration.  Rejected.
+Savannah bugs #39713 and #30540.
 
-Savannah bugs #39713, #30540 and #50712.
+(#50712 was first recorded here as rejected; it was later found to be a
+small step-floor defect and is fixed -- see the entry appended at the end
+of this file.)
 
 
 ## [rejected] meta: the Group P off-track reports
@@ -6655,6 +6652,62 @@ Files: `specfunc/hyperg_2F1.c`, `specfunc/test_hyperg.c`,
 `doc/specfunc-hyperg.rst`, `doc_texinfo/specfunc-hyperg.texi`.
 
 See Savannah bug #21835.
+
+
+## [upstream] multifit_nlinear: floor the finite-difference fvv step
+
+Commit: 5ed006141
+
+`gsl_multifit_nlinear_fdfvv()` forms the second directional derivative
+along the velocity `v` from the forward difference
+
+    fvv = 2/h^2 ( f(x + h v) - f(x) - h J v )
+
+with a fixed step `h = h_fvv`.  The perturbation length is `h ||v||`, so
+it vanishes with the velocity.  On `box3d` with the More scaling the LM
+parameter is driven up to about `1e3` in the last few iterations, which
+drops `||v||` to `~3e-14`; `h ||v|| ~ 6e-16` is then below the rounding
+unit of `x ~ 6.45` (`~8.9e-16`), so `f(x + h v)` rounds back to a point
+indistinguishable from `x`.  The estimate collapses to roundoff --
+`||fvv||` came out at `~4e-13` where the true second derivative is
+`~1e-27`.  The spurious acceleration is concentrated in the null
+direction of the Jacobian (which is rank deficient along the solution
+line `x0 = x1`, `x3 = 0`), every trial step increases the residual, and
+`mu` is rejected upward until the accepted step is tiny.  The near-zero
+component then converges at a linear rate `~0.999` and the driver
+exhausts its iteration limit.
+
+The step is now floored so the perturbation stays comparable to the
+parameters,
+
+    h_eff = max( h, sqrt(eps) (1 + ||x||) / ||v|| )
+
+The normal regime (`h ||v||` above the floor) is untouched; only the
+small-velocity case changes.  This is the directional analogue of the
+per-parameter step in `fdjac.c`.  A zero velocity short-circuits to
+`fvv = 0`, and an `h_eff` that would overflow for a denormal `||v||` is
+ignored.
+
+Both the Savannah report and this fork's earlier verdict left the test
+disabled (`#if 0` in `test_fdf.c`, recorded `[rejected]`); the diagnosis
+above supersedes that.  The fix is small and upstream-shaped, so it is
+recorded `[upstream]`.
+
+The lmaccel finite-difference fvv test is re-enabled and now converges in
+5 iterations to the analytic solution (`x* = (6.454796207..., 6.454796207...,
+1.2e-15)`, `sumsq = 1.3e-30`), matching the analytic-fvv path.  Negative
+control: with the step floor reverted the re-enabled test fails on eight
+vectors (the `box3d` problem is listed twice, each with an unweighted and
+a weighted run, under `solver=cholesky/scale=more`).  With the fix the
+module is 114248/114248 and the full `ctest` suite is 56/56 on MSVC x64.
+The `h_fvv` sweep is now flat -- `0.02`, `0.01`, `0.005`, `0.001`,
+`1e-4`, `1e-6`, `1e-8` all converge in 5 iterations -- where before
+`0.02` and `0.005` failed and `0.01` and `0.002` passed.
+
+Files: `multifit_nlinear/fdfvv.c`, `multifit_nlinear/test_fdf.c`,
+`multifit_nlinear/TODO`.
+
+Savannah bug #50712.
 
 
 
