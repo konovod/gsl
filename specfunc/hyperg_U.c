@@ -1643,6 +1643,33 @@ hyperg_U_negx_int_b(const double a, const int n, const double x,
 }
 
 
+/* The [A&S 13.1.3] reduction used by hyperg_U_negx() below is an
+ * identity for the Kummer branch of M(a,b,x).  When a and b are both
+ * negative integers with b <= a, however, gsl_sf_hyperg_1F1_e() returns
+ * the terminating polynomial (Savannah bug #66826), not that branch.
+ * The reduction needs the Kummer value e^x M(b-a,b,-x); reproduce it
+ * here, and use the public function for every other argument.  (x < 0
+ * in this helper, so -x > 0 and M(b-a,b,-x) is evaluated on the x > 0
+ * side, where no correction is applied.) */
+static int
+hyperg_U_M(const double a, const double b, const double x, gsl_sf_result * result)
+{
+  const int a_neg_int = (a == floor(a) && a <= 0.0);
+  const int b_neg_int = (b == floor(b) && b < 0.0);
+
+  if(x < 0.0 && a_neg_int && b_neg_int && b <= a) {
+    gsl_sf_result K;
+    int stat_K = gsl_sf_hyperg_1F1_e(b - a, b, -x, &K);
+    int stat_e = gsl_sf_exp_mult_err_e(x, GSL_DBL_EPSILON * fabs(x),
+                                       K.val, K.err, result);
+    return GSL_ERROR_SELECT_2(stat_K, stat_e);
+  }
+  else {
+    return gsl_sf_hyperg_1F1_e(a, b, x, result);
+  }
+}
+
+
 static int
 hyperg_U_negx (const double a, const double b, const double x, gsl_sf_result_e10 * result)
 {
@@ -1688,7 +1715,7 @@ hyperg_U_negx (const double a, const double b, const double x, gsl_sf_result_e10
       if (r1.val != 0.0) 
         {
           gsl_sf_result Mr1;
-          int stat_Mr1 = gsl_sf_hyperg_1F1_e (a, b, x, &Mr1);
+          int stat_Mr1 = hyperg_U_M (a, b, x, &Mr1);
           status = GSL_ERROR_SELECT_2(status, stat_Mr1);
           
           T1 = Mr1.val * r1.val;
@@ -1729,7 +1756,7 @@ hyperg_U_negx (const double a, const double b, const double x, gsl_sf_result_e10
       if (r2.val != 0.0)
         {
           gsl_sf_result Mr2;
-          int stat_Mr2 = gsl_sf_hyperg_1F1_e (1+a-b, 2-b, x, &Mr2);
+          int stat_Mr2 = hyperg_U_M (1+a-b, 2-b, x, &Mr2);
           T2 =  Mr2.val * r2.val;
           T2_err = 2.0 * GSL_DBL_EPSILON * fabs(T2)
             + fabs(Mr2.err * r2.val) + fabs(Mr2.val * r2.err);

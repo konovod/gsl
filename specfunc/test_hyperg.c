@@ -230,11 +230,11 @@ int test_hyperg(void)
   TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (-100, -200, 10.0, &r),  139.38026829540687270, TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (-100, -200, 100.0, &r),  1.1669433576237933752e+19, TEST_TOL1, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (-10, -20, -1.0, &r),  0.6025549561148035735, TEST_TOL0, GSL_SUCCESS);
-  TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (-10, -20, -10.0, &r),  0.00357079636732993491, TEST_TOL1, GSL_SUCCESS);
-  TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (-10, -20, -100.0, &r),  1.64284868563391159e-35, TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (-10, -20, -10.0, &r),  0.00357201182794578047, TEST_TOL1, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (-10, -20, -100.0, &r),  49303272.262405369733, TEST_TOL2, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (-10, -100, -1.0, &r),  0.90442397250313899, TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (-10, -100, -10.0, &r),  0.35061515251367215, TEST_TOL1, GSL_SUCCESS);
-  TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (-10, -100, -100.0, &r),  8.19512187960476424e-09, TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (-10, -100, -100.0, &r),  4.4148250205403363517e-7, TEST_TOL3, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (-100, -200, -1.0, &r),  0.6061497939628952629, TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (-100, -200, -10.0, &r),  0.0063278543908877674, TEST_TOL1, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (-100, -200, -100.0, &r),  4.34111795007336552e-25, TEST_TOL2, GSL_SUCCESS);
@@ -254,9 +254,9 @@ int test_hyperg(void)
   TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (5, 6, 7.0, &r),   480.548772048884018204, TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (5, 6, 8.0, &r),   1204.460563611831503295, TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (1, 1, -1.0, &r),  1/M_E, TEST_TOL0, GSL_SUCCESS);
-  TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (-1, -1, -1.0, &r), 1/M_E, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (-1, -1, -1.0, &r), 0.0, TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (-1, -1, 0.0, &r),  1.0, TEST_TOL0, GSL_SUCCESS);
-  TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (-1, -1, 1.0, &r),  M_E, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (-1, -1, 1.0, &r),  2.0, TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (2, 2, 0.0, &r),   1.0, TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (2, 2, 1.0, &r),   M_E, TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (2, 3, -1.0, &r),  2-(4/M_E), TEST_TOL0, GSL_SUCCESS);
@@ -292,18 +292,29 @@ int test_hyperg(void)
   TEST_SF(s, gsl_sf_hyperg_1F1_e,     (4, 2, 1, &r),   13*M_E/6.0, TEST_TOL0, GSL_SUCCESS);
 
   /* Savannah bug #66826 also reports four terminating cases with a
-   * negative integer b that are evaluated incorrectly: the integer
-   * form returns exp(x) when a == b, and otherwise applies a Kummer
-   * transformation that is not valid there.  The terminating series
-   * gives
+   * negative integer b that used to be evaluated incorrectly: the
+   * integer form returned exp(x) when a == b, and otherwise applied a
+   * Kummer transformation that is not valid there.  The terminating
+   * series gives
    *
-   *   1F1(-2,-2, 2) = 5        library: exp(2)         = 7.389
-   *   1F1(-2,-2, 1) = 2.5      library: exp(1)         = 2.718
-   *   1F1(-2,-2,-1) = 0.5      library: exp(-1)        = 0.368
-   *   1F1(-1,-2,-1) = 0.5      library: 0.551819161757...
-   *
-   * They are left disabled until that branch is fixed; see the review
-   * notes for the analysis. */
+   *   1F1(-2,-2, 2) = 5        old library: exp(2)         = 7.389
+   *   1F1(-2,-2, 1) = 2.5      old library: exp(1)         = 2.718
+   *   1F1(-2,-2,-1) = 0.5      old library: exp(-1)        = 0.368
+   *   1F1(-1,-2,-1) = 0.5      old library: 0.551819161757...
+   */
+  TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (-2, -2,  2, &r), 5.0, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (-2, -2,  1, &r), 2.5, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (-2, -2, -1, &r), 0.5, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (-1, -2, -1, &r), 0.5, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_1F1_e,     (-2, -2, -1, &r), 0.5, TEST_TOL0, GSL_SUCCESS);
+
+  /* Larger terminating cases on the x < 0 branch, guarding the
+   * reflection correction against the polynomial cancellation that
+   * defeats a direct evaluation.  References from mpmath at 300
+   * digits. */
+  TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (-10, -10, -100, &r), 25031071465218.4603175, TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (-10, -10, -10,  &r), 1342.5873015873015873, TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_hyperg_1F1_int_e, (-200, -400, -100, &r), 8.61430649770244839219e-24, TEST_TOL2, GSL_SUCCESS);
 
   /* b a nonpositive integer: the function has a pole, and the value
    * at x = 0 must be rejected like the value at x != 0, rather than

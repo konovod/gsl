@@ -1316,20 +1316,100 @@ hyperg_1F1_ab_negint(const int a, const int b, const double x, gsl_sf_result * r
     return GSL_SUCCESS;
   }
   else if(x > 0.0) {
+    /* The terminating polynomial is well conditioned for x > 0 (all
+     * terms have one sign), so evaluate it directly. */
     return hyperg_1F1_a_negint_poly(a, b, x, result);
   }
   else {
-    /* Apply a Kummer transformation to make x > 0 so
-     * we can evaluate the polynomial safely. Of course,
-     * this assumes b <= a, which must be true for
-     * a<0 and b<0, since otherwise the thing is undefined.
-     */
-    gsl_sf_result K;
-    int stat_K = hyperg_1F1_a_negint_poly(b-a, b, -x, &K);
-    int stat_e = gsl_sf_exp_mult_err_e(x, 2.0 * GSL_DBL_EPSILON * fabs(x),
-                                          K.val, K.err,
-                                          result);
-    return GSL_ERROR_SELECT_2(stat_e, stat_K);
+    /* x < 0.  The Kummer map M(a,b,x) = e^x M(b-a,b,-x) is not an
+     * identity for the terminating branch; it is right only for special
+     * parameters and is wrong by an amount that grows without bound
+     * with |x| (M(-10,-20,-100) comes back 1.6e-35 instead of 4.9e7).
+     * The missing piece is the correction term of the [A&S 13.6.9] /
+     * [A&S 13.1.3] reduction, which for a = -n, b = -m, m >= n reads
+     *
+     *   M(-n,-m,x) = K(x)
+     *              + ((m-n)!/m!) poch(-n,n-m-1) x^(1-b) M(m-n+1,m+2,x),
+     *
+     * with K(x) the Kummer value above and, for x < 0,
+     * x^(1-b) = (-1)^(1+m) |x|^(1+m).  This is the reflection used by
+     * gsl_sf_hyperg_U_int_e(), rearranged to avoid both its recursion
+     * into this function and its x^(1-b) overflow.  See Savannah bug
+     * #66826. */
+    const int n = -a;
+    const int m = -b;
+    gsl_sf_result Kummer;
+    gsl_sf_result M;
+    gsl_sf_result poch;
+    int stat = GSL_SUCCESS;
+
+    if(b == a) {
+      /* b-a = 0: the Kummer base is exactly e^x. */
+      stat = GSL_ERROR_SELECT_2(stat, gsl_sf_exp_e(x, &Kummer));
+    }
+    else {
+      gsl_sf_result K;
+      int stat_K = hyperg_1F1_a_negint_poly(b-a, b, -x, &K);
+      int stat_e = gsl_sf_exp_mult_err_e(x, 2.0 * GSL_DBL_EPSILON * fabs(x),
+                                         K.val, K.err, &Kummer);
+      stat = GSL_ERROR_SELECT_3(stat, stat_K, stat_e);
+    }
+
+    {
+      const int stat_M = gsl_sf_hyperg_1F1_e(1.0 + a - b, 2.0 - b, x, &M);
+      const int stat_p = gsl_sf_poch_e(a, -(1.0 + a - b), &poch);
+
+      if(poch.val != 0.0 && M.val != 0.0
+         && gsl_finite(poch.val) && gsl_finite(M.val)) {
+        gsl_sf_result lg1, lg2;
+        gsl_sf_result term;
+        double lnpre, lnpre_err, sgn;
+        int stat_l1 = gsl_sf_lngamma_e(m - n + 1.0, &lg1);
+        int stat_l2 = gsl_sf_lngamma_e(m + 1.0,     &lg2);
+        int stat_e;
+
+        /* Fold the prefactor, poch and M into one exponent so that no
+         * intermediate product overflows. */
+        lnpre = lg1.val - lg2.val + (1.0 - b) * log(-x)
+              + log(fabs(poch.val)) + log(fabs(M.val));
+        lnpre_err = lg1.err + lg2.err
+                  + fabs(poch.err / poch.val) + fabs(M.err / M.val)
+                  + 2.0 * GSL_DBL_EPSILON * (fabs(lnpre) + fabs(1.0 - b) * fabs(log(-x)));
+
+        sgn = 1.0;
+        if(poch.val < 0.0) sgn = -sgn;
+        if(M.val    < 0.0) sgn = -sgn;
+        if(GSL_IS_ODD(1 - b)) sgn = -sgn;
+
+        stat_e = gsl_sf_exp_mult_err_e(lnpre, lnpre_err, sgn, 0.0, &term);
+
+        if(stat_e == GSL_SUCCESS) {
+          stat = GSL_ERROR_SELECT_3(stat, stat_M, stat_p);
+          stat = GSL_ERROR_SELECT_2(stat, stat_l1);
+          stat = GSL_ERROR_SELECT_2(stat, stat_l2);
+          result->val = Kummer.val + term.val;
+          result->err = Kummer.err + term.err
+                      + 2.0 * GSL_DBL_EPSILON * fabs(result->val);
+        }
+        else if(stat_e == GSL_EUNDRFLW || stat_e == GSL_EOVRFLW) {
+          /* The correction is below or above the representable range,
+           * so it does not improve on the Kummer value. */
+          *result = Kummer;
+        }
+        else {
+          stat = GSL_ERROR_SELECT_3(stat, stat_M, stat_p);
+          stat = GSL_ERROR_SELECT_2(stat, GSL_ERROR_SELECT_2(stat_l1, stat_l2));
+          stat = GSL_ERROR_SELECT_2(stat, stat_e);
+          *result = Kummer;
+        }
+      }
+      else {
+        /* The correction is negligible, or could not be formed because
+         * poch or M overflowed/underflowed; the Kummer value stands. */
+        *result = Kummer;
+      }
+    }
+    return stat;
   }
 }
 
@@ -1808,6 +1888,11 @@ gsl_sf_hyperg_1F1_int_e(const int a, const int b, const double x, gsl_sf_result 
     return GSL_SUCCESS;
   }
   else if(a == b) {
+    if(a < 0) {
+      /* A non-positive integer a terminates the series at degree -a,
+       * so M(a,a,x) is the truncated exponential, not e^x. */
+      return hyperg_1F1_ab_negint(a, b, x, result);
+    }
     return gsl_sf_exp_e(x, result);
   }
   else if(b == 0) {
@@ -1909,6 +1994,11 @@ gsl_sf_hyperg_1F1_e(const double a, const double b, const double x,
      * It's good to test exact equality now.
      * We also test approximate equality later.
      */
+    if(a_neg_integer) {
+      /* Non-positive integer a: the series terminates and M(a,a,x) is
+       * the truncated exponential, not e^x. */
+      return gsl_sf_hyperg_1F1_int_e((int)rinta, (int)rintb, x, result);
+    }
     return gsl_sf_exp_e(x, result);
   } else if(fabs(b) < _1F1_INT_THRESHOLD && fabs(a) < _1F1_INT_THRESHOLD) {
     /* a and b near zero: 1 + a/b (exp(x)-1)
