@@ -9,10 +9,9 @@ Scratch index, not part of the fork's record of changes. Verdicts are curated fr
 
 | status | count |
 |---|---:|
-| fixed | 131 |
-| partial | 4 |
-| rejected | 81 |
-| deferred | 2 |
+| fixed | 153 |
+| partial | 5 |
+| rejected | 60 |
 | superseded | 1 |
 | not reviewed | 0 |
 
@@ -224,7 +223,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 67774 | 2025-12-05 | bug | Accuracy problem | none | **fixed** — the value was already right for x < 0; the error bar was computed with the signed x and came back negative (4220f05d9) | Feature: arctan integral is also defined for negative inputs |
 | 68068 | 2026-02-19 | bug | Accuracy problem | none | **fixed** - quad_golden stored f_m in f_upper instead of f_lower (4260778fe) | Bug: incorrect straddling of area of convergence in quad_golden |
 | 68073 | 2026-02-20 | bug | Documentation | none | **fixed** — gsl_stats_select comment corrected from "k-th largest" to "k-th smallest" (521bed61d) | Bug: incorrect inline code comment on BASE FUNCTION(gsl_stats,select) |
-| 68098 | 2026-02-27 | feature | - | none | **fixed** — |rho| >= 1 rejected with GSL_EDOM in the bivariate Gaussian pdf and generator (6da0c08f3) | Feature: division by zero when data is perfectly correlated |
+| 68098 | 2026-02-27 | feature | - | none | **fixed** — \|rho\| >= 1 rejected with GSL_EDOM in the bivariate Gaussian pdf and generator (6da0c08f3) | Feature: division by zero when data is perfectly correlated |
 | 68283 | 2026-04-26 | - | - | none | rejected — proposed guards break the `gsl_stats` equivalence in `rstat_test` | Correction to gsl_rstat_skew and gsl_rstat_kurtosis |
 | 68312 | 2026-05-07 | bug | Accuracy problem | none | **fixed** — same recurrence as #43256 (59fc479e2) | Wigner symbols inaccurate for large j |
 | 68367 | 2026-05-19 | feature | - | source invelljac.c | **fixed** — `gsl_sf_elljac_arcsn_e/arccn_e/arcdn_e`, using Carlson RF with the parameter `m`; the posted prototype passed `m` where the modulus `k = sqrt(m)` was expected (183ca894f, 653c77bca) | Feature: inverse Jacobi elliptic integrals |
@@ -244,12 +243,25 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 
 ## Future work backlog
 
-The first stage is complete: every open item is classified.  The items
-below were **rejected or deferred under the eligibility rule that admitted
-only bug fixes, documentation corrections and test-quality improvements** -
-they are not defects, and most are wanted work nonetheless.  They are kept
-here so the filter can be widened later and items removed one by one as they
-are taken.  Nothing here is a fork commitment.
+Every open item has a verdict, and the eligibility rule has since been
+widened to **any report on which an action can be taken**.  The only
+reports left out are those about platforms this fork cannot build and test
+(32-bit targets and architectures absent from CI), plus reports that name
+no defect in the repository at all.  The backlog therefore carries, besides
+the feature/API tail, the residual work on reports whose status is
+*partial* and several open defects that until now were recorded only in
+`SAVANNAH_REVIEW.md`.
+
+Nothing here is a fork commitment; items are removed one by one as they are
+taken.  This file is scratch and is not part of the fork's record of
+changes, so nothing here needs a `FORKNEWS` entry until an item is actually
+implemented.
+
+### History of the widening
+
+The first stage admitted only bug fixes, documentation corrections and
+test-quality improvements.  Each later widening is recorded below so the
+reason an item sits in the backlog is not lost.
 
 Four performance-only items that were listed here have since been taken as
 result-preserving fixes once the filter was widened: `#54925` (cblas gemm
@@ -312,20 +324,79 @@ real-vector scaling, `gsl_spmatrix_resize`, `gsl_block_resize`/
 listed in the table.
 
 `kind`: `feat` = new feature/API, `perf` = performance only, `test` =
-test-quality request, `doc` = documentation matter.  `patch`: `clean`/
-`partial`/`source` if an attachment was collected by the sweep, `-` if none;
+test-quality request, `doc` = documentation matter, `build` = packaging or
+distribution, `refactor` = internal restructuring, `accuracy` = accuracy
+improvement, `assess` = needs a fresh verdict.  `patch`: `clean`/`partial`/
+`source` if an attachment was collected by the sweep, `-` if none;
 `inline` if the text is in the bug thread only.
+
+### Residual defects
+
+Real defects, or work left open by a partly applied fix.  Most are already
+analysed in `SAVANNAH_REVIEW.md`; the reader is referred there for the
+reproduction.  `#66826` is the one that has no triage row of its own: the
+report was closed test-only, but the library defect it exposed is open.
+
+| # | kind | what remains |
+|---|---|---|
+| 66826 | bug | `gsl_sf_hyperg_1F1_int_e` returns the Kummer value rather than the terminating polynomial for negative integer `b` (`(-10,-20,-100)`: `1.6e-35` against a true `4.9e7`); the three existing vectors assert the wrong value and must be corrected with it.  Analysis under "Open defect" in `SAVANNAH_REVIEW.md`. |
+| 30510 | bug | `hyperg_U(a,b,x)` for non-integer `b` and `x < 0` returns `NaN` with `GSL_SUCCESS` (silent). |
+| 32306 | bug | 2F1 reflection at `x >= 0.995` with integer `d` keeps the sign/accuracy defect that the `x < 0.995` series fix only worked around. |
+| 53919 | bug | `gsl_sf_hazard_e()` beyond `\|x\| > sqrt(DBL_MAX)` returns `±inf` with `err = 0` (recorded as "related, not done" in the erfc entry). |
+| 28267 | bug | 1F1 in the transition region `x ~ a^2` still loses most digits (e.g. `(-37.8, 2.01, 103.58)` at ~2%). |
+| 21835 | bug | 2F1 at `c = a+b` near `x = 1` exhausts the series (`GSL_EMAXITER`) despite ~9 good digits; needs the A&S 15.3.10 form. |
+| 50712 | bug | `lm+accel` with a finite-difference `fvv` on `box3d` fails to converge; reproduces on MSVC x64 and is disabled under `#if 0`. |
+| 43259 | assess | re-verdict the `pochrel` and `ellint_P` inputs dismissed as "degenerate"; they may be a genuine limitation rather than evaluation on a pole. |
+| 66808 | accuracy | Airy oscillatory accuracy beyond `eps*\|x\|^{3/2}` (a double-double prototype recovered only 5-10x, capped by the double coefficient tables). |
+| 36152 | test | `gsl_sf_sinc_e` large-`x` vector (the behaviour is fixed as a side effect; no vector yet). |
+| 66993 | doc | pow_int residual, effectively closed: the only valid point, the zero-base overflow, is documented; the other claims do not reproduce. |
+
+### Wanted work, no defect
+
+Feature, API, performance, refactor and documentation items the earlier
+rule set aside and the widened rule admits.
 
 | # | kind | patch | what it would add |
 |---|---|---|---|
-| 68549 | feat | - | uniform argument lists across the distribution functions (breaking) |
-| 47402 | perf | - | Mathieu coefficient caching in the workspace (items 1, 2 and 4 already done) |
-| 66742 | doc | clean | GAMS classification across 177 files |
-| 66886 | doc | clean | refactor of `specfunc/trig.c` |
+| 25320 | feat | - | Fresnel integrals, with the extension's negative-`x` sign defect corrected. |
+| 21837 | feat | - | permutation path for a zero-diagonal symmetric tridiagonal solve (new algorithm). |
+| 34361 | feat | - | `gsl_bspline_knots_greville` constrained least squares (Lawson-Hanson NNLS/LDP). |
+| 68704 | feat | - | `gsl_histogram_variance`, including the breaking rename question. |
+| 24252 | feat | source | a *correct* truncated-gamma / gamma-tail generator (the posted sampler is wrong). |
+| 50382 | build | - | NuGet packaging for Windows. |
+| 59914 | doc | - | a documented native Windows build write-up. |
+| 66862 | refactor | partial | share the complex sin/cos implementation between `complex/math.c` and `specfunc/trig.c`. |
+| 68663 | refactor | - | drop the `GAMMA_INC_A_0` alias (one line; low value). |
+| 29834 | refactor | source | unify the CBLAS and GSL argument-checking macros. |
+| 68283 | bug | - | an `gsl_rstat` skew/kurtosis correction consistent with the `gsl_stats` equivalence the module asserts. |
+| 68549 | feat | - | uniform argument lists across the distribution functions (breaking). |
+| 47402 | perf | - | Mathieu coefficient caching in the workspace (items 1, 2 and 4 already done). |
+| 66742 | doc | clean | GAMS classification across 177 files. |
+| 66886 | doc | clean | refactor of `specfunc/trig.c`. |
 
-Already superseded by fork work, so **not** carried in the backlog:
-`66874` (bst documentation - the fork documents the module in `20eda0316`)
-and `68663` (the `GAMMA_INC_A_0` macro removal is a one-line alias, no value).
+### Platform re-checks
 
-The remaining 174 classified items are fixes, corrections, or rejections
-that need no future action; see the main table above and `FORKNEWS`.
+Reports that named a platform or toolchain the main review did not exercise.
+The first two are reachable from the current CI/setup; the compiler-specific
+ones need that toolchain installed first.
+
+| # | what to do |
+|---|---|
+| 56843 | reproduce the non-x86 eigen accuracy difference on the arm64 macOS CI target, which is in CI. |
+| 44865 | make the `e5_bigt` comparison absolute-aware so it survives `-ffp-contract=fast`; the contraction path itself is testable on this machine. |
+| 67446, 67447 | rebuild with gcc 14.2.1 and attempt reproduction. |
+| 49697 | re-verify with `-mavx`; likely already covered by the raised cholesky tolerance (`#67445`). |
+| 39152, 54919 | attempt reproduction with Intel oneAPI `icc`/`icx`. |
+
+### Excluded
+
+Skipped because the platform cannot be built or tested here: 32-bit targets
+(`46593`, `52322`, `59759`, `53903`, plus the 32-bit glibc data points
+`45265` and `52927`) and architectures absent from CI (`47028` ppc64le,
+`48915` AIX, `61342` ppc64/sparc).  `42058` is Savannah's own feed and
+`45797` is an external LAPACK build; neither is a defect in this
+repository.  `66874` is superseded - the fork already documents the BST
+module in `20eda0316`.
+
+The rest of the main table is handled or needs no action; see the per-bug
+verdicts and `FORKNEWS`.
