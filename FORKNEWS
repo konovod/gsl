@@ -115,6 +115,7 @@ One line per change: date | tag | description | commit(s).
   2026-10-07 | [upstream] | specfunc: Mathieu coefficient caching (deferred design) | - (see below)
   2026-10-08 | [upstream] | specfunc: finite hazard error estimate at the limits | 9c43a759f
   2026-10-08 | [upstream] | specfunc: hyperg_U on the real branch for x < 0    | 77388cb67
+  2026-10-08 | [upstream] | specfunc: integer-d 2F1 reflection near x = 1       | 58936d413
   2026-10-03 | [upstream] | specfunc: reject NaN in the complete elliptic integrals | 14d595eb8
   2026-10-03 | [upstream] | specfunc: terminate gamma_inc for large negative a    | 932087bcd
   2026-10-03 | [upstream] | specfunc: propagate NaN in gsl_sf_hyperg_1F1_e       | 99a73dd36
@@ -6400,6 +6401,42 @@ Files: `specfunc/hyperg_U.c`, `specfunc/test_hyperg.c`,
 `doc/specfunc-hyperg.rst`, `doc_texinfo/specfunc-hyperg.texi`.
 
 See Savannah bug #30510.
+
+
+## [upstream] specfunc: correct the integer-d 2F1 reflection near x = 1
+
+Commit: 58936d413
+
+This finishes the corner left open by e4c4ac326/882c8361d (Savannah bug
+#32306): the reflection branch for integer `d = c-a-b` at `x >= 0.995`.
+
+`hyperg_2F1_reflect()` formed every gamma factor with `gsl_sf_lngamma_e()`,
+which returns `log|Gamma|` and drops the sign, and applied a single global
+sign `(-1)^d`.  `2F1(-0.5, 1.5, 1, x)` therefore came back negated for
+`x >= 0.995`, and the finite sum of the [A&S 15.3.11] limit was itself in
+error for `d >= 2` (an extra `Gamma(d)`), so larger `|d|` was off by
+orders of magnitude:
+
+    F(-0.5, 1.5, 1, 0.995)    library  1.28696    true -1.28696
+    F(-2.5, -0.5, 1, 0.995)   library 12.1976     true  2.03294
+    F(4.5, 1.5, 3, 0.995)     library 6.24e6      true  3.12e6
+
+The branch now evaluates the [A&S 15.3.10] (`d = 0`) and [A&S 15.3.11]
+(`d = m > 0`) limits with `gsl_sf_lngamma_sgn_e()`, so each gamma factor
+carries its sign, and applies [A&S 15.3.12] (`(1-z)^{-m}` shift) for
+`d = -m < 0`.  The printed formulas carry the `1/m!` of the second series
+in its first term, which the implementation keeps; the earlier attempt
+here double-counted `Gamma(m)` and the `1/m!`.
+
+Thirteen vectors were added at `x = 0.995 ... 0.9999`, referencing mpmath
+at 40 digits; they agree to a few ulp and use `TEST_TOL2`.  A 504-point
+grid over integer `d` (including negative `d`) agrees to better than
+`1e-8`.  Negative control: with the branch restored, ten of the thirteen
+fail, four with the wrong sign.  Full suite 56/56.
+
+Files: `specfunc/hyperg_2F1.c`, `specfunc/test_hyperg.c`.
+
+See Savannah bug #32306.
 
 
 

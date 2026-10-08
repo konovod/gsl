@@ -41,7 +41,7 @@ replacement file, `inline` for a patch pasted into the bug text, `none` for no p
 | 31362 | 2010-10-18 | bug | Runtime error | none | **fixed** — NaN rejected as GSL_EDOM in the complete elliptic integrals (14d595eb8) | The Complete Elliptic Integrals (gsl_sf_ellint_Ecomp and _Kcomp) Loop Forever with NaN Argument |
 | 31426 | 2010-10-23 | - | Runtime error | none | **fixed** — rescaled/bounded symmetric QR iteration (7d586d89b) | infinite loop in gsl_eigen_symm |
 | 32257 | 2011-01-26 | - | - | none | **fixed** — Gauss-Lobatto, Gauss-Radau, Clenshaw-Curtis and Fejer fixed quadrature rules (7cdd25747, 4ad7f6f36) | RFE: Import integration routines from quadrule |
-| 32306 | 2011-01-31 | bug | Accuracy problem | source hyp.c | **fixed** — integer-d 2F1 series and error estimate (e4c4ac326, 882c8361d) | sign error in gsl_sf_hyperg_2F1 |
+| 32306 | 2011-01-31 | bug | Accuracy problem | source hyp.c | **fixed** — integer-d 2F1 series and error estimate for `x < 0.995` (e4c4ac326, 882c8361d) and the integer-d reflection at `x >= 0.995` (58936d413) | sign error in gsl_sf_hyperg_2F1 |
 | 32776 | 2011-03-14 | feature | - | source quadratic.c | **fixed** — multimin quadratic minimiser (53cd0d098) | RFE: Add brute-force quadratic numerical multidimensional minimizer |
 | 34361 | 2011-09-22 | - | Runtime error | none | **fixed** — the `init_augment` monotonicity guard rejects non-monotone breakpoints (74cace84f); Greville test + docs (c8543330d) | gsl_bspline_knots_greville needs inequality constrained linear least squares |
 | 35032 | 2011-12-11 | doc | Documentation | none | **fixed** — gsl_test support functions documented in the usage chapter, marked as an unreviewed AI draft (8ef88af6e) | gsl_test.h lacks documentation in the reference manual |
@@ -340,7 +340,6 @@ report was closed test-only, but the library defect it exposed is open.
 | # | kind | what remains |
 |---|---|---|
 | 66826 | bug | `gsl_sf_hyperg_1F1_int_e` returns the Kummer value rather than the terminating polynomial for negative integer `b` (`(-10,-20,-100)`: `1.6e-35` against a true `4.9e7`); the three existing vectors assert the wrong value and must be corrected with it.  Analysis under "Open defect" in `SAVANNAH_REVIEW.md`. |
-| 32306 | bug | 2F1 reflection at `x >= 0.995` with integer `d` keeps the sign/accuracy defect that the `x < 0.995` series fix only worked around. |
 | 28267 | bug | 1F1 in the transition region `x ~ a^2` still loses most digits (e.g. `(-37.8, 2.01, 103.58)` at ~2%). |
 | 21835 | bug | 2F1 at `c = a+b` near `x = 1` exhausts the series (`GSL_EMAXITER`) despite ~9 good digits; needs the A&S 15.3.10 form. |
 | 50712 | bug | `lm+accel` with a finite-difference `fvv` on `box3d` fails to converge; reproduces on MSVC x64 and is disabled under `#if 0`. |
