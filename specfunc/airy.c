@@ -30,261 +30,9 @@
 
 #include "chebyshev.h"
 #include "cheb_eval_mode.c"
+#include "airy_osc.h"
 
 /*-*-*-*-*-*-*-*-*-*-*-* Private Section *-*-*-*-*-*-*-*-*-*-*-*/
-
-
-/* chebyshev expansions for Airy modulus and phase
-   based on SLATEC r9aimp()
-
- Series for AM21       on the interval -1.25000D-01 to  0.
-                                        with weighted error   2.89E-17
-                                         log weighted error  16.54
-                               significant figures required  14.15
-                                    decimal places required  17.34
-
- Series for ATH1       on the interval -1.25000D-01 to  0.
-                                        with weighted error   2.53E-17
-                                         log weighted error  16.60
-                               significant figures required  15.15
-                                    decimal places required  17.38
-
- Series for AM22       on the interval -1.00000D+00 to -1.25000D-01
-                                        with weighted error   2.99E-17
-                                         log weighted error  16.52
-                               significant figures required  14.57
-                                    decimal places required  17.28
-
- Series for ATH2       on the interval -1.00000D+00 to -1.25000D-01
-                                        with weighted error   2.57E-17
-                                         log weighted error  16.59
-                               significant figures required  15.07
-                                    decimal places required  17.34
-*/
-
-static double am21_data[37] = {
-  0.0065809191761485,
-  0.0023675984685722,
-  0.0001324741670371,
-  0.0000157600904043,
-  0.0000027529702663,
-  0.0000006102679017,
-  0.0000001595088468,
-  0.0000000471033947,
-  0.0000000152933871,
-  0.0000000053590722,
-  0.0000000020000910,
-  0.0000000007872292,
-  0.0000000003243103,
-  0.0000000001390106,
-  0.0000000000617011,
-  0.0000000000282491,
-  0.0000000000132979,
-  0.0000000000064188,
-  0.0000000000031697,
-  0.0000000000015981,
-  0.0000000000008213,
-  0.0000000000004296,
-  0.0000000000002284,
-  0.0000000000001232,
-  0.0000000000000675,
-  0.0000000000000374,
-  0.0000000000000210,
-  0.0000000000000119,
-  0.0000000000000068,
-  0.0000000000000039,
-  0.0000000000000023,
-  0.0000000000000013,
-  0.0000000000000008,
-  0.0000000000000005,
-  0.0000000000000003,
-  0.0000000000000001,
-  0.0000000000000001
-};
-static cheb_series am21_cs = {
-  am21_data,
-  36,
-  -1, 1,
-  20
-};
-
-static double ath1_data[36] = {
-  -0.07125837815669365,
-  -0.00590471979831451,
-  -0.00012114544069499,
-  -0.00000988608542270,
-  -0.00000138084097352,
-  -0.00000026142640172,
-  -0.00000006050432589,
-  -0.00000001618436223,
-  -0.00000000483464911,
-  -0.00000000157655272,
-  -0.00000000055231518,
-  -0.00000000020545441,
-  -0.00000000008043412,
-  -0.00000000003291252,
-  -0.00000000001399875,
-  -0.00000000000616151,
-  -0.00000000000279614,
-  -0.00000000000130428,
-  -0.00000000000062373,
-  -0.00000000000030512,
-  -0.00000000000015239,
-  -0.00000000000007758,
-  -0.00000000000004020,
-  -0.00000000000002117,
-  -0.00000000000001132,
-  -0.00000000000000614,
-  -0.00000000000000337,
-  -0.00000000000000188,
-  -0.00000000000000105,
-  -0.00000000000000060,
-  -0.00000000000000034,
-  -0.00000000000000020,
-  -0.00000000000000011,
-  -0.00000000000000007,
-  -0.00000000000000004,
-  -0.00000000000000002
-};
-static cheb_series ath1_cs = {
-  ath1_data,
-  35,
-  -1, 1,
-  15
-};
-
-static double am22_data[33] = {
- -0.01562844480625341,
-  0.00778336445239681,
-  0.00086705777047718,
-  0.00015696627315611,
-  0.00003563962571432,
-  0.00000924598335425,
-  0.00000262110161850,
-  0.00000079188221651,
-  0.00000025104152792,
-  0.00000008265223206,
-  0.00000002805711662,
-  0.00000000976821090,
-  0.00000000347407923,
-  0.00000000125828132,
-  0.00000000046298826,
-  0.00000000017272825,
-  0.00000000006523192,
-  0.00000000002490471,
-  0.00000000000960156,
-  0.00000000000373448,
-  0.00000000000146417,
-  0.00000000000057826,
-  0.00000000000022991,
-  0.00000000000009197,
-  0.00000000000003700,
-  0.00000000000001496,
-  0.00000000000000608,
-  0.00000000000000248,
-  0.00000000000000101,
-  0.00000000000000041,
-  0.00000000000000017,
-  0.00000000000000007,
-  0.00000000000000002
-};
-static cheb_series am22_cs = {
-  am22_data,
-  32,
-  -1, 1,
-  15
-};
-
-static double ath2_data[32] = {
-   0.00440527345871877,
-  -0.03042919452318455,
-  -0.00138565328377179,
-  -0.00018044439089549,
-  -0.00003380847108327,
-  -0.00000767818353522,
-  -0.00000196783944371,
-  -0.00000054837271158,
-  -0.00000016254615505,
-  -0.00000005053049981,
-  -0.00000001631580701,
-  -0.00000000543420411,
-  -0.00000000185739855,
-  -0.00000000064895120,
-  -0.00000000023105948,
-  -0.00000000008363282,
-  -0.00000000003071196,
-  -0.00000000001142367,
-  -0.00000000000429811,
-  -0.00000000000163389,
-  -0.00000000000062693,
-  -0.00000000000024260,
-  -0.00000000000009461,
-  -0.00000000000003716,
-  -0.00000000000001469,
-  -0.00000000000000584,
-  -0.00000000000000233,
-  -0.00000000000000093,
-  -0.00000000000000037,
-  -0.00000000000000015,
-  -0.00000000000000006,
-  -0.00000000000000002
-};
-static cheb_series ath2_cs = {
-  ath2_data,
-  31,
-  -1, 1,
-  16
-};
-
-
-/* Airy modulus and phase for x < -1 */
-static
-int
-airy_mod_phase(const double x, gsl_mode_t mode, gsl_sf_result * mod, gsl_sf_result * phase)
-{
-  gsl_sf_result result_m;
-  gsl_sf_result result_p;
-  double m, p;
-  double sqx;
-
-  if(x < -2.0) {
-    double z = 16.0/(x*x*x) + 1.0;
-    cheb_eval_mode_e(&am21_cs, z, mode, &result_m);
-    cheb_eval_mode_e(&ath1_cs, z, mode, &result_p);
-  }
-  else if(x <= -1.0) {
-    double z = (16.0/(x*x*x) + 9.0)/7.0;
-    cheb_eval_mode_e(&am22_cs, z, mode, &result_m);
-    cheb_eval_mode_e(&ath2_cs, z, mode, &result_p);
-  }
-  else {
-    mod->val = 0.0;
-    mod->err = 0.0;
-    phase->val = 0.0;
-    phase->err = 0.0;
-    GSL_ERROR ("x is greater than 1.0", GSL_EDOM);
-  }
-
-  m =  0.3125 + result_m.val;
-  p = -0.625  + result_p.val;
-
-  sqx = sqrt(-x);
-
-  mod->val   = sqrt(m/sqx);
-  /* propagate the series truncation error through sqrt(m/sqx); the
-   * relative error of m is result_m.err/m, and sqx contributes one
-   * rounding.  Do not divide by result_m.val, which can vanish. */
-  mod->err   = 0.5 * fabs(mod->val) * (fabs(result_m.err/m) + GSL_DBL_EPSILON);
-  /* phase = pi/4 - x*sqx*p.  The term x*sqx*p is of size ~|x|^{3/2}, so an
-   * error in p is amplified by |x*sqx|; the arithmetic itself rounds at
-   * the level of eps*|phase|, which for large |x| dominates. */
-  phase->val = M_PI_4 - x*sqx * p;
-  phase->err = fabs(x*sqx) * result_p.err
-             + GSL_DBL_EPSILON * fabs(phase->val);
-
-  return GSL_SUCCESS;
-}
-
 
 
 /* Chebyshev series for Ai(x) with x in [-1,1]
@@ -668,28 +416,11 @@ gsl_sf_airy_Ai_e(const double x, const gsl_mode_t mode, gsl_sf_result * result)
   /* CHECK_POINTER(result) */
 
   if(x < -1.0) {
-    gsl_sf_result mod;
-    gsl_sf_result theta;
-    gsl_sf_result cos_result;
-    int stat_mp  = airy_mod_phase(x, mode, &mod, &theta);
-    int stat_cos;
-
-    if(theta.err >= 1.0) {
-      /* The phase is not known to better than a radian, which happens once
-       * |x| is large enough that eps*|x|^{3/2} ~ 1.  The cosine cannot be
-       * evaluated (gsl_sf_cos_e would return a value outside [-1,1], or
-       * overflow), so report zero with the whole modulus as the error.
-       * This is a genuine loss of precision, not a domain error. */
-      result->val = 0.0;
-      result->err = fabs(mod.val);
-      return GSL_ELOSS;
-    }
-
-    stat_cos = gsl_sf_cos_err_e(theta.val, theta.err, &cos_result);
-    result->val  = mod.val * cos_result.val;
-    result->err  = fabs(mod.val * cos_result.err) + fabs(cos_result.val * mod.err);
-    result->err += GSL_DBL_EPSILON * fabs(result->val);
-    return GSL_ERROR_SELECT_2(stat_mp, stat_cos);
+    const double t = -x;
+    if(x <= -AIRY_OSC_ASYM_MIN)
+      return airy_osc_asymp(t, 0, 0, &result->val, &result->err);
+    else
+      return airy_osc_maclaurin(t, 0, 0, &result->val, &result->err);
   }
   else if(x <= 1.0) {
     const double z = x*x*x;
@@ -722,28 +453,11 @@ gsl_sf_airy_Ai_scaled_e(const double x, gsl_mode_t mode, gsl_sf_result * result)
   /* CHECK_POINTER(result) */
 
   if(x < -1.0) {
-    gsl_sf_result mod;
-    gsl_sf_result theta;
-    gsl_sf_result cos_result;
-    int stat_mp  = airy_mod_phase(x, mode, &mod, &theta);
-    int stat_cos;
-
-    if(theta.err >= 1.0) {
-      /* The phase is not known to better than a radian, which happens once
-       * |x| is large enough that eps*|x|^{3/2} ~ 1.  The cosine cannot be
-       * evaluated (gsl_sf_cos_e would return a value outside [-1,1], or
-       * overflow), so report zero with the whole modulus as the error.
-       * This is a genuine loss of precision, not a domain error. */
-      result->val = 0.0;
-      result->err = fabs(mod.val);
-      return GSL_ELOSS;
-    }
-
-    stat_cos = gsl_sf_cos_err_e(theta.val, theta.err, &cos_result);
-    result->val  = mod.val * cos_result.val;
-    result->err  = fabs(mod.val * cos_result.err) + fabs(cos_result.val * mod.err);
-    result->err += GSL_DBL_EPSILON * fabs(result->val);
-    return GSL_ERROR_SELECT_2(stat_mp, stat_cos);
+    const double t = -x;
+    if(x <= -AIRY_OSC_ASYM_MIN)
+      return airy_osc_asymp(t, 0, 0, &result->val, &result->err);
+    else
+      return airy_osc_maclaurin(t, 0, 0, &result->val, &result->err);
   }
   else if(x <= 1.0) {
     const double z = x*x*x;
@@ -773,25 +487,11 @@ int gsl_sf_airy_Bi_e(const double x, gsl_mode_t mode, gsl_sf_result * result)
 {
   /* CHECK_POINTER(result) */
   if(x < -1.0) {
-    gsl_sf_result mod;
-    gsl_sf_result theta;
-    gsl_sf_result sin_result;
-    int stat_mp  = airy_mod_phase(x, mode, &mod, &theta);
-    int stat_sin;
-
-    if(theta.err >= 1.0) {
-      /* see gsl_sf_airy_Ai_e: the phase is indeterminate, so the sine is
-       * meaningless and the modulus is the honest error estimate */
-      result->val = 0.0;
-      result->err = fabs(mod.val);
-      return GSL_ELOSS;
-    }
-
-    stat_sin = gsl_sf_sin_err_e(theta.val, theta.err, &sin_result);
-    result->val  = mod.val * sin_result.val;
-    result->err  = fabs(mod.val * sin_result.err) + fabs(sin_result.val * mod.err);
-    result->err += GSL_DBL_EPSILON * fabs(result->val);
-    return GSL_ERROR_SELECT_2(stat_mp, stat_sin);
+    const double t = -x;
+    if(x <= -AIRY_OSC_ASYM_MIN)
+      return airy_osc_asymp(t, 0, 1, &result->val, &result->err);
+    else
+      return airy_osc_maclaurin(t, 0, 1, &result->val, &result->err);
   }
   else if(x < 1.0) {
     const double z = x*x*x;
@@ -840,25 +540,11 @@ gsl_sf_airy_Bi_scaled_e(const double x, gsl_mode_t mode, gsl_sf_result * result)
   /* CHECK_POINTER(result) */
 
   if(x < -1.0) {
-    gsl_sf_result mod;
-    gsl_sf_result theta;
-    gsl_sf_result sin_result;
-    int stat_mp  = airy_mod_phase(x, mode, &mod, &theta);
-    int stat_sin;
-
-    if(theta.err >= 1.0) {
-      /* see gsl_sf_airy_Ai_e: the phase is indeterminate, so the sine is
-       * meaningless and the modulus is the honest error estimate */
-      result->val = 0.0;
-      result->err = fabs(mod.val);
-      return GSL_ELOSS;
-    }
-
-    stat_sin = gsl_sf_sin_err_e(theta.val, theta.err, &sin_result);
-    result->val  = mod.val * sin_result.val;
-    result->err  = fabs(mod.val * sin_result.err) + fabs(sin_result.val * mod.err);
-    result->err += GSL_DBL_EPSILON * fabs(result->val);
-    return GSL_ERROR_SELECT_2(stat_mp, stat_sin);
+    const double t = -x;
+    if(x <= -AIRY_OSC_ASYM_MIN)
+      return airy_osc_asymp(t, 0, 1, &result->val, &result->err);
+    else
+      return airy_osc_maclaurin(t, 0, 1, &result->val, &result->err);
   }
   else if(x < 1.0) {
     const double z = x*x*x;

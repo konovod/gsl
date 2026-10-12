@@ -31,8 +31,8 @@ Airy Functions
 
    For large positive :data:`x` the result underflows and
    ``GSL_EUNDRFLW`` is returned.  For :data:`x < 0` the function
-   oscillates, and once the phase can no longer be determined from a
-   double the result is set to zero with the modulus as its error and
+   oscillates, and once the phase is no longer determined to a radian the
+   result is set to zero with the modulus as its error and
    ``GSL_ELOSS`` is returned; see the note below.
 .. Domain: -infinity < x < infinity
 .. Exceptional Return Values: GSL_EUNDRFLW, GSL_ELOSS
@@ -71,16 +71,20 @@ Airy Functions
 
 .. note::
 
-   For :math:`x < 0` the accuracy of the Airy functions and their
-   derivatives is limited by the phase
-   :math:`\theta \approx (2/3)|x|^{3/2}`.  Computing it in double
-   precision leaves an absolute error of order
-   :math:`\varepsilon\,|\theta|`, so the relative error of the result
-   grows roughly like :math:`\varepsilon\,|x|^{3/2}`.  When that error
-   reaches a radian the value is no longer determined by the argument and
-   the routines return zero with the modulus (or, for a derivative, the
-   amplitude) as the error, together with ``GSL_ELOSS``.  For
-   :math:`x > 0` the accuracy is a few ulp.
+   For :math:`x < 0` the Airy functions and their derivatives are
+   evaluated from the modulus and phase, with the phase carried in
+   double-double arithmetic.  The former single-double evaluation left an
+   absolute error of order :math:`\varepsilon\,|\theta|` in the phase
+   :math:`\theta \approx (2/3)|x|^{3/2}`, so the relative error of the
+   result grew like :math:`\varepsilon\,|x|^{3/2}`.  The double-double
+   phase lowers this to order :math:`\varepsilon^2\,|\theta|`, and the
+   result is accurate to a few ulp up to :math:`|x| \sim 10^{12}`.
+   Beyond that the accuracy degrades gradually, as the reported error bar
+   shows; when the phase error reaches a radian
+   (:math:`|x| \sim 10^{21}`) the value is no longer determined by the
+   argument and the routines return zero with the modulus (or, for a
+   derivative, the amplitude) as the error, together with ``GSL_ELOSS``.
+   For :math:`x > 0` the accuracy is a few ulp.
 
 
 Derivatives of Airy Functions
