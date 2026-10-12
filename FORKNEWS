@@ -6784,13 +6784,13 @@ own reported error bar, so the harness rejects the vector.
 
 `gsl_sf_sinc_e` now calls `gsl_sf_sin_pi_e(ax, ...)`, which reduces `x`
 itself and is exact for every representable `x`.  Only the rounding of
-the denominator `M_PI*ax` is left, so the result is good to a few ulp
-for all finite `x`, and it is exactly zero at the non-zero integers.
-The `ax < 0.8` Chebyshev branch and the `ax < 100` library-sin branch
-are untouched.  As a side effect `x = +-inf` is now `GSL_EDOM`, matching
-`gsl_sf_sin_pi_e` and the policy for a non-finite argument with no
-limit; the `sinc` entry in both manuals is updated (it previously
-documented no exceptional values).
+the denominator `M_PI*ax` is left, so the result is good to a few ulp for
+every large `x`, and the branch returns exact zeros at the non-zero
+integers.  The `ax < 0.8` Chebyshev branch and the `ax < 100`
+library-sin branch are untouched.  As a side effect `x = +-inf` is now
+`GSL_EDOM`, matching `gsl_sf_sin_pi_e` and the policy for a non-finite
+argument with no limit; the `sinc` entry in both manuals is updated (it
+previously documented no exceptional values).
 
 Verification.  Five vectors from mpmath at 40 digits, all `TEST_TOL0`:
 `1e8+0.5` -> `3.1830988459224123e-09`, `2^32+0.5` ->
