@@ -2984,6 +2984,10 @@ change.
 
 * **#68704 - `gsl_histogram_variance`.**  New public API; the proposed
   rename of `gsl_histogram_sigma` is a breaking change.  Out of scope.
+  **Taken later** once the filter was widened: `gsl_histogram_variance`
+  and the 2D `xvariance`/`yvariance` were added and the `sigma`
+  functions reimplemented as their square roots, without the rename
+  (commit `759862d60`).
 
 Method notes:
 

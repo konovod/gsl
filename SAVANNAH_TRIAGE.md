@@ -5,14 +5,14 @@ Generated 2026-10-02 from the `scripts/savannah_bugs.py` sweep (`inventory.tsv`)
 Scratch index, not part of the fork's record of changes. Verdicts are curated from
 `FORKNEWS`, `SAVANNAH_REVIEW.md` and the git history; every other row is un-triaged.
 
-**219 open items: 219 triaged, 0 never reviewed - 203 closed or rejected, 16 parked in the backlog below.**
+**219 open items: 219 triaged, 0 never reviewed - 204 closed or rejected, 15 parked in the backlog below.**
 
 | status | count |
 |---|---:|
-| fixed | 162 |
+| fixed | 163 |
 | partial | 0 |
 | rejected | 40 |
-| backlog | 16 |
+| backlog | 15 |
 | superseded | 1 |
 | not reviewed | 0 |
 
@@ -241,7 +241,7 @@ below; it is not counted as rejected.
 | 68611 | 2026-08-13 | feature | - | none | **fixed** - all-empty histogram raises GSL_EDOM in pdf_init (b60a47106) | Feature: guard against degenerate histogram input |
 | 68625 | 2026-08-21 | bug | Accuracy problem | none | **fixed** — hermite_func_der at n=0,1 (5d36e1999) | Bug: incorrect derivative of the Hermite function of order 0 or 1 |
 | 68663 | 2026-08-31 | feature | - | none | **fixed** — the `GAMMA_INC_A_0` alias replaced by direct `gsl_sf_expint_E1_e` calls (727a96315) | Feature: remove GAMM_INC macro in favor of direct call |
-| 68704 | 2026-09-18 | feature | - | none | **backlog** — `gsl_histogram_variance` (new API) including the breaking rename question | Feature: introduce variance of a histogram gsl_histogram_variance |
+| 68704 | 2026-09-18 | feature | - | none | **fixed** — `gsl_histogram_variance` and the 2D `xvariance`/`yvariance` added; the `sigma` functions are their square roots; no breaking rename (759862d60) | Feature: introduce variance of a histogram gsl_histogram_variance |
 
 
 ## Future work backlog
@@ -364,7 +364,6 @@ rule set aside and the widened rule admits.
 | 25320 | feat | - | Fresnel integrals, with the extension's negative-`x` sign defect corrected. |
 | 21837 | feat | - | permutation path for a zero-diagonal symmetric tridiagonal solve (new algorithm). |
 | 34361 | feat | - | `gsl_bspline_knots_greville` constrained least squares (Lawson-Hanson NNLS/LDP). |
-| 68704 | feat | - | `gsl_histogram_variance`, including the breaking rename question. |
 | 24252 | feat | source | a *correct* truncated-gamma / gamma-tail generator (the posted sampler is wrong). |
 | 50382 | build | - | NuGet packaging for Windows. |
 | 59914 | doc | - | a documented native Windows build write-up. |
