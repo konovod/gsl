@@ -5,14 +5,14 @@ Generated 2026-10-02 from the `scripts/savannah_bugs.py` sweep (`inventory.tsv`)
 Scratch index, not part of the fork's record of changes. Verdicts are curated from
 `FORKNEWS`, `SAVANNAH_REVIEW.md` and the git history; every other row is un-triaged.
 
-**219 open items: 219 triaged, 0 never reviewed — 199 closed or rejected, 20 parked in the backlog below.**
+**219 open items: 219 triaged, 0 never reviewed - 200 closed or rejected, 19 parked in the backlog below.**
 
 | status | count |
 |---|---:|
-| fixed | 158 |
+| fixed | 159 |
 | partial | 0 |
 | rejected | 40 |
-| backlog | 20 |
+| backlog | 19 |
 | superseded | 1 |
 | not reviewed | 0 |
 
@@ -82,7 +82,7 @@ below; it is not counted as rejected.
 | 42502 | 2014-06-03 | bug | Runtime error | none | **rejected** — reporter's program omits `gsl_cdf.h`, so the function is implicitly `int`; `Pinv(0.5) = 0.0` on the built DLL and is already tested | wrong results of the function gsl_cdf_ugaussian_Pinv |
 | 42830 | 2014-07-23 | bug | - | none | **fixed** - non-monotone breakpoints rejected in init_augment (74cace84f) | Bug in gsl_bspline_knot constructor |
 | 43256 | 2014-09-19 | - | Runtime error | source sixjsymbols.c | **fixed** — stable 6j by Schulten-Gordon recurrence (59fc479e2) | gsl_sf_coupling_6j overflows |
-| 43259 | 2014-09-19 | - | - | none | **backlog** — `hyperg_0F1` (5fafddc63), `exprel_2` (c2ba2e271) and `gamma_inc_Q` (18652f8c1) fixed; clausen/zeta/eta already fixed; the psi_1/pochrel/ellint_P "degenerate" inputs need a fresh verdict (residual defect below) | accuracy problems in specfunc |
+| 43259 | 2014-09-19 | - | - | none | **fixed** — `hyperg_0F1` (5fafddc63), `exprel_2` (c2ba2e271), `gamma_inc_Q` (18652f8c1), `pochrel` (e96143012) and `ellint_P` (1bbdc4315) fixed; clausen/zeta/eta already fixed; the psi_1 arguments are poles | accuracy problems in specfunc |
 | 43326 | 2014-09-29 | bug | Runtime error | clean bug43326.diff | **fixed** — poisson_pdf at mu=0 (4f9f4f4fc) | Bug in gsl_ran_poisson_pdf() for mu = 0.0 |
 | 43496 | 2014-10-29 | bug | Runtime error | none | **fixed** — Brent parabolic-step test (c27559ec6) | Possible error in brent minimizer convergence criteria |
 | 43809 | 2014-12-12 | bug | Runtime error | source gsl_hyperg.c | **fixed** — direct series for `a < 0`, large `x` (52505315d) | bug in gsl_sf_hyperg_1F1 |
@@ -353,7 +353,6 @@ test-only, but the library defect it exposed was later fixed (75fcaf1b3).
 
 | # | kind | what remains |
 |---|---|---|
-| 43259 | assess | re-verdict the `pochrel` and `ellint_P` inputs dismissed as "degenerate"; they may be a genuine limitation rather than evaluation on a pole. |
 
 ### Wanted work, no defect
 

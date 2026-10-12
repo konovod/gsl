@@ -2154,8 +2154,8 @@ was re-derived here.
 | `exprel_2` | rel err `8.9e-14`, reported `4.4e-16` | mpmath | **fixed** (c2ba2e271) |
 | `gamma_inc_Q` | rel err `1.6e-5` | `6.3191220136968329e-11` | **fixed** (18652f8c1) |
 | `hyperg_0F1` x3 | `1.15e198`, `1.14e168`, `2.23e157` | `1`, `2`, `1.7893298094111404e34` | **fixed** (5fafddc63) |
-| `pochrel` x3 | `~203`, `~208`, `~133` | `a ~ -1e89` sits on a `Gamma` pole | degenerate |
-| `ellint_P` | `4.148e-119` | `n ~ 1.3e251` puts a pole in `(0,phi]` | degenerate |
+| `pochrel` x3 | `~203`, `~208`, `~133` | `-1/x` = `-4.52e159`, `-9.28e7`, `+2.70e205` | **fixed** (e96143012) |
+| `ellint_P` | `4.148e-119` (`= phi`) | `4.3573030916e-126` (mpmath Carlson) | **fixed** (1bbdc4315) |
 
 The `hyperg_0F1` failure is the instructive one: for `c < 1` the code
 used `sin(pi(1-c))`, and with `c ~ 1e-215`, `1-c` rounds to `1`, so
@@ -2169,6 +2169,29 @@ and both now use the cancellation-free series when appropriate.
 A 475-point `gamma_inc_Q` grid (`a` 1e-1..1e-19, `x` 1e0..1e-24) has no
 point worse than before with the new branch threshold `a|log x| < 0.1`,
 and `P + Q = 1` is still exact in its window.
+
+Re-verdict of the two "degenerate" rows, 2026-10-12.  Both were the
+review's own error and are now fixed.
+
+**`pochrel`.**  Every double with `|a| >= 2^52` is an exact integer, so
+`a` is a pole of `Gamma`, `(a)_x = 0` (as `gsl_sf_poch` returns and the
+manual documents) and `pochrel = -1/x` exactly - the inputs are not
+"evaluated at a singularity" in any sense that makes the value
+undefined.  `pochrel_smallx` reflected with `tan(pi*(1-a-x))`, which
+loses the fraction of `a` above `|a| ~ 1e15`, so it returned `ln|a|`
+instead.  Reduced with the exact fraction (`-tan(pi*(frac(a)+x))`), the
+branch is exact for integer `a` and ~1e-16 for the non-pole band; see
+e96143012 and its FORKNEWS entry.
+
+**`ellint_P`.**  There is no pole: GSL defines `Pi` with `(1 + n sin^2)`
+in the denominator, so `n = +1.3e251` is finite (the note conflated it
+with the Cauchy-principal-value `n < 0` case of #53451).  The value is
+`4.3573030916e-126`; the routine returned `phi` because `sin^3(phi)`
+underflowed while the `RJ` term was still significant, a real defect.
+A convergent small-`phi` series and a gap-free grouping now give full
+double precision for `sin^2(phi) <= 0.9`; near `phi = pi/2` with huge
+`n` it falls back to the grouped formula with an honest error bar.  See
+1bbdc4315 and its FORKNEWS entry.
 
 ### #68283 - gsl_rstat_skew/kurtosis "correction" - rejected
 
