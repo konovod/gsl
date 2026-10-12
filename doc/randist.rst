@@ -734,6 +734,19 @@ The Gamma Distribution
 
    .. image:: /images/rand-gamma.png
 
+.. function:: double gsl_ran_erlang (const gsl_rng * r, double a, double n)
+              double gsl_ran_erlang_pdf (double x, double a, double n)
+
+   These functions return a random variate from, and compute the
+   probability density of, the Erlang distribution with scale :data:`a`
+   and shape :data:`n`,
+
+   .. math:: p(x) dx = {x^{n-1} e^{-x/a} \over a^n \Gamma(n)} dx
+
+   for :math:`x > 0`.  This is the gamma distribution with shape
+   :math:`n` and scale :math:`a`; note the reversed argument order
+   relative to :func:`gsl_ran_gamma`.
+
 .. function:: double gsl_cdf_gamma_P (double x, double a, double b)
               double gsl_cdf_gamma_Q (double x, double a, double b)
               double gsl_cdf_gamma_Pinv (double P, double a, double b)
@@ -1475,6 +1488,11 @@ The Poisson Distribution
    given above.
 
    .. image:: /images/rand-poisson.png
+
+.. function:: void gsl_ran_poisson_array (const gsl_rng * r, size_t n, unsigned int array[], double mu)
+
+   This function fills the array :data:`array` of length :data:`n` with
+   random integers from the Poisson distribution with mean :data:`mu`.
 
 .. function:: double gsl_cdf_poisson_P (unsigned int k, double mu)
               double gsl_cdf_poisson_Q (unsigned int k, double mu)

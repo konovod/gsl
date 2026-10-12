@@ -227,6 +227,28 @@ This function sets the error stream to @var{new_stream} and returns the
 previous stream.  The default error stream is @code{stderr}.
 @end deftypefun
 
+The library also provides a general messaging service for client code.
+
+@defmac GSL_MESSAGE (message, mask)
+This macro writes @var{message} to the error stream if the given
+@var{mask} shares any bits with @code{gsl_message_mask}.  It expands to a
+call to @code{gsl_message} that supplies @code{__FILE__} and
+@code{__LINE__}; defining @code{GSL_MESSAGING_OFF} removes the calls
+entirely at compile time.
+@end defmac
+
+@deftypevar {unsigned int} gsl_message_mask
+This variable selects which messages are enabled.  The default is to allow
+all messages; the enumerations @code{GSL_MESSAGE_MASK_A} through
+@code{GSL_MESSAGE_MASK_H} provide individual bits for client use.
+@end deftypevar
+
+@deftypefun void gsl_message (const char * @var{message}, const char * @var{file}, int @var{line}, unsigned int @var{mask})
+This function writes @var{message}, annotated with the source @var{file}
+and @var{line}, to the error stream if @var{mask} shares any bits with
+@code{gsl_message_mask}.
+@end deftypefun
+
 The error behavior can be changed for specific applications by
 recompiling the library with a customized definition of the
 @code{GSL_ERROR} macro in the file @file{gsl_errno.h}.

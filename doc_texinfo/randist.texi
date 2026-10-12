@@ -977,6 +977,30 @@ formula given above.
 \centerline{\input rand-gamma.tex}
 @end tex
 
+@deftypefun double gsl_ran_erlang (const gsl_rng * @var{r}, double @var{a}, double @var{n})
+@deftypefunx double gsl_ran_erlang_pdf (double @var{x}, double @var{a}, double @var{n})
+These functions return a random variate from, and compute the probability
+density of, the Erlang distribution with scale @var{a} and shape @var{n},
+@tex
+\beforedisplay
+$$
+p(x) dx = {x^{n-1} e^{-x/a} \over a^n \Gamma(n)} dx
+$$
+\afterdisplay
+@end tex
+@ifinfo
+
+@example
+p(x) dx = x^@{n-1@} exp(-x/a) / (a^n Gamma(n)) dx
+@end example
+
+@end ifinfo
+@noindent
+for @math{x > 0}.  This is the gamma distribution with shape @math{n} and
+scale @math{a}; note the reversed argument order relative to
+@code{gsl_ran_gamma}.
+@end deftypefun
+
 @deftypefun double gsl_cdf_gamma_P (double @var{x}, double @var{a}, double @var{b})
 @deftypefunx double gsl_cdf_gamma_Q (double @var{x}, double @var{a}, double @var{b})
 @deftypefunx double gsl_cdf_gamma_Pinv (double @var{P}, double @var{a}, double @var{b})
@@ -1928,6 +1952,11 @@ given above.
 @tex
 \centerline{\input rand-poisson.tex}
 @end tex
+
+@deftypefun void gsl_ran_poisson_array (const gsl_rng * @var{r}, size_t @var{n}, unsigned int @var{array}[], double @var{mu})
+This function fills the array @var{array} of length @var{n} with random
+integers from the Poisson distribution with mean @var{mu}.
+@end deftypefun
 
 @deftypefun double gsl_cdf_poisson_P (unsigned int @var{k}, double @var{mu})
 @deftypefunx double gsl_cdf_poisson_Q (unsigned int @var{k}, double @var{mu})

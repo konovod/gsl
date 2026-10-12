@@ -212,6 +212,29 @@ errors to a stream, which predates the error handlers described above.
    This function sets the error stream to :data:`new_stream` and returns
    the previous stream.  The default error stream is :code:`stderr`.
 
+The library also provides a general messaging service for client code.
+
+.. macro:: GSL_MESSAGE (message, mask)
+
+   This macro writes :data:`message` to the error stream if the given
+   :data:`mask` shares any bits with :data:`gsl_message_mask`.  It expands
+   to a call to :func:`gsl_message` that supplies :code:`__FILE__` and
+   :code:`__LINE__`; defining :macro:`GSL_MESSAGING_OFF` removes the calls
+   entirely at compile time.
+
+.. var:: unsigned int gsl_message_mask
+
+   This variable selects which messages are enabled.  The default is to
+   allow all messages; the enumerations
+   :macro:`GSL_MESSAGE_MASK_A` through :macro:`GSL_MESSAGE_MASK_H` provide
+   individual bits for client use.
+
+.. function:: void gsl_message (const char * message, const char * file, int line, unsigned int mask)
+
+   This function writes :data:`message`, annotated with the source
+   :data:`file` and :data:`line`, to the error stream if :data:`mask`
+   shares any bits with :data:`gsl_message_mask`.
+
 The error behavior can be changed for specific applications by
 recompiling the library with a customized definition of the
 :code:`GSL_ERROR` macro in the file :file:`gsl_errno.h`.

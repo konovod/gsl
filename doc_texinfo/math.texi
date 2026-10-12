@@ -133,6 +133,15 @@ This function returns 1 if @var{x} is a real number, and 0 if it is
 infinite or not-a-number.
 @end deftypefun
 
+@deftypefun double gsl_nan (void)
+@deftypefunx double gsl_posinf (void)
+@deftypefunx double gsl_neginf (void)
+These functions return the IEEE representations of the Not-a-Number
+symbol, positive infinity and negative infinity as runtime values, rather
+than through the compile-time macros @code{GSL_NAN}, @code{GSL_POSINF} and
+@code{GSL_NEGINF}.
+@end deftypefun
+
 
 @node Elementary Functions
 @section Elementary Functions
@@ -301,6 +310,13 @@ as @code{((a) > (b) ? (a):(b))}.
 This macro returns the minimum of @var{a} and @var{b}. It is defined as 
 @code{((a) < (b) ? (a):(b))}.
 @end defmac
+
+@deftypefun double gsl_max (double @var{a}, double @var{b})
+@deftypefunx double gsl_min (double @var{a}, double @var{b})
+These functions return the maximum and minimum of @var{a} and @var{b},
+evaluating each argument once, unlike the @code{GSL_MAX} and
+@code{GSL_MIN} macros.  They are declared in @file{gsl_minmax.h}.
+@end deftypefun
 
 @deftypefun {extern inline double} GSL_MAX_DBL (double @var{a}, double @var{b})
 This function returns the maximum of the double precision numbers

@@ -93,6 +93,15 @@ Infinities and Not-a-number
    This function returns 1 if :data:`x` is a real number, and 0 if it is
    infinite or not-a-number.
 
+.. function:: double gsl_nan (void)
+              double gsl_posinf (void)
+              double gsl_neginf (void)
+
+   These functions return the IEEE representations of the
+   Not-a-Number symbol, positive infinity and negative infinity as runtime
+   values, rather than through the compile-time macros :macro:`GSL_NAN`,
+   :macro:`GSL_POSINF` and :macro:`GSL_NEGINF`.
+
 Elementary Functions
 ====================
 
@@ -275,6 +284,14 @@ effects (such as a call to a random number generator).
 
    This macro returns the minimum of :data:`a` and :data:`b`. It is defined as 
    :code:`((a) < (b) ? (a):(b))`.
+
+.. function:: double gsl_max (double a, double b)
+              double gsl_min (double a, double b)
+
+   These functions return the maximum and minimum of :data:`a` and
+   :data:`b`, evaluating each argument once, unlike the :macro:`GSL_MAX`
+   and :macro:`GSL_MIN` macros.  They are declared in
+   :file:`gsl_minmax.h`.
 
 .. function:: extern inline double GSL_MAX_DBL (double a, double b)
 
