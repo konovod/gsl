@@ -114,6 +114,8 @@ gsl_histogram_shift (gsl_histogram * h, double shift);
 
 double gsl_histogram_sigma (const gsl_histogram * h);
 
+double gsl_histogram_variance (const gsl_histogram * h);
+
 double gsl_histogram_mean (const gsl_histogram * h);
 
 double gsl_histogram_sum (const gsl_histogram * h);

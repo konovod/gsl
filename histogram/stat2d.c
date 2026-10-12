@@ -25,6 +25,8 @@
  * gsl_histogram2d_sum sum up all bin values
  * gsl_histogram2d_xmean determine mean of x values
  * gsl_histogram2d_ymean determine mean of y values
+ * gsl_histogram2d_xvariance determine variance of x values
+ * gsl_histogram2d_yvariance determine variance of y values
  *
  * Author: Achim Gaedke Achim.Gaedke@zpr.uni-koeln.de
  * Jan. 2002
@@ -135,7 +137,7 @@ gsl_histogram2d_ymean (const gsl_histogram2d * h)
 }
 
 double
-gsl_histogram2d_xsigma (const gsl_histogram2d * h)
+gsl_histogram2d_xvariance (const gsl_histogram2d * h)
 {
   const double xmean = gsl_histogram2d_xmean (h);
   const size_t nx = h->nx;
@@ -173,14 +175,17 @@ gsl_histogram2d_xsigma (const gsl_histogram2d * h)
         }
     }
 
-  {
-    double xsigma = sqrt (wvariance);
-    return xsigma;
-  }
+  return wvariance;
 }
 
 double
-gsl_histogram2d_ysigma (const gsl_histogram2d * h)
+gsl_histogram2d_xsigma (const gsl_histogram2d * h)
+{
+  return sqrt (gsl_histogram2d_xvariance (h));
+}
+
+double
+gsl_histogram2d_yvariance (const gsl_histogram2d * h)
 {
   const double ymean = gsl_histogram2d_ymean (h);
   const size_t nx = h->nx;
@@ -217,10 +222,13 @@ gsl_histogram2d_ysigma (const gsl_histogram2d * h)
         }
     }
 
-  {
-    double ysigma = sqrt (wvariance);
-    return ysigma;
-  }
+  return wvariance;
+}
+
+double
+gsl_histogram2d_ysigma (const gsl_histogram2d * h)
+{
+  return sqrt (gsl_histogram2d_yvariance (h));
 }
 
 double

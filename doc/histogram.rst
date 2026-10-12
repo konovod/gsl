@@ -346,6 +346,14 @@ Histogram Statistics
    distribution. Negative bin values are ignored for the purposes of this
    calculation. The accuracy of the result is limited by the bin width.
 
+.. function:: double gsl_histogram_variance (const gsl_histogram * h)
+
+   This function returns the variance of the histogrammed variable, where
+   the histogram is regarded as a probability distribution. Negative bin
+   values are ignored for the purposes of this calculation. The accuracy of
+   the result is limited by the bin width. The standard deviation returned
+   by :func:`gsl_histogram_sigma` is the square root of this value.
+
 .. function:: double gsl_histogram_sum (const gsl_histogram * h)
 
    This function returns the sum of all bin values. Negative bin values
@@ -881,12 +889,28 @@ locate the bin which corresponds to a given :math:`(x,y)` coordinate.
    distribution. Negative bin values are ignored for the purposes of this
    calculation.
 
+.. function:: double gsl_histogram2d_xvariance (const gsl_histogram2d * h)
+
+   This function returns the variance of the histogrammed x variable, where
+   the histogram is regarded as a probability distribution. Negative bin
+   values are ignored for the purposes of this calculation. The standard
+   deviation returned by :func:`gsl_histogram2d_xsigma` is the square root
+   of this value.
+
 .. function:: double gsl_histogram2d_ysigma (const gsl_histogram2d * h)
 
    This function returns the standard deviation of the histogrammed
    y variable, where the histogram is regarded as a probability
    distribution. Negative bin values are ignored for the purposes of this
    calculation.
+
+.. function:: double gsl_histogram2d_yvariance (const gsl_histogram2d * h)
+
+   This function returns the variance of the histogrammed y variable, where
+   the histogram is regarded as a probability distribution. Negative bin
+   values are ignored for the purposes of this calculation. The standard
+   deviation returned by :func:`gsl_histogram2d_ysigma` is the square root
+   of this value.
 
 .. function:: double gsl_histogram2d_cov (const gsl_histogram2d * h)
 

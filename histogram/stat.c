@@ -21,8 +21,9 @@
  * Routines for statisticalcomputations on histograms. 
  * Need GSL library and header.
  * Contains the routines:
- * gsl_histogram_mean    compute histogram mean
- * gsl_histogram_sigma   compute histogram sigma
+ * gsl_histogram_mean     compute histogram mean
+ * gsl_histogram_variance compute histogram variance
+ * gsl_histogram_sigma    compute histogram sigma
  *
  * Author: S. Piccardi
  * Jan. 2000
@@ -70,7 +71,7 @@ gsl_histogram_mean (const gsl_histogram * h)
 }
 
 double
-gsl_histogram_sigma (const gsl_histogram * h)
+gsl_histogram_variance (const gsl_histogram * h)
 {
   const size_t n = h->n;
   size_t i;
@@ -113,10 +114,13 @@ gsl_histogram_sigma (const gsl_histogram * h)
       }
     }
 
-  {
-    double sigma = sqrt (wvariance) ;
-    return sigma;
-  }
+  return wvariance;
+}
+
+double
+gsl_histogram_sigma (const gsl_histogram * h)
+{
+  return sqrt (gsl_histogram_variance (h));
 }
 
 

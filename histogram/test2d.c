@@ -490,6 +490,8 @@ test2d (void)
     {
       double xs = gsl_histogram2d_xsigma (h3);
       double ys = gsl_histogram2d_ysigma (h3);
+      double xv = gsl_histogram2d_xvariance (h3);
+      double yv = gsl_histogram2d_yvariance (h3);
       /* evaluate results and compare with parameters */
 
       gsl_test_abs (gsl_histogram2d_xmean (h3), xmean, 2.0/M,
@@ -500,6 +502,14 @@ test2d (void)
                     "gsl_histogram2d_xsigma histogram stdev(x)");
       gsl_test_abs (ys, ysigma, 2.0/N,
                     "gsl_histogram2d_ysigma histogram stdev(y)");
+      gsl_test_rel (xv, xs * xs, 1e-14,
+                    "gsl_histogram2d_xvariance is the square of xsigma");
+      gsl_test_rel (yv, ys * ys, 1e-14,
+                    "gsl_histogram2d_yvariance is the square of ysigma");
+      gsl_test_abs (xv, xsigma * xsigma, 2.0/M,
+                    "gsl_histogram2d_xvariance histogram variance(x)");
+      gsl_test_abs (yv, ysigma * ysigma, 2.0/N,
+                    "gsl_histogram2d_yvariance histogram variance(y)");
       gsl_test_abs (gsl_histogram2d_cov (h3) / xs / ys, correl,
                     2.0/((M < N) ? M : N),
                     "gsl_histogram2d_cov histogram covariance");

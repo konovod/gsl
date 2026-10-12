@@ -27,6 +27,42 @@
 #define N 397
 #define NR 10
 
+/* Independent weighted (population) variance of a uniform histogram
+   with n bins over [x0, x0 + n*dx], skipping non-positive bin values.
+   Used as a reference for the gsl_histogram_variance tests. */
+static double
+ref_weighted_variance (const gsl_histogram * h, size_t n, double x0, double dx)
+{
+  size_t i;
+  double W = 0.0, mean = 0.0, var = 0.0;
+
+  for (i = 0; i < n; i++)
+    {
+      double wi = h->bin[i];
+      double xi = x0 + ((double) i + 0.5) * dx;
+      if (wi > 0)
+        {
+          W += wi;
+          mean += wi * xi;
+        }
+    }
+
+  if (W == 0)
+    return 0.0;
+
+  mean /= W;
+
+  for (i = 0; i < n; i++)
+    {
+      double wi = h->bin[i];
+      double xi = x0 + ((double) i + 0.5) * dx;
+      if (wi > 0)
+        var += wi * (xi - mean) * (xi - mean);
+    }
+
+  return var / W;
+}
+
 void
 test1d (void)
 {
@@ -512,6 +548,43 @@ test1d (void)
 
     gsl_histogram_free (hh);
     fclose (f);
+  }
+
+  {
+    /* Savannah feature #68704: histogram variance.
+       A five-bin uniform histogram over [0,5] with weights {1,2,3,4,5}
+       has weighted mean 19/6 and variance 14/9. */
+    const size_t nv = 5;
+    const double w[5] = { 1.0, 2.0, 3.0, 4.0, 5.0 };
+    gsl_histogram *hv = gsl_histogram_calloc_uniform (nv, 0.0, 5.0);
+    double var, sigma;
+
+    for (i = 0; i < nv; i++)
+      gsl_histogram_accumulate (hv, ((double) i) + 0.5, w[i]);
+
+    var = gsl_histogram_variance (hv);
+    sigma = gsl_histogram_sigma (hv);
+
+    gsl_test_rel (var, 14.0 / 9.0, 1e-15,
+                  "gsl_histogram_variance returns the weighted variance");
+    gsl_test_rel (sigma, sqrt (14.0 / 9.0), 1e-15,
+                  "gsl_histogram_sigma returns the square root");
+    gsl_test_rel (sigma * sigma, var, 1e-15,
+                  "gsl_histogram_sigma and gsl_histogram_variance agree");
+    gsl_test_rel (var, ref_weighted_variance (hv, nv, 0.0, 1.0), 1e-15,
+                  "gsl_histogram_variance matches the reference");
+
+    /* Negative and zero bins are ignored, as for the mean */
+    hv->bin[2] = -1.0;
+    hv->bin[0] = 0.0;
+    gsl_test_rel (gsl_histogram_variance (hv),
+                  ref_weighted_variance (hv, nv, 0.0, 1.0), 1e-15,
+                  "gsl_histogram_variance ignores non-positive bins");
+    gsl_test_rel (gsl_histogram_sigma (hv) * gsl_histogram_sigma (hv),
+                  gsl_histogram_variance (hv), 1e-15,
+                  "gsl_histogram_sigma ignores non-positive bins");
+
+    gsl_histogram_free (hv);
   }
 
   gsl_histogram_free (h);
