@@ -3131,6 +3131,12 @@ test would be seed- and tolerance-sensitive, so none is added.
 
 ### `#25320` - Import fresnel, bugs on GSL Extension Fresnel - rejected
 
+**Update 2026-10-12.** Added later as new API once the fork's scope
+admitted new functions: `gsl_sf_fresnel_c_e` / `_c` and
+`gsl_sf_fresnel_s_e` / `_s`, odd in `x` by construction and accurate to
+`~1e-14` for moderate arguments (commit `ddeab3e2f`).  The note below
+was the earlier verdict.
+
 The report is a maintainer note to import Andrew Steiner's Fresnel
 extension, carrying Toshiro Ohsaki's observation that the extension
 returns the wrong sign for negative `x`.  The observation is right, but

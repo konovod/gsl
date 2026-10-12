@@ -5,14 +5,14 @@ Generated 2026-10-02 from the `scripts/savannah_bugs.py` sweep (`inventory.tsv`)
 Scratch index, not part of the fork's record of changes. Verdicts are curated from
 `FORKNEWS`, `SAVANNAH_REVIEW.md` and the git history; every other row is un-triaged.
 
-**219 open items: 219 triaged, 0 never reviewed - 205 closed or rejected, 14 parked in the backlog below.**
+**219 open items: 219 triaged, 0 never reviewed - 206 closed or rejected, 13 parked in the backlog below.**
 
 | status | count |
 |---|---:|
-| fixed | 164 |
+| fixed | 165 |
 | partial | 0 |
 | rejected | 40 |
-| backlog | 14 |
+| backlog | 13 |
 | superseded | 1 |
 | not reviewed | 0 |
 
@@ -31,7 +31,7 @@ below; it is not counted as rejected.
 | 21837 | 2007-12-18 | - | Runtime error | none | **fixed** — the non-cyclic tridiagonal solvers (real and complex) fall back to Gaussian elimination with partial pivoting on a zero pivot; a singular matrix still returns GSL_EZERODIV (c9c14c1c8) | gsl_linalg_solve_symm_tridiag requires positive definite matrix |
 | 24252 | 2008-09-12 | feature | - | source gamma_tail_jpl_080908.c | **backlog** — the posted truncated-gamma sampler is wrong (the `a<1` branch uses `a` instead of the tail); a correct gamma-tail generator is wanted work; see FORKNEWS | suggestion: add gamma tail distribution |
 | 24871 | 2008-11-18 | feature | - | none | **fixed** — complex exponential integrals E1(z), En(z), their exp(z)-scaled variants and Ei(z), by a port of Amos Algorithm 683 (c01e6b922, 4416fe729, ffad9c422) | suggestion, add support for E_n |
-| 25320 | 2009-01-14 | - | Accuracy problem | none | **backlog** — no Fresnel in the tree; importing it is new API/algorithm work | Import fresnel, bugs on GSL Extension Fresnel |
+| 25320 | 2009-01-14 | - | Accuracy problem | none | **fixed** — Fresnel integrals `gsl_sf_fresnel_c`/`_s` added (odd in `x`; Maclaurin series then auxiliary-function Chebyshev/asymptotic, `~1e-14` for moderate `x`), verified against mpmath (ddeab3e2f; cmake 60265a554) | Import fresnel, bugs on GSL Extension Fresnel |
 | 28267 | 2009-12-11 | - | Accuracy problem | source hyperg1F1.c | **fixed** — same defect as #43809 (52505315d); the transition region `x ~ a^2` is handled by a double-double series (135c6eb27) | poor convergence region for gsl_sf_hyperg_1F1 |
 | 29834 | 2010-05-09 | - | Runtime error | source error_cblas_v2.h | **fixed** — the cblas checking macros were factored into `CBLAS_*_IS_VALID` predicates in `cblas/error_cblas.h`, shared with `blas/blas.c`; all 54 enumerated-argument wrappers now return `GSL_EINVAL` before the value can reach `cblas_xerbla()`, with a new `blas/test.c` (7eeff969a, 8207436a4) | insufficient argument checking in blas wrapper |
 | 30324 | 2010-07-02 | - | Accuracy problem | none | **fixed** — 2F1 continued to x < -1 by the Pfaff transformations, real and conjugate (b99ec4e7c, cfe9311cd) | improve range of 2F1 |
@@ -361,7 +361,6 @@ rule set aside and the widened rule admits.
 
 | # | kind | patch | what it would add |
 |---|---|---|---|
-| 25320 | feat | - | Fresnel integrals, with the extension's negative-`x` sign defect corrected. |
 | 34361 | feat | - | `gsl_bspline_knots_greville` constrained least squares (Lawson-Hanson NNLS/LDP). |
 | 24252 | feat | source | a *correct* truncated-gamma / gamma-tail generator (the posted sampler is wrong). |
 | 50382 | build | - | NuGet packaging for Windows. |
