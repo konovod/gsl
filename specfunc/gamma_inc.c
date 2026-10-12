@@ -490,10 +490,6 @@ gamma_inc_CF(double a, double x, gsl_sf_result * result)
 }
 
 
-/* evaluate Gamma(0,x), x > 0 */
-#define GAMMA_INC_A_0(x, result) gsl_sf_expint_E1_e(x, result)
-
-
 /*-*-*-*-*-*-*-*-*-*-*-* Functions with Error Codes *-*-*-*-*-*-*-*-*-*-*-*/
 
 int
@@ -683,7 +679,7 @@ gsl_sf_gamma_inc_e(const double a, const double x, gsl_sf_result * result)
   }
   else if(a == 0.0)
   {
-    return GAMMA_INC_A_0(x, result);
+    return gsl_sf_expint_E1_e(x, result);
   }
   else if(a > 0.0)
   {
@@ -723,7 +719,7 @@ gsl_sf_gamma_inc_e(const double a, const double x, gsl_sf_result * result)
 
     gsl_sf_result g_da;
     const int stat_g_da = ( da > 0.0 ? gamma_inc_a_gt_0(da, x, &g_da)
-                                     : GAMMA_INC_A_0(x, &g_da));
+                                     : gsl_sf_expint_E1_e(x, &g_da));
 
     double alpha = da;
     double gax = g_da.val;
