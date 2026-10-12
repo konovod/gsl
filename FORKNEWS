@@ -280,6 +280,7 @@ One line per change: date | tag | description | commit(s).
   2026-10-12 | [fork]     | cmake: build the constrained least squares solver  | 7e2c7b117
   2026-10-12 | [upstream] | doc: mark the remaining deprecated Hermite aliases  | a4a1f52bc
   2026-10-12 | [upstream] | doc: document five missing specfunc families       | 9f29ff97d
+  2026-10-12 | [upstream] | rstat: scale the running moments to the data range | 743bb5bf3
 
 
 ## [upstream] rng: make the random() generators produce the documented sequences
@@ -3702,6 +3703,11 @@ test1 at `j = 1` (0 vs `NaN`) and `j = 2, 3` (kurtosis 0 vs
 -2.75/-2.333); `gsl_test_rel` treats a value against a `NaN`
 expectation as a failure.  The values quoted are reproduced from the
 built DLL and match `gsl_stats_*` exactly.
+
+The small-n guards remain rejected for that reason.  A separate defect in
+the same two functions -- the raw central moments overflowing or
+underflowing for data of extreme magnitude -- was found later and fixed;
+see the `[upstream]` entry below.
 
 Savannah bug #68283.
 
@@ -7404,4 +7410,49 @@ Files: `doc/specfunc-expint.rst`, `doc/specfunc-coupling.rst`,
 `doc/specfunc-bessel.rst`, `doc_texinfo/specfunc-expint.texi`,
 `doc_texinfo/specfunc-coupling.texi`, `doc_texinfo/specfunc-ellint.texi`,
 `doc_texinfo/specfunc-gamma.texi`, `doc_texinfo/specfunc-bessel.texi`.
+
+
+
+## [upstream] rstat: scale the running moments to the data range
+
+Commit: 743bb5bf3
+
+Savannah bug #68283 proposed returning 0 from `gsl_rstat_skew` and
+`gsl_rstat_kurtosis` unless `n > 2` / `n > 3` and `M2 > 0`.  That was
+rejected -- it would break the equivalence with `gsl_stats_skew` /
+`gsl_stats_kurtosis` that `rstat_test` asserts, and that the `[rejected]`
+entry above records -- but a different defect in the same two functions
+was real.
+
+The workspace kept the raw central moments `M_k = sum (x_i - mean_n)^k`.
+Those leave the double range whenever `(max - min)^4` is not representable,
+so for data of order `1e150` the accumulator reached inf (or 0) and both
+routines returned `NaN`, while `gsl_stats_skew` / `gsl_stats_kurtosis` --
+which normalize every deviation by the standard deviation -- return the
+correct finite values.  Kurtosis diverges first (near `|spread| ~ 1e77`),
+the skew once `|spread|^3` itself leaves the range.
+
+The moments are now stored scaled by the running range `r = max - min`,
+`M_k = sum (x_i - mean_n)^k / r^k`.  The range never decreases, so a new
+extreme only rescales the stored moments by a factor `<= 1`; the increment
+is normalized by `r` before the online update.  The scale cancels from
+`gsl_rstat_skew` / `kurtosis`, and `gsl_rstat_variance` multiplies `M2`
+back by `r^2` through the standard deviation, so an unrepresentable `r` is
+never squared.  No new field is added; only the cached `M2/M3/M4` change
+meaning (the header comment is updated).  `gsl_rstat_skew` / `kurtosis`
+now also return `GSL_NAN` explicitly for `n < 2` or `M2 == 0`, where before
+`n == 0` returned `0`.
+
+Independent reference: a `ctypes` sweep against `gsl_stats_*` from `1e-150`
+to `1e150` agrees to about `1e-14` relative, and on the built DLL the old
+code returned `NaN` at every scale beyond the window.  `rstat/test_rstat.c`
+adds `test4`, which compares both statistics at scale `1e150` and `1e-150`.
+Negative control: reverting `rstat/rstat.c` fails all four new vectors
+(`NaN` observed).  Full `ctest` 57/57 on MSVC x64.
+
+Files: `rstat/rstat.c`, `rstat/gsl_rstat.h`, `rstat/test_rstat.c`,
+`doc/rstat.rst`, `doc_texinfo/rstat.texi` (documentation commit
+1171594b0).
+
+Savannah bug #68283.
 
