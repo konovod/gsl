@@ -44,6 +44,12 @@ implementations exists as part of the CBLAS standard and can
 be obtained from Netlib.  The complete set of CBLAS functions is
 listed in an :ref:`appendix <chap_cblas>`.
 
+The high-level functions validate their arguments and report a failure
+through the GSL error handler rather than returning an undefined result.
+A dimension mismatch is reported as :macro:`GSL_EBADLEN`, a matrix that
+is required to be square as :macro:`GSL_ENOTSQR`, and an enumerated
+argument that is not one of the CBLAS values as :macro:`GSL_EINVAL`.
+
 There are three levels of BLAS operations,
 
 =========== ===============================================================

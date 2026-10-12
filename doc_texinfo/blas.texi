@@ -40,6 +40,12 @@ implementations exists as part of the @sc{cblas} standard and can
 be obtained from Netlib.  The complete set of @sc{cblas} functions is
 listed in an appendix (@pxref{GSL CBLAS Library}).
 
+The high-level functions validate their arguments and report a failure
+through the GSL error handler rather than returning an undefined result.
+A dimension mismatch is reported as @code{GSL_EBADLEN}, a matrix that is
+required to be square as @code{GSL_ENOTSQR}, and an enumerated argument
+that is not one of the CBLAS values as @code{GSL_EINVAL}.
+
 There are three levels of @sc{blas} operations,
 
 @table @b
