@@ -272,6 +272,7 @@ One line per change: date | tag | description | commit(s).
   2026-10-12 | [upstream] | blas: validate enumerated arguments                | 7eeff969a
   2026-10-12 | [upstream] | doc: document the blas argument errors             | 8207436a4
   2026-10-12 | [fork]     | cmake: build the blas argument-checking test       | ff38bc937
+  2026-10-12 | [upstream] | histogram: add the variance functions              | 759862d60
 
 
 ## [upstream] rng: make the random() generators produce the documented sequences
@@ -7113,6 +7114,46 @@ Files: `blas/blas.c`, `blas/test.c`, `blas/Makefile.am`,
 `cblas/error_cblas.h`, `doc/blas.rst`, `doc_texinfo/blas.texi`.
 
 Savannah bug #29834.
+
+
+
+
+## [upstream] histogram: add the variance functions
+
+Commit: 759862d60
+
+Savannah bug #68704 asks for the variance of a histogram in addition to
+the standard deviation that `gsl_histogram_sigma()` already provides,
+because parameter estimation often needs the variance.  The variance is
+the value the existing two-pass weighted loop has already computed, so
+it is exposed directly:
+
+  * `gsl_histogram_variance()`,
+  * `gsl_histogram2d_xvariance()` and `gsl_histogram2d_yvariance()`.
+
+`gsl_histogram_sigma()`, `gsl_histogram2d_xsigma()` and
+`gsl_histogram2d_ysigma()` are now their square roots, so the two cannot
+drift apart.  Non-positive bin values are ignored, as for the mean.
+
+The report also proposes renaming `gsl_histogram_sigma()` to
+`gsl_histogram_variance()`.  That is a breaking change to a documented
+name, and unnecessary once both are provided, so the existing name is
+kept.
+
+Negative control: with `gsl_histogram_variance()` returning the square
+root (the old sigma), `histogram.test` fails four new vectors
+(`1.24721912892464704` observed against `1.55555555555555558`).  The 1D
+test checks the variance against an independent weighted computation on
+a known five-bin distribution and the treatment of zero and negative
+bins; the 2D test checks `xvariance == xsigma^2` and the same for `y` on
+the bivariate normal histogram.  Full `ctest` 57/57 on MSVC x64.
+
+Files: `histogram/stat.c`, `histogram/stat2d.c`,
+`histogram/gsl_histogram.h`, `histogram/gsl_histogram2d.h`,
+`histogram/test1d.c`, `histogram/test2d.c`, `doc/histogram.rst`,
+`doc_texinfo/histogram.texi`.
+
+Savannah bug #68704.
 
 
 
