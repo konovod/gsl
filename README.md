@@ -16,7 +16,8 @@ It is even done not with a top-tier model (most of code written with deepseek-4.
 
 - CMake support to build it in a modern way on all supported platform (Windows/Linux/macOS)
 - Github Actions to actually test in on all supported platforms
-- Right now i'm going to fix open issues of GSL bug tracker. 151/219 currently fixed, 28 in backlog.
+- Fixed open issues of GSL bug tracker. 166/219 currently fixed.
+- Fixed all warnings so it compiles on `-Wall -Wextra -Werror` on GCC\Clang and `/W3 /WX` on MSVC
 
 ## What to look
 
