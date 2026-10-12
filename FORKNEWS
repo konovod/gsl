@@ -287,6 +287,7 @@ One line per change: date | tag | description | commit(s).
   2026-10-12 | [upstream] | rstat: scale the running moments to the data range | 743bb5bf3
   2026-10-12 | [upstream] | randist: add the gamma tail distribution       | 47b9126ec
   2026-10-12 | [upstream] | misc: warning-clean library/tools, -Wall -Wextra | 32bed6609
+  2026-10-12 | [upstream] | specfunc: sin_pi/cos_pi long->double conversion | e33282546
   2026-10-12 | [fork]     | cmake: strict warning profile + CI job          | 7e89cac61
 
 
@@ -7725,4 +7726,31 @@ new `strict-warnings` job builds the library and tools on Linux with
 `GSL_WARNINGS_AS_ERRORS=ON` under both GCC and Clang, so a warning cannot
 regress.  Files: `CMakeLists.txt`, `.github/workflows/cmake.yml`,
 `CMake.md`.
+
+
+## [upstream] specfunc: avoid a long->double conversion in sin_pi/cos_pi
+
+Commit: e33282546
+
+A follow-up to the warning-clean change above.  The argument reduction in
+`gsl_sf_sin_pi_e` and `gsl_sf_cos_pi_e` chose between a direct cast of the
+integer part and a modulo-2 reduction with
+
+    q = (long) ( ( (intx >= LONG_MIN) && (intx <= LONG_MAX) ) ? intx : fmod(intx, 2.0) );
+
+On LP64 platforms `LONG_MAX` is not representable as a `double` (it rounds
+up to `2^63`), so the comparison relies on an implicit `long -> double`
+conversion that changes the value.  Clang 16 and later diagnose this with
+`-Wimplicit-const-int-float-conversion`, which the strict warning profile
+promotes to an error; the earlier GCC and Clang 15 checks did not see it.
+
+Only the parity of `q` is used, and the guard above ensures `|intx| < 2^53`,
+so `fmod` is exact and the range test is unnecessary.  The line is now
+
+    q = (long) fmod(intx, 2.0);
+
+Verified equivalent to the original for both 32-bit and 64-bit `long` over
+ten million values including the range boundaries; `ctest` passes 57/57 on
+MSVC and the library is clean under GCC 15 and Clang 15 with
+`-Wimplicit-const-int-float-conversion` forced on.
 
