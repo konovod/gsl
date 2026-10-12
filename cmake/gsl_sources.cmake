@@ -347,6 +347,7 @@ set(GSL_SOURCES
     linalg/qrc.c
     linalg/qrpt.c
     linalg/qr_ud.c
+    linalg/lsi.c
     linalg/qr_ur.c
     linalg/qr_uu.c
     linalg/qr_uz.c
