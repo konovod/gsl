@@ -2297,6 +2297,12 @@ Files: `eigen/symm.c`, `eigen/symmv.c`, `eigen/test.c`,
 
 ### `#21837` - `solve_symm_tridiag` on a zero diagonal - documented, request rejected
 
+**Update 2026-10-12.** The permutation path was taken later, once the
+fork's scope admitted new algorithms: `gsl_linalg_solve_symm_tridiag`
+(and `_tridiag`, real and complex) now fall back to Gaussian elimination
+with partial pivoting on a zero pivot, and the reporter's example
+solves (commit `c9c14c1c8`).  The note below was the earlier verdict.
+
 Reproduced the report with a returning handler: the zero-diagonal
 example returns `GSL_EZERODIV` (12), not a solution.  The maintainer's
 2007 reply stands: a solution needs a permutation (`slatec/dgtsl.f`),

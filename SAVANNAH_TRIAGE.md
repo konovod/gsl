@@ -5,14 +5,14 @@ Generated 2026-10-02 from the `scripts/savannah_bugs.py` sweep (`inventory.tsv`)
 Scratch index, not part of the fork's record of changes. Verdicts are curated from
 `FORKNEWS`, `SAVANNAH_REVIEW.md` and the git history; every other row is un-triaged.
 
-**219 open items: 219 triaged, 0 never reviewed - 204 closed or rejected, 15 parked in the backlog below.**
+**219 open items: 219 triaged, 0 never reviewed - 205 closed or rejected, 14 parked in the backlog below.**
 
 | status | count |
 |---|---:|
-| fixed | 163 |
+| fixed | 164 |
 | partial | 0 |
 | rejected | 40 |
-| backlog | 15 |
+| backlog | 14 |
 | superseded | 1 |
 | not reviewed | 0 |
 
@@ -28,7 +28,7 @@ below; it is not counted as rejected.
 | 21833 | 2007-12-18 | - | Performance | none | **fixed** — the selection loop scans backward from the suffix (c382ed86e); the alleged quadratic behaviour is amortised O(1) per permutation and the 8! walk in `permutation/test.c` covers it | suboptimal performance of gsl permutation? |
 | 21835 | 2007-12-18 | - | Accuracy problem | clean test_hyperg.diff +1 | **fixed** — non-positive-integer termination for `x >= 1` fixed (2aa89bae8); the integer `c-a-b` near `x = 1` case now uses the [A&S 15.3.10/11/12] limits with conditioning guards, and the `d < 0` shift pole is repaired (39e4204eb) | gsl_sf_hyperg_2F1 problematic arguments |
 | 21836 | 2007-12-18 | - | Accuracy problem | none | **fixed** — Q returns exact complement of P in the series window (6f23a4cb5) | gamma_inc_P and gamma_inc_Q only satisfy P+Q=1 within errors |
-| 21837 | 2007-12-18 | - | Runtime error | none | **backlog** — docs corrected (9418afa5f); a zero-diagonal permutation path is new algorithm work | gsl_linalg_solve_symm_tridiag requires positive definite matrix |
+| 21837 | 2007-12-18 | - | Runtime error | none | **fixed** — the non-cyclic tridiagonal solvers (real and complex) fall back to Gaussian elimination with partial pivoting on a zero pivot; a singular matrix still returns GSL_EZERODIV (c9c14c1c8) | gsl_linalg_solve_symm_tridiag requires positive definite matrix |
 | 24252 | 2008-09-12 | feature | - | source gamma_tail_jpl_080908.c | **backlog** — the posted truncated-gamma sampler is wrong (the `a<1` branch uses `a` instead of the tail); a correct gamma-tail generator is wanted work; see FORKNEWS | suggestion: add gamma tail distribution |
 | 24871 | 2008-11-18 | feature | - | none | **fixed** — complex exponential integrals E1(z), En(z), their exp(z)-scaled variants and Ei(z), by a port of Amos Algorithm 683 (c01e6b922, 4416fe729, ffad9c422) | suggestion, add support for E_n |
 | 25320 | 2009-01-14 | - | Accuracy problem | none | **backlog** — no Fresnel in the tree; importing it is new API/algorithm work | Import fresnel, bugs on GSL Extension Fresnel |
@@ -362,7 +362,6 @@ rule set aside and the widened rule admits.
 | # | kind | patch | what it would add |
 |---|---|---|---|
 | 25320 | feat | - | Fresnel integrals, with the extension's negative-`x` sign defect corrected. |
-| 21837 | feat | - | permutation path for a zero-diagonal symmetric tridiagonal solve (new algorithm). |
 | 34361 | feat | - | `gsl_bspline_knots_greville` constrained least squares (Lawson-Hanson NNLS/LDP). |
 | 24252 | feat | source | a *correct* truncated-gamma / gamma-tail generator (the posted sampler is wrong). |
 | 50382 | build | - | NuGet packaging for Windows. |
