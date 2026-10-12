@@ -261,6 +261,7 @@ One line per change: date | tag | description | commit(s).
 
   2026-10-12 | [upstream] | specfunc: share the pi/4 constants in trig.c   | 68af86f13
   2026-10-12 | [upstream] | specfunc: reduce gsl_sf_sinc_e in x for large arguments | 00b312f48
+  2026-10-12 | [upstream] | specfunc: double-double Airy oscillatory branch   | f8ab5e2c7
 
 
 ## [upstream] rng: make the random() generators produce the documented sequences
@@ -1375,6 +1376,60 @@ the Maclaurin series in 200-digit arithmetic.  With the fix reverted
 Files: `specfunc/airy.c`, `specfunc/airy_der.c`, `specfunc/test_airy.c`.
 
 See Savannah bugs #52359, #52570, #51000 and #66808.
+
+
+## [upstream] specfunc: double-double Airy oscillatory branch
+
+Commit: f8ab5e2c7
+
+This closes the accuracy half of Savannah bug #66808 that the entry
+above left open.  For `x < -1` the Airy functions and their derivatives
+were formed from the modulus and phase with the phase in double
+precision.  The phase is `theta ~ (2/3)|x|^{3/2}`, so its absolute
+rounding error `eps*|theta|` is the relative error of the result: about
+`2e-14` at `x = -10` (100 ulp), and the value became meaningless once
+`eps*|x|^{3/2}` reached a radian near `|x| = 3.6e10`.  A double-double
+prototype of that formula only recovered 5-10x, because the phase was
+still a single double and its representation, not the arithmetic, was
+the limit.
+
+The branch is rewritten in double-double.  For `1 < |x| < 10` the
+Maclaurin series of the Airy equation is summed in double-double
+(the cancellation loses 9 digits at `|x| = 10`); the seeds `Ai(0)`,
+`Ai'(0)`, `Bi(0)`, `Bi'(0)` are carried to double-double as well, since
+for `Bi'` the two seed contributions cancel and would otherwise cap the
+result at a few ulp.  For `|x| >= 10` the Olver asymptotic expansions
+of `Ai`, `Bi` and their derivatives (DLMF 9.7.9-9.7.12), whose
+coefficients come from the exact recurrence 9.7.2, are evaluated
+directly; the angle `zeta - pi/4` is kept in double-double and folded
+into `gsl_sf_cos_e`/`sin_e` of the high word with the low word as a
+first-order correction, so no argument reduction is duplicated.  The
+`x < -1` branch no longer uses the SLATEC modulus/phase tables
+(`am21`, `ath1`, `am22`, `ath2`) nor the derivative tables
+(`an20/21/22`, `aph0/1/2`); they are removed.  The double-double
+helpers live in `specfunc/airy_dd.h`, the shared branch in
+`specfunc/airy_osc.h`, both included as fragments.
+
+The result is accurate to a few ulp up to `|x| ~ 1e12`; past that the
+phase error grows as `eps^2*|zeta|` (about `1e-11` relative at
+`|x| = 1e15`, `1e-6` at `1e18`, `5e-4` at `1e20`) and the reported
+error bar follows it.  `GSL_ELOSS` now starts near `|x| = 1e21` rather
+than `3.6e10`.  The Dekker split product overflows above `2^996`, so
+arguments past `1e150` take the loss path before the product.
+
+Verification: the new vectors in `specfunc/test_airy.c` use 200-digit
+Maclaurin references and `TEST_TOL0` over the integers `-1..-20` and up
+to `|x| = 1e8`, with explicit tolerances for the larger arguments where
+the phase error shows.  With the library change reverted
+`specfunc_test` reports 70 failures, all in the new vectors.  A sweep
+of 320 points against mpmath found no value outside its reported error
+bar.  Full `ctest` is 56/56 on MSVC.
+
+Files: `specfunc/airy.c`, `specfunc/airy_der.c`, `specfunc/airy_dd.h`,
+`specfunc/airy_osc.h`, `specfunc/test_airy.c`, `specfunc/Makefile.am`,
+`doc/specfunc-airy.rst`.
+
+Savannah bug #66808.
 
 
 ## [upstream] specfunc: propagate the Olver argument error in Bessel
