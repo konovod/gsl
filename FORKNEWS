@@ -266,6 +266,9 @@ One line per change: date | tag | description | commit(s).
 
   2026-10-12 | [upstream] | linalg: unify the Cholesky inverse Hilbert tolerances | c37162f56
 
+  2026-10-12 | [upstream] | specfunc: pochrel reflection for large negative a | e96143012
+  2026-10-12 | [upstream] | specfunc: large-n series for gsl_sf_ellint_P      | 1bbdc4315
+
 
 ## [upstream] rng: make the random() generators produce the documented sequences
 
@@ -3691,31 +3694,115 @@ review.
 Savannah bug #67494.
 
 
+## [upstream] specfunc: pochrel reflection for large negative a
+
+Commit: e96143012
+
+`gsl_sf_pochrel_e(a,x)` computes `((a)_x - 1)/x`.  When `a` is a
+non-positive integer it is a pole of `Gamma`, so `(a)_x = 0` (the
+limiting value `gsl_sf_poch` documents and returns) and the function
+value is exactly `-1/x`.  Every double with `|a| >= 2^52` is an integer,
+so the whole far tail of the domain is this case.
+
+`pochrel_smallx` instead evaluated the reflection with `tan(M_PI*b)`,
+`b = 1-a-x`.  Above `|a| ~ 1e15` the product `M_PI*b` no longer carries
+the fractional part of `a`, so `tan` was noise and the returned value
+was the asymptotic-series branch `psi(a) ~ ln|a|`.  The three reported
+inputs (`a ~ -1.45e89`, `-3.26e65`, `-4.88e58`) returned 203.28,
+208.11 and 132.79 where the values are `-1/x` = -4.5236979361e159,
+-9.2796405833e7 and +2.6955522136e205, each with an error bar 10-15
+orders too small.  The defect is not confined to huge `a`:
+`pochrel(-3, 1e-30)` returned -6.41e14 instead of -1e30, and even
+`pochrel(-10, 1e-8)` was off by 2.1 with an error bar 8 orders too
+small.
+
+Writing `a = floor(a) + frac(a)`,
+
+    tan(M_PI*b) = tan(M_PI*(1 - a - x)) = -tan(M_PI*(frac(a) + x))
+
+so the reduction uses `frac(a)` (exact for every double) and keeps the
+small `x` separate from it.  The integer-`a` cases have `frac(a) = 0`
+and return `-1/x` directly.  On a reference grid the reflection branch
+drops from a relative error of 0.03 at `a = -1e15 + 0.5` (4e-3 at
+`a = -1e6`) to ~1e-16, including the non-pole band
+`1e15 < |a| < 2^52`.
+
+Files: `specfunc/poch.c`, six vectors in `specfunc/test_gamma.c`, and a
+note in `doc/specfunc-gamma.rst` / `doc_texinfo/specfunc-gamma.texi`.
+
+Negative control: with the original `tan(M_PI*b)`, the six vectors in
+`specfunc_test` fail (e.g. `obtained: 2.0328064268471965e+02` against
+`-4.5236979360955165e+159`).
+
+Savannah bug #43259.
+
+
+## [upstream] specfunc: large-n series for gsl_sf_ellint_P
+
+Commit: 1bbdc4315
+
+Carlson's formula (4.3) [Carlson, Numer. Math. 33 (1979) 1] evaluates
+`Pi(phi,k,n)` as `sin(phi) RF - (n/3) sin^3(phi) RJ`.  For
+`q = n sin^2(phi)` large the two terms are each `~ sin(phi) RF` and the
+difference is the small `Pi`, and `sin^3(phi)` underflows to zero, so
+the routine returned the first term alone.  The reported input
+(`phi = 4.15e-119`, `n = 1.30e251`) returned `phi` = 4.15e-119 with a
+reported error of 1.8e-134, where the value is 4.3573030916e-126: the
+`ellint_P` row of the report is a real arithmetic defect, not a pole.
+
+The earlier note here claimed a pole of the integrand in `(0,phi]`.
+That is wrong: GSL's definition is `Int dt / ((1 + n sin^2 t) ...)`, so
+`n > 0` never introduces a pole, and `n = +1.30e251` is a perfectly
+finite input.
+
+The routine now groups the terms as `sin(phi) * (RF - (q/3) RJ)` so
+`sin^3(phi)` cannot underflow before it meets the large `RJ` factor, and
+for `n > 0`, `q >= 1` uses a convergent expansion in powers of
+`sin^2(phi)`.  The expansion comes from `u = sin(t)/sin(phi)`:
+
+    Pi(phi,k,n) = sin(phi) sum_{m>=0} M_m(q) P_m(k^2) sin^{2m}(phi),
+
+    M_m(q) = int_0^1 u^{2m}/(1+q u^2) du,  M_0 = atan(sqrt q)/sqrt q,
+    M_m    = (1/(2m-1) - M_{m-1})/q,
+    P_m(k^2) = sum_j a_{m-j} a_j k^{2j},   a_j = (2j-1)!!/(2j)!!.
+
+Every term is positive, so the sum carries no cancellation.  The
+reported input needs one term; the branch is used only while the terms
+still decay to double precision within 512 terms, otherwise the grouped
+Carlson form is used with an error bar that includes the cancellation.
+
+Verified against mpmath's `elliprf`/`elliprj` at 60 digits over a grid
+of `(phi,k,n)` (relative error ~1e-16 where the series converges, which
+includes every case with `sin^2(phi) <= 0.9`).  `phi` near `pi/2` with
+huge `n` is not covered and falls back to the grouped form with the
+larger, honest error bar - still far better than the returned `phi`.
+
+Files: `specfunc/ellint.c`, three vectors in `specfunc/test_sf.c`.
+
+Negative control: with the original formula the reported input returns
+4.1482603293727604e-119 and both further vectors fail.
+
+Savannah bug #43259.
+
+
 ## [rejected] specfunc: the remainder of the "accuracy problems" report
 
-Partly applied (see the Group K entry); the remaining items of Savannah
-bug #43259 are not acted on.
+Originally recorded when only `hyperg_0F1`, `exprel_2` and `gamma_inc_Q`
+were fixed (see the Group K entry).  The `pochrel` and `ellint_P` rows
+were later re-examined and both are real defects, not "degenerate"
+inputs; they are now fixed (e96143012, 1bbdc4315, above).  What stays
+rejected:
 
 The report lists fifteen inputs across nine functions with "estimated"
 and "actual" absolute errors.  In most rows the reported "actual error"
 equals the magnitude of the GSL value, i.e. the reporter's reference
-had underflowed to zero, so the figures are not evidence.  Re-derived
-against mpmath at 50-60 digits on the current build:
+had underflowed to zero, so the figures are not evidence.
 
 * `clausen` (2 cases), `zeta`, `eta`: already accurate to a few ulp;
   the errors were fixed by the exact angle reduction (commit
   5639c380f).
 * `psi_1` (2 cases): now `GSL_EDOM`; the arguments are negative even
   integers, i.e. poles, so no finite value is expected.
-* `pochrel` (3 cases): the `a` are around -1e89, where `Gamma(a)` has a
-  pole in double precision; `a` is an integer as far as a `double` can
-  tell, and the function is evaluated essentially at a singularity.
-* `ellint_P`: `n ~ 1.3e251` puts a pole of the integrand inside
-  `(0, phi]`; the value is a principal value that the double-argument
-  routine cannot be expected to represent.
-
-The three clean defects in the report (`hyperg_0F1`, `exprel_2`,
-`gamma_inc_Q`) were fixed; the rest are degenerate or already fixed.
 
 Savannah bug #43259.
 
