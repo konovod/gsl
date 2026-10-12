@@ -281,6 +281,7 @@ One line per change: date | tag | description | commit(s).
   2026-10-12 | [upstream] | doc: mark the remaining deprecated Hermite aliases  | a4a1f52bc
   2026-10-12 | [upstream] | doc: document five missing specfunc families       | 9f29ff97d
   2026-10-12 | [upstream] | doc: bspline, cheb, min, movstat, container accessors | 533997071
+  2026-10-12 | [upstream] | doc: legacy multifit interface and more routines     | 804591106
   2026-10-12 | [upstream] | rstat: scale the running moments to the data range | 743bb5bf3
   2026-10-12 | [upstream] | randist: add the gamma tail distribution       | 47b9126ec
 
@@ -7547,4 +7548,59 @@ Files: `randist/gamma.c`, `randist/gsl_randist.h`, `randist/test.c`, both
 manuals.
 
 See Savannah bug #24252.
+
+
+## [upstream] doc: document the legacy multifit interface and more public routines
+
+Commit: 804591106
+
+Third batch from the `FORKTODO` audit.
+
+Linalg: `gsl_linalg_matmult`, `gsl_linalg_matmult_mod` and
+`gsl_linalg_exponential_ss` in a new "Matrix Multiplication" section;
+`gsl_linalg_cholesky_decomp_unit`; the multiple-right-hand-side
+`gsl_linalg_cholesky_solve_mat`/`gsl_linalg_cholesky_svx_mat`;
+`gsl_linalg_mcholesky_invert`; and `gsl_linalg_balance_columns`.
+
+Eigen: `gsl_eigen_jacobi` and `gsl_eigen_invert_jacobi`.  Both had been
+left as commented-out `@deftypefun` lines in the Texinfo mirror by the
+Sphinx conversion; they are now real entries in both trees.  They are
+`/* obsolete */` in the header but not guarded by
+`GSL_DISABLE_DEPRECATED`, so they are described as retained for backward
+compatibility, without a deprecation directive.
+
+Also documented: `gsl_stats_pvariance`;
+`gsl_multifit_wlinear_svd`/`gsl_multifit_wlinear_usvd`;
+`gsl_fft_halfcomplex_backward`, `gsl_fft_halfcomplex_radix2_transform`;
+`gsl_ieee_float_to_rep`, `gsl_ieee_double_to_rep`,
+`gsl_ieee_read_mode_string`, `gsl_ieee_set_mode`;
+`gsl_rng_print_state`; and the error-stream trio `gsl_stream_printf`,
+`gsl_set_stream_handler` and `gsl_set_stream`.
+
+NLS: a new "Legacy Interface" section documents the older
+`gsl_multifit_fsolver`, `gsl_multifit_fdfsolver` and
+`gsl_multifit_fdfridge` families together with `gsl_multifit_gradient`,
+`gsl_multifit_covar`, `gsl_multifit_covar_QRPT`,
+`gsl_multifit_test_delta` and `gsl_multifit_test_gradient`.  These are
+presented as supported API rather than deprecated, since the header does
+not guard them even though `NEWS` once described two of the names as
+deprecated.
+
+Two functions were missed by the audit itself and are documented here
+as well: `gsl_eigen_jacobi` (present only in a commented-out manual
+line, so the sweep counted it as documented) and
+`gsl_ieee_float_to_rep` (dropped by the "templated type" rule because
+its name contains the token `float`).
+
+Deliberately left undocumented as implementation detail:
+`gsl_multifit_eval_wf`, `gsl_multifit_eval_wdf`,
+`gsl_multifit_fdfsolver_dif_df` and `gsl_multifit_fdfsolver_dif_fdf`.
+
+Verification: `sphinx-build -M html doc doc/_build` exits 0; the only
+warnings in the touched files are the two pre-existing
+`Unparseable C cross-reference: 'N-1'` warnings in `doc/linalg.rst`.
+
+Files: `doc/linalg.rst`, `doc/eigen.rst`, `doc/nls.rst`,
+`doc/statistics.rst`, `doc/lls.rst`, `doc/fft.rst`, `doc/ieee754.rst`,
+`doc/rng.rst`, `doc/err.rst` and the matching `doc_texinfo/*.texi`.
 
