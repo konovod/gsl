@@ -5,14 +5,14 @@ Generated 2026-10-02 from the `scripts/savannah_bugs.py` sweep (`inventory.tsv`)
 Scratch index, not part of the fork's record of changes. Verdicts are curated from
 `FORKNEWS`, `SAVANNAH_REVIEW.md` and the git history; every other row is un-triaged.
 
-**219 open items: 219 triaged, 0 never reviewed — 193 closed or rejected, 26 parked in the backlog below.**
+**219 open items: 219 triaged, 0 never reviewed — 194 closed or rejected, 25 parked in the backlog below.**
 
 | status | count |
 |---|---:|
-| fixed | 152 |
+| fixed | 153 |
 | partial | 0 |
 | rejected | 40 |
-| backlog | 26 |
+| backlog | 25 |
 | superseded | 1 |
 | not reviewed | 0 |
 
@@ -207,7 +207,7 @@ below; it is not counted as rejected.
 | 66874 | 2025-03-05 | feature | - | source doc_bst.rst | rejected — superseded: the bst module is documented in the fork (20eda0316) | Feature: documentation for binary search trees (bst module) |
 | 66877 | 2025-03-06 | feature | Build | none | **fixed** — exact zero error at x = 0 (fe7285909) and the special-case vectors (2d6cf433c) | Feature: test cases for hyperg_0F1() |
 | 66880 | 2025-03-07 | feature | Build | clean test_hyperg_U.diff | **fixed** — U special-case vectors, with corrections (153a149d4) | Feature: test cases for function hyperg_0F1() |
-| 66886 | 2025-03-09 | feature | Build | clean specfunc_trig_.diff | **backlog** — refactor of `specfunc/trig.c`, not a bug fix; wanted but out of scope | Feature: refactoring of specfunc/trig.c |
+| 66886 | 2025-03-09 | feature | Build | clean specfunc_trig_.diff | **fixed** — the pi/4 three-term constants hoisted to file scope and shared by `gsl_sf_sin_e`, `gsl_sf_cos_e` and both angle-restriction functions; bit-for-bit identical, ctest 56/56 (68af86f13) | Feature: refactoring of specfunc/trig.c |
 | 66894 | 2025-03-11 | - | Documentation | none | **fixed** — chapter introduction notes that randist does not validate distribution parameters (dbe316d49) | Domain value checking for random number distributions |
 | 66922 | 2025-03-17 | feature | Build | clean specfunc_trig.diff | **fixed** — complex_logsin at a real zero of sin (10d64fb15) | Feature: special case for special functin logsin() |
 | 66949 | 2025-03-25 | feature | Build | source erlang.c | **fixed** — gsl_cdf_erlang_P/Q delegating to the gamma cdf (3d607fce8) | Feature: Erlang cumulative distribution |
@@ -379,7 +379,6 @@ rule set aside and the widened rule admits.
 | 68549 | feat | - | uniform argument lists across the distribution functions (breaking). |
 | 47402 | perf | - | Mathieu coefficient caching in the workspace (items 1, 2 and 4 already done). |
 | 66742 | doc | clean | GAMS classification across 177 files. |
-| 66886 | doc | clean | refactor of `specfunc/trig.c`. |
 
 ### Platform re-checks
 

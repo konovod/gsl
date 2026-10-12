@@ -1377,6 +1377,30 @@ reduction above `2^21`; `clausen(1e12)` now returns
 calls `gsl_sf_sin_e`); no new vector there yet.
 
 
+### `#66886` — refactoring of `specfunc/trig.c` — taken (refactor)
+
+A refactor request, no defect: the three-term split of pi/4 was written
+out four times in `trig.c`.  The attached `specfunc_trig_.diff` does not
+apply to the fork — it expects doxygen `@brief` comments the fork dropped,
+and it predates the `REM_PIO2_THRESHOLD` branch that `5639c380f` (#45746)
+added to both angle-restriction functions — so it was reconstructed by
+hand.
+
+`P1`, `P2`, `P3` are now file-scope constants.  The local copies in
+`gsl_sf_sin_e` and `gsl_sf_cos_e` are deleted unchanged; in the two
+`gsl_sf_angle_restrict_*_err_e` functions, whose locals were `4 *` the
+pieces (pi), the factor is spelled out (`4*y*P1`, `8*(P1+P2+P3)` for
+`TwoPi`, `8*P*` for the +/- corrections).  The factors are powers of two
+and the four literal sets round to the same three doubles, so the values
+are bit-for-bit unchanged.  The patch's incidental `1/16` name
+(`M_1_16`) and the reworded `GSL_ELOSS` message are kept.
+
+There is no regression test to add, so the control is a `%a` hex sweep of
+the four functions across the `2^21` and `1/16` boundaries (120 lines):
+before and after are identical line for line.  `ctest` 56/56 on MSVC x64.
+See `FORKNEWS` and commit `68af86f13`.
+
+
 ### `#40755` (+ `#42042`, `#37209`, `#45265`, `#52927`) - the "Group A" Bessel reports
 
 Five Bessel reports were re-examined on the current build (MSVC x64,
