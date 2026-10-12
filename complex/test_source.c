@@ -187,6 +187,29 @@ FUNCTION (test, all) ()
       i++;
     }
 
+  /* gsl_complex_sin() and gsl_complex_cos() delegate to the specfunc
+   * implementation for finite |imag| below GSL_LOG_DBL_MAX.  The guards
+   * are load-bearing: an unconditional delegation would turn a NaN
+   * imaginary part into +Inf (and invoke the error handler for a huge
+   * argument) instead of propagating it.  See Savannah bug #66862. */
+
+  {
+    TYPE (gsl_complex) snan = gsl_complex_sin (gsl_complex_rect (0.0, GSL_NAN));
+    TYPE (gsl_complex) cnan = gsl_complex_cos (gsl_complex_rect (0.0, GSL_NAN));
+    TYPE (gsl_complex) shuge = gsl_complex_sin (gsl_complex_rect (0.0, 800.0));
+
+    gsl_test (!gsl_isnan (GSL_REAL (snan)),
+              "gsl_complex_sin real part propagates NaN");
+    gsl_test (!gsl_isnan (GSL_IMAG (snan)),
+              "gsl_complex_sin imag part propagates NaN");
+    gsl_test (!gsl_isnan (GSL_REAL (cnan)),
+              "gsl_complex_cos real part propagates NaN");
+    gsl_test (!gsl_isnan (GSL_IMAG (cnan)),
+              "gsl_complex_cos imag part propagates NaN");
+    gsl_test (!gsl_isinf (GSL_IMAG (shuge)),
+              "gsl_complex_sin imag part is infinite past the overflow bound");
+  }
+
   i = 0;
 
   while (listzz[i].f)

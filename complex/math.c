@@ -46,6 +46,7 @@
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_complex.h>
 #include <gsl/gsl_complex_math.h>
+#include <gsl/gsl_sf_trig.h>
 
 /**********************************************************************
  * Complex numbers
@@ -445,6 +446,19 @@ gsl_complex_sin (gsl_complex a)
 
       GSL_SET_COMPLEX (&z, sin (R), 0.0);  
     } 
+  else if (fabs (I) < GSL_LOG_DBL_MAX)
+    {
+      /* Share the closed form with the special-function implementation,
+       * which uses a series for |I| < 1 and exp for larger |I|.  The
+       * bound on |I| keeps the complex module from ever reaching
+       * gsl_sf_complex_sin_e()'s overflow branch (which would invoke the
+       * error handler); NaN and Infinity fall through to the libm form
+       * below and propagate as before. */
+      gsl_sf_result sv, sw;
+
+      gsl_sf_complex_sin_e (R, I, &sv, &sw);
+      GSL_SET_COMPLEX (&z, sv.val, sw.val);
+    }
   else 
     {
       GSL_SET_COMPLEX (&z, sin (R) * cosh (I), cos (R) * sinh (I));
@@ -466,6 +480,15 @@ gsl_complex_cos (gsl_complex a)
 
       GSL_SET_COMPLEX (&z, cos (R), 0.0);  
     } 
+  else if (fabs (I) < GSL_LOG_DBL_MAX)
+    {
+      /* See gsl_complex_sin() for the bound on |I| and why NaN and
+       * Infinity take the libm form below. */
+      gsl_sf_result cv, cw;
+
+      gsl_sf_complex_cos_e (R, I, &cv, &cw);
+      GSL_SET_COMPLEX (&z, cv.val, cw.val);
+    }
   else 
     {
       GSL_SET_COMPLEX (&z, cos (R) * cosh (I), sin (R) * sinh (-I));
