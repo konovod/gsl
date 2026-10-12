@@ -219,7 +219,9 @@ Pochhammer Symbol
               int gsl_sf_pochrel_e (double a, double x, gsl_sf_result * result)
 
    These routines compute the relative Pochhammer symbol :math:`((a)_x - 1)/x`
-   where :math:`(a)_x = \Gamma(a + x)/\Gamma(a)`.
+   where :math:`(a)_x = \Gamma(a + x)/\Gamma(a)`.  When :math:`a` is zero or a
+   negative integer it is a pole of :math:`\Gamma` and
+   :math:`(a)_x = 0`, so the routines return :math:`-1/x`.
 .. exceptions:  GSL_EDOM
 
 Incomplete Gamma Functions

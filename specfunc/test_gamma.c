@@ -184,6 +184,20 @@ int test_gamma(void)
   TEST_SF(s,  gsl_sf_pochrel_e, (-5.5,-1.0/256.0, &r), 1.7678268037726177453, TEST_TOL1, GSL_SUCCESS);
   TEST_SF(s,  gsl_sf_pochrel_e, (-5.5,-11.0, &r), 0.09090909090939652475, TEST_TOL0, GSL_SUCCESS);
 
+  /* Savannah bug #43259: at a non-positive integer a is a pole of Gamma,
+   * so the Pochhammer ratio (a)_x = Gamma(a+x)/Gamma(a) vanishes (see
+   * gsl_sf_poch) and pochrel = -1/x.  pochrel_smallx formed tan(pi*(1-a-x)),
+   * which loses the fraction of a for |a| >~ 1e15 and returned psi(a) ~
+   * ln|a| instead.  The three large-a vectors are the reported inputs
+   * (a is an exact integer, so -1/x is exact); the last three probe the
+   * regime where only the reflection term was wrong. */
+  TEST_SF(s,  gsl_sf_pochrel_e, (-1.4528993626338482e+89, 2.2105808436518146e-160, &r), -4.5236979360955165e+159, TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s,  gsl_sf_pochrel_e, (-3.25531148722873e+65, 1.077627943696845e-08, &r), -9.2796405832746014e+7, TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s,  gsl_sf_pochrel_e, (-4.877802207118486e+58, -3.7098149869520627e-206, &r), 2.6955522135662819e+205, TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s,  gsl_sf_pochrel_e, (-3.0, 1.0e-30, &r), -1.0e+30, TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s,  gsl_sf_pochrel_e, (-1.0e+6, 1.0e-08, &r), -1.0e+8, TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s,  gsl_sf_pochrel_e, (-999999999999999.5, 1.0e-08, &r), 34.538782408894785, TEST_TOL2, GSL_SUCCESS);
+
   /* Add tests for special cases with negative arguments */
   TEST_SF(s,  gsl_sf_poch_e, (-9.0, -4.0, &r), 1.0/17160.0, TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s,  gsl_sf_poch_e, (-9.0, -3.0, &r), -1.0/1320.0, TEST_TOL0, GSL_SUCCESS);

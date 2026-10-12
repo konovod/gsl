@@ -172,7 +172,15 @@ pochrel_smallx(const double a, const double x, gsl_sf_result * result)
        */
       double sinpxx = sin(M_PI*x)/x;
       double sinpx2 = sin(0.5*M_PI*x);
-      double t1 = sinpxx/tan(M_PI*b);
+      /*
+       * The reflection needs tan(pi*b) with b = 1-a-x.  Reducing b
+       * directly is useless once |a| is large: M_PI*b loses the whole
+       * fractional part above |a| ~ 1e15, and above |a| ~ 1e16 it is
+       * entirely rounded.  Writing a = floor(a) + frac(a) and using
+       * tan(pi(1-a-x)) = -tan(pi(frac(a)+x)) keeps the fraction of a and
+       * the small x separate, so the reduction stays exact.
+       */
+      double t1 = sinpxx / -tan(M_PI*(a - floor(a) + x));
       double t2 = 2.0*sinpx2*(sinpx2/x);
       double trig  = t1 - t2;
       result->val  = dpoch1 * (1.0 + x*trig) + trig;
