@@ -280,6 +280,7 @@ One line per change: date | tag | description | commit(s).
   2026-10-12 | [fork]     | cmake: build the constrained least squares solver  | 7e2c7b117
   2026-10-12 | [upstream] | doc: mark the remaining deprecated Hermite aliases  | a4a1f52bc
   2026-10-12 | [upstream] | doc: document five missing specfunc families       | 9f29ff97d
+  2026-10-12 | [upstream] | doc: bspline, cheb, min, movstat, container accessors | 533997071
   2026-10-12 | [upstream] | rstat: scale the running moments to the data range | 743bb5bf3
 
 
@@ -7455,4 +7456,45 @@ Files: `rstat/rstat.c`, `rstat/gsl_rstat.h`, `rstat/test_rstat.c`,
 1171594b0).
 
 Savannah bug #68283.
+
+
+## [upstream] doc: document missing B-spline, Chebyshev, min, movstat and container functions
+
+Commit: 533997071
+
+The second batch from the `FORKTODO` audit.  Public routines added to the
+manuals:
+
+    gsl_bspline_breakpoint
+    gsl_bspline_find_interval
+    gsl_bspline_eval_basis
+    gsl_bspline_eval_deriv_basis
+    gsl_cheb_eval_mode, gsl_cheb_eval_mode_e
+    gsl_min_find_bracket
+    gsl_min_fminimizer_minimum
+    gsl_movstat_alloc_with_size
+    gsl_movstat_apply_accum
+    gsl_block_size, gsl_block_data
+    gsl_matrix_tricpy, gsl_matrix_transpose_tricpy
+
+`gsl_cheb_eval_mode(_e)` had been left behind by the Sphinx conversion:
+both trees still carried commented-out `@deftypefun` lines.  Those are
+now real entries.  `gsl_min_fminimizer_minimum` is documented as a
+synonym of `gsl_min_fminimizer_x_minimum`; it is only *commented*
+"Deprecated" in the header and is not inside a `GSL_DISABLE_DEPRECATED`
+block, so it is not marked deprecated in the manual.
+
+The behavioural descriptions (the flag values of
+`gsl_bspline_find_interval`, the shapes written by
+`gsl_bspline_eval_basis`/`_eval_deriv_basis`, the `CblasUnit` handling of
+the tricpy helpers, the `accum_state_size = 0` default of
+`gsl_movstat_alloc_with_size`) come from the implementations in
+`bspline/eval.c`, `bspline/bspline.c`, `matrix/copy_source.c`,
+`matrix/swap_source.c` and `movstat/apply.c`.
+
+The Texinfo mirror is updated for cheb, min and vectors.  The bspline
+chapter and the movstat chapter exist only in the Sphinx tree, so there
+is no Texinfo counterpart to change.
+
+The Sphinx manual builds with no warning in the touched files.
 
