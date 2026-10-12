@@ -3699,6 +3699,7 @@ int main(int argc, char * argv[])
   gsl_test(test_exp(),         "Exponential Functions");
   gsl_test(test_expint(),      "Exponential/Sine/Cosine Integrals");
   gsl_test(test_expint_complex(), "Complex Exponential Integrals");
+  gsl_test(test_fresnel(),     "Fresnel Integrals");
   gsl_test(test_fermidirac(),  "Fermi-Dirac Functions");
   gsl_test(test_gamma(),       "Gamma Functions");
   gsl_test(test_gegen(),       "Gegenbauer Polynomials");

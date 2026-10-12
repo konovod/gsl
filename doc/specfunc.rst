@@ -9,7 +9,7 @@ includes routines for calculating the values of Airy functions, Bessel
 functions, Clausen functions, Coulomb wave functions, Coupling
 coefficients, the Dawson function, Debye functions, Dilogarithms,
 Elliptic integrals, Jacobi elliptic functions, Error functions,
-Exponential integrals, Fermi-Dirac functions, Gamma functions,
+Exponential integrals, Fermi-Dirac functions, Fresnel integrals, Gamma functions,
 Gegenbauer functions, Hermite polynomials and functions, Hypergeometric functions, Laguerre functions,
 Legendre functions and Spherical Harmonics, the Psi (Digamma) Function,
 Synchrotron functions, Transport functions, Trigonometric functions and
@@ -179,6 +179,10 @@ Exponential Integrals
 Fermi-Dirac Function
 ====================
 .. include:: specfunc-fermi-dirac.rst
+
+Fresnel Integrals
+=================
+.. include:: specfunc-fresnel.rst
 
 Gamma and Beta Functions
 ========================

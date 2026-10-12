@@ -21,6 +21,7 @@
 #include <gsl/gsl_sf_exp.h>
 #include <gsl/gsl_sf_expint.h>
 #include <gsl/gsl_sf_fermi_dirac.h>
+#include <gsl/gsl_sf_fresnel.h>
 #include <gsl/gsl_sf_gamma.h>
 #include <gsl/gsl_sf_gegenbauer.h>
 #include <gsl/gsl_sf_hermite.h>

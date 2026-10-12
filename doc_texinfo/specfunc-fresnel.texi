@@ -1,0 +1,24 @@
+@cindex Fresnel integrals
+
+The Fresnel integrals are defined by @math{C(x) = \int_0^x \cos(\pi
+t^2/2) dt} and @math{S(x) = \int_0^x \sin(\pi t^2/2) dt}.  Both
+functions are odd, @math{C(-x) = -C(x)} and @math{S(-x) = -S(x)}.  The
+routines are declared in the header file @file{gsl_sf_fresnel.h}.
+
+@deftypefun double gsl_sf_fresnel_c (double @var{x})
+@deftypefunx int gsl_sf_fresnel_c_e (double @var{x}, gsl_sf_result * @var{result})
+These routines compute the Fresnel cosine integral @math{C(x)} for
+@var{x}.
+@end deftypefun
+
+@deftypefun double gsl_sf_fresnel_s (double @var{x})
+@deftypefunx int gsl_sf_fresnel_s_e (double @var{x}, gsl_sf_result * @var{result})
+These routines compute the Fresnel sine integral @math{S(x)} for
+@var{x}.
+@end deftypefun
+
+The values are computed in full double precision for moderate arguments.
+For large @math{|x|} the phase @math{\pi x^2/2} can no longer be
+represented exactly and the reported error grows with @math{|x|}.  An
+infinite argument returns the error @code{GSL_EDOM}, since the integrals
+have no limit there.

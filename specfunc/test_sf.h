@@ -103,6 +103,7 @@ int test_coulomb(void);
 int test_dilog(void);
 int test_elljac(void);
 int test_expint_complex(void);
+int test_fresnel(void);
 int test_gamma(void);
 int test_mathieu(void);
 int test_hermite(void);

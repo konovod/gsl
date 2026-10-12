@@ -155,6 +155,7 @@ rst_files =                            \
   specfunc-expint.rst                  \
   specfunc-exp.rst                     \
   specfunc-fermi-dirac.rst             \
+  specfunc-fresnel.rst                 \
   specfunc-gamma.rst                   \
   specfunc-gegenbauer.rst              \
   specfunc-hermite.rst                 \
