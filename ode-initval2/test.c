@@ -2023,6 +2023,9 @@ test_extreme_problems (void)
   /* initial values for each ode-solver */
   double y[MAXEQ * MAXNS];
 
+  /* Rounding scale of the initial state */
+  double yscale;
+
   size_t i, k, p;
 
   /* Number of problems to test */
@@ -2094,6 +2097,17 @@ test_extreme_problems (void)
             }
         }
 
+      /* Rounding scale of the initial state.  Once a component has
+         decayed to this level it is only round-off, so a relative
+         comparison of two independent rounding paths is meaningless. */
+
+      yscale = 0.0;
+      for (k = 0; k < sd[p]; k++)
+        {
+          if (fabs (y[k]) > yscale)
+            yscale = fabs (y[k]);
+        }
+
       /* Call each solver for the problem */
 
       for (i = 0; steppers[i] != 0; i++)
@@ -2118,11 +2132,15 @@ test_extreme_problems (void)
           {
             const double val1 = y[k];
             const double val2 = y[sd[p] * i + k];
-            gsl_test_rel (val1, val2,
-                          (GSL_MAX (err_target[0], err_target[i])),
-                          "%s/%s %s [%d]",
-                          steppers[0]->name, steppers[i]->name,
-                          probname[p], k);
+            const double err = GSL_MAX (err_target[0], err_target[i]);
+            const double rel_tol = err * GSL_MAX (fabs (val1), fabs (val2));
+            const double abs_tol = GSL_DBL_EPSILON * yscale;
+            int status = (fabs (val1 - val2) > rel_tol + abs_tol);
+
+            gsl_test (status,
+                      "%s/%s %s [%d] (%.18g observed vs %.18g expected)",
+                      steppers[0]->name, steppers[i]->name, probname[p], k,
+                      val1, val2);
           }
     }
 }
