@@ -260,6 +260,7 @@ One line per change: date | tag | description | commit(s).
   2026-10-08 | [upstream] | multifit_nlinear: floor the finite-difference fvv step | 5ed006141
 
   2026-10-12 | [upstream] | specfunc: share the pi/4 constants in trig.c   | 68af86f13
+  2026-10-12 | [upstream] | specfunc: reduce gsl_sf_sinc_e in x for large arguments | 00b312f48
 
 
 ## [upstream] rng: make the random() generators produce the documented sequences
@@ -6752,6 +6753,58 @@ identical line for line.  The full `ctest` suite is 56/56 on MSVC x64.
 Files: `specfunc/trig.c`.
 
 Savannah bug #66886.
+
+
+## [upstream] specfunc: reduce the argument of gsl_sf_sinc_e in x itself
+
+Commit: 00b312f48
+
+Savannah bug #36152 is about the asymptotics of the spherical Bessel
+functions; that half was fixed by `a08ef2f7f` and `8a46ec7cf`.  The
+residual it left was the task "add a `gsl_sf_sinc_e` large-`x` vector".
+That vector could not be added on its own: `sinc` was not actually
+fixed.
+
+`gsl_sf_sinc_e` evaluated `sin(M_PI*ax)/(M_PI*ax)` above |x| = 100.  The
+product `M_PI*ax` is rounded before it reaches `gsl_sf_sin_e`, so its
+phase is lost once the rounding of the product is a sizeable part of a
+radian: above |x| ~ 1e8 the value has only a few digits and above
+|x| ~ 1e16 it is meaningless, while the reported error stayed at a few
+`eps*|value|`.  Measured on the built library, `sinc(1e15+0.5)` was
+0.48% low with a relative error bar of 9e-16, and `sinc(1e18)` returned
+`-2.04e-19` instead of the exact zero (the pre-`8a46ec7cf` library
+returned `-1.1e-06` there).
+
+No test-only vector was possible.  The product `M_PI*ax` is exact to a
+few ulp while its quotient stays below 2^29, so every large-`x` point
+at which the current value is accurate enough to assert is one at which
+the old reduction is accurate too -- the vector would pass with the
+trig fix reverted.  Above that the current value is already outside its
+own reported error bar, so the harness rejects the vector.
+
+`gsl_sf_sinc_e` now calls `gsl_sf_sin_pi_e(ax, ...)`, which reduces `x`
+itself and is exact for every representable `x`.  Only the rounding of
+the denominator `M_PI*ax` is left, so the result is good to a few ulp
+for all finite `x`, and it is exactly zero at the non-zero integers.
+The `ax < 0.8` Chebyshev branch and the `ax < 100` library-sin branch
+are untouched.  As a side effect `x = +-inf` is now `GSL_EDOM`, matching
+`gsl_sf_sin_pi_e` and the policy for a non-finite argument with no
+limit; the `sinc` entry in both manuals is updated (it previously
+documented no exceptional values).
+
+Verification.  Five vectors from mpmath at 40 digits, all `TEST_TOL0`:
+`1e8+0.5` -> `3.1830988459224123e-09`, `2^32+0.5` ->
+`7.411229567293415e-11`, `1e15+0.5` -> `3.183098861837905e-16`, `1e18`
+-> 0 and `-1e18` -> 0.  Negative control: with the change reverted four
+of the five fail -- e.g. `sinc(1e15+0.5)` returns
+`3.0320906335466765e-16 +/- 2.7e-31` against `3.1830988618379052e-16`,
+and `sinc(1e18)` returns `-2.0424464679636576e-19` against 0.  The full
+`ctest` suite is 56/56 on MSVC x64.
+
+Files: `specfunc/trig.c`, `specfunc/test_sf.c`, `doc/specfunc-trig.rst`,
+`doc_texinfo/specfunc-trig.texi`.
+
+Savannah bug #36152.
 
 
 
