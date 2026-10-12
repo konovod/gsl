@@ -140,6 +140,16 @@ double test_gamma_mt_small (void);
 double test_gamma_mt_small_pdf (double x);
 double test_gamma_knuth_vlarge (void);
 double test_gamma_knuth_vlarge_pdf (double x);
+double test_gamma_tail (void);
+double test_gamma_tail_pdf (double x);
+double test_gamma_tail1 (void);
+double test_gamma_tail1_pdf (double x);
+double test_gamma_tail2 (void);
+double test_gamma_tail2_pdf (double x);
+double test_gamma_tail3 (void);
+double test_gamma_tail3_pdf (double x);
+void test_gamma_tail_pdf_reference (void);
+void test_gamma_tail_zero (void);
 double test_nakagami (void);
 double test_nakagami_pdf (double x);
 void test_nakagami_pdf_reference (void);
@@ -510,6 +520,25 @@ main (void)
   testMoments (FUNC (tgaussian), -3.0, 0.0, 0.5);
   testPDF (FUNC2 (tgaussian));
   test_tgaussian_pdf_reference ();
+
+  /* The gamma tail tests consume the shared stream.  The four parameter
+     sets cover the a < 1 shifted-exponential branch (with tail < a and
+     tail > a), the a > 1 rate-matched branch, plain rejection, and the
+     a = 1 memoryless case.  See Savannah bug #24252. */
+  testMoments (FUNC (gamma_tail), 0.25, 0.5, 0.3382472846603483);
+  testMoments (FUNC (gamma_tail), 0.5, 1.5, 0.4881041325535012);
+  testMoments (FUNC (gamma_tail1), 4.0, 5.0, 0.5184501300186153);
+  testMoments (FUNC (gamma_tail1), 4.5, 6.0, 0.4754125457497238);
+  testMoments (FUNC (gamma_tail2), 0.5, 1.5, 0.17934586200216707);
+  testMoments (FUNC (gamma_tail2), 1.5, 3.0, 0.39128645288820835);
+  testMoments (FUNC (gamma_tail3), 2.0, 3.0, 0.6321205588285577);
+  testMoments (FUNC (gamma_tail3), 3.0, 5.0, 0.3180923728035784);
+  testPDF (FUNC2 (gamma_tail));
+  testPDF (FUNC2 (gamma_tail1));
+  testPDF (FUNC2 (gamma_tail2));
+  testPDF (FUNC2 (gamma_tail3));
+  test_gamma_tail_pdf_reference ();
+  test_gamma_tail_zero ();
 
   test_binomial_seed ();
 
@@ -1796,6 +1825,112 @@ test_tgaussian_pdf_reference (void)
       gsl_test_rel (gsl_ran_tgaussian_pdf (x[i], a, b, sigma), y[i], 1e-12,
                     "gsl_ran_tgaussian_pdf(%g, %g, %g, %g)", x[i], a, b, sigma);
     }
+}
+
+/* The gamma tail distribution restricted to x > tail, with shape a and
+   scale b.  The four parameter sets exercise the a < 1 shifted
+   exponential with tail < a and tail > a, the a > 1 rate-matched branch,
+   plain rejection, and the a = 1 memoryless case. */
+
+double
+test_gamma_tail (void)
+{
+  return gsl_ran_gamma_tail (r_global, 0.25, 0.5, 1.0);
+}
+
+double
+test_gamma_tail_pdf (double x)
+{
+  return gsl_ran_gamma_tail_pdf (x, 0.25, 0.5, 1.0);
+}
+
+double
+test_gamma_tail1 (void)
+{
+  return gsl_ran_gamma_tail (r_global, 4.0, 2.5, 1.0);
+}
+
+double
+test_gamma_tail1_pdf (double x)
+{
+  return gsl_ran_gamma_tail_pdf (x, 4.0, 2.5, 1.0);
+}
+
+double
+test_gamma_tail2 (void)
+{
+  return gsl_ran_gamma_tail (r_global, 0.5, 3.0, 1.0);
+}
+
+double
+test_gamma_tail2_pdf (double x)
+{
+  return gsl_ran_gamma_tail_pdf (x, 0.5, 3.0, 1.0);
+}
+
+double
+test_gamma_tail3 (void)
+{
+  return gsl_ran_gamma_tail (r_global, 2.0, 1.0, 1.0);
+}
+
+double
+test_gamma_tail3_pdf (double x)
+{
+  return gsl_ran_gamma_tail_pdf (x, 2.0, 1.0, 1.0);
+}
+
+/* Independent reference values for the pdf, computed with mpmath.
+   See Savannah bug #24252. */
+
+void
+test_gamma_tail_pdf_reference (void)
+{
+  const double tail = 0.5, a = 0.8, b = 2.0;
+  const double x[5] = { 1.0, 2.0, 3.0, 5.0, 8.0 };
+  const double y[5] = { 0.438612105369212775, 0.231594037259870877,
+                        0.129527469442203017, 0.0430226986990219634,
+                        0.00873840018124102144 };
+  int i;
+
+  for (i = 0; i < 5; i++)
+    {
+      gsl_test_rel (gsl_ran_gamma_tail_pdf (x[i], tail, a, b), y[i], 1e-12,
+                    "gsl_ran_gamma_tail_pdf(%g, %g, %g, %g)", x[i], tail, a, b);
+    }
+}
+
+/* With tail <= 0 the truncation is inactive, so gsl_ran_gamma_tail must
+   return exactly what gsl_ran_gamma returns.  Two identically seeded
+   streams make the check exact. */
+
+void
+test_gamma_tail_zero (void)
+{
+  gsl_rng *r1 = gsl_rng_alloc (gsl_rng_default);
+  gsl_rng *r2 = gsl_rng_alloc (gsl_rng_default);
+  const double a = 2.5, b = 3.0;
+  int i, status = 0;
+
+  gsl_rng_set (r1, 42);
+  gsl_rng_set (r2, 42);
+
+  for (i = 0; i < 1000; i++)
+    {
+      double x = gsl_ran_gamma (r1, a, b);
+      double y = gsl_ran_gamma_tail (r2, -1.0, a, b);
+
+      if (x != y)
+        {
+          status = 1;
+          break;
+        }
+    }
+
+  gsl_test (status, "gsl_ran_gamma_tail with tail <= 0 matches gsl_ran_gamma");
+
+  gsl_rng_free (r1);
+  gsl_rng_free (r2);
 }
 
 double

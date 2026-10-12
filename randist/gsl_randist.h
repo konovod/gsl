@@ -76,6 +76,8 @@ double gsl_ran_gamma_int (const gsl_rng * r, const unsigned int a);
 double gsl_ran_gamma_pdf (const double x, const double a, const double b);
 double gsl_ran_gamma_mt (const gsl_rng * r, const double a, const double b);
 double gsl_ran_gamma_knuth (const gsl_rng * r, const double a, const double b);
+double gsl_ran_gamma_tail (const gsl_rng * r, const double tail, const double a, const double b);
+double gsl_ran_gamma_tail_pdf (const double x, const double tail, const double a, const double b);
 
 double gsl_ran_gaussian (const gsl_rng * r, const double sigma);
 double gsl_ran_gaussian_ratio_method (const gsl_rng * r, const double sigma);

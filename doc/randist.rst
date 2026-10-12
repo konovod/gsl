@@ -757,6 +757,33 @@ The Gamma Distribution
    :math:`b = 1/\lambda`.  Note that :func:`gsl_ran_erlang` takes the
    scale and the shape, in that order, as its two parameters.
 
+The Gamma Tail Distribution
+===========================
+
+.. index:: Gamma tail distribution
+
+.. function:: double gsl_ran_gamma_tail (const gsl_rng * r, double tail, double a, double b)
+
+   This function returns a random variate from the gamma distribution with
+   shape :data:`a` and scale :data:`b`, restricted to values larger than
+   :data:`tail`.  The distribution function is,
+
+   .. math:: p(x) dx = {1 \over N \, \Gamma(a) b^a} x^{a-1} e^{-x/b} dx
+
+   for :math:`x > tail`, where :math:`N` is the normalization constant,
+
+   .. math:: N = Q(a, tail/b),
+
+   the upper tail of the regularized incomplete gamma function.  With
+   :math:`tail \le 0` the truncation is inactive and the result is
+   an ordinary gamma variate.
+
+.. function:: double gsl_ran_gamma_tail_pdf (double x, double tail, double a, double b)
+
+   This function computes the probability density :math:`p(x)` at :data:`x`
+   for a gamma tail distribution with parameters :data:`tail`, :data:`a`
+   and :data:`b`, using the formula given above.
+
 |newpage|
 
 The Nakagami Distribution

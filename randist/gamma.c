@@ -227,3 +227,119 @@ gsl_ran_gamma (const gsl_rng * r, const double a, const double b)
     return b * d * v;
   }
 }
+
+/* The gamma distribution restricted to x > tail.  Writing X = b Y, the
+   unit-scale variable Y has density proportional to y^(a-1) e^(-y) on
+   y > t = tail/b.
+
+   The tail is sampled by Devroye's rejection schemes (Non-Uniform Random
+   Variate Generation, ch. IX).  For a < 1 the density is decreasing and a
+   shifted exponential proposal y = t + Exp(1) is available.  For a > 1
+   the density decreases from the truncation point only when t > a - 1,
+   and there a shifted exponential with the rate matched at t is used;
+   when the mode lies inside the support, t <= a - 1, plain rejection from
+   the untruncated gamma is used.
+
+   Both a < 1 schemes are exact, so the cheaper one is chosen: plain
+   rejection is poor deep in the tail, while the shifted exponential is
+   poor for small t.  The ratio of their acceptance probabilities is
+   e^t t^(1-a) Gamma(a) (times the common Q(a,t)), so the shifted
+   exponential takes over when its log, which is what
+   gamma_tail_log_ratio() returns, becomes positive.  Likewise the a > 1
+   branch keeps plain rejection until Q(a,t) drops below 0.2, which
+   avoids the very low acceptance of the rate-matched proposal just above
+   t = a - 1.  See Savannah bug #24252. */
+
+static double
+gamma_tail_log_ratio (const double a, const double t)
+{
+  return t + (1.0 - a) * log (t) + gsl_sf_lngamma (a);
+}
+
+double
+gsl_ran_gamma_tail (const gsl_rng * r, const double tail, const double a, const double b)
+{
+  double t, y;
+
+  if (tail <= 0.0)
+    {
+      /* the truncation is inactive: every gamma variate exceeds tail */
+      return gsl_ran_gamma (r, a, b);
+    }
+
+  t = tail / b;
+
+  if (a < 1.0)
+    {
+      if (gamma_tail_log_ratio (a, t) <= 0.0)
+        {
+          /* plain rejection, acceptance Q(a,t) */
+          do
+            {
+              y = gsl_ran_gamma (r, a, 1.0);
+            }
+          while (y < t);
+        }
+      else
+        {
+          /* shifted exponential, acceptance (t/y)^(1-a) */
+          double u, e;
+
+          do
+            {
+              u = gsl_rng_uniform_pos (r);
+              e = gsl_ran_exponential (r, 1.0);
+              y = t + e;
+            }
+          while (y * pow (u, 1.0 / (1.0 - a)) > t);
+        }
+    }
+  else if (a == 1.0)
+    {
+      /* memoryless exponential */
+      y = t + gsl_ran_exponential (r, 1.0);
+    }
+  else if (t > a - 1.0 && gsl_sf_gamma_inc_Q (a, t) < 0.2)
+    {
+      /* density decreasing on [t, inf); shifted exponential with the rate
+         1 - (a-1)/t matched at t */
+      double e, es;
+      double lambda = 1.0 - (a - 1.0) / t;
+
+      do
+        {
+          e = gsl_ran_exponential (r, 1.0);
+          es = gsl_ran_exponential (r, 1.0);
+          y = t + e / lambda;
+        }
+      while (y / t - 1.0 + log (t / y) > es / (a - 1.0));
+    }
+  else
+    {
+      /* plain rejection, acceptance Q(a,t) */
+      do
+        {
+          y = gsl_ran_gamma (r, a, 1.0);
+        }
+      while (y < t);
+    }
+
+  return b * y;
+}
+
+double
+gsl_ran_gamma_tail_pdf (const double x, const double tail, const double a, const double b)
+{
+  if (x < tail)
+    {
+      return 0.0;
+    }
+  else if (tail <= 0.0)
+    {
+      return gsl_ran_gamma_pdf (x, a, b);
+    }
+  else
+    {
+      return gsl_ran_gamma_pdf (x, a, b) / gsl_sf_gamma_inc_Q (a, tail / b);
+    }
+}

@@ -60,6 +60,7 @@ overflow.
 * The Levy alpha-Stable Distributions::  
 * The Levy skew alpha-Stable Distribution::  
 * The Gamma Distribution::      
+* The Gamma Tail Distribution::  
 * The Nakagami Distribution::  
 * The Flat (Uniform) Distribution::  
 * The Lognormal Distribution::  
@@ -1006,6 +1007,42 @@ for @math{x > 0}.  The Erlang distribution is the gamma distribution
 with an integer shape parameter, @math{a = k}, and scale
 @math{b = 1/lambda}.  Note that @code{gsl_ran_erlang} takes the scale
 and the shape, in that order, as its two parameters.
+@end deftypefun
+
+@page
+@node The Gamma Tail Distribution
+@section The Gamma Tail Distribution
+@cindex Gamma tail distribution
+
+@deftypefun double gsl_ran_gamma_tail (const gsl_rng * @var{r}, double @var{tail}, double @var{a}, double @var{b})
+This function returns a random variate from the gamma distribution with
+shape @var{a} and scale @var{b}, restricted to values larger than
+@var{tail}.  The distribution function is,
+@tex
+\beforedisplay
+$$
+p(x)\,dx = {1 \over N \, \Gamma(a) b^a} x^{a-1} e^{-x/b} dx
+$$
+\afterdisplay
+@end tex
+@ifinfo
+
+@example
+p(x) dx = 1 / (N Gamma(a) b^a) x^(a-1) exp(-x/b) dx
+@end example
+
+@end ifinfo
+@noindent
+for @math{x > tail}, where @math{N} is the normalization constant
+@math{N = Q(a, tail/b)}, the upper tail of the regularized
+incomplete gamma function.  With @math{tail <= 0} the truncation is
+inactive and the result is an ordinary gamma variate.
+@end deftypefun
+
+@deftypefun double gsl_ran_gamma_tail_pdf (double @var{x}, double @var{tail}, double @var{a}, double @var{b})
+This function computes the probability density @math{p(x)} at @var{x}
+for a gamma tail distribution with parameters @var{tail}, @var{a} and
+@var{b}, using the formula given above.
 @end deftypefun
 
 @page
