@@ -25,6 +25,7 @@ algorithms to find the maximum of a function simply invert its sign.
 * Providing the function to minimize::  
 * Minimization Iteration::      
 * Minimization Stopping Parameters::  
+* Bracketing a Minimum::        
 * Minimization Algorithms::     
 * Minimization Examples::       
 * Minimization References and Further Reading::  
@@ -226,6 +227,12 @@ This function returns the current estimate of the position of the
 minimum for the minimizer @var{s}.
 @end deftypefun
 
+@deftypefun double gsl_min_fminimizer_minimum (const gsl_min_fminimizer * @var{s})
+This function is a synonym for @code{gsl_min_fminimizer_x_minimum},
+returning the current estimate of the position of the minimum for the
+minimizer @var{s}.  It is retained for backward compatibility.
+@end deftypefun
+
 @deftypefun double gsl_min_fminimizer_x_upper (const gsl_min_fminimizer * @var{s})
 @deftypefunx double gsl_min_fminimizer_x_lower (const gsl_min_fminimizer * @var{s})
 These functions return the current upper and lower bound of the interval
@@ -307,6 +314,28 @@ $$
 @end ifinfo
 @noindent
 assuming that the true minimum @math{x_m^*} is contained within the interval.
+@end deftypefun
+
+@comment ============================================================
+
+@node Bracketing a Minimum
+@section Bracketing a Minimum
+
+@deftypefun int gsl_min_find_bracket (gsl_function * @var{f}, double * @var{x_minimum}, double * @var{f_minimum}, double * @var{x_lower}, double * @var{f_lower}, double * @var{x_upper}, double * @var{f_upper}, size_t @var{eval_max})
+This function searches outwards for an interval that brackets a local
+minimum.  On input, @var{x_lower} and @var{x_upper} must point to two
+distinct abscissae and @var{f_lower}, @var{f_upper} to the corresponding
+function values.  The function evaluates @var{f} at no more than
+@var{eval_max} further points, using golden-section steps, and on success
+returns @code{GSL_SUCCESS} with @var{x_lower}, @var{x_upper} narrowed to a
+bracket and @var{x_minimum} set to a point inside it at which the function
+value @var{f_minimum} is lower than both, so that
+@math{f(x\_lower) > f(x\_minimum) < f(x\_upper)}.  The other function
+values are returned in @var{f_lower} and @var{f_upper}.
+
+If no bracket is found within @var{eval_max} evaluations,
+@code{GSL_FAILURE} is returned and the outputs are left at the best set of
+points found so far.
 @end deftypefun
 
 @comment ============================================================

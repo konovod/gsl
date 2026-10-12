@@ -118,6 +118,15 @@ Allocation for Moving Window Statistics
    samples prior to the current sample, and :math:`J` samples after the current sample. The
    total window size is :math:`K = H + J + 1`. The size of the workspace is :math:`O(7K)`.
 
+.. function:: gsl_movstat_workspace * gsl_movstat_alloc_with_size(const size_t accum_state_size, const size_t H, const size_t J)
+
+   This function is equivalent to :func:`gsl_movstat_alloc2`, but also
+   allows the caller to set the number of bytes reserved for the
+   accumulator state, :data:`accum_state_size`.  Passing 0 selects the
+   largest size required by the built-in accumulators; a user-defined
+   accumulator should pass the size reported by its own :code:`size`
+   method.
+
 .. function:: void * gsl_movstat_free(gsl_movstat_workspace * w)
 
    This function frees the memory associated with :data:`w`.
@@ -425,6 +434,18 @@ This structure is defined as follows.
    to the input vector :data:`x`, storing the output in :data:`y`.
    The parameter :data:`endtype` specifies how windows near the ends of the input should be handled.
    It is allowed for :data:`x` = :data:`y` for an in-place moving window calculation.
+
+.. function:: int gsl_movstat_apply_accum(const gsl_movstat_end_t endtype, const gsl_vector * x, const gsl_movstat_accum * accum, void * accum_params, gsl_vector * y, gsl_vector * z, gsl_movstat_workspace * w)
+
+   This is the low-level engine behind the moving window functions.  It
+   applies the accumulator :data:`accum` to the input vector :data:`x`,
+   storing the statistic in :data:`y`, which must have the same length as
+   :data:`x`.  If :data:`z` is not a null pointer, a secondary output such
+   as the window minimum or maximum is stored there.  Optional
+   accumulator parameters are passed through :data:`accum_params`.  The
+   parameter :data:`endtype` specifies how windows near the ends of the
+   input should be handled, and it is allowed to have :data:`x` =
+   :data:`y` for an in-place calculation.
 
 .. function:: size_t gsl_movstat_fill(const gsl_movstat_end_t endtype, const gsl_vector * x, const size_t idx, const size_t H, const size_t J, double * window)
 

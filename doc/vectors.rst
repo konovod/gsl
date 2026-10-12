@@ -116,6 +116,15 @@ then it isn't necessary to check every :code:`alloc`.
    :func:`gsl_vector_alloc_from_block` share its storage and become
    invalid when the block is resized.
 
+.. function:: size_t gsl_block_size (const gsl_block * b)
+
+   This function returns the number of elements in the block :data:`b`.
+
+.. function:: double * gsl_block_data (const gsl_block * b)
+
+   This function returns a pointer to the first element of the block
+   :data:`b`, giving direct access to the underlying storage.
+
 Reading and writing blocks
 --------------------------
 
@@ -1391,6 +1400,24 @@ Copying matrices
 
    This function exchanges the elements of the matrices :data:`m1` and
    :data:`m2` by copying.  The two matrices must have the same size.
+
+.. function:: int gsl_matrix_tricpy (CBLAS_UPLO_t Uplo, CBLAS_DIAG_t Diag, gsl_matrix * dest, const gsl_matrix * src)
+
+   This function copies the triangular part of the matrix :data:`src`
+   selected by :data:`Uplo` (:code:`CblasUpper` or :code:`CblasLower`)
+   into :data:`dest`; the rest of :data:`dest` is left unchanged.  The two
+   matrices must have the same size.  The diagonal is copied only when
+   :data:`Diag` is :code:`CblasNonUnit`; with :code:`CblasUnit` the
+   diagonal of :data:`src` is assumed to be unity and is not read.
+
+.. function:: int gsl_matrix_transpose_tricpy (CBLAS_UPLO_t Uplo_src, CBLAS_DIAG_t Diag, gsl_matrix * dest, const gsl_matrix * src)
+
+   This function copies the triangle :data:`Uplo_src` of the matrix
+   :data:`src` into :data:`dest` transposed: with :code:`CblasLower` the
+   lower triangle of :data:`src` becomes the upper triangle of
+   :data:`dest`, and vice versa.  :data:`dest` must have the transposed
+   dimensions of :data:`src`.  As for :func:`gsl_matrix_tricpy`, the
+   diagonal is copied only when :data:`Diag` is :code:`CblasNonUnit`.
 
 Copying rows and columns
 ------------------------

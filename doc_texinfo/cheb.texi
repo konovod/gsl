@@ -123,14 +123,15 @@ This function evaluates a Chebyshev series @var{cs} at a given point
 estimate is made from the first neglected term in the series.
 @end deftypefun
 
-@comment @deftypefun double gsl_cheb_eval_mode (const gsl_cheb_series * @var{cs}, double @var{x}, gsl_mode_t @var{mode})
-@comment @end deftypefun
-
-@comment @deftypefun int gsl_cheb_eval_mode_err (const gsl_cheb_series * @var{cs}, const double @var{x}, gsl_mode_t @var{mode}, double * @var{result}, double * @var{abserr})
-@comment Evaluate a Chebyshev series at a given point, using the default
-@comment order for double precision mode(s) and the single precision
-@comment order for other modes.
-@comment @end deftypefun
+@deftypefun double gsl_cheb_eval_mode (const gsl_cheb_series * @var{cs}, double @var{x}, gsl_mode_t @var{mode})
+@deftypefunx int gsl_cheb_eval_mode_e (const gsl_cheb_series * @var{cs}, const double @var{x}, gsl_mode_t @var{mode}, double * @var{result}, double * @var{abserr})
+These functions evaluate the Chebyshev series @var{cs} at a given point
+@var{x} using the order appropriate to @var{mode}: the full order for
+double precision modes, and a reduced single precision order held in the
+series for the other modes.  The @code{_e} variant also returns an
+estimate of the absolute error in @var{abserr}, made from the first
+neglected term.
+@end deftypefun
 
 
 @node Derivatives and Integrals

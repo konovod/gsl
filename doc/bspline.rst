@@ -261,11 +261,35 @@ Properties of B-splines
 
    This function returns the number of breakpoints (interior knots) defined for the B-spline.
 
+.. function:: double gsl_bspline_breakpoint (const size_t i, const gsl_bspline_workspace * w)
+
+   This function returns the location of the :data:`i`-th breakpoint
+   (interior knot), that is, the :math:`(i+1)`-th interior knot of the
+   knot vector :math:`\mathbf{t}`.  If :data:`i` is not in
+   :math:`[0,\textrm{nbreak}-1]`, the function returns 0 and reports
+   :macro:`GSL_EDOM`.
+
 .. index::
    single: basis splines, evaluation
 
 Evaluation of B-splines
 =======================
+
+.. function:: size_t gsl_bspline_find_interval (const double x, int * flag, gsl_bspline_workspace * w)
+
+   This function finds the knot interval containing :data:`x`, that is,
+   the index :math:`i` such that :math:`t_i \le x < t_{i+1}` for the
+   knots :math:`t_i` of the workspace, and returns it.  The output
+   :data:`flag` reports the relation of :data:`x` to the knot vector:
+
+   * :data:`flag` is :math:`-1` if :math:`x < t_0`, and 0 is returned;
+   * :data:`flag` is 0 if :math:`x` lies in a knot interval; and
+   * :data:`flag` is :math:`+1` if :math:`x` lies beyond the last knot
+     with a distinct successor, in which case the index of the last such
+     interval is returned.
+
+   The workspace caches the interval found most recently, so repeated
+   evaluation at nearby points is fast.
 
 .. function:: int gsl_bspline_calc (const double x, const gsl_vector * c, double * result, gsl_bspline_workspace * w)
 
@@ -303,6 +327,15 @@ Evaluation of B-splines
    to be computed without unnecessary terms
    (such linear combinations occur, for example,
    when evaluating an interpolated function).
+
+.. function:: int gsl_bspline_eval_basis (const double x, gsl_vector * B, gsl_bspline_workspace * w)
+
+   This function evaluates all B-spline basis functions :math:`B_i(x)`
+   at the position :data:`x` and stores them in the vector :data:`B`,
+   whose length must be :math:`n` (the number of control points,
+   :func:`gsl_bspline_ncontrol`).  It is a convenience wrapper around
+   :func:`gsl_bspline_basis` that places the :math:`k` nonzero basis
+   functions in their proper positions in the full vector.
 
 .. index::
    single: basis splines, derivatives
@@ -350,6 +383,17 @@ Evaluation of B-spline derivatives
    By returning only the nonzero basis functions, this function allows
    quantities involving linear combinations of the :math:`B_i(x)` and
    their derivatives to be computed without unnecessary terms.
+
+.. function:: int gsl_bspline_eval_deriv_basis (const double x, const size_t nderiv, gsl_matrix * dB, gsl_bspline_workspace * w)
+
+   This function evaluates all B-spline basis function derivatives of
+   orders :math:`0` through :data:`nderiv` (inclusive) at the position
+   :data:`x` and stores them in the matrix :data:`dB`.  The
+   :math:`(i,j)`-th element of :data:`dB` is
+   :math:`d^jB_i(x)/dx^j`, and the matrix must be of size :math:`n` by at
+   least :math:`nderiv+1`.  It is a convenience wrapper around
+   :func:`gsl_bspline_basis_deriv` that places the nonzero derivatives in
+   their proper rows of the full matrix.
 
 .. index::
    single: basis splines, integration

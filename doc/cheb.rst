@@ -113,14 +113,15 @@ Chebyshev Series Evaluation
    :data:`abserr`, to (at most) the given order :data:`order`.  The error
    estimate is made from the first neglected term in the series.
 
-.. @deftypefun double gsl_cheb_eval_mode (const gsl_cheb_series * cs, double x, gsl_mode_t mode)
-.. @end deftypefun
+.. function:: double gsl_cheb_eval_mode (const gsl_cheb_series * cs, double x, gsl_mode_t mode)
+              int gsl_cheb_eval_mode_e (const gsl_cheb_series * cs, const double x, gsl_mode_t mode, double * result, double * abserr)
 
-.. @deftypefun int gsl_cheb_eval_mode_err (const gsl_cheb_series * cs, const double x, gsl_mode_t mode, double * result, double * abserr)
-.. Evaluate a Chebyshev series at a given point, using the default
-.. order for double precision mode(s) and the single precision
-.. order for other modes.
-.. @end deftypefun
+   These functions evaluate the Chebyshev series :data:`cs` at a given
+   point :data:`x` using the order appropriate to :data:`mode`: the full
+   order for double precision modes, and a reduced single precision order
+   held in the series for the other modes.  The :code:`_e` variant also
+   returns an estimate of the absolute error in :data:`abserr`, made from
+   the first neglected term.
 
 Derivatives and Integrals
 =========================

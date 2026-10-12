@@ -201,6 +201,12 @@ This information can be accessed with the following auxiliary functions,
    This function returns the current estimate of the position of the
    minimum for the minimizer :data:`s`.
 
+.. function:: double gsl_min_fminimizer_minimum (const gsl_min_fminimizer * s)
+
+   This function is a synonym for :func:`gsl_min_fminimizer_x_minimum`,
+   returning the current estimate of the position of the minimum for the
+   minimizer :data:`s`.  It is retained for backward compatibility.
+
 .. function:: double gsl_min_fminimizer_x_upper (const gsl_min_fminimizer * s)
               double gsl_min_fminimizer_x_lower (const gsl_min_fminimizer * s)
 
@@ -269,6 +275,28 @@ below allows the user to test the precision of the current result.
          |x_m - x_m^*| < epsabs + epsrel x_m^*
 
    assuming that the true minimum :math:`x_m^*` is contained within the interval.
+
+Bracketing a Minimum
+====================
+
+.. function:: int gsl_min_find_bracket (gsl_function * f, double * x_minimum, double * f_minimum, double * x_lower, double * f_lower, double * x_upper, double * f_upper, size_t eval_max)
+
+   This function searches outwards for an interval that brackets a local
+   minimum.  On input, :data:`x_lower` and :data:`x_upper` must point to
+   two distinct abscissae and :data:`f_lower`, :data:`f_upper` to the
+   corresponding function values.  The function evaluates :data:`f` at no
+   more than :data:`eval_max` further points, using golden-section steps,
+   and on success returns :macro:`GSL_SUCCESS` with :data:`x_lower`,
+   :data:`x_upper` narrowed to a bracket and :data:`x_minimum` set to a
+   point inside it at which the function value :data:`f_minimum` is lower
+   than both, so that
+   :math:`f(\mathtt{x\_lower}) > f(\mathtt{x\_minimum}) < f(\mathtt{x\_upper})`.
+   The other function values are returned in :data:`f_lower` and
+   :data:`f_upper`.
+
+   If no bracket is found within :data:`eval_max` evaluations,
+   :macro:`GSL_FAILURE` is returned and the outputs are left at the best
+   set of points found so far.
 
 Minimization Algorithms
 =======================

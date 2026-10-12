@@ -127,6 +127,15 @@ undefined.  Note that vectors created from @var{b} with
 when the block is resized.
 @end deftypefun
 
+@deftypefun size_t gsl_block_size (const gsl_block * @var{b})
+This function returns the number of elements in the block @var{b}.
+@end deftypefun
+
+@deftypefun {double *} gsl_block_data (const gsl_block * @var{b})
+This function returns a pointer to the first element of the block
+@var{b}, giving direct access to the underlying storage.
+@end deftypefun
+
 @node Reading and writing blocks
 @subsection Reading and writing blocks
 
@@ -1467,6 +1476,24 @@ matrix @var{dest}.  The two matrices must have the same size.
 @deftypefun int gsl_matrix_swap (gsl_matrix * @var{m1}, gsl_matrix * @var{m2})
 This function exchanges the elements of the matrices @var{m1} and
 @var{m2} by copying.  The two matrices must have the same size.
+@end deftypefun
+
+@deftypefun int gsl_matrix_tricpy (CBLAS_UPLO_t @var{Uplo}, CBLAS_DIAG_t @var{Diag}, gsl_matrix * @var{dest}, const gsl_matrix * @var{src})
+This function copies the triangular part of the matrix @var{src} selected
+by @var{Uplo} (@code{CblasUpper} or @code{CblasLower}) into @var{dest};
+the rest of @var{dest} is left unchanged.  The two matrices must have the
+same size.  The diagonal is copied only when @var{Diag} is
+@code{CblasNonUnit}; with @code{CblasUnit} the diagonal of @var{src} is
+assumed to be unity and is not read.
+@end deftypefun
+
+@deftypefun int gsl_matrix_transpose_tricpy (CBLAS_UPLO_t @var{Uplo_src}, CBLAS_DIAG_t @var{Diag}, gsl_matrix * @var{dest}, const gsl_matrix * @var{src})
+This function copies the triangle @var{Uplo_src} of the matrix @var{src}
+into @var{dest} transposed: with @code{CblasLower} the lower triangle of
+@var{src} becomes the upper triangle of @var{dest}, and vice versa.
+@var{dest} must have the transposed dimensions of @var{src}.  As for
+@code{gsl_matrix_tricpy}, the diagonal is copied only when @var{Diag} is
+@code{CblasNonUnit}.
 @end deftypefun
 
 @node Copying rows and columns
