@@ -708,6 +708,7 @@ set(GSL_SOURCES
     specfunc/expint3.c
     specfunc/expint_complex.c
     specfunc/fermi_dirac.c
+    specfunc/fresnel.c
     specfunc/gegenbauer.c
     specfunc/gamma.c
     specfunc/gamma_inc.c

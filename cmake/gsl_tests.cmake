@@ -262,6 +262,7 @@ gsl_add_test(specfunc test
     specfunc/test_hyperg.c
     specfunc/test_legendre.c
     specfunc/test_mathieu.c
+    specfunc/test_fresnel.c
     specfunc/test_sincos_pi.c
 )
 
