@@ -8,26 +8,15 @@ Started 2026-10-03.
 
 ## Audit exported-but-undocumented public functions
 
-Found while fixing the coupling symbols (Savannah bugs #43256 / #68312):
-`gsl_sf_coupling_RacahW()` and `gsl_sf_coupling_RacahW_e()` are declared
-in `gsl/gsl_sf_coupling.h` and exported by the library, but there is no
-entry for them anywhere in `doc/` or `doc_texinfo/`. A function sitting
-next to fully documented neighbours having that gap suggests there are
-more, so the whole public API should be swept.
-
-For each function that is exported but not documented, decide whether it
-should be
-
-- documented - add it to both `doc/*.rst` and the `doc_texinfo/*.texi`
-  mirror, following `AGENTS.md`;
-- deprecated - with a marker derived from the actual
-  `GSL_DISABLE_DEPRECATED` block in the header, not from a comment; or
-- hidden - renamed to a non-`gsl_` symbol, if it was never meant to be
-  public. That is an API change and needs care.
+Status: **done** (2026-10-12).  Found while fixing the coupling symbols
+(Savannah bugs #43256 / #68312): `gsl_sf_coupling_RacahW()` and
+`gsl_sf_coupling_RacahW_e()` are declared in `gsl/gsl_sf_coupling.h` and
+exported by the library, but had no entry anywhere in `doc/` or
+`doc_texinfo/`.  That gap prompted a sweep of the whole public API.
 
 ### Method
 
-1. Take `gsl/*.h` as the definition of the public API. Do **not** use
+1. Take `gsl/*.h` as the definition of the public API.  Do **not** use
    the DLL exports on Windows: the CMake build sets
    `WINDOWS_EXPORT_ALL_SYMBOLS`, so `dumpbin`/`nm` list every symbol,
    internal ones included.
@@ -36,35 +25,83 @@ should be
    `doc_texinfo/` - not only the `.. function::` / `@deftypefun`
    directives, because many functions are named only in prose or in an
    example.
-3. Subtract. Discard names containing a templated-type token
-   (`float`, `long_double`, `char`, `uchar`, `short`, `ushort`, `int`,
-   `uint`, `long`, `ulong`, `complex`, `raw`): the manual documents
-   those through the generic `double` base name.
+3. Subtract.  Discard names containing a templated-type token
+   (`float`, `long_double`, `char`, ...): the manual documents those
+   through the generic `double` base name.
 
-A first pass on 2026-10-03 left 191 candidate names. The heuristic is
-crude in both directions, so each row still needs a look by hand.
+The heuristic has three known holes, patched by hand in this pass:
 
-### Confirmed examples (checked against both manual trees)
+* `doc/gsl-ref.info` is a tracked generated file, so any name that
+  occurs only there is counted as documented;
+* a name that occurs only in a commented-out manual line (for example
+  `gsl_eigen_jacobi`) is also counted as documented;
+* a name whose token looks like a C type is dropped by rule 3 (for
+  example `gsl_ieee_float_to_rep`).
 
-gsl_sf_coupling_RacahW gsl_sf_coupling_RacahW_e
-gsl_bspline_eval_basis gsl_bspline_eval_deriv_basis
-gsl_bspline_breakpoint gsl_bspline_find_interval
-gsl_bspline_init_greville gsl_linalg_mcholesky_invert
-gsl_linalg_matmult gsl_linalg_matmult_mod
-gsl_linalg_cholesky_solve_mat gsl_linalg_cholesky_svx_mat
-gsl_linalg_balance_columns gsl_linalg_exponential_ss
-gsl_multifit_covar gsl_eigen_francis
-gsl_eigen_invert_jacobi gsl_cheb_new
-gsl_min_find_bracket gsl_bst_alloc
+### Outcome
 
-(`gsl_bspline_eval_basis` is used in `doc/examples/bspline_knots.c` but
-is never described, which is exactly the kind of gap this is meant to
-catch.)
+All genuinely-public gaps are now fixed; the changes are recorded in
+`FORKNEWS`, grouped by manual chapter.  In summary:
 
-Some candidates are almost certainly deliberate and want a deprecation
-marker rather than prose, e.g. the old `gsl_odeiv_*` control/step aliases
-and the `gsl_multifit_fdfsolver_*` compatibility names; do not document
-those as new API without checking `GSL_DISABLE_DEPRECATED`.
+* documented: the scaled exponential integrals and friends
+  (`specfunc`), the B-spline basis accessors, `gsl_cheb_eval_mode`,
+  `gsl_min_find_bracket`, the low-level `movstat` engine, the
+  block/matrix/vector accessors, the whole legacy multifit interface,
+  the `linalg` matrix/eigen helpers, the eigen Jacobi routines,
+  `gsl_stats_pvariance`, the `lls` SVD wrappers, the `fft` halfcomplex
+  variants, the `ieee754` rep/mode functions, `gsl_rng_print_state`,
+  the error stream and messaging service, the legacy v1 `gsl_odeiv_*`
+  interface, and the system NaN/inf/max/min accessors;
+* deprecated: the seven remaining `gsl_sf_hermite_phys_*` aliases,
+  completing Savannah #67621 (see `FORKNEWS`; no Texinfo chapter for
+  Hermite);
+* documented as supported rather than deprecated: the old
+  `gsl_multifit_fsolver_*` / `gsl_multifit_fdfsolver_*` /
+  `gsl_multifit_fdfridge_*` family and the v1 `gsl_odeiv_*` interface.
+  Neither is guarded by `GSL_DISABLE_DEPRECATED`, and the v1 ODE
+  interface is actively extended by this fork (`gsl_odeiv_control_fixed_new`,
+  Savannah #30947), so a deprecation marker would be wrong.
+
+### Internal declarations (intentionally undocumented)
+
+The sweep still reports the names below.  They are declared in the
+public headers only so the library can share them across translation
+units; they are deliberately absent from the manual and are **not** to
+be renamed or documented.  A future sweep should leave exactly this
+list:
+
+gsl_coerce_double gsl_fdiv
+gsl_eigen_francis gsl_eigen_francis_T gsl_eigen_francis_Z
+gsl_eigen_francis_alloc gsl_eigen_francis_free
+gsl_eigen_genherm_standardize gsl_eigen_gensymm_standardize
+gsl_integration_qcheb gsl_integration_qk gsl_integration_qk15
+gsl_integration_qk21 gsl_integration_qk31 gsl_integration_qk41
+gsl_integration_qk51 gsl_integration_qk61 gsl_integration_rule
+gsl_linalg_LQ_LQsolve gsl_linalg_LQ_Lsolve_T gsl_linalg_LQ_Lsvx_T
+gsl_linalg_LQ_lssolve_T gsl_linalg_LQ_solve_T gsl_linalg_LQ_svx_T
+gsl_linalg_LQ_update gsl_linalg_LQ_vecQ gsl_linalg_LQ_vecQT
+gsl_linalg_L_solve_T gsl_linalg_PTLQ_LQsolve_T gsl_linalg_PTLQ_Lsolve_T
+gsl_linalg_PTLQ_Lsvx_T gsl_linalg_PTLQ_decomp gsl_linalg_PTLQ_decomp2
+gsl_linalg_PTLQ_solve_T gsl_linalg_PTLQ_svx_T gsl_linalg_PTLQ_update
+gsl_linalg_QR_band_decomp_L2 gsl_linalg_QR_band_unpack_L2
+gsl_linalg_QR_decomp_old gsl_linalg_QR_matQ gsl_linalg_balance_accum
+gsl_linalg_hessenberg_submatrix gsl_linalg_householder_transform2
+gsl_linalg_invnorm1 gsl_multifit_eval_wdf gsl_multifit_eval_wf
+gsl_multifit_fdfsolver_dif_df gsl_multifit_fdfsolver_dif_fdf
+gsl_multifit_nlinear_df gsl_multifit_nlinear_eval_df
+gsl_multifit_nlinear_eval_f gsl_multifit_nlinear_eval_fvv
+gsl_multifit_nlinear_fdfvv gsl_multilarge_nlinear_df
+gsl_multilarge_nlinear_eval_df gsl_multilarge_nlinear_eval_f
+gsl_multilarge_nlinear_eval_fvv gsl_multilarge_nlinear_fdfvv
+gsl_multilarge_nlinear_step gsl_multimin_diff gsl_multiroot_fdjacobian
+gsl_ran_binomial_knuth gsl_ran_binomial_tpe gsl_schur_gen_eigvals
+gsl_schur_solve_equation gsl_schur_solve_equation_z
+gsl_sf_angle_restrict_pos_err_e gsl_sf_angle_restrict_symm_err_e
+gsl_sf_exprel_n_CF_e gsl_sf_result_smash_e gsl_siman_solve_many
+gsl_spblas_scatter gsl_spmatrix_compcol gsl_spmatrix_cumsum
+gsl_spmatrix_tree_rebuild gsl_sum_levin_u_minmax gsl_sum_levin_u_step
+gsl_sum_levin_utrunc_minmax gsl_sum_levin_utrunc_step
+
 
 ## Enable more warnings
 
