@@ -166,7 +166,7 @@ gsl_bspline_wlssolve(const gsl_vector * x, const gsl_vector * y, const gsl_vecto
       gsl_vector_memcpy(&XTy.vector, c);
       cblas_dtbmv(CblasColMajor, CblasLower, CblasTrans, CblasNonUnit,
                   (int) w->XTX->size1, (int) (w->XTX->size2 - 1),
-                  w->XTX->data, (int) w->XTX->tda, XTy.vector.data, XTy.vector.stride);
+                  w->XTX->data, (int) w->XTX->tda, XTy.vector.data, (int) XTy.vector.stride);
 
       tmp = gsl_blas_dnrm2(&XTy.vector);
 

@@ -184,6 +184,8 @@ void
 gsl_eigen_gen_params (const int compute_s, const int compute_t,
                       const int balance, gsl_eigen_gen_workspace *w)
 {
+  (void) balance;
+
   w->compute_s = compute_s;
   w->compute_t = compute_t;
 } /* gsl_eigen_gen_params() */

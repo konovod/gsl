@@ -221,7 +221,7 @@ FUNCTION (gsl_spmatrix, add) (TYPE (gsl_spmatrix) * c, const TYPE (gsl_spmatrix)
 
       for (j = 0; j < outer_size; ++j)
         {
-          Cp[j] = nz;
+          Cp[j] = (int)(nz);
 
           /* CSC: x += A(:,j); CSR: x += A(j,:) */
           nz = FUNCTION (spmatrix, scatter) (a, j, w, x, (int) (j + 1), c, nz);
@@ -234,7 +234,7 @@ FUNCTION (gsl_spmatrix, add) (TYPE (gsl_spmatrix) * c, const TYPE (gsl_spmatrix)
         }
 
       /* finalize last column of c */
-      Cp[j] = nz;
+      Cp[j] = (int)(nz);
       c->nz = nz;
 
       return status;

@@ -130,7 +130,7 @@ gsl_histogram_calloc (size_t n)
 
     for (i = 0; i < n + 1; i++)
       {
-        h->range[i] = i;
+        h->range[i] = (double) i;
       }
 
     for (i = 0; i < n; i++)

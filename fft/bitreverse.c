@@ -34,7 +34,7 @@ FUNCTION(fft_complex,bitreverse_order) (BASE data[],
   size_t i;
   size_t j = 0;
 
-  logn = 0 ; /* not needed for this algorithm */
+  (void) logn ; /* not needed for this algorithm */
 
   for (i = 0; i < n - 1; i++)
     {
@@ -74,7 +74,7 @@ FUNCTION(fft_real,bitreverse_order) (BASE data[],
   size_t i;
   size_t j = 0;
 
-  logn = 0 ; /* not needed for this algorithm */
+  (void) logn ; /* not needed for this algorithm */
 
   for (i = 0; i < n - 1; i++)
     {

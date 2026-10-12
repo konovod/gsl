@@ -128,6 +128,8 @@ typedef struct
 
 static size_t sobol_state_size(unsigned int dimension)
 {
+  (void) dimension;
+
   return sizeof(sobol_state_t);
 }
 

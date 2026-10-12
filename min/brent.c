@@ -55,10 +55,10 @@ brent_init (void *vstate, gsl_function * f, double x_minimum, double f_minimum, 
 
   double f_vw;
 
-  x_minimum = 0 ;  /* avoid warnings about unused varibles */
-  f_minimum = 0 ;
-  f_lower = 0 ;
-  f_upper = 0 ;
+  (void) x_minimum;  /* avoid warnings about unused variables */
+  (void) f_minimum;
+  (void) f_lower;
+  (void) f_upper;
 
   state->v = v;
   state->w = w;

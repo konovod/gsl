@@ -149,7 +149,7 @@ increment_state (ranlxd_state_t * state)
 static inline unsigned long int
 ranlxd_get (void *vstate)
 {
-  return ranlxd_get_double (vstate) * 4294967296.0;     /* 2^32 */
+  return (unsigned long int) (ranlxd_get_double (vstate) * 4294967296.0);     /* 2^32 */
 }
 
 static double

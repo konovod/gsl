@@ -201,7 +201,7 @@ fixed_compute(const double a, const double b, const double alpha, const double b
     }
 
   /* diagonalize the Jacobi matrix */
-  s = imtqlx (n, w->x, w->subdiag, w->weights);
+  s = imtqlx ((int) n, w->x, w->subdiag, w->weights);
   if (s)
     return s;
 

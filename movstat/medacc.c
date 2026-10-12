@@ -48,7 +48,6 @@ typedef struct
 static size_t medacc_size(const size_t n);
 static int medacc_init(const size_t n, void * vstate);
 static int medacc_insert(const medacc_type_t x, void * vstate);
-static int medacc_delete(void * vstate);
 static int medacc_get(void * params, medacc_type_t * result, const void * vstate);
 
 static int mmless(const medacc_state_t * state, const int i, const int j);
@@ -77,7 +76,7 @@ medacc_init(const size_t n, void * vstate)
   medacc_state_t * state = (medacc_state_t *) vstate;
   int k = (int) n;
 
-  state->n = n;
+  state->n = (int) n;
   state->ct = 0;
   state->idx = 0;
 
@@ -128,35 +127,6 @@ medacc_insert(const medacc_type_t x, void * vstate)
 
       if (minCt(state))
         minSortDown(state, 1);
-    }
-
-  return GSL_SUCCESS;
-}
-
-static int
-medacc_delete(void * vstate)
-{
-  medacc_state_t * state = (medacc_state_t *) vstate;
-
-  if (state->ct > 0)
-    {
-      int p = state->pos[(state->idx - state->ct + state->n) % state->n];
-
-      if (p > 0)        /* oldest item is in minHeap */
-        {
-          mmexchange(state, p, minCt(state));
-          --(state->ct);
-          minSortDown(state, 2 * p);
-        }
-      else if (p < 0)   /* oldest item is in maxHeap */
-        {
-          mmexchange(state, p, maxCt(state));
-          --(state->ct);
-          maxSortDown(state, 2 * p);
-        }
-      else if (p == 0)  /* oldest item is at median */
-        {
-        }
     }
 
   return GSL_SUCCESS;

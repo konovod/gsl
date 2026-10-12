@@ -1143,6 +1143,8 @@ gsl_sf_coulomb_wave_FG_e(const double eta, const double x,
       stat_CF1_lam_G = coulomb_CF1(lam_G, eta, x, &F_sign_lam_G, &Fp_over_F_lam_G, &CF1_count);
     }
 
+    (void) stat_CF1_lam_G;
+
     F->val = F_lam_F.val;
     F->err = F_lam_F.err;
 
@@ -1196,7 +1198,7 @@ gsl_sf_coulomb_wave_FG_e(const double eta, const double x,
      */
     const double SMALL = GSL_SQRT_DBL_EPSILON;
     const double C = 0.5 * sqrt(1.0 + 4.0*x*(x-2.0*eta));
-    const int N = ceil(lam_F - C + 0.5);
+    const int N = (int) ceil(lam_F - C + 0.5);
     const double lam_0   = lam_F - GSL_MAX(N, 0);
     const double lam_min = GSL_MIN(lam_0, lam_G);
     double F_lam_F, Fp_lam_F;
@@ -1253,6 +1255,7 @@ gsl_sf_coulomb_wave_FG_e(const double eta, const double x,
 
     F_lam_min  = F_sign_lam_min / sqrt(alpha*alpha/Q_lam_min + Q_lam_min);
     Fp_lam_min = Fp_over_F_lam_min * F_lam_min;
+    (void) Fp_lam_min;
     G_lam_min  = gamma * F_lam_min;
     Gp_lam_min = (P_lam_min * gamma - Q_lam_min) * F_lam_min;
 

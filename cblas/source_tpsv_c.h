@@ -40,7 +40,7 @@
       const BASE a_imag = conj * CONST_IMAG(Ap, TPUP(N, (N - 1), (N - 1)));
       const BASE x_real = REAL(X, ix);
       const BASE x_imag = IMAG(X, ix);
-      const BASE s = xhypot(a_real, a_imag);
+      const BASE s = (BASE)(xhypot(a_real, a_imag));
       const BASE b_real = a_real / s;
       const BASE b_imag = a_imag / s;
       REAL(X, ix) = (x_real * b_real + x_imag * b_imag) / s;
@@ -66,7 +66,7 @@
       if (nonunit) {
         const BASE a_real = CONST_REAL(Ap, TPUP(N, i, i));
         const BASE a_imag = conj * CONST_IMAG(Ap, TPUP(N, i, i));
-        const BASE s = xhypot(a_real, a_imag);
+        const BASE s = (BASE)(xhypot(a_real, a_imag));
         const BASE b_real = a_real / s;
         const BASE b_imag = a_imag / s;
         REAL(X, ix) = (tmp_real * b_real + tmp_imag * b_imag) / s;
@@ -89,7 +89,7 @@
       const BASE a_imag = conj * CONST_IMAG(Ap, TPLO(N, 0, 0));
       const BASE x_real = REAL(X, ix);
       const BASE x_imag = IMAG(X, ix);
-      const BASE s = xhypot(a_real, a_imag);
+      const BASE s = (BASE)(xhypot(a_real, a_imag));
       const BASE b_real = a_real / s;
       const BASE b_imag = a_imag / s;
       REAL(X, ix) = (x_real * b_real + x_imag * b_imag) / s;
@@ -114,7 +114,7 @@
       if (nonunit) {
         const BASE a_real = CONST_REAL(Ap, TPLO(N, i, i));
         const BASE a_imag = conj * CONST_IMAG(Ap, TPLO(N, i, i));
-        const BASE s = xhypot(a_real, a_imag);
+        const BASE s = (BASE)(xhypot(a_real, a_imag));
         const BASE b_real = a_real / s;
         const BASE b_imag = a_imag / s;
         REAL(X, ix) = (tmp_real * b_real + tmp_imag * b_imag) / s;
@@ -138,7 +138,7 @@
       const BASE a_imag = conj * CONST_IMAG(Ap, TPUP(N, 0, 0));
       const BASE x_real = REAL(X, ix);
       const BASE x_imag = IMAG(X, ix);
-      const BASE s = xhypot(a_real, a_imag);
+      const BASE s = (BASE)(xhypot(a_real, a_imag));
       const BASE b_real = a_real / s;
       const BASE b_imag = a_imag / s;
       REAL(X, ix) = (x_real * b_real + x_imag * b_imag) / s;
@@ -163,7 +163,7 @@
       if (nonunit) {
         const BASE a_real = CONST_REAL(Ap, TPUP(N, i, i));
         const BASE a_imag = conj * CONST_IMAG(Ap, TPUP(N, i, i));
-        const BASE s = xhypot(a_real, a_imag);
+        const BASE s = (BASE)(xhypot(a_real, a_imag));
         const BASE b_real = a_real / s;
         const BASE b_imag = a_imag / s;
         REAL(X, ix) = (tmp_real * b_real + tmp_imag * b_imag) / s;
@@ -186,7 +186,7 @@
       const BASE a_imag = conj * CONST_IMAG(Ap, TPLO(N, (N - 1), (N - 1)));
       const BASE x_real = REAL(X, ix);
       const BASE x_imag = IMAG(X, ix);
-      const BASE s = xhypot(a_real, a_imag);
+      const BASE s = (BASE)(xhypot(a_real, a_imag));
       const BASE b_real = a_real / s;
       const BASE b_imag = a_imag / s;
       REAL(X, ix) = (x_real * b_real + x_imag * b_imag) / s;
@@ -212,7 +212,7 @@
       if (nonunit) {
         const BASE a_real = CONST_REAL(Ap, TPLO(N, i, i));
         const BASE a_imag = conj * CONST_IMAG(Ap, TPLO(N, i, i));
-        const BASE s = xhypot(a_real, a_imag);
+        const BASE s = (BASE)(xhypot(a_real, a_imag));
         const BASE b_real = a_real / s;
         const BASE b_imag = a_imag / s;
         REAL(X, ix) = (tmp_real * b_real + tmp_imag * b_imag) / s;

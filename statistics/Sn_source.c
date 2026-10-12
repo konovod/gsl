@@ -81,7 +81,7 @@ FUNCTION(gsl_stats,Sn0_from_sorted_data) (const BASE sorted_data[],
   double medA, medB;
   int i, diff, half, Amin, Amax, even, length;
   int leftA, leftB, nA, nB, tryA, tryB, rightA, rightB;
-  int np1_2 = (n + 1) / 2;
+  int np1_2 = (int) ((n + 1) / 2);
 
   work[0] = sorted_data[n / 2 * stride] - sorted_data[0];
 
@@ -89,7 +89,7 @@ FUNCTION(gsl_stats,Sn0_from_sorted_data) (const BASE sorted_data[],
   for (i = 2; i <= np1_2; ++i)
     {
       nA = i - 1;
-      nB = n - i;
+      nB = (int) (n - i);
       diff = nB - nA;
       leftA = leftB	= 1;
       rightA = rightB = nB;
@@ -141,14 +141,14 @@ FUNCTION(gsl_stats,Sn0_from_sorted_data) (const BASE sorted_data[],
         {
           medA = sorted_data[(i - 1) * stride] - sorted_data[(i - leftA + Amin - 2) * stride];
           medB = sorted_data[(leftB + i - 1) * stride] - sorted_data[(i - 1) * stride];
-          work[i - 1] = GSL_MIN(medA, medB);
+          work[i - 1] = (BASE) GSL_MIN(medA, medB);
         }
     }
 
   /* second half for() loop : */
   for (i = np1_2 + 1; i <= (int) n - 1; ++i)
     {
-      nA = n - i;
+      nA = (int) (n - i);
       nB = i - 1;
       diff = nB - nA;
       leftA  = leftB	= 1;
@@ -202,7 +202,7 @@ FUNCTION(gsl_stats,Sn0_from_sorted_data) (const BASE sorted_data[],
         {
           medA = sorted_data[(i + leftA - Amin) * stride] - sorted_data[(i - 1) * stride];
           medB = sorted_data[(i - 1) * stride] - sorted_data[(i - leftB - 1) * stride];
-          work[i - 1] = GSL_MIN(medA, medB);
+          work[i - 1] = (BASE) GSL_MIN(medA, medB);
         }
     }
 

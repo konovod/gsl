@@ -17,15 +17,15 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-static double scaled_enorm (const gsl_vector * d, const gsl_vector * f);
-static void scaled_addition (const double alpha, const gsl_vector * x,
+static inline double scaled_enorm (const gsl_vector * d, const gsl_vector * f);
+static inline void scaled_addition (const double alpha, const gsl_vector * x,
                              const double beta, const gsl_vector * y,
                              gsl_vector * z);
-static double quadratic_preduction(const gsl_multilarge_nlinear_trust_state * trust_state,
+static inline double quadratic_preduction(const gsl_multilarge_nlinear_trust_state * trust_state,
                                    const gsl_vector * dx, gsl_vector * work);
 
 /* compute || diag(d) f || */
-static double
+static inline double
 scaled_enorm (const gsl_vector * d, const gsl_vector * f)
 {
   double e2 = 0;
@@ -41,7 +41,7 @@ scaled_enorm (const gsl_vector * d, const gsl_vector * f)
 }
 
 /* compute z = alpha*x + beta*y */
-static void
+static inline void
 scaled_addition (const double alpha, const gsl_vector * x,
                  const double beta, const gsl_vector * y, gsl_vector * z)
 {
@@ -76,7 +76,7 @@ Inputs: trust_state - trust state
 Return: predicted reduction
 */
 
-static double
+static inline double
 quadratic_preduction(const gsl_multilarge_nlinear_trust_state * trust_state,
                      const gsl_vector * dx, gsl_vector * work)
 {

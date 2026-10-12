@@ -28,7 +28,7 @@
   }
 
   for (i = 0; i < N; i++) {
-    const BASE a = fabs(CONST_REAL(X, ix)) + fabs(CONST_IMAG(X, ix));
+    const BASE a = (BASE)(fabs(CONST_REAL(X, ix)) + fabs(CONST_IMAG(X, ix)));
 
     if (a > max) {
       max = a;

@@ -84,7 +84,7 @@ gsl_sf_bessel_Knu_scaled_e10_e(const double nu, const double x, gsl_sf_result_e1
         double factor = pow(10.0, p);
         K_num1 /= factor;
         K_nu /= factor;
-        e10 += p;
+        e10 += (int) p;
       };
       K_nup1 = 2.0*(mu+n+1)/x * K_nu + K_num1;
     }

@@ -234,7 +234,7 @@ gsl_filter_gaussian_kernel(const double alpha, const size_t order, const int nor
            */
 
           /* initialize q_0(n) = 1 / half^{order} */
-          q[0] = 1.0 / gsl_pow_uint(half, order);
+          q[0] = 1.0 / gsl_pow_uint(half, (unsigned int) order);
           for (i = 1; i <= GSL_FILTER_GAUSSIAN_MAX_ORDER; ++i)
             q[i] = 0.0;
 
@@ -257,7 +257,7 @@ gsl_filter_gaussian_kernel(const double alpha, const size_t order, const int nor
           for (i = 0; i < N; ++i)
             {
               double xi = ((double)i - half) / half;
-              double qn = gsl_poly_eval(q, order + 1, xi);
+              double qn = gsl_poly_eval(q, (int) (order + 1), xi);
               double *wn = gsl_vector_ptr(kernel, i);
 
               *wn *= qn;

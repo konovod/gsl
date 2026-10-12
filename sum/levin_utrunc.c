@@ -188,7 +188,7 @@ gsl_sum_levin_utrunc_step (const double term,
       w->q_den[n] = 1.0 / (term * (n + 1.0) * (n + 1.0));
       w->q_num[n] = w->sum_plain * w->q_den[n];
 
-      for (j = n - 1; j >= 0; j--)
+      for (j = (int) (n - 1); j >= 0; j--)
         {
           double c = factor * (j + 1) / (n + 1);
           factor *= ratio;

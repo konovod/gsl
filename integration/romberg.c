@@ -117,7 +117,7 @@ gsl_integration_romberg(const gsl_function * f, const double a, const double b,
           double sum = 0.0;
           double err;
           double four_j;         /* 4^j */
-          size_t two_i = 1 << i; /* 2^i */
+          size_t two_i = (size_t)1 << i; /* 2^i */
 
           for (j = 1; j < two_i; j += 2)
             {

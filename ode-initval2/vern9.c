@@ -673,8 +673,7 @@ vern9_reset (void *vstate, size_t dim)
 static unsigned int
 vern9_order (void *vstate)
 {
-  vern9_state_t *state = (vern9_state_t *) vstate;
-  state = 0;                    /* prevent warnings about unused parameters */
+  (void) vstate; /* prevent warnings about unused parameters */
   return 9;
 }
 

@@ -37,7 +37,6 @@
 
 /* Feagin RK10(8) constants, see https://sce.uhcl.edu/rungekutta/rk108.txt */
 
-static const double a0 = 0.0;
 static const double a1 =
   0.100000000000000000000000000000000000000000000000000000000000;
 static const double a2 =
@@ -688,8 +687,7 @@ feagin108_reset (void *vstate, size_t dim)
 static unsigned int
 feagin108_order (void *vstate)
 {
-  feagin108_state_t *state = (feagin108_state_t *) vstate;
-  state = 0;                    /* prevent warnings about unused parameters */
+  (void) vstate; /* prevent warnings about unused parameters */
   return 10;
 }
 

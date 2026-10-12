@@ -536,7 +536,7 @@ gsl_sf_coupling_3j_e (int two_ja, int two_jb, int two_jc,
         return GSL_SUCCESS;
       }
     } else {
-      int regge[9] = {0}, sign_param;
+      int regge[9] = {0}, sign_param = 0;
         
       regge3j_find_ordered_params(two_ja, two_jb, two_jc, two_ma, two_mb, two_mc, 
             regge, &sign_param);

@@ -205,12 +205,12 @@ gsl_histogram2d_calloc (const size_t nx, const size_t ny)
 
     for (i = 0; i < nx + 1; i++)
       {
-        h->xrange[i] = i;
+        h->xrange[i] = (double) i;
       }
 
     for (i = 0; i < ny + 1; i++)
       {
-        h->yrange[i] = i;
+        h->yrange[i] = (double) i;
       }
 
     for (i = 0; i < nx * ny; i++)

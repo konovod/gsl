@@ -164,6 +164,8 @@ lmniel_set(void *vstate, const gsl_vector *swts,
   const size_t p = x->size;
   size_t i;
 
+  (void) dx;
+
   /* initialize counters for function and Jacobian evaluations */
   fdf->nevalf = 0;
   fdf->nevaldf = 0;

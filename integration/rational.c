@@ -90,7 +90,8 @@ rational_init(const size_t n, double * diag, double * subdiag, gsl_integration_f
 static const gsl_integration_fixed_type rational_type =
 {
   rational_check,
-  rational_init
+  rational_init,
+  NULL
 };
 
 const gsl_integration_fixed_type *gsl_integration_fixed_rational = &rational_type;

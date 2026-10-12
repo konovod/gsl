@@ -42,7 +42,7 @@ gsl_ran_geometric (const gsl_rng * r, const double p)
     }
   else
     {
-      k = log (u) / log (1 - p) + 1;
+      k = (unsigned int) (log (u) / log (1 - p) + 1);
     }
 
   return k;

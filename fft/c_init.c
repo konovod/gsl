@@ -90,8 +90,8 @@ FUNCTION(gsl_fft_complex_wavetable,alloc) (size_t n)
               m = m + j * product_1;
               m = m % n;
               theta = d_theta * m;      /*  d_theta*j*k*p_(i-1) */
-              GSL_REAL(wavetable->trig[t]) = cos (theta);
-              GSL_IMAG(wavetable->trig[t]) = sin (theta);
+              GSL_REAL(wavetable->trig[t]) = (ATOMIC) cos (theta);
+              GSL_IMAG(wavetable->trig[t]) = (ATOMIC) sin (theta);
 
               t++;
             }
@@ -181,8 +181,8 @@ FUNCTION(gsl_fft_complex,memcpy) (TYPE(gsl_fft_complex_wavetable) * dest,
       GSL_ERROR ("length of src and dest do not match", GSL_EINVAL);
     } 
   
-  n = dest->n ;
-  nf = dest->nf ;
+  n = (int) dest->n ;
+  nf = (int) dest->nf ;
 
   memcpy(dest->trig, src->trig, n * sizeof (double)) ;
   

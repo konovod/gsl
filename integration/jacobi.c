@@ -81,7 +81,8 @@ jacobi_init(const size_t n, double * diag, double * subdiag, gsl_integration_fix
 static const gsl_integration_fixed_type jacobi_type =
 {
   jacobi_check,
-  jacobi_init
+  jacobi_init,
+  NULL
 };
 
 const gsl_integration_fixed_type *gsl_integration_fixed_jacobi = &jacobi_type;

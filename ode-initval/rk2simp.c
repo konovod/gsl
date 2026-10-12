@@ -260,6 +260,8 @@ rk2simp_apply (void *vstate, size_t dim, double t, double h,
   double *y0_orig = state->y0_orig;
   double *y_onestep = state->y_onestep;
 
+  (void) dydt_in; /* prevent warnings about unused parameters */
+
   /* Error estimation is done by step doubling procedure */
 
   DBL_MEMCPY (y0, y, dim);
@@ -349,8 +351,7 @@ rk2simp_reset (void *vstate, size_t dim)
 static unsigned int
 rk2simp_order (void *vstate)
 {
-  rk2simp_state_t *state = (rk2simp_state_t *) vstate;
-  state = 0;                    /* prevent warnings about unused parameters */
+  (void) vstate; /* prevent warnings about unused parameters */
   return 2;
 }
 

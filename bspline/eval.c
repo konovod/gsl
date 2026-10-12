@@ -730,7 +730,7 @@ bspline_pppack_bsplvd (const gsl_vector * t,
   size_t bsplvb_j;
   gsl_vector_view dbcol = gsl_matrix_column (dbiatx, 0);
 
-  mhigh = GSL_MIN_INT (nderiv, k - 1);
+  mhigh = GSL_MIN_INT ((int) nderiv, (int) (k - 1));
   bspline_pppack_bsplvb (t, k - mhigh, 1, x, left, &bsplvb_j, deltal, deltar,
                          &dbcol.vector);
 
@@ -773,10 +773,10 @@ bspline_pppack_bsplvd (const gsl_vector * t,
          k b-splines of interest here. */
       for (m = 1; m <= mhigh; m++)
         {
-          kmm = k - m;
+          kmm = (int) (k - m);
           fkmm = (float) kmm;
-          il = left;
-          i = k - 1;
+          il = (int) left;
+          i = (int) (k - 1);
 
           /* for j=1,...,k, construct b-coeffs of (m)th  derivative
              of b-splines from those for preceding derivative by

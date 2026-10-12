@@ -103,7 +103,7 @@ nnls_core(const gsl_matrix * A, const gsl_vector * b, gsl_vector * x)
   gsl_vector * Atb = gsl_vector_alloc (n);
   double scale, tol;
   size_t p = 0, outer, inner;
-  size_t i, j;
+  size_t j;
 
   if (set == 0 || in_set == 0 || sub == 0 || tau == 0 || s == 0 || res == 0
       || r == 0 || w == 0 || Atb == 0)
@@ -158,7 +158,6 @@ nnls_core(const gsl_matrix * A, const gsl_vector * b, gsl_vector * x)
         {
           size_t k;
           double alpha = 2.0;
-          size_t jj = 0;
 
           status = solve_ls_subset (A, b, set, p, sub, tau, s, res);
           if (status != GSL_SUCCESS)
@@ -175,7 +174,6 @@ nnls_core(const gsl_matrix * A, const gsl_vector * b, gsl_vector * x)
                   if (a < alpha)
                     {
                       alpha = a;
-                      jj = k;
                     }
                 }
             }

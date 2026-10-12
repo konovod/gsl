@@ -17,11 +17,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-static int
+static inline int
 stepper_set_driver_null (void *vstate, const gsl_odeiv2_driver * d)
 {
   /* Dummy set function for those steppers that do not
      need pointer to driver object. */
+
+  (void) vstate;
+  (void) d;
 
   return GSL_SUCCESS;
 }

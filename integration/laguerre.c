@@ -72,7 +72,8 @@ laguerre_init(const size_t n, double * diag, double * subdiag, gsl_integration_f
 static const gsl_integration_fixed_type laguerre_type =
 {
   laguerre_check,
-  laguerre_init
+  laguerre_init,
+  NULL
 };
 
 const gsl_integration_fixed_type *gsl_integration_fixed_laguerre = &laguerre_type;

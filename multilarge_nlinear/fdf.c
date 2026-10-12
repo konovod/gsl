@@ -470,6 +470,12 @@ gsl_multilarge_nlinear_eval_df(const CBLAS_TRANSPOSE_t TransJ,
   const size_t n = fdf->n;
   const size_t p = fdf->p;
 
+  (void) f;
+  (void) swts;
+  (void) h;
+  (void) fdtype;
+  (void) work;
+
   if (u != NULL && ((TransJ == CblasNoTrans && u->size != p) ||
                     (TransJ == CblasTrans && u->size != n)))
     {
@@ -541,7 +547,11 @@ gsl_multilarge_nlinear_eval_fvv(const double h,
                                 gsl_vector *work)
 {
   int status = GSL_SUCCESS;
-  
+
+  (void) h;
+  (void) f;
+  (void) work;
+
   if (fdf->fvv != NULL)
     {
       /* call user-supplied function */

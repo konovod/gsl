@@ -141,7 +141,7 @@ FUNCTION(fft_signal,complex_exp) (const int k,
 
     if (k <= 0)
       {
-        freq = (n-k) % n ;
+        freq = (int) ((n-k) % n) ;
       }
     else
       {
@@ -206,7 +206,7 @@ FUNCTION(fft_signal,complex_exppair) (const int k1,
 
     if (k1 <= 0)
       {
-        freq1 = (n - k1) % n;
+        freq1 = (int) ((n - k1) % n);
       }
     else
       {
@@ -215,7 +215,7 @@ FUNCTION(fft_signal,complex_exppair) (const int k1,
 
     if (k2 <= 0)
       {
-        freq2 = (n - k2) % n;
+        freq2 = (int) ((n - k2) % n);
       }
     else
       {

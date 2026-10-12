@@ -69,7 +69,7 @@ pcg32_get (void *vstate)
   rot = (uint32_t) (oldstate >> 59);
 
   return (unsigned long int)
-    ((xorshifted >> rot) | (xorshifted << ((-rot) & 31)));
+    ((xorshifted >> rot) | (xorshifted << ((0u - rot) & 31)));
 }
 
 static double

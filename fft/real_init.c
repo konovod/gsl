@@ -100,8 +100,8 @@ FUNCTION(gsl_fft_real_wavetable,alloc) (size_t n)
               m = m + j * q;
               m = m % n;
               theta = d_theta * m;      /*  d_theta*j*k*q */
-              GSL_REAL(wavetable->trig[t]) = cos (theta);
-              GSL_IMAG(wavetable->trig[t]) = sin (theta);
+              GSL_REAL(wavetable->trig[t]) = (ATOMIC) cos (theta);
+              GSL_IMAG(wavetable->trig[t]) = (ATOMIC) sin (theta);
 
               t++;
             }

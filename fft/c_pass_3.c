@@ -37,7 +37,7 @@ FUNCTION(fft_complex,pass_3) (const BASE in[],
   const size_t product_1 = product / factor;
   const size_t jump = (factor - 1) * product_1;
 
-  const ATOMIC tau = sqrt (3.0) / 2.0;
+  const ATOMIC tau = (ATOMIC) (sqrt (3.0) / 2.0);
 
   for (k = 0; k < q; k++)
     {
@@ -86,8 +86,8 @@ FUNCTION(fft_complex,pass_3) (const BASE in[],
           const ATOMIC t1_imag = z1_imag + z2_imag;
           
           /* t2 = z0 - t1/2 */
-          const ATOMIC t2_real = z0_real - t1_real / 2.0;
-          const ATOMIC t2_imag = z0_imag - t1_imag / 2.0;
+          const ATOMIC t2_real = (ATOMIC) (z0_real - t1_real / 2.0);
+          const ATOMIC t2_imag = (ATOMIC) (z0_imag - t1_imag / 2.0);
           
           /* t3 = (+/-) sin(pi/3)*(z1 - z2) */
           const ATOMIC t3_real = ((int) sign) * tau * (z1_real - z2_real);

@@ -27,19 +27,15 @@ FUNCTION(fft_halfcomplex,pass_3) (const BASE in[],
                                   const TYPE(gsl_complex) twiddle1[],
                                   const TYPE(gsl_complex) twiddle2[])
 {
-  size_t i, j, k, k1, jump;
+  size_t k, k1;
   size_t factor, q, m, product_1;
 
-  ATOMIC tau = sqrt (3.0) / 2.0;
-
-  i = 0;
-  j = 0;
+  ATOMIC tau = (ATOMIC) (sqrt (3.0) / 2.0);
 
   factor = 3;
   m = n / factor;
   q = n / product;
   product_1 = product / factor;
-  jump = (factor - 1) * q;
 
   for (k1 = 0; k1 < product_1; k1++)
     {
@@ -96,8 +92,8 @@ FUNCTION(fft_halfcomplex,pass_3) (const BASE in[],
           const ATOMIC t1_imag = z1_imag + z2_imag;
 
           /* t2 = z0 - t1/2 */
-          const ATOMIC t2_real = z0_real - t1_real / 2.0;
-          const ATOMIC t2_imag = z0_imag - t1_imag / 2.0;
+          const ATOMIC t2_real = (ATOMIC) (z0_real - t1_real / 2.0);
+          const ATOMIC t2_imag = (ATOMIC) (z0_imag - t1_imag / 2.0);
 
           /* t3 = sin(pi/3)*(z1 - z2) */
           const ATOMIC t3_real = tau * (z1_real - z2_real);

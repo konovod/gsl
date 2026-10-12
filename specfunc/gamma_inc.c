@@ -117,7 +117,7 @@ gamma_inc_P_series(const double a, const double x, gsl_sf_result * result)
 
     /* Handle lower part of the series where t_n is increasing, |x| > a+n */
 
-    int nlow = (x > a) ? (x - a): 0;
+    int nlow = (x > a) ? (int) (x - a): 0;
 
     for(n=1; n < nlow; n++) {
       term *= x/(a+n);

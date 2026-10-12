@@ -460,8 +460,7 @@ rk1imp_reset (void *vstate, size_t dim)
 static unsigned int
 rk1imp_order (void *vstate)
 {
-  rk1imp_state_t *state = (rk1imp_state_t *) vstate;
-  state = 0;                    /* prevent warnings about unused parameters */
+  (void) vstate; /* prevent warnings about unused parameters */
   return 1;
 }
 

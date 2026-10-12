@@ -53,6 +53,8 @@ gsl_multilarge_nlinear_test (const double xtol, const double gtol,
   int status;
   double gnorm, fnorm, phi;
 
+  (void) ftol;
+
   *info = 0;
 
   status = gsl_multifit_test_delta(w->dx, w->x, xtol*xtol, xtol);

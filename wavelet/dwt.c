@@ -51,7 +51,7 @@ binary_logn (const size_t n)
       return -1;                /* n is not a power of 2 */
     }
 
-  return logn;
+  return (int) logn;
 }
 
 static void

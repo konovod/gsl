@@ -40,7 +40,7 @@ FUNCTION(gsl_stats,select) (BASE data[],
 {
   if (n == 0)
     {
-      GSL_ERROR_VAL("array size must be positive", GSL_EBADLEN, 0.0);
+      GSL_ERROR_VAL("array size must be positive", GSL_EBADLEN, (BASE) 0.0);
     }
   else
     {
@@ -107,6 +107,6 @@ FUNCTION(gsl_stats,select) (BASE data[],
         }
 
       /* will never get here */
-      GSL_ERROR_VAL("select error", GSL_FAILURE, 0.0);
+      GSL_ERROR_VAL("select error", GSL_FAILURE, (BASE) 0.0);
     }
 }

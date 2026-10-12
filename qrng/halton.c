@@ -184,6 +184,8 @@ halton_state_t;
 static size_t
 halton_state_size (unsigned int dimension)
 {
+  (void) dimension;
+
   return sizeof (halton_state_t);
 }
 

@@ -664,6 +664,8 @@ msbdf_update (void *vstate, const size_t dim, gsl_matrix * dfdy, double *dfdt,
   const double c = 0.2;
   const double gammarel = fabs (gamma / gammaprev - 1.0);
 
+  (void) iter; /* prevent warnings about unused parameters */
+
   if (*nJ == 0 || *nJ > MSBDF_JAC_WAIT ||
       (t == failt && (gammarel < c || hratio < 1.0)))
     {
@@ -867,7 +869,7 @@ msbdf_corrector (void *vstate, const gsl_odeiv2_system * sys,
 
       /* Convergence test. Norms used are root-mean-square norms. */
 
-      stepnorm = gsl_blas_dnrm2 (relcor) / sqrt (dim);
+      stepnorm = gsl_blas_dnrm2 (relcor) / sqrt ((double) dim);
 
       if (mi > 0)
         {
@@ -980,7 +982,7 @@ msbdf_eval_order (gsl_vector * abscorscaled, gsl_vector * tempvec,
 
   /* Relative step length estimate for current order */
 
-  ordest = 1.0 / (pow (bias * gsl_blas_dnrm2 (abscorscaled) / sqrt (dim)
+  ordest = 1.0 / (pow (bias * gsl_blas_dnrm2 (abscorscaled) / sqrt ((double) dim)
                        * errcoeff, 1.0 / (*ord + 1)) + safety);
 
   /* Relative step length estimate for order ord - 1 */
@@ -992,7 +994,7 @@ msbdf_eval_order (gsl_vector * abscorscaled, gsl_vector * tempvec,
           gsl_vector_set (tempvec, i, z[*ord * dim + i] / errlev[i]);
         }
 
-      ordm1est = 1.0 / (pow (bias * gsl_blas_dnrm2 (tempvec) / sqrt (dim)
+      ordm1est = 1.0 / (pow (bias * gsl_blas_dnrm2 (tempvec) / sqrt ((double) dim)
                              / ordm1coeff, 1.0 / (*ord)) + safety);
     }
   else
@@ -1005,7 +1007,7 @@ msbdf_eval_order (gsl_vector * abscorscaled, gsl_vector * tempvec,
   if (*ord < MSBDF_MAX_ORD)
     {
       const double c = -ordp1coeff / ordp1coeffprev *
-        pow (h / hprev[1], *ord + 1);
+        pow (h / hprev[1], (double) (*ord + 1));
 
       for (i = 0; i < dim; i++)
         {
@@ -1013,7 +1015,7 @@ msbdf_eval_order (gsl_vector * abscorscaled, gsl_vector * tempvec,
                           gsl_vector_get (abscorscaled, i));
         }
 
-      ordp1est = 1.0 / (pow (bias2 * gsl_blas_dnrm2 (svec) / sqrt (dim)
+      ordp1est = 1.0 / (pow (bias2 * gsl_blas_dnrm2 (svec) / sqrt ((double) dim)
                              / ordp2coeff, 1.0 / (*ord + 2)) + safety);
     }
   else
@@ -1354,7 +1356,7 @@ msbdf_apply (void *vstate, size_t dim, double t, double h,
   /* Sanity check */
 
   { 
-    const int deltaord = ord - ordprev[0];
+    const int deltaord = (int) (ord - ordprev[0]);
 
   if (deltaord > 1 || deltaord < -1)
     {
@@ -1762,7 +1764,7 @@ msbdf_order (void *vstate)
 {
   msbdf_state_t *state = (msbdf_state_t *) vstate;
 
-  return state->ord;
+  return (unsigned int) state->ord;
 }
 
 static void

@@ -28,6 +28,13 @@ static int
 bilinear_init(void * state, const double xa[], const double ya[],
               const double za[], size_t xsize, size_t ysize)
 {
+  (void) state;
+  (void) xa;
+  (void) ya;
+  (void) za;
+  (void) xsize;
+  (void) ysize;
+
   return GSL_SUCCESS;
 }
 
@@ -41,6 +48,8 @@ bilinear_eval(const void * state, const double xarr[], const double yarr[],
   double dx, dy;
   double t, u;
   size_t xi, yi;
+
+  (void) state;
 
   if (xa != NULL)
     xi = gsl_interp_accel_find(xa, xarr, xsize, x);
@@ -80,6 +89,8 @@ bilinear_deriv_x(const void * state, const double xarr[],
   double dt, u;
   size_t xi, yi;
 
+  (void) state;
+
   if (xa != NULL)
     xi = gsl_interp_accel_find(xa, xarr, xsize, x);
   else
@@ -118,6 +129,8 @@ bilinear_deriv_y(const void * state, const double xarr[],
   double t, du;
   size_t xi, yi;
 
+  (void) state;
+
   if (xa != NULL)
     xi = gsl_interp_accel_find(xa, xarr, xsize, x);
   else
@@ -151,6 +164,17 @@ bilinear_deriv2(const void * state, const double xarr[],
                 size_t xsize, size_t ysize, double x, double y,
                 gsl_interp_accel * xa, gsl_interp_accel * ya, double * z_pp)
 {
+  (void) state;
+  (void) xarr;
+  (void) yarr;
+  (void) zarr;
+  (void) xsize;
+  (void) ysize;
+  (void) x;
+  (void) y;
+  (void) xa;
+  (void) ya;
+
   *z_pp = 0.0;
   return GSL_SUCCESS;
 }
@@ -165,6 +189,8 @@ bilinear_derivxy(const void * state, const double xarr[],
   double dx, dy;
   double dt, du;
   size_t xi, yi;
+
+  (void) state;
 
   if (xa != NULL)
     xi = gsl_interp_accel_find(xa, xarr, xsize, x);

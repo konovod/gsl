@@ -29,5 +29,5 @@
     iy += incY;
   }
 
-  return r;
+  return (BASE)(r);
 }

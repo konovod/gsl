@@ -166,16 +166,16 @@ gsl_linalg_ldlt_band_svx (const gsl_matrix * LDLT, gsl_vector * x)
 
       /* solve for z using forward-substitution, L z = b */
       cblas_dtbsv(CblasColMajor, CblasLower, CblasNoTrans, CblasUnit,
-                  (int) LDLT->size1, (int) (LDLT->size2 - 1), LDLT->data, LDLT->tda,
-                  x->data, x->stride);
+                  (int) LDLT->size1, (int) (LDLT->size2 - 1), LDLT->data, (int) LDLT->tda,
+                  x->data, (int) x->stride);
 
       /* solve for y, D y = z */
       gsl_vector_div(x, &diag.vector);
 
       /* perform back-substitution, L^T x = y */
       cblas_dtbsv(CblasColMajor, CblasLower, CblasTrans, CblasUnit,
-                  (int) LDLT->size1, (int) (LDLT->size2 - 1), LDLT->data, LDLT->tda,
-                  x->data, x->stride);
+                  (int) LDLT->size1, (int) (LDLT->size2 - 1), LDLT->data, (int) LDLT->tda,
+                  x->data, (int) x->stride);
 
       return GSL_SUCCESS;
     }
@@ -335,16 +335,16 @@ ldlt_band_Ainv(CBLAS_TRANSPOSE_t TransA, gsl_vector * x, void * params)
 
   /* compute x := L^{-1} x */
   cblas_dtbsv(CblasColMajor, CblasLower, CblasNoTrans, CblasUnit,
-              (int) LDLT->size1, (int) (LDLT->size2 - 1), LDLT->data, LDLT->tda,
-              x->data, x->stride);
+              (int) LDLT->size1, (int) (LDLT->size2 - 1), LDLT->data, (int) LDLT->tda,
+              x->data, (int) x->stride);
 
   /* compute x := D^{-1} x */
   gsl_vector_div(x, &diag.vector);
 
   /* compute x := L^{-T} x */
   cblas_dtbsv(CblasColMajor, CblasLower, CblasTrans, CblasUnit,
-              (int) LDLT->size1, (int) (LDLT->size2 - 1), LDLT->data, LDLT->tda,
-              x->data, x->stride);
+              (int) LDLT->size1, (int) (LDLT->size2 - 1), LDLT->data, (int) LDLT->tda,
+              x->data, (int) x->stride);
 
   return GSL_SUCCESS;
 }

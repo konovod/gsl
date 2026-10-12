@@ -148,7 +148,7 @@ FUNCTION (gsl_spmatrix, transpose_memcpy) (TYPE (gsl_spmatrix) * dest, const TYP
               for (p = Ap[j]; p < Ap[j + 1]; ++p)
                 {
                   int k = w[Ai[p]]++;
-                  ATi[k] = j;
+                  ATi[k] = (int)(j);
 
                   for (r = 0; r < MULTIPLICITY; ++r)
                     ATd[MULTIPLICITY * k + r] = Ad[MULTIPLICITY * p + r];
@@ -187,7 +187,7 @@ FUNCTION (gsl_spmatrix, transpose_memcpy) (TYPE (gsl_spmatrix) * dest, const TYP
               for (p = Ap[i]; p < Ap[i + 1]; ++p)
                 {
                   size_t k = w[Aj[p]]++;
-                  ATj[k] = i;
+                  ATj[k] = (int)(i);
 
                   for (r = 0; r < MULTIPLICITY; ++r)
                     ATd[MULTIPLICITY * k + r] = Ad[MULTIPLICITY * p + r];

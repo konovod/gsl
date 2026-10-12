@@ -572,7 +572,7 @@ msadams_corrector (void *vstate, const gsl_odeiv2_system * sys,
           gsl_vector_set (abscor, i, ytmp[i]);
         }
 
-      stepnorm = gsl_blas_dnrm2 (relcor) / sqrt (dim);
+      stepnorm = gsl_blas_dnrm2 (relcor) / sqrt ((double) dim);
 
       if (mi > 0)
         {
@@ -683,7 +683,7 @@ msadams_eval_order (gsl_vector * abscor, gsl_vector * tempvec,
 
   /* Relative step length estimate for current order */
 
-  ordest = 1.0 / (pow (bias * gsl_blas_dnrm2 (abscor) / sqrt (dim)
+  ordest = 1.0 / (pow (bias * gsl_blas_dnrm2 (abscor) / sqrt ((double) dim)
                        * errcoeff, 1.0 / (*ord + 1)) + safety);
 
   /* Relative step length estimate for order ord - 1 */
@@ -695,7 +695,7 @@ msadams_eval_order (gsl_vector * abscor, gsl_vector * tempvec,
           gsl_vector_set (tempvec, i, z[*ord * dim + i] / errlev[i]);
         }
 
-      ordm1est = 1.0 / (pow (bias * gsl_blas_dnrm2 (tempvec) / sqrt (dim)
+      ordm1est = 1.0 / (pow (bias * gsl_blas_dnrm2 (tempvec) / sqrt ((double) dim)
                              / ordm1coeff, 1.0 / (*ord)) + safety);
     }
   else
@@ -708,7 +708,7 @@ msadams_eval_order (gsl_vector * abscor, gsl_vector * tempvec,
   if (*ord < MSADAMS_MAX_ORD)
     {
       const double c = -ordp1coeff / ordp1coeffprev *
-        pow (h / hprev[1], *ord + 1);
+        pow (h / hprev[1], (double) (*ord + 1));
 
       for (i = 0; i < dim; i++)
         {
@@ -716,7 +716,7 @@ msadams_eval_order (gsl_vector * abscor, gsl_vector * tempvec,
                           gsl_vector_get (abscor, i));
         }
 
-      ordp1est = 1.0 / (pow (bias2 * gsl_blas_dnrm2 (svec) / sqrt (dim)
+      ordp1est = 1.0 / (pow (bias2 * gsl_blas_dnrm2 (svec) / sqrt ((double) dim)
                              / ordp2coeff, 1.0 / (*ord + 2)) + safety);
     }
   else
@@ -978,7 +978,7 @@ msadams_apply (void *vstate, size_t dim, double t, double h,
 
   /* Sanity check  */
 
-  deltaord = ord - state->ordprev;
+  deltaord = (int) (ord - state->ordprev);
 
   if (deltaord > 1 || deltaord < -1)
     {
@@ -1288,7 +1288,7 @@ msadams_order (void *vstate)
 {
   msadams_state_t *state = (msadams_state_t *) vstate;
 
-  return state->ord;
+  return (unsigned int) state->ord;
 }
 
 static void

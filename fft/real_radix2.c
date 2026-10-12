@@ -24,7 +24,6 @@ FUNCTION(gsl_fft_real,radix2_transform) (BASE data[], const size_t stride,  cons
   size_t p, p_1, q;
   size_t i; 
   size_t logn = 0;
-  int status;
 
   if (n == 1) /* identity operation */
     {
@@ -46,7 +45,7 @@ FUNCTION(gsl_fft_real,radix2_transform) (BASE data[], const size_t stride,  cons
 
   /* bit reverse the ordering of input data for decimation in time algorithm */
   
-  status = FUNCTION(fft_real,bitreverse_order)(data, stride, n, logn) ;
+  (void) FUNCTION(fft_real,bitreverse_order)(data, stride, n, logn) ;
 
   /* apply fft recursion */
 
@@ -79,9 +78,9 @@ FUNCTION(gsl_fft_real,radix2_transform) (BASE data[], const size_t stride,  cons
 
         const double theta = - 2.0 * M_PI / p;
         
-        const ATOMIC s = sin (theta);
-        const ATOMIC t = sin (theta / 2.0);
-        const ATOMIC s2 = 2.0 * t * t;
+        const ATOMIC s = (ATOMIC) sin (theta);
+        const ATOMIC t = (ATOMIC) sin (theta / 2.0);
+        const ATOMIC s2 = (ATOMIC) (2.0 * t * t);
         
         for (a = 1; a < (p_1)/2; a++)
           {

@@ -41,7 +41,7 @@ double
 gsl_ran_gamma_knuth (const gsl_rng * r, const double a, const double b)
 {
   /* assume a > 0 */
-  unsigned int na = floor (a);
+  unsigned int na = (unsigned int) floor (a);
 
   if(a >= UINT_MAX) 
     {

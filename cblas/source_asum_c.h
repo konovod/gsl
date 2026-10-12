@@ -27,7 +27,7 @@
   }
 
   for (i = 0; i < N; i++) {
-    r += fabs(CONST_REAL(X, ix)) + fabs(CONST_IMAG(X, ix));
+    r += (BASE)(fabs(CONST_REAL(X, ix)) + fabs(CONST_IMAG(X, ix)));
     ix += incX;
   }
   return r;

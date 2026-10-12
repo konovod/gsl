@@ -17,7 +17,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-static void
+static inline void
 chop_small_elements (gsl_vector * d, gsl_vector * f)
 {
   const size_t N = d->size;
@@ -40,7 +40,7 @@ chop_small_elements (gsl_vector * d, gsl_vector * f)
 
 }
 
-static double
+static inline double
 trailing_eigenvalue (const gsl_vector * d, const gsl_vector * f)
 {
   const size_t n = d->size;
@@ -114,7 +114,7 @@ trailing_eigenvalue (const gsl_vector * d, const gsl_vector * f)
   return mu;
 }
 
-static void
+static inline void
 create_schur (double d0, double f0, double d1, double * c, double * s)
 {
   double apq = 2.0 * d0 * f0;
@@ -167,7 +167,7 @@ create_schur (double d0, double f0, double d1, double * c, double * s)
     }
 }
 
-static void
+static inline void
 svd2 (gsl_vector * d, gsl_vector * f, gsl_matrix * U, gsl_matrix * V)
 {
   size_t i;
@@ -296,7 +296,7 @@ svd2 (gsl_vector * d, gsl_vector * f, gsl_matrix * U, gsl_matrix * V)
 }
 
 
-static void
+static inline void
 chase_out_intermediate_zero (gsl_vector * d, gsl_vector * f, gsl_matrix * U, size_t k0)
 {
 #if !USE_BLAS
@@ -354,7 +354,7 @@ chase_out_intermediate_zero (gsl_vector * d, gsl_vector * f, gsl_matrix * U, siz
     }
 }
 
-static void
+static inline void
 chase_out_trailing_zero (gsl_vector * d, gsl_vector * f, gsl_matrix * V)
 {
 #if !USE_BLAS
@@ -412,7 +412,7 @@ chase_out_trailing_zero (gsl_vector * d, gsl_vector * f, gsl_matrix * V)
     }
 }
 
-static void
+static inline void
 qrstep (gsl_vector * d, gsl_vector * f, gsl_matrix * U, gsl_matrix * V)
 {
 #if !USE_BLAS

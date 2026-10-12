@@ -37,7 +37,7 @@ int gsl_sf_pow_int_e(double x, int n, gsl_sf_result * result)
 
 
   if(n < 0) {
-    un = -(unsigned int)n;  /* |INT_MIN| is representable unsigned */
+    un = (unsigned int)(-(n));  /* |INT_MIN| is representable unsigned */
 
     if(x == 0.0) {
       double u = 1.0 / x;

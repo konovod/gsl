@@ -50,7 +50,7 @@ FUNCTION(gsl_fft_complex,radix2_inverse) (TYPE(gsl_complex_packed_array) data,
   /* normalize inverse fft with 1/n */
 
   {
-    const ATOMIC norm = 1.0 / n;
+    const ATOMIC norm = (ATOMIC) (1.0 / n);
     size_t i;
     for (i = 0; i < n; i++)
       {
@@ -74,7 +74,6 @@ FUNCTION(gsl_fft_complex,radix2_transform) (TYPE(gsl_complex_packed_array) data,
   size_t dual;
   size_t bit; 
   size_t logn = 0;
-  int status;
 
   if (n == 1) /* identity operation */
     {
@@ -96,7 +95,7 @@ FUNCTION(gsl_fft_complex,radix2_transform) (TYPE(gsl_complex_packed_array) data,
 
   /* bit reverse the ordering of input data for decimation in time algorithm */
   
-  status = FUNCTION(fft_complex,bitreverse_order) (data, stride, n, logn) ;
+  (void) FUNCTION(fft_complex,bitreverse_order) (data, stride, n, logn) ;
 
   /* apply fft recursion */
 
@@ -109,9 +108,9 @@ FUNCTION(gsl_fft_complex,radix2_transform) (TYPE(gsl_complex_packed_array) data,
 
       const double theta = 2.0 * ((int) sign) * M_PI / (2.0 * (double) dual);
 
-      const ATOMIC s = sin (theta);
-      const ATOMIC t = sin (theta / 2.0);
-      const ATOMIC s2 = 2.0 * t * t;
+      const ATOMIC s = (ATOMIC) sin (theta);
+      const ATOMIC t = (ATOMIC) sin (theta / 2.0);
+      const ATOMIC s2 = (ATOMIC) (2.0 * t * t);
 
       size_t a, b;
 
@@ -209,7 +208,7 @@ FUNCTION(gsl_fft_complex,radix2_dif_inverse) (TYPE(gsl_complex_packed_array) dat
   /* normalize inverse fft with 1/n */
 
   {
-    const ATOMIC norm = 1.0 / n;
+    const ATOMIC norm = (ATOMIC) (1.0 / n);
     size_t i;
     for (i = 0; i < n; i++)
       {
@@ -231,7 +230,6 @@ FUNCTION(gsl_fft_complex,radix2_dif_transform) (TYPE(gsl_complex_packed_array) d
   size_t dual;
   size_t bit; 
   size_t logn = 0;
-  int status;
 
   if (n == 1) /* identity operation */
     {
@@ -262,9 +260,9 @@ FUNCTION(gsl_fft_complex,radix2_dif_transform) (TYPE(gsl_complex_packed_array) d
 
       const double theta = 2.0 * ((int) sign) * M_PI / ((double) (2 * dual));
 
-      const ATOMIC s = sin (theta);
-      const ATOMIC t = sin (theta / 2.0);
-      const ATOMIC s2 = 2.0 * t * t;
+      const ATOMIC s = (ATOMIC) sin (theta);
+      const ATOMIC t = (ATOMIC) sin (theta / 2.0);
+      const ATOMIC s2 = (ATOMIC) (2.0 * t * t);
 
       size_t a, b;
 
@@ -301,7 +299,7 @@ FUNCTION(gsl_fft_complex,radix2_dif_transform) (TYPE(gsl_complex_packed_array) d
   /* bit reverse the ordering of output data for decimation in
      frequency algorithm */
   
-  status = FUNCTION(fft_complex,bitreverse_order)(data, stride, n, logn) ;
+  (void) FUNCTION(fft_complex,bitreverse_order)(data, stride, n, logn) ;
 
   return 0;
 

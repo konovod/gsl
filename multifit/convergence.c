@@ -51,6 +51,8 @@ gsl_multifit_fdfsolver_test (const gsl_multifit_fdfsolver * s,
   int status;
   double gnorm, fnorm, phi;
 
+  (void) ftol;
+
   *info = 0;
 
   status = gsl_multifit_test_delta(s->dx, s->x, xtol*xtol, xtol);

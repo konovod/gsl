@@ -338,8 +338,7 @@ rkf45_reset (void *vstate, size_t dim)
 static unsigned int
 rkf45_order (void *vstate)
 {
-  rkf45_state_t *state = (rkf45_state_t *) vstate;
-  state = 0; /* prevent warnings about unused parameters */
+  (void) vstate; /* prevent warnings about unused parameters */
   return 5;
 }
 

@@ -41,13 +41,13 @@ FUNCTION(fft_complex,pass_7) (const BASE in[],
   const size_t p_1 = product / factor;
   const size_t jump = (factor - 1) * p_1;
 
-  const ATOMIC c1 = cos(1.0 * 2.0 * M_PI / 7.0) ;
-  const ATOMIC c2 = cos(2.0 * 2.0 * M_PI / 7.0) ;
-  const ATOMIC c3 = cos(3.0 * 2.0 * M_PI / 7.0) ;
+  const ATOMIC c1 = (ATOMIC) cos(1.0 * 2.0 * M_PI / 7.0) ;
+  const ATOMIC c2 = (ATOMIC) cos(2.0 * 2.0 * M_PI / 7.0) ;
+  const ATOMIC c3 = (ATOMIC) cos(3.0 * 2.0 * M_PI / 7.0) ;
 
-  const ATOMIC s1 = sin(1.0 * 2.0 * M_PI / 7.0) ;
-  const ATOMIC s2 = sin(2.0 * 2.0 * M_PI / 7.0) ;
-  const ATOMIC s3 = sin(3.0 * 2.0 * M_PI / 7.0) ;
+  const ATOMIC s1 = (ATOMIC) sin(1.0 * 2.0 * M_PI / 7.0) ;
+  const ATOMIC s2 = (ATOMIC) sin(2.0 * 2.0 * M_PI / 7.0) ;
+  const ATOMIC s3 = (ATOMIC) sin(3.0 * 2.0 * M_PI / 7.0) ;
 
   for (k = 0; k < q; k++)
     {
@@ -161,36 +161,36 @@ FUNCTION(fft_complex,pass_7) (const BASE in[],
           const ATOMIC b0_imag = z0_imag + t6_imag + t4_imag ;
           
           /* b1 = ((cos(2pi/7) + cos(4pi/7) + cos(6pi/7))/3-1) (t6 + t4) */
-          const ATOMIC b1_real = (((c1 + c2 + c3)/3.0 - 1.0) * (t6_real + t4_real));
-          const ATOMIC b1_imag = (((c1 + c2 + c3)/3.0 - 1.0) * (t6_imag + t4_imag));
+          const ATOMIC b1_real = (ATOMIC) ((((c1 + c2 + c3)/3.0 - 1.0) * (t6_real + t4_real)));
+          const ATOMIC b1_imag = (ATOMIC) ((((c1 + c2 + c3)/3.0 - 1.0) * (t6_imag + t4_imag)));
           
           /* b2 = ((2*cos(2pi/7) - cos(4pi/7) - cos(6pi/7))/3) (t0 - t4) */
-          const ATOMIC b2_real = (((2.0 * c1 - c2 - c3)/3.0) * (t0_real - t4_real));
-          const ATOMIC b2_imag = (((2.0 * c1 - c2 - c3)/3.0) * (t0_imag - t4_imag));
+          const ATOMIC b2_real = (ATOMIC) ((((2.0 * c1 - c2 - c3)/3.0) * (t0_real - t4_real)));
+          const ATOMIC b2_imag = (ATOMIC) ((((2.0 * c1 - c2 - c3)/3.0) * (t0_imag - t4_imag)));
           
           /* b3 = ((cos(2pi/7) - 2*cos(4pi/7) + cos(6pi/7))/3) (t4 - t2) */
-          const ATOMIC b3_real = (((c1 - 2.0*c2 + c3)/3.0) * (t4_real - t2_real));
-          const ATOMIC b3_imag = (((c1 - 2.0*c2 + c3)/3.0) * (t4_imag - t2_imag));
+          const ATOMIC b3_real = (ATOMIC) ((((c1 - 2.0*c2 + c3)/3.0) * (t4_real - t2_real)));
+          const ATOMIC b3_imag = (ATOMIC) ((((c1 - 2.0*c2 + c3)/3.0) * (t4_imag - t2_imag)));
           
           /* b4 = ((cos(2pi/7) + cos(4pi/7) - 2*cos(6pi/7))/3) (t2 - t0) */
-          const ATOMIC b4_real = (((c1 + c2 - 2.0 * c3)/3.0) * (t2_real - t0_real));
-          const ATOMIC b4_imag = (((c1 + c2 - 2.0 * c3)/3.0) * (t2_imag - t0_imag));
+          const ATOMIC b4_real = (ATOMIC) ((((c1 + c2 - 2.0 * c3)/3.0) * (t2_real - t0_real)));
+          const ATOMIC b4_imag = (ATOMIC) ((((c1 + c2 - 2.0 * c3)/3.0) * (t2_imag - t0_imag)));
           
           /* b5 = sign * ((sin(2pi/7) + sin(4pi/7) - sin(6pi/7))/3) (t7 + t1) */
-          const ATOMIC b5_real = (-(int)sign) * ((s1 + s2 - s3)/3.0) * (t7_real + t1_real) ;
-          const ATOMIC b5_imag = (-(int)sign) * ((s1 + s2 - s3)/3.0) * (t7_imag + t1_imag) ;
+          const ATOMIC b5_real = (ATOMIC) ((-(int)sign) * ((s1 + s2 - s3)/3.0) * (t7_real + t1_real)) ;
+          const ATOMIC b5_imag = (ATOMIC) ((-(int)sign) * ((s1 + s2 - s3)/3.0) * (t7_imag + t1_imag)) ;
           
           /* b6 = sign * ((2sin(2pi/7) - sin(4pi/7) + sin(6pi/7))/3) (t1 - t5) */
-          const ATOMIC b6_real = (-(int)sign) * ((2.0 * s1 - s2 + s3)/3.0) * (t1_real - t5_real) ;
-          const ATOMIC b6_imag = (-(int)sign) * ((2.0 * s1 - s2 + s3)/3.0) * (t1_imag - t5_imag) ;
+          const ATOMIC b6_real = (ATOMIC) ((-(int)sign) * ((2.0 * s1 - s2 + s3)/3.0) * (t1_real - t5_real)) ;
+          const ATOMIC b6_imag = (ATOMIC) ((-(int)sign) * ((2.0 * s1 - s2 + s3)/3.0) * (t1_imag - t5_imag)) ;
           
           /* b7 = sign * ((sin(2pi/7) - 2sin(4pi/7) - sin(6pi/7))/3) (t5 - t3) */
-          const ATOMIC b7_real = (-(int)sign) * ((s1 - 2.0 * s2 - s3)/3.0) * (t5_real - t3_real) ;
-          const ATOMIC b7_imag = (-(int)sign) * ((s1 - 2.0 * s2 - s3)/3.0) * (t5_imag - t3_imag) ;
+          const ATOMIC b7_real = (ATOMIC) ((-(int)sign) * ((s1 - 2.0 * s2 - s3)/3.0) * (t5_real - t3_real)) ;
+          const ATOMIC b7_imag = (ATOMIC) ((-(int)sign) * ((s1 - 2.0 * s2 - s3)/3.0) * (t5_imag - t3_imag)) ;
           
           /* b8 = sign * ((sin(2pi/7) + sin(4pi/7) + 2sin(6pi/7))/3) (t3 - t1) */
-          const ATOMIC b8_real = (-(int)sign) * ((s1 + s2 + 2.0 * s3)/3.0) * (t3_real - t1_real) ;
-          const ATOMIC b8_imag = (-(int)sign) * ((s1 + s2 + 2.0 * s3)/3.0) * (t3_imag - t1_imag) ;
+          const ATOMIC b8_real = (ATOMIC) ((-(int)sign) * ((s1 + s2 + 2.0 * s3)/3.0) * (t3_real - t1_real)) ;
+          const ATOMIC b8_imag = (ATOMIC) ((-(int)sign) * ((s1 + s2 + 2.0 * s3)/3.0) * (t3_imag - t1_imag)) ;
           
           
           /* T0 = b0 + b1 */

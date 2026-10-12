@@ -186,6 +186,8 @@ reversehalton_state_t;
 static size_t
 reversehalton_state_size (unsigned int dimension)
 {
+  (void) dimension;
+
   return sizeof (reversehalton_state_t);
 }
 

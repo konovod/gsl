@@ -38,7 +38,7 @@ gsl_ran_poisson (const gsl_rng * r, double mu)
 
   while (mu > 10)
     {
-      unsigned int m = mu * (7.0 / 8.0);
+      unsigned int m = (unsigned int) (mu * (7.0 / 8.0));
 
       double X = gsl_ran_gamma_int (r, m);
 

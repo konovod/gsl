@@ -32,10 +32,10 @@
     const BASE y = CONST_IMAG(X, ix);
 
     if (x != 0.0) {
-      const BASE ax = fabs(x);
+      const BASE ax = (BASE)(fabs(x));
 
       if (scale < ax) {
-        ssq = 1.0 + ssq * (scale / ax) * (scale / ax);
+        ssq = (BASE)(1.0 + ssq * (scale / ax) * (scale / ax));
         scale = ax;
       } else {
         ssq += (ax / scale) * (ax / scale);
@@ -43,10 +43,10 @@
     }
 
     if (y != 0.0) {
-      const BASE ay = fabs(y);
+      const BASE ay = (BASE)(fabs(y));
 
       if (scale < ay) {
-        ssq = 1.0 + ssq * (scale / ay) * (scale / ay);
+        ssq = (BASE)(1.0 + ssq * (scale / ay) * (scale / ay));
         scale = ay;
       } else {
         ssq += (ay / scale) * (ay / scale);
@@ -56,5 +56,5 @@
     ix += incX;
   }
 
-  return scale * sqrt(ssq);
+  return (BASE)(scale * sqrt(ssq));
 }

@@ -143,7 +143,6 @@ gsl_eigen_jacobi (gsl_matrix * a,
 {
   size_t i, p, q;
   const size_t M = a->size1, N = a->size2;
-  double red, redsum = 0.0;
 
   if (M != N)
     {
@@ -174,8 +173,7 @@ gsl_eigen_jacobi (gsl_matrix * a,
             {
               double c, s;
 
-              red = symschur2 (a, p, q, &c, &s);
-              redsum += red;
+              symschur2 (a, p, q, &c, &s);
 
               /* Compute A <- J^T A J */
               apply_jacobi_L (a, p, q, c, s);
@@ -187,7 +185,7 @@ gsl_eigen_jacobi (gsl_matrix * a,
         }
     }
 
-  *nrot = i;
+  *nrot = (unsigned int) i;
 
   for (p = 0; p < N; p++)
     {

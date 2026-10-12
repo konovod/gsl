@@ -77,6 +77,8 @@ typedef struct
 
 static size_t nied2_state_size(unsigned int dimension)
 {
+  (void) dimension;
+
   return sizeof(nied2_state_t);
 }
 

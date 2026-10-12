@@ -48,7 +48,7 @@ gsl_ran_logarithmic (const gsl_rng * r, const double p)
       if (v <= q*q)
         {
           double x = 1 + log(v)/log(q) ;
-          return x ;
+          return (unsigned int) x ;
         }
       else if (v <= q)
         {

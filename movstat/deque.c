@@ -31,10 +31,8 @@ typedef struct
 
 static size_t deque_size(const size_t n);
 static int deque_init(const size_t n, deque * d);
-static int deque_empty(deque * d);
 static int deque_is_empty(const deque * d);
 static int deque_is_full(const deque * d);
-static int deque_push_front(const deque_type_t x, deque * d);
 static int deque_push_back(const deque_type_t x, deque * d);
 static int deque_pop_front(deque * d);
 static int deque_pop_back(deque * d);
@@ -63,15 +61,6 @@ deque_init(const size_t n, deque * d)
   return GSL_SUCCESS;
 }
 
-/* empty the queue */
-static int
-deque_empty(deque * d)
-{
-  d->head = -1;
-  d->tail = 0;
-  return GSL_SUCCESS;
-}
-
 /* check if queue is empty */
 static int
 deque_is_empty(const deque * d)
@@ -85,36 +74,6 @@ deque_is_full(const deque * d)
 {
   return ((d->head == 0 && d->tail == d->size - 1) ||
           (d->head == d->tail + 1));
-}
-
-static int
-deque_push_front(const deque_type_t x, deque * d)
-{
-  if (deque_is_full(d))
-    {
-      GSL_ERROR("deque is full", GSL_EOVRFLW);
-    }
-  else
-    {
-      if (d->head == -1)     /* queue is empty */
-        {
-          d->head = 0;
-          d->tail = 0;
-        }
-      else if (d->head == 0) /* head is in first position, wrap to end */
-        {
-          d->head = d->size - 1;
-        }
-      else                   /* decrement head */
-        {
-          --(d->head);
-        }
-
-      /* insert element */
-      d->array[d->head] = x;
-
-      return GSL_SUCCESS;
-    }
 }
 
 static int

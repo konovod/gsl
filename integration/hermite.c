@@ -72,7 +72,8 @@ hermite_init(const size_t n, double * diag, double * subdiag, gsl_integration_fi
 static const gsl_integration_fixed_type hermite_type =
 {
   hermite_check,
-  hermite_init
+  hermite_init,
+  NULL
 };
 
 const gsl_integration_fixed_type *gsl_integration_fixed_hermite = &hermite_type;

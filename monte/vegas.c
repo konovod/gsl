@@ -141,7 +141,7 @@ gsl_monte_vegas_integrate (gsl_monte_function * f,
 
       if (state->verbose >= 0)
         {
-          print_lim (state, xl, xu, dim);
+          print_lim (state, xl, xu, (unsigned long) dim);
         }
     }
 
@@ -157,22 +157,22 @@ gsl_monte_vegas_integrate (gsl_monte_function * f,
 
   if (state->stage <= 2)
     {
-      unsigned int bins = state->bins_max;
+      unsigned int bins = (unsigned int) state->bins_max;
       unsigned int boxes = 1;
 
       if (state->mode != GSL_VEGAS_MODE_IMPORTANCE_ONLY)
         {
           /* shooting for 2 calls/box */
 
-          boxes = floor (pow (calls / 2.0, 1.0 / dim));
+          boxes = (unsigned int) floor (pow (calls / 2.0, 1.0 / dim));
           state->mode = GSL_VEGAS_MODE_IMPORTANCE;
 
           if (2 * boxes >= state->bins_max)
             {
               /* if bins/box < 2 */
-              int box_per_bin = GSL_MAX (boxes / state->bins_max, 1);
+              int box_per_bin = (int) GSL_MAX (boxes / state->bins_max, 1);
 
-              bins = GSL_MIN(boxes / box_per_bin, state->bins_max);
+              bins = (unsigned int) GSL_MIN(boxes / box_per_bin, state->bins_max);
               boxes = box_per_bin * bins;
 
               state->mode = GSL_VEGAS_MODE_STRATIFIED;
@@ -180,9 +180,9 @@ gsl_monte_vegas_integrate (gsl_monte_function * f,
         }
 
       {
-        double tot_boxes = gsl_pow_int ((double) boxes, dim);
-        state->calls_per_box = GSL_MAX (calls / tot_boxes, 2);
-        calls = state->calls_per_box * tot_boxes;
+        double tot_boxes = gsl_pow_int ((double) boxes, (int) dim);
+        state->calls_per_box = (unsigned int) GSL_MAX (calls / tot_boxes, 2);
+        calls = (size_t) (state->calls_per_box * tot_boxes);
       }
 
       /* total volume of x-space/(avg num of calls/bin) */
@@ -200,14 +200,15 @@ gsl_monte_vegas_integrate (gsl_monte_function * f,
 
           if (state->verbose > 1)
             {
-              print_grid (state, dim);
+              print_grid (state, (unsigned long) dim);
             }
         }
 
       if (state->verbose >= 0)
         {
           print_head (state,
-                      dim, calls, state->it_num, state->bins, state->boxes);
+                      (unsigned long) dim, (unsigned long) calls,
+                      state->it_num, state->bins, state->boxes);
         }
     }
 
@@ -226,7 +227,7 @@ gsl_monte_vegas_integrate (gsl_monte_function * f,
       double *x = state->x;
       coord *bin = state->bin;
 
-      state->it_num = state->it_start + it;
+      state->it_num = (unsigned int) (state->it_start + it);
 
       reset_grid_values (state);
       init_box_coord (state, state->box);
@@ -347,20 +348,20 @@ gsl_monte_vegas_integrate (gsl_monte_function * f,
                      state->chisq);
           if (it + 1 == state->iterations && state->verbose > 0)
             {
-              print_grid (state, dim);
+              print_grid (state, (unsigned long) dim);
             }
         }
 
       if (state->verbose > 1)
         {
-          print_dist (state, dim);
+          print_dist (state, (unsigned long) dim);
         }
 
       refine_grid (state);
 
       if (state->verbose > 1)
         {
-          print_grid (state, dim);
+          print_grid (state, (unsigned long) dim);
         }
 
     }
@@ -500,7 +501,7 @@ gsl_monte_vegas_init (gsl_monte_vegas_state * state)
   state->iterations = 5;
   state->mode = GSL_VEGAS_MODE_IMPORTANCE;
   state->chisq = 0;
-  state->bins = state->bins_max;
+  state->bins = (unsigned int) state->bins_max;
   state->ostream = stdout;
 
   return GSL_SUCCESS;
@@ -549,7 +550,7 @@ void
 gsl_monte_vegas_params_set (gsl_monte_vegas_state * s, const gsl_monte_vegas_params * p)
 {
   s->alpha = p->alpha;
-  s->iterations = p->iterations;
+  s->iterations = (unsigned int) p->iterations;
   s->stage = p->stage;
   s->mode = p->mode;
   s->verbose = p->verbose;
@@ -575,7 +576,7 @@ init_box_coord (gsl_monte_vegas_state * s, coord box[])
 static int
 change_box_coord (gsl_monte_vegas_state * s, coord box[])
 {
-  int j = s->dim - 1;
+  int j = (int) (s->dim - 1);
 
   int ng = s->boxes;
 
@@ -673,7 +674,7 @@ random_point (double x[], coord bin[], double *bin_vol,
 
       double z = ((box[j] + gsl_rng_uniform_pos (r)) / boxes) * bins;
 
-      int k = z;
+      int k = (int) z;
 
       double y, bin_width;
 

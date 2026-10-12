@@ -26,17 +26,17 @@
   if (N <= 0 || incX <= 0) {
     return 0;
   } else if (N == 1) {
-    return fabs(X[0]);
+    return (BASE)(fabs(X[0]));
   }
 
   for (i = 0; i < N; i++) {
     const BASE x = X[ix];
 
     if (x != 0.0) {
-      const BASE ax = fabs(x);
+      const BASE ax = (BASE)(fabs(x));
 
       if (scale < ax) {
-        ssq = 1.0 + ssq * (scale / ax) * (scale / ax);
+        ssq = (BASE)(1.0 + ssq * (scale / ax) * (scale / ax));
         scale = ax;
       } else {
         ssq += (ax / scale) * (ax / scale);
@@ -46,5 +46,5 @@
     ix += incX;
   }
 
-  return scale * sqrt(ssq);
+  return (BASE)(scale * sqrt(ssq));
 }

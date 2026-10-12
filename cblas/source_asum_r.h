@@ -27,7 +27,7 @@
   }
 
   for (i = 0; i < N; i++) {
-    r += fabs(X[ix]);
+    r += (BASE)(fabs(X[ix]));
     ix += incX;
   }
   return r;

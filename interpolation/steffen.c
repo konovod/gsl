@@ -212,6 +212,8 @@ steffen_eval (const void * vstate,
 
   size_t index;
   
+  (void) y_array;
+
   if (a != 0)
     {
       index = gsl_interp_accel_find (a, x_array, size, x);
@@ -246,7 +248,7 @@ steffen_eval_deriv (const void * vstate,
 
   size_t index;
 
-  /* DISCARD_POINTER(y_array); /\* prevent warning about unused parameter *\/ */
+  (void) y_array;
   
   if (a != 0)
     {
@@ -280,7 +282,7 @@ steffen_eval_deriv2 (const void * vstate,
 
   size_t index;
 
-  /* DISCARD_POINTER(y_array); /\* prevent warning about unused parameter *\/ */
+  (void) y_array;
 
   if (a != 0)
     {
@@ -313,6 +315,8 @@ steffen_eval_integ (const void * vstate,
   const steffen_state_t *state = (const steffen_state_t *) vstate;
 
   size_t i, index_a, index_b;
+
+  (void) y_array;
 
   /* Find the data points in the x_array that are nearest to the desired */
   /* a and b integration boundaries. */

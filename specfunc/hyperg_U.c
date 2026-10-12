@@ -317,6 +317,8 @@ hyperg_U_finite_sum(int N, double a, double b, double x, double xeps,
       stat_gbm1 = gsl_sf_gamma_e(b-1.0, &gbm1);
       stat_gamr = gsl_sf_gammainv_e(a,  &gamr);
 
+      (void) stat_gamr;
+
       if(stat_gbm1 == GSL_SUCCESS) {
         gsl_sf_result powx1N;
         int stat_p = gsl_sf_pow_int_e(x, 1-N, &powx1N);
@@ -551,6 +553,8 @@ hyperg_U_infinite_sum_improved(int N, double a, double bint, double b, double be
 {
   const double EPS      = 2.0 * GSL_DBL_EPSILON;  /* EPS = D1MACH(3) */
   const double lnx = log(x);
+
+  (void) xeps;
 
     int istrt = ( N < 1 ? 1-N : 0 );
     double xi = istrt;
@@ -1025,7 +1029,7 @@ hyperg_U_int_bge1(const int a, const int b, const double x,
       int scale_count_for = 0;
       int scale_count_bck = 0;
       int a0 = 1;
-      int a1 = a0 + ceil(0.5*(b-x) - a0);
+      int a1 = (int) (a0 + ceil(0.5*(b-x) - a0));
       double Ua1_bck_val;
       double Ua1_bck_err;
       double Ua1_for_val;
@@ -1887,7 +1891,7 @@ gsl_sf_hyperg_U_e10_e(const double a, const double b, const double x,
 /* This is DLMF 13.6.4 */
    {
      gsl_sf_result powx1N_1;
-     gsl_sf_pow_int_e(x, -a, &powx1N_1);
+     gsl_sf_pow_int_e(x, (int) (-a), &powx1N_1);
      result->val = powx1N_1.val;
      result->err = powx1N_1.err;
      result->e10 = 0;
@@ -1895,7 +1899,7 @@ gsl_sf_hyperg_U_e10_e(const double a, const double b, const double x,
 	
    }  
    else if(a_integer && b_integer) {
-     return gsl_sf_hyperg_U_int_e10_e(rinta, rintb, x, result);
+     return gsl_sf_hyperg_U_int_e10_e((int) rinta, (int) rintb, x, result);
   }
   else if (x < 0.0) {
     return hyperg_U_negx (a, b, x, result);

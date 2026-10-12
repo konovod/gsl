@@ -541,8 +541,8 @@ bsimp_apply (void *vstate,
 
       x[k] = x_k;
 
-      poly_extrap (d, x, k, x_k, y_extrap_sequence, y, yerr, extrap_work,
-                   dim);
+      poly_extrap (d, x, (unsigned int) k, x_k, y_extrap_sequence, y, yerr,
+                   extrap_work, dim);
     }
 
   /* Evaluate dydt_out[]. */
@@ -566,7 +566,7 @@ static unsigned int
 bsimp_order (void *vstate)
 {
   bsimp_state_t *state = (bsimp_state_t *) vstate;
-  return state->order;
+  return (unsigned int) state->order;
 }
 
 static int

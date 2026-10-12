@@ -125,8 +125,8 @@ FUNCTION (gsl_spmatrix, set) (TYPE (gsl_spmatrix) * m, const size_t i,
         }
 
       /* store the triplet (i, j, x) */
-      m->i[m->nz] = i;
-      m->p[m->nz] = j;
+      m->i[m->nz] = (int)(i);
+      m->p[m->nz] = (int)(j);
       m->data[m->nz] = x;
 
       ptr = gsl_bst_insert(&m->data[m->nz], m->tree);
@@ -198,8 +198,8 @@ FUNCTION (gsl_spmatrix, set_add) (TYPE (gsl_spmatrix) * m, const size_t i,
         }
 
       /* store the triplet (i, j, x) */
-      m->i[m->nz] = i;
-      m->p[m->nz] = j;
+      m->i[m->nz] = (int)(i);
+      m->p[m->nz] = (int)(j);
       m->data[m->nz] = x;
 
       ptr = gsl_bst_insert(&m->data[m->nz], m->tree);

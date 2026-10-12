@@ -223,6 +223,8 @@ vector_bfgs2_iterate (void *vstate, gsl_multimin_function_fdf * fdf,
 
   double f0 = *f;
 
+  (void) fdf;
+
   if (pnorm == 0.0 || g0norm == 0.0 || state->fp0 == 0)
     {
       gsl_vector_set_zero (dx);

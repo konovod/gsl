@@ -37,8 +37,8 @@ FUNCTION(fft_halfcomplex,pass_n) (const BASE in[],
   size_t e1, e2;
 
   const double d_theta = 2.0 * M_PI / ((double) factor);
-  const ATOMIC cos_d_theta = cos (d_theta);
-  const ATOMIC sin_d_theta = sin (d_theta);
+  const ATOMIC cos_d_theta = (ATOMIC) cos (d_theta);
+  const ATOMIC sin_d_theta = (ATOMIC) sin (d_theta);
 
   for (k1 = 0; k1 < product_1; k1++)
     {
@@ -183,8 +183,8 @@ FUNCTION(fft_halfcomplex,pass_n) (const BASE in[],
 
   {
     double tw_arg = M_PI / ((double) factor);
-    ATOMIC cos_tw_arg = cos (tw_arg);
-    ATOMIC sin_tw_arg = sin (tw_arg);
+    ATOMIC cos_tw_arg = (ATOMIC) cos (tw_arg);
+    ATOMIC sin_tw_arg = (ATOMIC) sin (tw_arg);
 
     for (k1 = 0; k1 < product_1; k1++)
       {

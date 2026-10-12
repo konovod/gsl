@@ -46,27 +46,24 @@ typedef union  { ringbuf r; double d; } ringbuf_align_union_t;
 typedef struct { char c; ringbuf_align_union_t u; } ringbuf_align_probe_t;
 #define RINGBUF_ALIGN (sizeof(ringbuf_align_probe_t) - sizeof(ringbuf_align_union_t))
 
-static size_t ringbuf_size(const size_t n);
-static size_t ringbuf_align(const size_t offset);
-static int ringbuf_empty(ringbuf * d);
-static int ringbuf_is_empty(const ringbuf * d);
-static int ringbuf_is_full(const ringbuf * d);
-static int ringbuf_insert(const ringbuf_type_t x, ringbuf * d);
-static int ringbuf_pop_back(ringbuf * b);
-static ringbuf_type_t ringbuf_peek(const int i, const ringbuf * b);
-static ringbuf_type_t ringbuf_peek_front(const ringbuf * d);
-static ringbuf_type_t ringbuf_peek_back(const ringbuf * d);
-static size_t ringbuf_copy(double * dest, const ringbuf * b);
-static int ringbuf_n(const ringbuf * b);
+static inline size_t ringbuf_size(const size_t n);
+static inline size_t ringbuf_align(const size_t offset);
+static inline int ringbuf_is_empty(const ringbuf * d);
+static inline int ringbuf_is_full(const ringbuf * d);
+static inline int ringbuf_insert(const ringbuf_type_t x, ringbuf * d);
+static inline int ringbuf_pop_back(ringbuf * b);
+static inline ringbuf_type_t ringbuf_peek_back(const ringbuf * d);
+static inline size_t ringbuf_copy(double * dest, const ringbuf * b);
+static inline int ringbuf_n(const ringbuf * b);
 
-static size_t
+static inline size_t
 ringbuf_align(const size_t offset)
 {
   const size_t rem = offset % RINGBUF_ALIGN;
   return (rem == 0) ? offset : offset + (RINGBUF_ALIGN - rem);
 }
 
-static size_t
+static inline size_t
 ringbuf_size(const size_t n)
 {
   size_t size = 0;
@@ -77,7 +74,7 @@ ringbuf_size(const size_t n)
   return size;
 }
 
-static int
+static inline int
 ringbuf_init(const size_t n, ringbuf * b)
 {
   b->array = (ringbuf_type_t *) ((char *) b + sizeof(ringbuf));
@@ -87,24 +84,15 @@ ringbuf_init(const size_t n, ringbuf * b)
   return GSL_SUCCESS;
 }
 
-/* empty the buffer */
-static int
-ringbuf_empty(ringbuf * b)
-{
-  b->head = -1;
-  b->tail = 0;
-  return GSL_SUCCESS;
-}
-
 /* check if buffer is empty */
-static int
+static inline int
 ringbuf_is_empty(const ringbuf * b)
 {
   return (b->head == -1);
 }
 
 /* check if buffer is full */
-static int
+static inline int
 ringbuf_is_full(const ringbuf * b)
 {
   return ((b->head == 0 && b->tail == b->size - 1) ||
@@ -112,7 +100,7 @@ ringbuf_is_full(const ringbuf * b)
 }
 
 /* insert element into buffer, overwriting oldest element if necessary */
-static int
+static inline int
 ringbuf_insert(const ringbuf_type_t x, ringbuf * b)
 {
   if (b->head == -1)     /* buffer is empty */
@@ -147,7 +135,7 @@ ringbuf_insert(const ringbuf_type_t x, ringbuf * b)
   return GSL_SUCCESS;
 }
 
-static int
+static inline int
 ringbuf_pop_back(ringbuf * b)
 {
   if (ringbuf_is_empty(b) || b->tail < 0)
@@ -174,33 +162,7 @@ ringbuf_pop_back(ringbuf * b)
     }
 }
 
-static ringbuf_type_t
-ringbuf_peek(const int i, const ringbuf * b)
-{
-  if (ringbuf_is_empty(b))
-    {
-      GSL_ERROR("buffer is empty", GSL_EBADLEN);
-    }
-  else
-    {
-      return b->array[(b->head + i) % b->size];
-    }
-}
-
-static ringbuf_type_t
-ringbuf_peek_front(const ringbuf * b)
-{
-  if (ringbuf_is_empty(b))
-    {
-      GSL_ERROR("buffer is empty", GSL_EBADLEN);
-    }
-  else
-    {
-      return b->array[b->head];
-    }
-}
-
-static ringbuf_type_t
+static inline ringbuf_type_t
 ringbuf_peek_back(const ringbuf * b)
 {
   if (ringbuf_is_empty(b) || b->tail < 0)
@@ -213,7 +175,7 @@ ringbuf_peek_back(const ringbuf * b)
     }
 }
 
-static size_t
+static inline size_t
 ringbuf_copy(double * dest, const ringbuf * b)
 {
   if (ringbuf_is_empty(b) || b->tail < 0)
@@ -232,7 +194,7 @@ ringbuf_copy(double * dest, const ringbuf * b)
     }
 }
 
-static int
+static inline int
 ringbuf_n(const ringbuf * b)
 {
   const int n = (b->head > b->tail) ? (b->size - b->head + b->tail + 1) : (b->tail - b->head + 1);

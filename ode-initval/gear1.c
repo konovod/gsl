@@ -161,6 +161,8 @@ gear1_apply(void * vstate,
   double *y0_orig = state->y0_orig;
   double *y_onestep = state->y_onestep;
 
+  (void) dydt_in; /* prevent warnings about unused parameters */
+
   /* initialization */
   DBL_MEMCPY(y0, y, dim);
 
@@ -243,8 +245,7 @@ gear1_reset (void *vstate, size_t dim)
 static unsigned int
 gear1_order (void *vstate)
 {
-  gear1_state_t *state = (gear1_state_t *) vstate;
-  state = 0; /* prevent warnings about unused parameters */
+  (void) vstate; /* prevent warnings about unused parameters */
   return 1;
 }
 

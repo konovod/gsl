@@ -68,7 +68,7 @@ gsl_rstat_quantile_reset(gsl_rstat_quantile_workspace *w)
 
   /* initialize positions n */
   for (i = 0; i < 5; ++i)
-    w->npos[i] = i + 1;
+    w->npos[i] = (int) (i + 1);
 
   /* initialize n' */
   w->np[0] = 1.0;

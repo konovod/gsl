@@ -199,7 +199,7 @@ ranlxs_get_double (void *vstate)
 static unsigned long int
 ranlxs_get (void *vstate)
 {
-  return ranlxs_get_double (vstate) * 16777216.0;       /* 2^24 */
+  return (unsigned long int) (ranlxs_get_double (vstate) * 16777216.0);       /* 2^24 */
 }
 
 static void

@@ -557,8 +557,7 @@ vern8_reset (void *vstate, size_t dim)
 static unsigned int
 vern8_order (void *vstate)
 {
-  vern8_state_t *state = (vern8_state_t *) vstate;
-  state = 0;                    /* prevent warnings about unused parameters */
+  (void) vstate; /* prevent warnings about unused parameters */
   return 8;
 }
 

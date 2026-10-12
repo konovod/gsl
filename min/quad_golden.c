@@ -105,11 +105,11 @@ quad_golden_init (void *vstate, gsl_function * f, double x_minimum,
   state->prev_stored_step = 0.0;
   state->num_iter = 0;
 
-  x_lower = 0 ;  /* avoid warnings about unused variables */
-  x_upper = 0 ;
-  f_lower = 0 ;
-  f_upper = 0 ;
-  f = 0;
+  (void) x_lower;  /* avoid warnings about unused variables */
+  (void) x_upper;
+  (void) f_lower;
+  (void) f_upper;
+  (void) f;
 
   return GSL_SUCCESS;
 }

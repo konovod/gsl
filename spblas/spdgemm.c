@@ -103,7 +103,7 @@ gsl_spblas_dgemm(const double alpha, const gsl_spmatrix *A,
               Cd = C->data;
             }
 
-          Cp[j] = nz; /* column j of C starts here */
+          Cp[j] = (int) nz; /* column j of C starts here */
 
           for (p = Bp[j]; p < Bp[j + 1]; ++p)
             {
@@ -114,7 +114,7 @@ gsl_spblas_dgemm(const double alpha, const gsl_spmatrix *A,
             Cd[p] = x[Ci[p]];
         }
 
-      Cp[N] = nz;
+      Cp[N] = (int) nz;
       C->nz = nz;
 
       /* scale by alpha */
@@ -170,7 +170,7 @@ gsl_spblas_scatter(const gsl_spmatrix *A, const size_t j, const double alpha,
       if (w[i] < mark)           /* check if row i has been stored in column j yet */
         {
           w[i] = mark;           /* i is new entry in column j */
-          Ci[nz++] = i;          /* add i to pattern of C(:,j) */
+          Ci[nz++] = (int) i;          /* add i to pattern of C(:,j) */
           x[i] = alpha * Ad[p];  /* x(i) = alpha * A(i,j) */
         }
       else                       /* this (i,j) exists in C from a previous call */

@@ -30,6 +30,11 @@ linear_init (void * vstate,
              const double y_array[],
              size_t size)
 {
+  (void) vstate;
+  (void) x_array;
+  (void) y_array;
+  (void) size;
+
   return GSL_SUCCESS;
 }
 
@@ -45,6 +50,8 @@ linear_eval (const void * vstate,
   double y_lo, y_hi;
   double dx;
   size_t index;
+
+  (void) vstate;
   
   if (a != 0)
     {
@@ -87,6 +94,8 @@ linear_eval_deriv (const void * vstate,
   double dx;
   double dy;
   size_t index;
+
+  (void) vstate;
   
   if (a != 0)
     {
@@ -125,6 +134,13 @@ linear_eval_deriv2 (const void * vstate,
                     gsl_interp_accel * a,
                     double *y_pp)
 {
+  (void) vstate;
+  (void) x_array;
+  (void) y_array;
+  (void) size;
+  (void) x;
+  (void) a;
+
   *y_pp = 0.0;
 
   return GSL_SUCCESS;
@@ -140,6 +156,8 @@ linear_eval_integ (const void * vstate,
                    double * result)
 {
   size_t i, index_a, index_b;
+  
+  (void) vstate;
   
   if (acc != 0)
     {

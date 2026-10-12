@@ -65,17 +65,17 @@ void qpsrt (gsl_integration_workspace * workspace)
   
   if(last < (limit/2 + 2)) 
     {
-      top = last ;
+      top = (int) last ;
     }
   else
     {
-      top = limit - last + 1;
+      top = (int) (limit - last + 1);
     }
   
   /* Insert errmax by traversing the list top-down, starting
      comparison from the element elist(order(i_nrmax+1)). */
   
-  i = i_nrmax + 1 ;
+  i = (int) (i_nrmax + 1) ;
   
   /* The order of the tests in the following line is important to
      prevent a segmentation fault */

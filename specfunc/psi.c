@@ -535,7 +535,7 @@ psi_complex_rhp(
     const double sp = sqrt(20.0 + GSL_IMAG(z));
     const double sn = sqrt(20.0 - GSL_IMAG(z));
     const double rhs = sp*sn - GSL_REAL(z);
-    if(rhs > 0.0) n_recurse = ceil(rhs);
+    if(rhs > 0.0) n_recurse = (int) ceil(rhs);
   }
 
   /* compute asymptotic at the large value z + n_recurse */
@@ -747,7 +747,7 @@ int gsl_sf_psi_1_e(const double x, gsl_sf_result * result)
   else if(x > -5.0)
   {
     /* Abramowitz + Stegun 6.4.6 */
-    int M = -floor(x);
+    int M = (int) (-floor(x));
     double fx = x + M;
     double sum = 0.0;
     int m;

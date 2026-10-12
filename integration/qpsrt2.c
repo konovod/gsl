@@ -28,7 +28,7 @@ static int
 increase_nrmax (gsl_integration_workspace * workspace)
 {
   int k;
-  int id = workspace->nrmax;
+  int id = (int) workspace->nrmax;
   int jupbnd;
 
   const size_t * level = workspace->level;
@@ -39,11 +39,11 @@ increase_nrmax (gsl_integration_workspace * workspace)
 
   if (last > (1 + limit / 2))
     {
-      jupbnd = limit + 1 - last;
+      jupbnd = (int) (limit + 1 - last);
     }
   else
     {
-      jupbnd = last;
+      jupbnd = (int) last;
     }
   
   for (k = id; k <= jupbnd; k++)

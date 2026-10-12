@@ -709,7 +709,7 @@ static int figi(int nn, double *tt, double *dd, double *ee,
 
 int gsl_sf_mathieu_a_array(int order_min, int order_max, double qq, gsl_sf_mathieu_workspace *work, double result_array[])
 {
-  unsigned int even_order = work->even_order, odd_order = work->odd_order,
+  unsigned int even_order = (unsigned int) work->even_order, odd_order = (unsigned int) work->odd_order,
       extra_values = work->extra_values, ii, jj;
   int status;
   double *tt = work->tt, *dd = work->dd, *ee = work->ee, *e2 = work->e2,
@@ -718,7 +718,7 @@ int gsl_sf_mathieu_a_array(int order_min, int order_max, double qq, gsl_sf_mathi
   gsl_vector_view eval;
   gsl_eigen_symmv_workspace *wmat = work->wmat;
   
-  if (order_max > work->size || order_max <= order_min || order_min < 0)
+  if ((size_t) order_max > work->size || order_max <= order_min || order_min < 0)
     {
       GSL_ERROR ("invalid range [order_min,order_max]", GSL_EINVAL);
     }
@@ -796,7 +796,7 @@ int gsl_sf_mathieu_a_array(int order_min, int order_max, double qq, gsl_sf_mathi
   for (ii=0; ii<odd_order-extra_values; ii++)
       aa[2*ii+1] = gsl_vector_get(&eval.vector, ii);
 
-  for (ii = order_min ; ii <= order_max ; ii++)
+  for (ii = (unsigned int)order_min ; ii <= (unsigned int)order_max ; ii++)
     {
       result_array[ii - order_min] = aa[ii];
     }
@@ -807,14 +807,14 @@ int gsl_sf_mathieu_a_array(int order_min, int order_max, double qq, gsl_sf_mathi
 
 int gsl_sf_mathieu_b_array(int order_min, int order_max, double qq, gsl_sf_mathieu_workspace *work, double result_array[])
 {
-  unsigned int even_order = work->even_order-1, odd_order = work->odd_order,
+  unsigned int even_order = (unsigned int) (work->even_order-1), odd_order = (unsigned int) work->odd_order,
       extra_values = work->extra_values, ii, jj;
   double *zz = work->zz, *bb = work->bb;
   gsl_matrix_view mat, evec;
   gsl_vector_view eval;
   gsl_eigen_symmv_workspace *wmat = work->wmat;
 
-  if (order_max > work->size || order_max <= order_min || order_min < 0)
+  if ((size_t) order_max > work->size || order_max <= order_min || order_min < 0)
     {
       GSL_ERROR ("invalid range [order_min,order_max]", GSL_EINVAL);
     }
@@ -866,7 +866,7 @@ int gsl_sf_mathieu_b_array(int order_min, int order_max, double qq, gsl_sf_mathi
   for (ii=0; ii<odd_order-extra_values; ii++)
       bb[2*ii+1] = gsl_vector_get(&eval.vector, ii);  
 
-  for (ii = order_min ; ii <= order_max ; ii++)
+  for (ii = (unsigned int)order_min ; ii <= (unsigned int)order_max ; ii++)
     {
       result_array[ii - order_min] = bb[ii];
     }

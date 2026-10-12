@@ -156,7 +156,7 @@ FUNCTION (gsl_matrix, div_elements) (TYPE (gsl_matrix) * a,
               ATOMIC br = b->data[bij];
               ATOMIC bi = b->data[bij + 1];
 
-              ATOMIC s = 1.0 / hypot(br, bi);
+              ATOMIC s = (ATOMIC) (1.0 / hypot(br, bi));
 
               ATOMIC sbr = s * br;
               ATOMIC sbi = s * bi;

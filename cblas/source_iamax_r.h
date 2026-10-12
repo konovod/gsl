@@ -29,7 +29,7 @@
 
   for (i = 0; i < N; i++) {
     if (fabs(X[ix]) > max) {
-      max = fabs(X[ix]);
+      max = (BASE)(fabs(X[ix]));
       result = i;
     }
     ix += incX;

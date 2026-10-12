@@ -485,7 +485,7 @@ gsl_sf_sin_e(double x, gsl_sf_result * result)
     else {
       double sgn_result = sgn_x;
       double y = floor(abs_x/(0.25*M_PI));
-      int octant = y - ldexp(floor(ldexp(y,-3)),3);
+      int octant = (int) (y - ldexp(floor(ldexp(y,-3)),3));
       int stat_cs;
       double z;
 
@@ -574,7 +574,7 @@ gsl_sf_cos_e(double x, gsl_sf_result * result)
     else {
       double sgn_result = 1.0;
       double y = floor(abs_x/(0.25*M_PI));
-      int octant = y - ldexp(floor(ldexp(y,-3)),3);
+      int octant = (int) (y - ldexp(floor(ldexp(y,-3)),3));
       int stat_cs;
       double z;
 

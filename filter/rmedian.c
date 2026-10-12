@@ -134,7 +134,7 @@ gsl_filter_rmedian(const gsl_filter_end_t endtype, const gsl_vector * x, gsl_vec
       int wsize;
 
       /* find median of first window to initialize filter */
-      wsize = gsl_movstat_fill((gsl_movstat_end_t) endtype, x, 0, H, H, w->window);
+      wsize = (int) gsl_movstat_fill((gsl_movstat_end_t) endtype, x, 0, H, H, w->window);
       yprev = gsl_stats_median(w->window, 1, wsize);
       gsl_vector_set(y, 0, yprev);
 

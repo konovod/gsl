@@ -31,7 +31,7 @@ double gsl_pow_int(double x, int n)
 
   if(n < 0) {
     x = 1.0/x;
-    un = -(unsigned int)n;  /* |INT_MIN| is representable unsigned */
+    un = (unsigned int)(-(n));  /* |INT_MIN| is representable unsigned */
   } else {
     un = n;
   }

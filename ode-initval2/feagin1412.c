@@ -36,7 +36,6 @@
 #include "step_utils.c"
 
 /* Feagin RK14(12) constants, see https://sce.uhcl.edu/rungekutta/rk1412.txt */
-static const double a0 = 0;
 static const double a1 =
   0.111111111111111111111111111111111111111111111111111111111111;
 static const double a2 =
@@ -110,7 +109,6 @@ static const double c1 =
   0.00585937500000000000000000000000000000000000000000000000000000;
 static const double c2 =
   0.0117187500000000000000000000000000000000000000000000000000000;
-static const double c3 = 0;
 static const double c4 =
   0.0175781250000000000000000000000000000000000000000000000000000;
 static const double c5 = 0;
@@ -1955,8 +1953,7 @@ feagin1412_reset (void *vstate, size_t dim)
 static unsigned int
 feagin1412_order (void *vstate)
 {
-  feagin1412_state_t *state = (feagin1412_state_t *) vstate;
-  state = 0;                    /* prevent warnings about unused parameters */
+  (void) vstate; /* prevent warnings about unused parameters */
   return 14;
 }
 

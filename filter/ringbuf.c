@@ -33,14 +33,9 @@ typedef struct
 } ringbuf;
 
 static size_t ringbuf_size(const size_t n);
-static int ringbuf_empty(ringbuf * d);
 static int ringbuf_is_empty(const ringbuf * d);
-static int ringbuf_is_full(const ringbuf * d);
 static int ringbuf_insert(const ringbuf_type_t x, ringbuf * d);
 static int ringbuf_pop_back(ringbuf * b);
-static ringbuf_type_t ringbuf_peek(const int i, const ringbuf * b);
-static ringbuf_type_t ringbuf_peek_front(const ringbuf * d);
-static ringbuf_type_t ringbuf_peek_back(const ringbuf * d);
 static size_t ringbuf_copy(double * dest, const ringbuf * b);
 
 static size_t
@@ -64,28 +59,11 @@ ringbuf_init(const size_t n, ringbuf * b)
   return GSL_SUCCESS;
 }
 
-/* empty the buffer */
-static int
-ringbuf_empty(ringbuf * b)
-{
-  b->head = -1;
-  b->tail = 0;
-  return GSL_SUCCESS;
-}
-
 /* check if buffer is empty */
 static int
 ringbuf_is_empty(const ringbuf * b)
 {
   return (b->head == -1);
-}
-
-/* check if buffer is full */
-static int
-ringbuf_is_full(const ringbuf * b)
-{
-  return ((b->head == 0 && b->tail == b->size - 1) ||
-          (b->head == b->tail + 1));
 }
 
 /* insert element into buffer, overwriting oldest element if necessary */
@@ -148,45 +126,6 @@ ringbuf_pop_back(ringbuf * b)
         }
 
       return GSL_SUCCESS;
-    }
-}
-
-static ringbuf_type_t
-ringbuf_peek(const int i, const ringbuf * b)
-{
-  if (ringbuf_is_empty(b))
-    {
-      GSL_ERROR("buffer is empty", GSL_EBADLEN);
-    }
-  else
-    {
-      return b->array[(b->head + i) % b->size];
-    }
-}
-
-static ringbuf_type_t
-ringbuf_peek_front(const ringbuf * b)
-{
-  if (ringbuf_is_empty(b))
-    {
-      GSL_ERROR("buffer is empty", GSL_EBADLEN);
-    }
-  else
-    {
-      return b->array[b->head];
-    }
-}
-
-static ringbuf_type_t
-ringbuf_peek_back(const ringbuf * b)
-{
-  if (ringbuf_is_empty(b) || b->tail < 0)
-    {
-      GSL_ERROR("buffer is empty", GSL_EBADLEN);
-    }
-  else
-    {
-      return b->array[b->tail];
     }
 }
 

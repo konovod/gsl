@@ -34,7 +34,7 @@ FUNCTION(fft_real,pass_3) (const BASE in[],
   const size_t q = n / product;
   const size_t product_1 = product / factor;
 
-  const ATOMIC tau = sqrt (3.0) / 2.0;
+  const ATOMIC tau = (ATOMIC) (sqrt (3.0) / 2.0);
 
   for (k1 = 0; k1 < q; k1++)
     {
@@ -49,7 +49,7 @@ FUNCTION(fft_real,pass_3) (const BASE in[],
       const ATOMIC t1 = z1_real + z2_real;
 
       const ATOMIC x0_real = z0_real + t1;
-      const ATOMIC x1_real = z0_real - t1 / 2.0;
+      const ATOMIC x1_real = (ATOMIC) (z0_real - t1 / 2.0);
       const ATOMIC x1_imag = -tau * (z1_real - z2_real);
 
       const size_t to0 = product * k1;
@@ -150,7 +150,7 @@ FUNCTION(fft_real,pass_3) (const BASE in[],
       const ATOMIC z2_real = VECTOR(in,istride,from2);
 
       const ATOMIC t1 = z1_real - z2_real;
-      const ATOMIC x0_real = z0_real + t1 / 2.0;
+      const ATOMIC x0_real = (ATOMIC) (z0_real + t1 / 2.0);
       const ATOMIC x0_imag = -tau * (z1_real + z2_real);
       const ATOMIC x1_real = z0_real - t1;
 

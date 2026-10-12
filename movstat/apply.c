@@ -63,8 +63,8 @@ gsl_movstat_apply_accum(const gsl_movstat_end_t endtype,
   else
     {
       const int n = (int) x->size;
-      const int H = w->H; /* number of samples to left of current sample */
-      const int J = w->J; /* number of samples to right of current sample */
+      const int H = (int) w->H; /* number of samples to left of current sample */
+      const int J = (int) w->J; /* number of samples to right of current sample */
       int i;
       double x1 = 0.0;    /* pad values for data edges */
       double xN = 0.0;

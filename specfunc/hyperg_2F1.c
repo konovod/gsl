@@ -544,7 +544,7 @@ hyperg_2F1_reflect(const double a, const double b, const double c,
                    const double x, gsl_sf_result * result)
 {
   const double d = c - a - b;
-  const int intd  = rint(d);
+  const int intd  = (int) rint(d);
   const int d_integer = ( fabs(d - intd) < locEPS );
 
   if(d_integer) {

@@ -206,7 +206,7 @@ gsl_integration_glfixed_table_alloc (size_t n)
   /* No predefined table is available.  Generate one on the fly. */
   if (retval == 0)
     {
-      const int m = (n + 1) >> 1;
+      const int m = (int) ((n + 1) >> 1);
 
       x = (double *) malloc(m * sizeof(double));
       if (x == 0)
@@ -233,7 +233,7 @@ gsl_integration_glfixed_table_alloc (size_t n)
                   GSL_ENOMEM);
         }
 
-      gauss_legendre_tbl(n, x, w, 1e-10 /* precision magic number */);
+      gauss_legendre_tbl((int) n, x, w, 1e-10 /* precision magic number */);
 
       retval->n           = n;
       retval->x           = x;
@@ -284,7 +284,7 @@ gsl_integration_glfixed (const gsl_function *f,
 {
   const double * const x = t->x;
   const double * const w = t->w;
-  const int n = t->n;
+  const int n = (int) t->n;
   double A, B, Ax, s;
   int i, m;
 

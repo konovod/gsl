@@ -96,7 +96,7 @@ pochrel_smallx(const double a, const double x, gsl_sf_result * result)
   }
   else {
     const double bp   = (  (a < -0.5) ? 1.0-a-x : a );
-    const int    incr = ( (bp < 10.0) ? 11.0-bp : 0 );
+    const int    incr = (int) ( (bp < 10.0) ? 11.0-bp : 0 );
     const double b    = bp + incr;
     double dpoch1;
     gsl_sf_result dexprl;

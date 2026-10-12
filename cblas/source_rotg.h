@@ -19,13 +19,13 @@
 
 {
   const BASE roe = (fabs(*a) > fabs(*b) ? *a : *b);
-  const BASE scale = fabs(*a) + fabs(*b);
+  const BASE scale = (BASE)(fabs(*a) + fabs(*b));
   BASE r, z;
 
   if (scale != 0.0) {
     const BASE aos = *a / scale;
     const BASE bos = *b / scale;
-    r = scale * sqrt(aos * aos + bos * bos);
+    r = (BASE)(scale * sqrt(aos * aos + bos * bos));
     r = GSL_SIGN(roe) * r;
     *c = *a / r;
     *s = *b / r;
@@ -33,7 +33,7 @@
     if (fabs(*a) > fabs(*b))
       z = *s;
     if (fabs(*b) >= fabs(*a) && *c != 0.0)
-      z = 1.0 / (*c);
+      z = (BASE)(1.0 / (*c));
   } else {
     *c = 1.0;
     *s = 0.0;

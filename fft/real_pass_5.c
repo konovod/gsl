@@ -36,8 +36,8 @@ FUNCTION(fft_real,pass_5) (const BASE in[],
   const size_t q = n / product;
   const size_t product_1 = product / factor;
 
-  const ATOMIC sina = sin (2.0 * M_PI / 5.0);
-  const ATOMIC sinb = sin (2.0 * M_PI / 10.0);
+  const ATOMIC sina = (ATOMIC) sin (2.0 * M_PI / 5.0);
+  const ATOMIC sinb = (ATOMIC) sin (2.0 * M_PI / 10.0);
 
   for (k1 = 0; k1 < q; k1++)
     {
@@ -69,10 +69,10 @@ FUNCTION(fft_real,pass_5) (const BASE in[],
       const ATOMIC t5_real = t1_real + t2_real;
 
       /* t6 = (sqrt(5)/4)(t1 - t2) */
-      const ATOMIC t6_real = (sqrt (5.0) / 4.0) * (t1_real - t2_real);
+      const ATOMIC t6_real = (ATOMIC) ((sqrt (5.0) / 4.0) * (t1_real - t2_real));
 
       /* t7 = z0 - ((t5)/4) */
-      const ATOMIC t7_real = z0_real - t5_real / 4.0;
+      const ATOMIC t7_real = (ATOMIC) (z0_real - t5_real / 4.0);
 
       /* t8 = t7 + t6 */
       const ATOMIC t8_real = t7_real + t6_real;
@@ -175,12 +175,12 @@ FUNCTION(fft_real,pass_5) (const BASE in[],
           const ATOMIC t5_imag = t1_imag + t2_imag;
           
           /* t6 = (sqrt(5)/4)(t1 - t2) */
-          const ATOMIC t6_real = (sqrt (5.0) / 4.0) * (t1_real - t2_real);
-          const ATOMIC t6_imag = (sqrt (5.0) / 4.0) * (t1_imag - t2_imag);
+          const ATOMIC t6_real = (ATOMIC) ((sqrt (5.0) / 4.0) * (t1_real - t2_real));
+          const ATOMIC t6_imag = (ATOMIC) ((sqrt (5.0) / 4.0) * (t1_imag - t2_imag));
           
           /* t7 = z0 - ((t5)/4) */
-          const ATOMIC t7_real = z0_real - t5_real / 4.0;
-          const ATOMIC t7_imag = z0_imag - t5_imag / 4.0;
+          const ATOMIC t7_real = (ATOMIC) (z0_real - t5_real / 4.0);
+          const ATOMIC t7_imag = (ATOMIC) (z0_imag - t5_imag / 4.0);
           
           /* t8 = t7 + t6 */
           const ATOMIC t8_real = t7_real + t6_real;
@@ -263,8 +263,8 @@ FUNCTION(fft_real,pass_5) (const BASE in[],
       const ATOMIC t3 = z2_real - z3_real;
       const ATOMIC t4 = z2_real + z3_real;
       const ATOMIC t5 = t1 - t3;
-      const ATOMIC t6 = z0_real + t5 / 4.0;
-      const ATOMIC t7 = (sqrt (5.0) / 4.0) * (t1 + t3);
+      const ATOMIC t6 = (ATOMIC) (z0_real + t5 / 4.0);
+      const ATOMIC t7 = (ATOMIC) ((sqrt (5.0) / 4.0) * (t1 + t3));
 
       const size_t to0 = k1 * product + product_1 - 1;
       const size_t to1 = to0 + 2 * product_1;

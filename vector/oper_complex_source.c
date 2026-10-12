@@ -125,7 +125,7 @@ FUNCTION(gsl_vector, div) (TYPE(gsl_vector) * a, const TYPE(gsl_vector) * b)
           ATOMIC br = b->data[2 * i * stride_b];
           ATOMIC bi = b->data[2 * i * stride_b + 1];
 
-          ATOMIC s = 1.0 / hypot(br, bi);
+          ATOMIC s = (ATOMIC) (1.0 / hypot(br, bi));
           
           ATOMIC sbr = s * br;
           ATOMIC sbi = s * bi;

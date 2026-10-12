@@ -39,8 +39,8 @@ FUNCTION(fft_complex,pass_5) (const BASE in[],
   const size_t p_1 = product / factor;
   const size_t jump = (factor - 1) * p_1;
 
-  const ATOMIC sin_2pi_by_5 = sin (2.0 * M_PI / 5.0);
-  const ATOMIC sin_2pi_by_10 = sin (2.0 * M_PI / 10.0);
+  const ATOMIC sin_2pi_by_5 = (ATOMIC) sin (2.0 * M_PI / 5.0);
+  const ATOMIC sin_2pi_by_10 = (ATOMIC) sin (2.0 * M_PI / 10.0);
 
   for (k = 0; k < q; k++)
     {
@@ -127,12 +127,12 @@ FUNCTION(fft_complex,pass_5) (const BASE in[],
           const ATOMIC t5_imag = t1_imag + t2_imag;
           
           /* t6 = (sqrt(5)/4)(t1 - t2) */
-          const ATOMIC t6_real = (sqrt (5.0) / 4.0) * (t1_real - t2_real);
-          const ATOMIC t6_imag = (sqrt (5.0) / 4.0) * (t1_imag - t2_imag);
+          const ATOMIC t6_real = (ATOMIC) ((sqrt (5.0) / 4.0) * (t1_real - t2_real));
+          const ATOMIC t6_imag = (ATOMIC) ((sqrt (5.0) / 4.0) * (t1_imag - t2_imag));
           
           /* t7 = z0 - ((t5)/4) */
-          const ATOMIC t7_real = z0_real - t5_real / 4.0;
-          const ATOMIC t7_imag = z0_imag - t5_imag / 4.0;
+          const ATOMIC t7_real = (ATOMIC) (z0_real - t5_real / 4.0);
+          const ATOMIC t7_imag = (ATOMIC) (z0_imag - t5_imag / 4.0);
           
           /* t8 = t7 + t6 */
           const ATOMIC t8_real = t7_real + t6_real;

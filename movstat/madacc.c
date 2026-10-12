@@ -47,7 +47,6 @@ typedef struct
 static size_t madacc_size(const size_t n);
 static int madacc_init(const size_t n, void * vstate);
 static int madacc_insert(const madacc_type_t x, void * vstate);
-static int madacc_delete(void * vstate);
 static int madacc_medmad(void * params, madacc_type_t * result, const void * vstate);
 
 static size_t
@@ -92,17 +91,6 @@ madacc_insert(const madacc_type_t x, void * vstate)
 
   /* insert element into ring buffer */
   ringbuf_insert(x, state->rbuf);
-
-  return GSL_SUCCESS;
-}
-
-static int
-madacc_delete(void * vstate)
-{
-  madacc_state_t * state = (madacc_state_t *) vstate;
-
-  if (!ringbuf_is_empty(state->rbuf))
-    ringbuf_pop_back(state->rbuf);
 
   return GSL_SUCCESS;
 }

@@ -74,7 +74,8 @@ chebyshev_init(const size_t n, double * diag, double * subdiag, gsl_integration_
 static const gsl_integration_fixed_type chebyshev_type =
 {
   chebyshev_check,
-  chebyshev_init
+  chebyshev_init,
+  NULL
 };
 
 const gsl_integration_fixed_type *gsl_integration_fixed_chebyshev = &chebyshev_type;

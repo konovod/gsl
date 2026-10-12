@@ -121,6 +121,7 @@ gsl_sum_levin_u_minmax (const double *array, const size_t array_size,
           trunc_n = 0.5 * (actual_trunc_n + actual_trunc_nm1);
 
           noise_nm1 = noise_n;
+          (void) noise_nm1;
           variance = 0;
 
           for (i = 0; i <= n; i++)
@@ -227,7 +228,7 @@ gsl_sum_levin_u_step (const double term, const size_t n, const size_t nmax,
       w->dq_num[I (n, n)] =
         w->q_den[n] + w->sum_plain * (w->dq_den[I (n, n)]);
 
-      for (j = n - 1; j >= 0; j--)
+      for (j = (int) (n - 1); j >= 0; j--)
         {
           double c = factor * (j + 1) / (n + 1);
           factor *= ratio;

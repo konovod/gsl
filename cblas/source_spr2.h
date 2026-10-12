@@ -38,7 +38,7 @@
       INDEX jx = ix;
       INDEX jy = iy;
       for (j = i; j < N; j++) {
-        Ap[TPUP(N, i, j)] += tmp1 * Y[jy] + tmp2 * X[jx];
+        Ap[TPUP(N, i, j)] += (float)(tmp1 * Y[jy] + tmp2 * X[jx]);
         jx += incX;
         jy += incY;
       }
@@ -55,7 +55,7 @@
       INDEX jx = OFFSET(N, incX);
       INDEX jy = OFFSET(N, incY);
       for (j = 0; j <= i; j++) {
-        Ap[TPLO(N, i, j)] += tmp1 * Y[jy] + tmp2 * X[jx];
+        Ap[TPLO(N, i, j)] += (float)(tmp1 * Y[jy] + tmp2 * X[jx]);
         jx += incX;
         jy += incY;
       }

@@ -358,7 +358,7 @@ gsl_ran_discrete(const gsl_rng *r, const gsl_ran_discrete_t *g)
     double u,f;
     u = gsl_rng_uniform(r);
 #if KNUTH_CONVENTION
-    c = (u*(g->K));
+    c = (size_t) (u*(g->K));
 #else
     u *= g->K;
     c = u;

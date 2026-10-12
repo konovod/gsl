@@ -164,7 +164,7 @@ LU_decomp_L2 (gsl_matrix_complex * A, gsl_vector_uint * ipiv)
           gsl_complex Ajpj = gsl_matrix_complex_get(A, j_pivot, j);
           gsl_vector_complex_view v1, v2;
 
-          gsl_vector_uint_set(ipiv, j, j_pivot);
+          gsl_vector_uint_set(ipiv, j, (unsigned int) j_pivot);
 
           if (GSL_REAL(Ajpj) != 0.0 || GSL_IMAG(Ajpj) != 0.0)
             {
@@ -305,7 +305,7 @@ LU_decomp_L3 (gsl_matrix_complex * A, gsl_vector_uint * ipiv)
       for (i = 0; i < N2; ++i)
         {
           unsigned int * ptr = gsl_vector_uint_ptr(&ipiv2.vector, i);
-          *ptr += N1;
+          *ptr += (unsigned int) N1;
         }
 
       return GSL_SUCCESS;

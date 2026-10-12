@@ -164,13 +164,13 @@ gsl_linalg_cholesky_band_svx (const gsl_matrix * LLT, gsl_vector * x)
     {
       /* solve for c using forward-substitution, L c = b */
       cblas_dtbsv(CblasColMajor, CblasLower, CblasNoTrans, CblasNonUnit,
-                  (int) LLT->size1, (int) (LLT->size2 - 1), LLT->data, LLT->tda,
-                  x->data, x->stride);
+                  (int) LLT->size1, (int) (LLT->size2 - 1), LLT->data, (int) LLT->tda,
+                  x->data, (int) x->stride);
 
       /* perform back-substitution, L^T x = c */
       cblas_dtbsv(CblasColMajor, CblasLower, CblasTrans, CblasNonUnit,
-                  (int) LLT->size1, (int) (LLT->size2 - 1), LLT->data, LLT->tda,
-                  x->data, x->stride);
+                  (int) LLT->size1, (int) (LLT->size2 - 1), LLT->data, (int) LLT->tda,
+                  x->data, (int) x->stride);
 
       return GSL_SUCCESS;
     }
@@ -494,13 +494,13 @@ cholesky_band_Ainv(CBLAS_TRANSPOSE_t TransA, gsl_vector * x, void * params)
 
   /* compute x := L^{-1} x */
   cblas_dtbsv(CblasColMajor, CblasLower, CblasNoTrans, CblasNonUnit,
-              (int) LLT->size1, (int) (LLT->size2 - 1), LLT->data, LLT->tda,
-              x->data, x->stride);
+              (int) LLT->size1, (int) (LLT->size2 - 1), LLT->data, (int) LLT->tda,
+              x->data, (int) x->stride);
 
   /* compute x := L^{-T} x */
   cblas_dtbsv(CblasColMajor, CblasLower, CblasTrans, CblasNonUnit,
-              (int) LLT->size1, (int) (LLT->size2 - 1), LLT->data, LLT->tda,
-              x->data, x->stride);
+              (int) LLT->size1, (int) (LLT->size2 - 1), LLT->data, (int) LLT->tda,
+              x->data, (int) x->stride);
 
   return GSL_SUCCESS;
 }

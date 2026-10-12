@@ -41,7 +41,7 @@ FUNCTION(gsl_fft_halfcomplex,radix2_inverse) (BASE data[],
   /* normalize inverse fft with 1/n */
 
   {
-    const ATOMIC norm = 1.0 / n;
+    const ATOMIC norm = (ATOMIC) (1.0 / n);
     size_t i;
     for (i = 0; i < n; i++)
       {
@@ -60,7 +60,6 @@ FUNCTION(gsl_fft_halfcomplex,radix2_transform) (BASE data[],
   size_t p, p_1, q;
   size_t i; 
   size_t logn = 0;
-  int status;
 
   if (n == 1) /* identity operation */
     {
@@ -108,11 +107,11 @@ FUNCTION(gsl_fft_halfcomplex,radix2_transform) (BASE data[],
         ATOMIC w_real = 1.0;
         ATOMIC w_imag = 0.0;
 
-        const ATOMIC theta = 2.0 * M_PI / p;
+        const ATOMIC theta = (ATOMIC) (2.0 * M_PI / p);
         
-        const ATOMIC s = sin (theta);
-        const ATOMIC t = sin (theta / 2.0);
-        const ATOMIC s2 = 2.0 * t * t;
+        const ATOMIC s = (ATOMIC) sin (theta);
+        const ATOMIC t = (ATOMIC) sin (theta / 2.0);
+        const ATOMIC s2 = (ATOMIC) (2.0 * t * t);
         
         for (a = 1; a < (p_1)/2; a++)
           {
@@ -166,7 +165,7 @@ FUNCTION(gsl_fft_halfcomplex,radix2_transform) (BASE data[],
   /* bit reverse the ordering of output data for decimation in
      frequency algorithm */
   
-  status = FUNCTION(fft_real,bitreverse_order)(data, stride, n, logn) ;
+  (void) FUNCTION(fft_real,bitreverse_order)(data, stride, n, logn) ;
 
   return 0;
 

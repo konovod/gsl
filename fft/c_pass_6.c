@@ -41,7 +41,7 @@ FUNCTION(fft_complex,pass_6) (const BASE in[],
   const size_t p_1 = product / factor;
   const size_t jump = (factor - 1) * p_1;
 
-  const ATOMIC tau = sqrt (3.0) / 2.0;
+  const ATOMIC tau = (ATOMIC) (sqrt (3.0) / 2.0);
 
   for (k = 0; k < q; k++)
     {

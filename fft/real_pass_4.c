@@ -187,8 +187,8 @@ FUNCTION(fft_real,pass_4) (const BASE in[],
       const ATOMIC x2 = VECTOR(in,istride,from2);
       const ATOMIC x3 = VECTOR(in,istride,from3);
       
-      const ATOMIC t1 = (1.0 / sqrt (2.0)) * (x1 - x3);
-      const ATOMIC t2 = (1.0 / sqrt (2.0)) * (x1 + x3);
+      const ATOMIC t1 = (ATOMIC) ((1.0 / sqrt (2.0)) * (x1 - x3));
+      const ATOMIC t2 = (ATOMIC) ((1.0 / sqrt (2.0)) * (x1 + x3));
       
       const size_t to0 = k1 * product + 2 * k - 1;
       const size_t to1 = to0 + 2 * product_1;

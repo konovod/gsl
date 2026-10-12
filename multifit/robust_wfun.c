@@ -208,6 +208,8 @@ static const gsl_multifit_robust_type huber_type = {
 static int
 ols(const gsl_vector *r, gsl_vector *w)
 {
+  (void) r;
+
   gsl_vector_set_all(w, 1.0);
 
   return GSL_SUCCESS;
@@ -216,6 +218,8 @@ ols(const gsl_vector *r, gsl_vector *w)
 static int
 ols_dpsi(const gsl_vector *r, gsl_vector *dpsi)
 {
+  (void) r;
+
   gsl_vector_set_all(dpsi, 1.0);
 
   return GSL_SUCCESS;

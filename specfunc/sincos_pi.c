@@ -155,7 +155,7 @@ gsl_sf_sin_pi_e(const double x, gsl_sf_result *result)
   if (fracx == 0.0) return GSL_SUCCESS;
   if(fabs(intx) >= TWOBIG) return GSL_SUCCESS; /* to be sure. Actually should be covered by the line above */
 
-  q = ( ( (intx >= LONG_MIN) && (intx <= LONG_MAX) ) ? intx : fmod(intx, 2.0) );
+  q = (long) ( ( (intx >= LONG_MIN) && (intx <= LONG_MAX) ) ? intx : fmod(intx, 2.0) );
   sign = ( q % 2 ? -1 : 1 );
 
   /* int sign = 1 - 2*((int)round(fmod(fabs(intx),2.0))); */
@@ -203,7 +203,7 @@ gsl_sf_cos_pi_e(const double x, gsl_sf_result *result)
     return GSL_SUCCESS;
   }
 
-  q = ( ( (intx >= LONG_MIN) && (intx <= LONG_MAX) ) ? intx : fmod(intx, 2.0) );
+  q = (long) ( ( (intx >= LONG_MIN) && (intx <= LONG_MAX) ) ? intx : fmod(intx, 2.0) );
   sign = ( q % 2 ? -1 : 1 );
 
   /* int sign = 1 - 2*((int)round(fmod(fabs(intx),2.0))); */

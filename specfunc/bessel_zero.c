@@ -1122,7 +1122,7 @@ gsl_sf_bessel_zero_Jnu_e(double nu, unsigned int s, gsl_sf_result * result)
       const double * c = coef_jnu_a[s];
       const size_t   L = size_jnu_a[s];
       const double arg = nu/2.0;
-      const double chb = clenshaw(c, L-1, arg);
+      const double chb = clenshaw(c, (int) (L-1), arg);
       result->val = chb;
       result->err = 2.0e-15 * result->val;
     }
@@ -1130,7 +1130,7 @@ gsl_sf_bessel_zero_Jnu_e(double nu, unsigned int s, gsl_sf_result * result)
       const double * c = coef_jnu_b[s];
       const size_t   L = size_jnu_b[s];
       const double arg = pow(2.0/nu, 2.0/3.0);
-      const double chb = clenshaw(c, L-1, arg);
+      const double chb = clenshaw(c, (int) (L-1), arg);
       result->val = nu * chb;
       result->err = 2.0e-15 * result->val;
     }
@@ -1142,7 +1142,7 @@ gsl_sf_bessel_zero_Jnu_e(double nu, unsigned int s, gsl_sf_result * result)
       const double * c = coef_jnu_a[s];
       const size_t   L = size_jnu_a[s];
       const double arg = nu/s;
-      const double chb = clenshaw(c, L-1, arg);
+      const double chb = clenshaw(c, (int) (L-1), arg);
       result->val = chb;
       result->err = 2.0e-15 * result->val;
     }
@@ -1150,7 +1150,7 @@ gsl_sf_bessel_zero_Jnu_e(double nu, unsigned int s, gsl_sf_result * result)
       const double * c = coef_jnu_b[s];
       const size_t   L = size_jnu_b[s];
       const double arg = pow(s/nu, 2.0/3.0);
-      const double chb = clenshaw(c, L-1, arg);
+      const double chb = clenshaw(c, (int) (L-1), arg);
       result->val = nu * chb;
       result->err = 2.0e-15 * result->val;
 
@@ -1168,7 +1168,7 @@ gsl_sf_bessel_zero_Jnu_e(double nu, unsigned int s, gsl_sf_result * result)
     const double * c = coef_jnu_a[s];
     const size_t   L = size_jnu_a[s];
     const double arg = nu/(2.0*s);
-    const double chb = clenshaw(c, L-1, arg);
+    const double chb = clenshaw(c, (int) (L-1), arg);
     result->val = chb;
     result->err = 4.0e-15 * chb;
     return GSL_SUCCESS;

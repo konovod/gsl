@@ -64,7 +64,7 @@ clenshaw_curtis_nodes(const size_t n, double * x, double * w,
 
       for (j = 1; j <= nm1 / 2; j++)
         {
-          const double bj = (2 * j == (int) nm1) ? 1.0 : 2.0;
+          const double bj = (2 * j == nm1) ? 1.0 : 2.0;
           sum += bj / (4.0 * j * j - 1.0) * cos(2.0 * j * theta);
         }
 

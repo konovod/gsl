@@ -143,7 +143,7 @@ gsl_monte_miser_integrate (gsl_monte_function * f,
       return GSL_SUCCESS;
     }
 
-  estimate_calls = GSL_MAX (min_calls, calls * (state->estimate_frac));
+  estimate_calls = (size_t) GSL_MAX (min_calls, calls * (state->estimate_frac));
 
   if (estimate_calls < 4 * dim)
     {
@@ -220,7 +220,7 @@ gsl_monte_miser_integrate (gsl_monte_function * f,
     {
       /* All estimates were the same, so chose a direction at random */
 
-      i_bisect = gsl_rng_uniform_int (r, dim);
+      i_bisect = gsl_rng_uniform_int (r, (unsigned long) dim);
     }
 
   xbi_l = xl[i_bisect];
@@ -237,8 +237,8 @@ gsl_monte_miser_integrate (gsl_monte_function * f,
     double a = fraction_l * weight_l;
     double b = fraction_r * weight_r;
 
-    calls_l = min_calls + (calls - 2 * min_calls) * a / (a + b);
-    calls_r = min_calls + (calls - 2 * min_calls) * b / (a + b);
+    calls_l = (size_t) (min_calls + (calls - 2 * min_calls) * a / (a + b));
+    calls_r = (size_t) (min_calls + (calls - 2 * min_calls) * b / (a + b));
   }
 
   /* Compute the integral for the left hand side of the bisection */
@@ -623,7 +623,7 @@ estimate_corrmc (gsl_monte_function * f,
     {
       double fval;
       
-      unsigned int j = (n/2) % dim;
+      unsigned int j = (unsigned int) ((n/2) % dim);
       unsigned int side = (n % 2);
 
       for (i = 0; i < dim; i++)

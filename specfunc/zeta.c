@@ -821,7 +821,7 @@ int gsl_sf_zeta_e(const double s, gsl_sf_result * result)
                                      5.114214477385391780e+127,
                                      4.904306689854036836e+135
                                     };
-      const int n = floor((-s)/10.0);
+      const int n = (int) floor((-s)/10.0);
       const double fs = s + 10.0*n;
       const double p = pow(2.0*M_PI, fs) / twopi_pow[n];
 

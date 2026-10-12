@@ -68,7 +68,8 @@ legendre_init(const size_t n, double * diag, double * subdiag, gsl_integration_f
 static const gsl_integration_fixed_type legendre_type =
 {
   legendre_check,
-  legendre_init
+  legendre_init,
+  NULL
 };
 
 const gsl_integration_fixed_type *gsl_integration_fixed_legendre = &legendre_type;

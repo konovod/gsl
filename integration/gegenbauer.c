@@ -78,7 +78,8 @@ gegenbauer_init(const size_t n, double * diag, double * subdiag, gsl_integration
 static const gsl_integration_fixed_type gegenbauer_type =
 {
   gegenbauer_check,
-  gegenbauer_init
+  gegenbauer_init,
+  NULL
 };
 
 const gsl_integration_fixed_type *gsl_integration_fixed_gegenbauer = &gegenbauer_type;

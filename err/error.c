@@ -68,10 +68,10 @@ static void
 no_error_handler (const char *reason, const char *file, int line, int gsl_errno)
 {
   /* do nothing */
-  reason = 0;
-  file = 0;
-  line = 0;
-  gsl_errno = 0;
+  (void) reason;
+  (void) file;
+  (void) line;
+  (void) gsl_errno;
   return;
 }
 

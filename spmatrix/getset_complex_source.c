@@ -127,8 +127,8 @@ FUNCTION (gsl_spmatrix, set) (TYPE (gsl_spmatrix) * m, const size_t i,
         }
 
       /* store the triplet (i, j, x) */
-      m->i[m->nz] = i;
-      m->p[m->nz] = j;
+      m->i[m->nz] = (int)(i);
+      m->p[m->nz] = (int)(j);
       m->data[2 * m->nz] = GSL_REAL (x);
       m->data[2 * m->nz + 1] = GSL_IMAG (x);
 
@@ -204,8 +204,8 @@ FUNCTION (gsl_spmatrix, set_add) (TYPE (gsl_spmatrix) * m, const size_t i,
         }
 
       /* store the triplet (i, j, x) */
-      m->i[m->nz] = i;
-      m->p[m->nz] = j;
+      m->i[m->nz] = (int)(i);
+      m->p[m->nz] = (int)(j);
       m->data[2 * m->nz] = GSL_REAL (x);
       m->data[2 * m->nz + 1] = GSL_IMAG (x);
 

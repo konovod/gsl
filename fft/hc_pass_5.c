@@ -30,20 +30,16 @@ FUNCTION(fft_halfcomplex,pass_5) (const BASE in[],
                                   const TYPE(gsl_complex) twiddle4[])
 {
 
-  size_t i, j, k, k1, jump;
+  size_t k, k1;
   size_t factor, q, m, product_1;
 
-  const ATOMIC sina = sin (2.0 * M_PI / 5.0);
-  const ATOMIC sinb = sin (2.0 * M_PI / 10.0);
-
-  i = 0;
-  j = 0;
+  const ATOMIC sina = (ATOMIC) sin (2.0 * M_PI / 5.0);
+  const ATOMIC sinb = (ATOMIC) sin (2.0 * M_PI / 10.0);
 
   factor = 5;
   m = n / factor;
   q = n / product;
   product_1 = product / factor;
-  jump = (factor - 1) * q;
 
   for (k1 = 0; k1 < product_1; k1++)
     {
@@ -58,8 +54,8 @@ FUNCTION(fft_halfcomplex,pass_5) (const BASE in[],
       const ATOMIC z2_imag = VECTOR(in,istride,from2 + 1);
 
       const ATOMIC t1_real = 2 * (z1_real + z2_real);
-      const ATOMIC t2_real = 2 * (sqrt (5.0) / 4.0) * (z1_real - z2_real);
-      const ATOMIC t3_real = z0_real - t1_real / 4.0;
+      const ATOMIC t2_real = (ATOMIC) (2 * (sqrt (5.0) / 4.0) * (z1_real - z2_real));
+      const ATOMIC t3_real = (ATOMIC) (z0_real - t1_real / 4.0);
       const ATOMIC t4_real = t2_real + t3_real;
       const ATOMIC t5_real = -t2_real + t3_real;
       const ATOMIC t6_imag = 2 * (sina * z1_imag + sinb * z2_imag);
@@ -144,12 +140,12 @@ FUNCTION(fft_halfcomplex,pass_5) (const BASE in[],
           const ATOMIC t5_imag = t1_imag + t2_imag;
 
           /* t6 = (sqrt(5)/4)(t1 - t2) */
-          const ATOMIC t6_real = (sqrt (5.0) / 4.0) * (t1_real - t2_real);
-          const ATOMIC t6_imag = (sqrt (5.0) / 4.0) * (t1_imag - t2_imag);
+          const ATOMIC t6_real = (ATOMIC) ((sqrt (5.0) / 4.0) * (t1_real - t2_real));
+          const ATOMIC t6_imag = (ATOMIC) ((sqrt (5.0) / 4.0) * (t1_imag - t2_imag));
 
           /* t7 = z0 - ((t5)/4) */
-          const ATOMIC t7_real = z0_real - t5_real / 4.0;
-          const ATOMIC t7_imag = z0_imag - t5_imag / 4.0;
+          const ATOMIC t7_real = (ATOMIC) (z0_real - t5_real / 4.0);
+          const ATOMIC t7_imag = (ATOMIC) (z0_imag - t5_imag / 4.0);
 
           /* t8 = t7 + t6 */
           const ATOMIC t8_real = t7_real + t6_real;
@@ -235,8 +231,8 @@ FUNCTION(fft_halfcomplex,pass_5) (const BASE in[],
       const ATOMIC z2_real = VECTOR(in,istride,from2);
 
       const ATOMIC t1_real = z0_real + z1_real;
-      const ATOMIC t2_real = (t1_real / 4.0) - z2_real;
-      const ATOMIC t3_real = (sqrt (5.0) / 4.0) * (z0_real - z1_real);
+      const ATOMIC t2_real = (ATOMIC) ((t1_real / 4.0) - z2_real);
+      const ATOMIC t3_real = (ATOMIC) ((sqrt (5.0) / 4.0) * (z0_real - z1_real));
       const ATOMIC t4_real = sinb * z0_imag + sina * z1_imag;
       const ATOMIC t5_real = sina * z0_imag - sinb * z1_imag;
       const ATOMIC t6_real = t3_real + t2_real;

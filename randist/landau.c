@@ -523,7 +523,7 @@ gsl_ran_landau(const gsl_rng * r)
 
   X = gsl_rng_uniform_pos(r);
   U = 1000.0 * X;
-  I = U;
+  I = (int) U;
   U = U - I;
 
   if (I >= 70 && I <= 800)

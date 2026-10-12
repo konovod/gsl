@@ -790,7 +790,7 @@ gsl_linalg_SV_decomp_jacobi (gsl_matrix * A, gsl_matrix * Q, gsl_vector * S)
       /* Initialize the rotation counter and the sweep counter. */
       int count = 1;
       int sweep = 0;
-      int sweepmax = 5*N;
+      int sweepmax = (int) (5*N);
 
       double tolerance = 10 * M * GSL_DBL_EPSILON;
 
@@ -815,7 +815,7 @@ gsl_linalg_SV_decomp_jacobi (gsl_matrix * A, gsl_matrix * Q, gsl_vector * S)
       while (count > 0 && sweep <= sweepmax)
         {
           /* Initialize rotation counter. */
-          count = N * (N - 1) / 2;
+          count = (int) (N * (N - 1) / 2);
 
           for (j = 0; j < N - 1; j++)
             {

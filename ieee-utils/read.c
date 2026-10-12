@@ -39,7 +39,6 @@ gsl_ieee_read_mode_string (const char * description,
 
   int precision_count = 0 ;
   int rounding_count = 0 ;
-  int exception_count = 0 ;
 
   start = (char *) malloc(strlen(description) + 1) ;
 
@@ -118,7 +117,6 @@ gsl_ieee_read_mode_string (const char * description,
     if (new_exception) 
       {
         *exception_mask |= new_exception ;
-        exception_count ++ ;
       }
 
     p = end ; 

@@ -43,8 +43,8 @@
     return;
   }
 
-  c = fabs(D1 * x * x);
-  s = fabs(D2 * y * y);
+  c = (BASE)(fabs(D1 * x * x));
+  s = (BASE)(fabs(D2 * y * y));
 
   if (c > s) {
     /* case of equation A6 */

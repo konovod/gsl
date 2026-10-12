@@ -106,7 +106,7 @@ FUNCTION(gsl_stats,Qn0_from_sorted_data) (const BASE sorted_data[],
   if (n < 2)
     return ((BASE) 0.0);
 
-  h = n / 2 + 1;
+  h = (int) (n / 2 + 1);
   k = (int64_t)h * (h - 1) / 2;
 
   for (i = 0; i < ni; ++i)
@@ -117,8 +117,8 @@ FUNCTION(gsl_stats,Qn0_from_sorted_data) (const BASE sorted_data[],
       /* the n - (i-h) is from the paper; original code had `n' */
     }
 
-  nl = (int64_t)n * (n + 1) / 2;
-  nr = (int64_t)n * n;
+  nl = (int64_t) ((int64_t)n * (n + 1) / 2);
+  nr = (int64_t) ((int64_t)n * n);
   knew = k + nl;/* = k + (n+1 \over 2) */
 
 /* L200: */
@@ -297,7 +297,7 @@ FUNCTION(Qn,whimed)(BASE * a, int * w, int n, BASE * a_cand, BASE * a_srt, int *
 {
   int n2, i, kcand;
   /* sum of weights: `int' do overflow when  n ~>= 1e5 */
-  int64_t wleft, wmid, wright, w_tot, wrest;
+  int64_t wleft, wmid, w_tot, wrest;
 
   BASE trial;
 
@@ -323,15 +323,12 @@ FUNCTION(Qn,whimed)(BASE * a, int * w, int n, BASE * a_cand, BASE * a_srt, int *
 
       wleft = 0;
       wmid = 0;
-      wright = 0;
 
       for (i = 0; i < n; ++i)
         {
           if (a[i] < trial)
             wleft += w[i];
-          else if (a[i] > trial)
-            wright += w[i];
-          else
+          else if (a[i] == trial)
             wmid += w[i];
         }
 

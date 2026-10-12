@@ -57,7 +57,7 @@ FUNCTION(gsl_fft_halfcomplex,inverse) (BASE data[], const size_t stride,
     size_t i;
     for (i = 0; i < n; i++)
       {
-        data[stride*i] *= norm;
+        data[stride*i] *= (ATOMIC) norm;
       }
   }
   return status;
@@ -79,7 +79,6 @@ FUNCTION(gsl_fft_halfcomplex,transform) (BASE data[], const size_t stride, const
   size_t i;
   size_t nf;
   int state;
-  int product_1;
   int tskip;
   TYPE(gsl_complex) *twiddle1, *twiddle2, *twiddle3, *twiddle4;
 
@@ -110,11 +109,10 @@ FUNCTION(gsl_fft_halfcomplex,transform) (BASE data[], const size_t stride, const
   for (i = 0; i < nf; i++)
     {
       factor = wavetable->factor[i];
-      product_1 = product;
       product *= factor;
       q = n / product;
 
-      tskip = (q + 1) / 2 - 1;
+      tskip = (int) ((q + 1) / 2 - 1);
 
       if (state == 0)
         {

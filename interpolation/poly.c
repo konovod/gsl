@@ -91,6 +91,9 @@ polynomial_eval (const void *vstate,
 {
   const polynomial_state_t *state = (const polynomial_state_t *) vstate;
 
+  (void) ya;
+  (void) acc;
+
   *y = gsl_poly_dd_eval (state->d, xa, size, x);
 
   return GSL_SUCCESS;
@@ -103,6 +106,9 @@ polynomial_deriv (const void *vstate,
                   gsl_interp_accel * acc, double *y)
 {
   const polynomial_state_t *state = (const polynomial_state_t *) vstate;
+
+  (void) ya;
+  (void) acc;
 
   gsl_poly_dd_taylor (state->coeff, x, state->d, xa, size, state->work);
 
@@ -117,6 +123,9 @@ polynomial_deriv2 (const void *vstate,
                    double x, gsl_interp_accel * acc, double *y)
 {
   const polynomial_state_t *state = (const polynomial_state_t *) vstate;
+
+  (void) ya;
+  (void) acc;
 
   gsl_poly_dd_taylor (state->coeff, x, state->d, xa, size, state->work);
 
@@ -134,13 +143,16 @@ polynomial_integ (const void *vstate, const double xa[], const double ya[],
   size_t i;
   double sum;
 
+  (void) ya;
+  (void) acc;
+
   gsl_poly_dd_taylor (state->coeff, 0.0, state->d, xa, size, state->work);
 
   sum = state->coeff[0] * (b - a);
 
   for (i = 1; i < size; i++)
     {
-      sum += state->coeff[i] * (pow (b, i + 1) - pow (a, i + 1)) / (i + 1.0);
+      sum += state->coeff[i] * (pow (b, (double) (i + 1)) - pow (a, (double) (i + 1))) / (i + 1.0);
     }
 
   *result = sum;

@@ -40,6 +40,8 @@ intermediate_point (gsl_multimin_function_fdf * fdf,
 {
   double stepb, fb;
 
+  (void) stepa;
+
 trial:
   {
     double u = fabs (pg * lambda * stepc);

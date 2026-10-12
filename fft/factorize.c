@@ -161,14 +161,14 @@ fft_binary_logn (const size_t n)
       binary_logn++;
     }
 
-  ntest = (1 << binary_logn) ;
+  ntest = ((size_t)1 << binary_logn) ;
 
   if (n != ntest )       
     {
       return -1 ; /* n is not a power of 2 */
     } 
 
-  return binary_logn;
+  return (int) binary_logn;
 }
 
 

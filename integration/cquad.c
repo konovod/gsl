@@ -273,7 +273,7 @@ gsl_integration_cquad (const gsl_function * f, double a, double b,
 
 
   /* Initialize the heaps. */
-  for (i = 0; i < ws->size; i++)
+  for (i = 0; i < (int) ws->size; i++)
     ws->heap[i] = i;
 
 
@@ -284,6 +284,7 @@ gsl_integration_cquad (const gsl_function * f, double a, double b,
   igral_final = 0.0;
   err_final = 0.0;
   err_excess = 0.0;
+  (void) err_excess;
 
 
   /* Main loop. */
@@ -386,7 +387,7 @@ gsl_integration_cquad (const gsl_function * f, double a, double b,
 	  igral_final += iv->igral;
 
 	  /* Swap with the last element on the heap */
-	  t = ws->heap[nivals - 1];
+	  t = (int) ws->heap[nivals - 1];
 	  ws->heap[nivals - 1] = ws->heap[0];
 	  ws->heap[0] = t;
 	  nivals--;
@@ -411,7 +412,7 @@ gsl_integration_cquad (const gsl_function * f, double a, double b,
 		break;
 	      else
 		{
-		  t = ws->heap[j];
+		  t = (int) ws->heap[j];
 		  ws->heap[j] = ws->heap[i];
 		  ws->heap[i] = t;
 		  i = j;
@@ -565,7 +566,7 @@ gsl_integration_cquad (const gsl_function * f, double a, double b,
 
 	  /* Flip the last interval to the top of the heap and
 	     sift down. */
-	  t = ws->heap[nivals - 1];
+	  t = (int) ws->heap[nivals - 1];
 	  ws->heap[nivals - 1] = ws->heap[0];
 	  ws->heap[0] = t;
 	  nivals--;
@@ -583,7 +584,7 @@ gsl_integration_cquad (const gsl_function * f, double a, double b,
 		break;
 	      else
 		{
-		  t = ws->heap[j];
+		  t = (int) ws->heap[j];
 		  ws->heap[j] = ws->heap[i];
 		  ws->heap[i] = t;
 		  i = j;
@@ -597,7 +598,7 @@ gsl_integration_cquad (const gsl_function * f, double a, double b,
 	      j = (i - 1) / 2;
 	      if (ws->ivals[ws->heap[j]].err < ws->ivals[ws->heap[i]].err)
 		{
-		  t = ws->heap[j];
+		  t = (int) ws->heap[j];
 		  ws->heap[j] = ws->heap[i];
 		  ws->heap[i] = t;
 		  i = j;
@@ -624,7 +625,7 @@ gsl_integration_cquad (const gsl_function * f, double a, double b,
 		break;
 	      else
 		{
-		  t = ws->heap[j];
+		  t = (int) ws->heap[j];
 		  ws->heap[j] = ws->heap[i];
 		  ws->heap[i] = t;
 		  i = j;
@@ -635,7 +636,7 @@ gsl_integration_cquad (const gsl_function * f, double a, double b,
 
       /* If the heap is about to overflow, remove the last two
          intervals. */
-      while (nivals > ws->size - 2)
+      while (nivals > (int) ws->size - 2)
 	{
 	  iv = &(ws->ivals[ws->heap[nivals - 1]]);
 

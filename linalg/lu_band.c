@@ -180,8 +180,8 @@ gsl_linalg_LU_band_svx (const size_t lb, const size_t ub, const gsl_matrix * LUB
 
       /* solve U x = b */
       cblas_dtbsv(CblasColMajor, CblasUpper, CblasNoTrans, CblasNonUnit,
-                  (int) N, (int) (lb + ub), LUB->data, LUB->tda,
-                  x->data, x->stride);
+                  (int) N, (int) (lb + ub), LUB->data, (int) LUB->tda,
+                  x->data, (int) x->stride);
 
       return GSL_SUCCESS;
     }
@@ -323,7 +323,7 @@ LU_band_decomp_L2 (const size_t M, const size_t lb, const size_t ub,
           CBLAS_INDEX_t j_pivot = gsl_blas_idamax(&x.vector);
           double * ptr;
 
-          gsl_vector_uint_set(ipiv, j, j + j_pivot);
+          gsl_vector_uint_set(ipiv, j, (unsigned int) (j + j_pivot));
 
           ptr = gsl_matrix_ptr(AB, j, ub_U + j_pivot);
           if (*ptr != 0.0)

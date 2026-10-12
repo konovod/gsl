@@ -78,7 +78,8 @@ exponential_init(const size_t n, double * diag, double * subdiag, gsl_integratio
 static const gsl_integration_fixed_type exponential_type =
 {
   exponential_check,
-  exponential_init
+  exponential_init,
+  NULL
 };
 
 const gsl_integration_fixed_type *gsl_integration_fixed_exponential = &exponential_type;

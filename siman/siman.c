@@ -72,7 +72,7 @@ gsl_siman_solve (const gsl_rng * r, void *x0_p, gsl_siman_Efunc_t Ef,
   assert((copyfunc != NULL && copy_constructor != NULL && destructor != NULL)
          || (element_size != 0));
 
-  distance = 0 ; /* This parameter is not currently used */
+  (void) distance ; /* This parameter is not currently used */
   E = Ef(x0_p);
 
   if (copyfunc) {
@@ -162,6 +162,10 @@ gsl_siman_solve (const gsl_rng * r, void *x0_p, gsl_siman_Efunc_t Ef,
       break;
     }
   }
+
+  (void) n_accepts;   /* accumulated for the (currently disabled) statistics print */
+  (void) n_rejects;
+  (void) n_eless;
 
   /* at the end, copy the result onto the initial point, so we pass it
      back to the caller */

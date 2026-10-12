@@ -28,8 +28,8 @@
     const BASE x_imag = CONST_IMAG(X, ix);
     const BASE y_real = CONST_REAL(Y, iy);
     const BASE y_imag = CONST_IMAG(Y, iy);
-    r_real += x_real * y_real - CONJ_SIGN * x_imag * y_imag;
-    r_imag += x_real * y_imag + CONJ_SIGN * x_imag * y_real;
+    r_real += (BASE)(x_real * y_real - CONJ_SIGN * x_imag * y_imag);
+    r_imag += (BASE)(x_real * y_imag + CONJ_SIGN * x_imag * y_real);
     ix += incX;
     iy += incY;
   }

@@ -34,7 +34,7 @@
 
     INDEX ix = OFFSET(N, incX);
     for (i = 0; i < N; i++) {
-      BASE temp = (nonunit ? A[lda * i + 0] : 1.0) * X[ix];
+      BASE temp = (BASE)((nonunit ? A[lda * i + 0] : 1.0) * X[ix]);
       const INDEX j_min = i + 1;
       const INDEX j_max = GSL_MIN(N, i + K + 1);
       INDEX jx = OFFSET(N, incX) + j_min * incX;
@@ -52,7 +52,7 @@
 
     INDEX ix = OFFSET(N, incX) + (N - 1) * incX;
     for (i = N; i > 0 && i--;) {
-      BASE temp = (nonunit ? A[lda * i + K] : 1.0) * X[ix];
+      BASE temp = (BASE)((nonunit ? A[lda * i + K] : 1.0) * X[ix]);
       const INDEX j_min = (i > K ? i - K : 0);
       const INDEX j_max = i;
       INDEX jx = OFFSET(N, incX) + j_min * incX;

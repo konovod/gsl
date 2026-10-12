@@ -215,7 +215,7 @@ int gsl_sf_debye_1_e(const double x, gsl_sf_result * result)
     return GSL_SUCCESS;
   }
   else if(x < -(M_LN2 + GSL_LOG_DBL_EPSILON)) {
-    const int nexp = floor(xcut/x);
+    const int nexp = (int) floor(xcut/x);
     const double ex  = exp(-x);
     double sum = 0.0;
     double xk  = nexp * x;
@@ -268,7 +268,7 @@ int gsl_sf_debye_2_e(const double x, gsl_sf_result * result)
     return GSL_SUCCESS;
   }
   else if(x < -(M_LN2 + GSL_LOG_DBL_EPSILON)) {
-    const int nexp = floor(xcut/x);
+    const int nexp = (int) floor(xcut/x);
     const double ex  = exp(-x);
     double xk  = nexp * x;
     double rk  = nexp;
@@ -324,7 +324,7 @@ int gsl_sf_debye_3_e(const double x, gsl_sf_result * result)
     return GSL_SUCCESS;
   }
   else if(x < -(M_LN2 + GSL_LOG_DBL_EPSILON)) {
-    const int nexp = floor(xcut/x);
+    const int nexp = (int) floor(xcut/x);
     const double ex  = exp(-x);
     double xk  = nexp * x;
     double rk  = nexp;
@@ -381,7 +381,7 @@ int gsl_sf_debye_4_e(const double x, gsl_sf_result * result)
     return GSL_SUCCESS;
   }
   else if(x < -(M_LN2 + GSL_LOG_DBL_EPSILON)) {
-    const int nexp = floor(xcut/x);
+    const int nexp = (int) floor(xcut/x);
     const double ex  = exp(-x);
     double xk  = nexp * x;
     double rk  = nexp;
@@ -438,7 +438,7 @@ int gsl_sf_debye_5_e(const double x, gsl_sf_result * result)
     return GSL_SUCCESS;
   }
   else if(x < -(M_LN2 + GSL_LOG_DBL_EPSILON)) {
-    const int nexp = floor(xcut/x);
+    const int nexp = (int) floor(xcut/x);
     const double ex  = exp(-x);
     double xk  = nexp * x;
     double rk  = nexp;
@@ -496,7 +496,7 @@ int gsl_sf_debye_6_e(const double x, gsl_sf_result * result)
     return GSL_SUCCESS;
   }
   else if(x < -(M_LN2 + GSL_LOG_DBL_EPSILON)) {
-    const int nexp = floor(xcut/x);
+    const int nexp = (int) floor(xcut/x);
     const double ex  = exp(-x);
     double xk  = nexp * x;
     double rk  = nexp;
