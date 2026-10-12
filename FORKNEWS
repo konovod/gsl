@@ -282,6 +282,7 @@ One line per change: date | tag | description | commit(s).
   2026-10-12 | [upstream] | doc: document five missing specfunc families       | 9f29ff97d
   2026-10-12 | [upstream] | doc: bspline, cheb, min, movstat, container accessors | 533997071
   2026-10-12 | [upstream] | doc: legacy multifit interface and more routines     | 804591106
+  2026-10-12 | [upstream] | doc: describe the legacy gsl_odeiv v1 interface       | 11719af6e
   2026-10-12 | [upstream] | rstat: scale the running moments to the data range | 743bb5bf3
   2026-10-12 | [upstream] | randist: add the gamma tail distribution       | 47b9126ec
 
@@ -7603,4 +7604,30 @@ warnings in the touched files are the two pre-existing
 Files: `doc/linalg.rst`, `doc/eigen.rst`, `doc/nls.rst`,
 `doc/statistics.rst`, `doc/lls.rst`, `doc/fft.rst`, `doc/ieee754.rst`,
 `doc/rng.rst`, `doc/err.rst` and the matching `doc_texinfo/*.texi`.
+
+
+## [upstream] doc: describe the supported legacy gsl_odeiv v1 interface
+
+Commit: 11719af6e
+
+The v1 ODE interface was on the `FORKTODO` audit list.  The note there
+suggested a deprecation marker, but the header does not guard it and this
+fork added to it recently: `gsl_odeiv_control_fixed_new()` came from
+Savannah #30947 (commit 379750b93).  Marking the whole v1 interface
+deprecated would have deprecated the fork's own new function, so the
+interface is instead presented as supported legacy API.
+
+A new "Legacy v1 Interface" section in `doc/ode-initval.rst` and
+`doc_texinfo/ode-initval.texi` documents the `gsl_odeiv_system` type, the
+stepper layer (`gsl_odeiv_step_*`, including the available step types),
+the step-size control layer (`gsl_odeiv_control_*`, including
+`gsl_odeiv_control_fixed_new`) and the evolution layer
+(`gsl_odeiv_evolve_*`).  The chapter already recommends `gsl_odeiv2` and
+notes the v1 fixed-step control; this section supplies the remaining v1
+entry points.
+
+No source change: `ode-initval/gsl_odeiv.h` is left unguarded.  The
+manual builds cleanly for the touched files.
+
+Files: `doc/ode-initval.rst`, `doc_texinfo/ode-initval.texi`.
 
