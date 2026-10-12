@@ -282,6 +282,7 @@ One line per change: date | tag | description | commit(s).
   2026-10-12 | [upstream] | doc: document five missing specfunc families       | 9f29ff97d
   2026-10-12 | [upstream] | doc: bspline, cheb, min, movstat, container accessors | 533997071
   2026-10-12 | [upstream] | rstat: scale the running moments to the data range | 743bb5bf3
+  2026-10-12 | [upstream] | randist: add the gamma tail distribution       | 47b9126ec
 
 
 ## [upstream] rng: make the random() generators produce the documented sequences
@@ -4964,10 +4965,11 @@ New distributions and generators (new public API):
     `#66767` inverse binomial, `#66775` inverse Poisson - **taken later**
     once the filter was widened to admit new public API; see the five
     entries appended at the end of this file.
-  * `#24252` gamma-tail distribution - re-examined and **rejected**: the
-    posted sampler's `a < 1` branch is numerically wrong; see the
-    rejection entry appended at the end of this file.  `#24871`
-    (exponential integrals for complex arguments) remains open.
+  * `#24252` gamma-tail distribution - the posted sampler's `a < 1` branch
+    is numerically wrong, so it was **rejected**; a correct generator was
+    then **taken** (`gsl_ran_gamma_tail()`, commit `47b9126ec`); see the
+    rejection entry and the `[upstream]` entry near the end of this file.
+    `#24871` (exponential integrals for complex arguments) remains open.
   * `#57173` zeta for complex arguments, `#68367` inverse Jacobi
     elliptic integrals - new algorithms and API.
 
@@ -5879,8 +5881,11 @@ hold.  Simulated on 200000 draws, `a = 0.5, tail = 0` gives mean `0.75`
 instead of `0.50`; the correct `gsl_ran_gamma` already uses the standard
 `Gamma(1+a) * U^(1/a)` identity.
 
-No change is made.  A correct truncated-gamma generator would be a
-separate feature, and the posted code is not a usable basis for it.
+No change is made to `gsl_ran_gamma`; a correct truncated-gamma generator
+would be a separate feature, and the posted code is not a usable basis
+for it.  That feature was added later as `gsl_ran_gamma_tail()` (commit
+`47b9126ec`) - see the `[upstream] randist: add the gamma tail
+distribution` entry at the end of this file.
 
 See Savannah bug #24252.
 
@@ -7497,4 +7502,49 @@ chapter and the movstat chapter exist only in the Sphinx tree, so there
 is no Texinfo counterpart to change.
 
 The Sphinx manual builds with no warning in the touched files.
+
+
+## [upstream] randist: add the gamma tail distribution
+
+Commit: 47b9126ec
+
+Add `gsl_ran_gamma_tail()` and `gsl_ran_gamma_tail_pdf()` for the gamma
+distribution with shape `a` and scale `b` restricted to `x > tail`, the
+left-truncated (far-tail) gamma.  The 2008 attachment
+`gamma_tail_jpl_080908.c` contains two Devroye rejection schemes that are
+correct only where they were meant to be used.  Its `a < 1` branch draws
+`Y = tail + Exp(1)` and accepts on `X U^(1/(1-a)) <= a`, where the
+shifted-exponential criterion is `<= tail`: the constant is `a` instead
+of `tail`.  For `tail >= a` this is a constant factor `(a/tail)^(1-a)`
+off the correct acceptance, so only the efficiency changes; for
+`tail < a` the erroneous acceptance is capped at one on `(tail, a)` and
+the sampled distribution is wrong; at `tail = 0` the branch is
+degenerate.  The 2026 follow-up's claim that it can replace the `a < 1`
+branch of `gsl_ran_gamma`, i.e. be called with `tail = 0`, therefore does
+not hold.  The `a > 1` branches were already correct.
+
+The new generator fixes the criterion and selects between the two exact
+`a < 1` schemes by their acceptance ratio `e^t t^(1-a) Gamma(a)`
+(`log = t + (1-a) log t + lngamma(a)`): plain rejection is poor deep in
+the tail, the shifted exponential is poor for small `t`, and each is used
+only where it is the better of the two.  `a = 1` uses the memoryless
+exponential.  For `a > 1` plain rejection is kept until `Q(a,t) < 0.2`,
+which avoids the low acceptance of the rate-matched proposal just above
+`t = a - 1`.  A non-positive `tail` reduces to `gsl_ran_gamma`.  The pdf
+normalizes with `gsl_sf_gamma_inc_Q`, so `randist` gains no dependency on
+`cdf`.
+
+Verification: five pdf values computed with mpmath; sampling over four
+parameter sets that cover every branch, checked against the pdf and
+against analytic tail probabilities; and an identically seeded pair of
+streams confirming that `tail <= 0` reproduces `gsl_ran_gamma` exactly.
+With the posted `a < 1` criterion restored the `[0.25,0.5]` and
+`[0.5,1.5]` moment checks fail (0.30347 vs 0.33825 and 0.51341 vs
+0.48810) and the `a = 0.5` goodness-of-fit test never converges.  Full
+ctest 57/57.
+
+Files: `randist/gamma.c`, `randist/gsl_randist.h`, `randist/test.c`, both
+manuals.
+
+See Savannah bug #24252.
 
