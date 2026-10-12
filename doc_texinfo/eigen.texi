@@ -20,6 +20,7 @@ The functions described in this chapter are declared in the header file
 * Complex Generalized Hermitian-Definite Eigensystems::
 * Real Generalized Nonsymmetric Eigensystems::
 * Sorting Eigenvalues and Eigenvectors::  
+* Jacobi Method::               
 * Eigenvalue and Eigenvector Examples::  
 * Eigenvalue and Eigenvector References::  
 @end menu
@@ -680,22 +681,28 @@ as shown above. Only @code{GSL_EIGEN_SORT_ABS_ASC} and
 complex.
 @end deftypefun
 
-@comment @deftypefun int gsl_eigen_jacobi (gsl_matrix * @var{matrix}, gsl_vector * @var{eval}, gsl_matrix * @var{evec}, unsigned int @var{max_rot}, unsigned int * @var{nrot})
-@comment This function finds the eigenvectors and eigenvalues of a real symmetric
-@comment matrix by Jacobi iteration. The data in the input matrix is destroyed.
-@comment @end deftypefun
+@node Jacobi Method
+@section Jacobi Method
+@cindex Jacobi method, eigenvalues
+@cindex eigenvalues, Jacobi method
 
-@comment @deftypefun int gsl_la_invert_jacobi (const gsl_matrix * @var{matrix}, gsl_matrix * @var{ainv}, unsigned int @var{max_rot})
-@comment Invert a matrix by Jacobi iteration.
-@comment @end deftypefun
+@deftypefun int gsl_eigen_jacobi (gsl_matrix * @var{matrix}, gsl_vector * @var{eval}, gsl_matrix * @var{evec}, unsigned int @var{max_rot}, unsigned int * @var{nrot})
+This function finds the eigenvalues and eigenvectors of a real symmetric
+matrix by Jacobi iteration, performing at most @var{max_rot} rotations and
+storing the number actually used in @var{nrot}.  The eigenvalues are
+stored in @var{eval} and the eigenvectors in the columns of @var{evec}.
+The data in the input matrix @var{matrix} is destroyed.  This routine is
+retained for backward compatibility; @code{gsl_eigen_symmv} is preferred.
+@end deftypefun
 
-@comment @deftypefun int gsl_eigen_sort (gsl_vector * @var{eval}, gsl_matrix * @var{evec}, gsl_eigen_sort_t @var{sort_type})
-@comment This functions sorts the eigensystem results based on eigenvalues.
-@comment Sorts in order of increasing value or increasing
-@comment absolute value, depending on the value of
-@comment @var{sort_type}, which can be @code{GSL_EIGEN_SORT_VALUE}
-@comment or @code{GSL_EIGEN_SORT_ABSVALUE}.
-@comment @end deftypefun
+@deftypefun int gsl_eigen_invert_jacobi (const gsl_matrix * @var{matrix}, gsl_matrix * @var{ainv}, unsigned int @var{max_rot})
+This function computes the inverse of the symmetric matrix @var{matrix}
+by Jacobi iteration, performing at most @var{max_rot} rotations, and stores
+it in @var{ainv}.  It is retained for backward compatibility; for most
+purposes the general inverse @code{gsl_linalg_LU_invert} or
+@code{gsl_linalg_cholesky_invert} is preferred.
+@comment Exceptional Return Values: GSL_ENOTSQR, GSL_EBADLEN
+@end deftypefun
 
 @node Eigenvalue and Eigenvector Examples
 @section Examples

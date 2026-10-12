@@ -252,6 +252,12 @@ fwrite (state, n, 1, stream);
 @end example
 @end deftypefun
 
+@deftypefun void gsl_rng_print_state (const gsl_rng * @var{r})
+This function writes the internal state of the generator @var{r} to
+@code{stdout} as a string of hexadecimal digits, for debugging purposes.
+No newline is appended.
+@end deftypefun
+
 @deftypefun {const gsl_rng_type **} gsl_rng_types_setup (void)
 This function returns a pointer to an array of all the available
 generator types, terminated by a null pointer. The function should be

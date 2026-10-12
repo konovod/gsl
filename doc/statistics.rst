@@ -147,6 +147,26 @@ error :macro:`GSL_EBADLEN`, and return `NaN` when the error handler has been
 disabled.  The total sum of squares of an empty data set is zero, since the
 empty sum is zero.
 
+.. function:: double gsl_stats_pvariance (const double data1[], size_t stride1, size_t n1, const double data2[], size_t stride2, size_t n2)
+
+   This function returns the pooled variance of the two datasets
+   :data:`data1` and :data:`data2`, of lengths :data:`n1` and :data:`n2`
+   with strides :data:`stride1` and :data:`stride2`.  The pooled variance is
+   the common variance estimate used for the two-sample t-test,
+
+   .. only:: not texinfo
+
+      .. math:: {\Hat\sigma}^2_p = {(n_1 - 1) {\Hat\sigma}^2_1 + (n_2 - 1) {\Hat\sigma}^2_2 \over n_1 + n_2 - 2}
+
+   .. only:: texinfo
+
+      ::
+
+         \Hat\sigma^2_p = ((n_1 - 1) \Hat\sigma^2_1 + (n_2 - 1) \Hat\sigma^2_2) / (n_1 + n_2 - 2)
+
+   where :math:`{\Hat\sigma}^2_1` and :math:`{\Hat\sigma}^2_2` are the
+   sample variances of the two datasets.
+
 Absolute deviation
 ==================
 

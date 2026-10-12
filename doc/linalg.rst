@@ -19,6 +19,36 @@ Computations* with Level-1 and Level-2 BLAS calls for efficiency.
 The functions described in this chapter are declared in the header file
 :file:`gsl_linalg.h`.
 
+Matrix Multiplication
+=====================
+
+.. function:: int gsl_linalg_matmult (const gsl_matrix * A, const gsl_matrix * B, gsl_matrix * C)
+
+   This function multiplies the matrices :data:`A` and :data:`B` and
+   stores the product :math:`C = A B` in :data:`C`.  The dimensions must
+   be compatible, so that :data:`C` has the same number of rows as
+   :data:`A` and the same number of columns as :data:`B`.
+
+.. function:: int gsl_linalg_matmult_mod (const gsl_matrix * A, gsl_linalg_matrix_mod_t modA, const gsl_matrix * B, gsl_linalg_matrix_mod_t modB, gsl_matrix * C)
+
+   This function multiplies the matrices :data:`A` and :data:`B`, allowing
+   either operand to be transformed first.  :data:`modA` and :data:`modB`
+   select the operation on :data:`A` and :data:`B` through the
+   :type:`gsl_linalg_matrix_mod_t` enumeration
+   (:code:`GSL_LINALG_MOD_NONE`, :code:`GSL_LINALG_MOD_TRANSPOSE` or
+   :code:`GSL_LINALG_MOD_CONJUGATE`), so that :data:`C` can be computed as
+   :math:`A B`, :math:`A^T B`, :math:`A B^T`, :math:`A^T B^T`, or the
+   corresponding conjugate-transpose variants.
+
+.. function:: int gsl_linalg_exponential_ss (const gsl_matrix * A, gsl_matrix * eA, gsl_mode_t mode)
+
+   This function computes the matrix exponential :math:`e^A` of the square
+   matrix :data:`A`, storing it in :data:`eA`, by the scaling and squaring
+   method described in Moler and Van Loan, *SIAM Review* 20, 801 (1978).
+   The parameter :data:`mode` selects the strategy from the table in that
+   paper appropriate to the requested accuracy.
+.. Exceptional Return Values: GSL_ENOTSQR, GSL_EBADLEN
+
 .. index:: LU decomposition
 
 .. _sec_lu-decomposition:
@@ -1512,6 +1542,14 @@ both the scaled and unscaled systems.
    handler first to avoid triggering an error. These functions use
    Level 3 BLAS to compute the Cholesky factorization (Peise and Bientinesi, 2016).
 
+.. function:: int gsl_linalg_cholesky_decomp_unit (gsl_matrix * A, gsl_vector * D)
+
+   This function factorizes the symmetric, positive-definite square matrix
+   :data:`A` into :math:`A = L D L^T`, where :math:`L` is lower triangular
+   with a unit diagonal and :math:`D` is diagonal.  On output, the
+   diagonal and lower triangular part of :data:`A` hold :math:`L` and the
+   vector :data:`D` contains the diagonal elements of :math:`D`.
+
 .. function:: int gsl_linalg_cholesky_decomp (gsl_matrix * A)
 
    This function is now deprecated and is provided only for backward compatibility.
@@ -1534,6 +1572,18 @@ both the scaled and unscaled systems.
    :func:`gsl_linalg_complex_cholesky_decomp`. On input :data:`x` should
    contain the right-hand side :math:`b`, which is replaced by the
    solution on output.
+
+.. function:: int gsl_linalg_cholesky_solve_mat (const gsl_matrix * cholesky, const gsl_matrix * B, gsl_matrix * X)
+              int gsl_linalg_cholesky_svx_mat (const gsl_matrix * cholesky, gsl_matrix * X)
+
+   These functions solve the systems :math:`A X = B` using the Cholesky
+   decomposition of :math:`A` held in the matrix :data:`cholesky`, with
+   several right-hand sides held in the columns of :data:`B`.  The
+   solution is stored in the columns of :data:`X`, which must have the
+   same dimensions as :data:`B`.  The in-place variant
+   :func:`gsl_linalg_cholesky_svx_mat` overwrites :data:`X` with the
+   solution.  The decomposition must have been previously computed by
+   :func:`gsl_linalg_cholesky_decomp1`.
 
 .. function:: int gsl_linalg_cholesky_invert (gsl_matrix * cholesky)
               int gsl_linalg_complex_cholesky_invert (gsl_matrix_complex * cholesky)
@@ -1756,6 +1806,14 @@ well conditioned.
    :math:`A + E`, using its pivoted Cholesky decomposition provided in :data:`LDLT`.
    The reciprocal condition number estimate, defined as :math:`1 / (||A + E||_1 \cdot ||(A + E)^{-1}||_1)`, is stored
    in :data:`rcond`.  Additional workspace of size :math:`3 N` is required in :data:`work`.
+
+.. function:: int gsl_linalg_mcholesky_invert (const gsl_matrix * LDLT, const gsl_permutation * p, gsl_matrix * Ainv)
+
+   This function computes the inverse of the perturbed matrix :math:`A + E`,
+   using the modified Cholesky decomposition stored in :data:`LDLT` and
+   :data:`p` which must have been previously computed by
+   :func:`gsl_linalg_mcholesky_decomp`.  On output, the matrix :data:`Ainv`
+   contains :math:`(A + E)^{-1}`.
 
 .. index::
    single: LDL decomposition
@@ -2793,6 +2851,15 @@ of the floating point radix.
    This function replaces the matrix :data:`A` with its balanced counterpart
    and stores the diagonal elements of the similarity transformation
    into the vector :data:`D`.
+
+.. function:: int gsl_linalg_balance_columns (gsl_matrix * A, gsl_vector * D)
+
+   This function scales the columns of the matrix :data:`A` by powers of
+   two so that the 1-norm (the sum of absolute values) of each column lies
+   in the interval :math:`[1/2, 1]`.  The length of :data:`D` must equal the
+   number of columns of :data:`A`.  On output, column :math:`j` of
+   :data:`A` has been divided by :math:`D_j`, so that the original matrix
+   is recovered by :math:`A D`.
 
 Examples
 ========

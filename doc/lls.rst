@@ -366,6 +366,15 @@ These functions are declared in the header file :file:`gsl_multifit.h`.
    where the weighted total sum of squares (WTSS) of the
    observations :data:`y` may be computed from :func:`gsl_stats_wtss`.
 
+.. function:: int gsl_multifit_wlinear_svd (const gsl_matrix * X, const gsl_vector * w, const gsl_vector * y, double tol, size_t * rank, gsl_vector * c, gsl_matrix * cov, double * chisq, gsl_multifit_linear_workspace * work)
+              int gsl_multifit_wlinear_usvd (const gsl_matrix * X, const gsl_vector * w, const gsl_vector * y, double tol, size_t * rank, gsl_vector * c, gsl_matrix * cov, double * chisq, gsl_multifit_linear_workspace * work)
+
+   These are earlier SVD-based interfaces to the weighted linear
+   least-squares fit, retained for backward compatibility.  Both now
+   compute the truncated SVD solution exactly as
+   :func:`gsl_multifit_wlinear_tsvd`: :data:`tol` has the same meaning and
+   the two names produce identical results.
+
 .. function:: int gsl_multifit_linear_est (const gsl_vector * x, const gsl_vector * c, const gsl_matrix * cov, double * y, double * y_err)
 
    This function uses the best-fit multilinear regression coefficients

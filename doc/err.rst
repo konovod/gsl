@@ -185,6 +185,33 @@ function :func:`gsl_set_error_handler` which is also declared in
    This is the recommended behavior for production programs.  The previous
    handler is returned (so that you can restore it later).
 
+The library also provides an older, lower-level mechanism for reporting
+errors to a stream, which predates the error handlers described above.
+
+.. type:: gsl_stream_handler_t
+
+   This is the type of a stream handler function.  It is passed a label,
+   the name of the source file, the line number and the reason string, and
+   returns :code:`void`.
+
+.. function:: void gsl_stream_printf (const char * label, const char * file, int line, const char * reason)
+
+   This function prints the error described by :data:`reason`, with the
+   given :data:`label`, :data:`file` and :data:`line`, to the current error
+   stream.  If a stream handler has been installed with
+   :func:`gsl_set_stream_handler` it is called instead.
+
+.. function:: gsl_stream_handler_t * gsl_set_stream_handler (gsl_stream_handler_t * new_handler)
+
+   This function installs a new stream handler, :data:`new_handler`, and
+   returns the previous one.  Passing :code:`NULL` restores the default
+   behaviour of writing to the error stream.
+
+.. function:: FILE * gsl_set_stream (FILE * new_stream)
+
+   This function sets the error stream to :data:`new_stream` and returns
+   the previous stream.  The default error stream is :code:`stderr`.
+
 The error behavior can be changed for specific applications by
 recompiling the library with a customized definition of the
 :code:`GSL_ERROR` macro in the file :file:`gsl_errno.h`.

@@ -639,6 +639,33 @@ Sorting Eigenvalues and Eigenvectors
    :macro:`GSL_EIGEN_SORT_ABS_DESC` are supported due to the eigenvalues being
    complex.
 
+Jacobi Method
+=============
+
+.. index::
+   single: Jacobi method, eigenvalues
+   single: eigenvalues, Jacobi method
+
+.. function:: int gsl_eigen_jacobi (gsl_matrix * matrix, gsl_vector * eval, gsl_matrix * evec, unsigned int max_rot, unsigned int * nrot)
+
+   This function finds the eigenvalues and eigenvectors of a real
+   symmetric matrix by Jacobi iteration, performing at most
+   :data:`max_rot` rotations and storing the number actually used in
+   :data:`nrot`.  The eigenvalues are stored in :data:`eval` and the
+   eigenvectors in the columns of :data:`evec`.  The data in the input
+   matrix :data:`matrix` is destroyed.  This routine is retained for
+   backward compatibility; :func:`gsl_eigen_symmv` is preferred.
+
+.. function:: int gsl_eigen_invert_jacobi (const gsl_matrix * matrix, gsl_matrix * ainv, unsigned int max_rot)
+
+   This function computes the inverse of the symmetric matrix
+   :data:`matrix` by Jacobi iteration, performing at most :data:`max_rot`
+   rotations, and stores it in :data:`ainv`.  It is retained for backward
+   compatibility; for most purposes the general inverse
+   :func:`gsl_linalg_LU_invert` or :func:`gsl_linalg_cholesky_invert` is
+   preferred.
+.. Exceptional Return Values: GSL_ENOTSQR, GSL_EBADLEN
+
 Examples
 ========
 

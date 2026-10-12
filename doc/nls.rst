@@ -1295,7 +1295,217 @@ Covariance matrix of best fit parameters
    For more information about covariance matrices see
    :ref:`Linear Least-Squares Overview <sec_lls-overview>`.
 
+.. _sec_multifit-legacy:
+
+Legacy Interface
+================
+
+The header file :file:`gsl_multifit_nlin.h` also declares an earlier
+interface to the nonlinear least-squares solvers.  It remains supported,
+but new code should prefer the :type:`gsl_multifit_nlinear_workspace`
+interface described above.
+
+The residual function is described by two structures,
+
+.. type:: gsl_multifit_function
+
+   This structure describes a residual function without a user-supplied
+   Jacobian.  Its members are :code:`f`, a pointer to the function that
+   computes the residual vector, and :code:`n`, :code:`p` and
+   :code:`params`, giving the number of residuals, the number of
+   parameters and the user parameters.
+
+.. type:: gsl_multifit_function_fdf
+
+   This structure describes a residual function together with its
+   Jacobian.  In addition to the members of
+   :type:`gsl_multifit_function` it holds the pointers :code:`df` and
+   :code:`fdf`, which compute the Jacobian alone and the residuals and
+   Jacobian together, and the counters :code:`nevalf` and
+   :code:`nevaldf`.
+
+Solver without derivatives
+--------------------------
+
+.. type:: gsl_multifit_fsolver
+.. type:: gsl_multifit_fsolver_type
+
+   The :type:`gsl_multifit_fsolver` workspace holds the state of a solver
+   that needs only function evaluations, described by the
+   :type:`gsl_multifit_fsolver_type` algorithm table.
+
+.. function:: gsl_multifit_fsolver * gsl_multifit_fsolver_alloc (const gsl_multifit_fsolver_type * T, size_t n, size_t p)
+
+   This function returns a pointer to a newly allocated instance of a
+   solver of type :data:`T` for a system of :data:`n` functions in
+   :data:`p` unknowns.  If there is insufficient memory the function
+   returns a null pointer and reports :macro:`GSL_ENOMEM`.
+
+.. function:: void gsl_multifit_fsolver_free (gsl_multifit_fsolver * s)
+
+   This function frees all the memory associated with the solver
+   :data:`s`.
+
+.. function:: int gsl_multifit_fsolver_set (gsl_multifit_fsolver * s, gsl_multifit_function * f, const gsl_vector * x)
+
+   This function initializes, or resets, the solver :data:`s` to use the
+   function :data:`f` with the initial guess :data:`x` for the
+   parameters.
+
+.. function:: int gsl_multifit_fsolver_iterate (gsl_multifit_fsolver * s)
+
+   This function performs a single iteration of the solver :data:`s`.
+
+.. function:: int gsl_multifit_fsolver_driver (gsl_multifit_fsolver * s, size_t maxiter, double epsabs, double epsrel)
+
+   This function iterates the solver :data:`s` until it converges to the
+   tolerances :data:`epsabs` and :data:`epsrel`, or until :data:`maxiter`
+   iterations have been performed.
+
+.. function:: const char * gsl_multifit_fsolver_name (const gsl_multifit_fsolver * s)
+              gsl_vector * gsl_multifit_fsolver_position (const gsl_multifit_fsolver * s)
+
+   These functions return the name of the solver and the current best
+   estimate of the parameters :math:`x`.
+
+Solver with derivatives
+-----------------------
+
+.. type:: gsl_multifit_fdfsolver
+.. type:: gsl_multifit_fdfsolver_type
+
+   The :type:`gsl_multifit_fdfsolver` workspace holds the state of a
+   solver that uses the residual Jacobian, described by the
+   :type:`gsl_multifit_fdfsolver_type` algorithm table.  The predefined
+   types are
+
+   .. var:: gsl_multifit_fdfsolver_type * gsl_multifit_fdfsolver_lmsder
+              gsl_multifit_fdfsolver_type * gsl_multifit_fdfsolver_lmder
+              gsl_multifit_fdfsolver_type * gsl_multifit_fdfsolver_lmniel
+
+      The Levenberg-Marquardt algorithms, with the scaled and unscaled
+      SVD implementations and the large-residual variant.
+
+.. function:: gsl_multifit_fdfsolver * gsl_multifit_fdfsolver_alloc (const gsl_multifit_fdfsolver_type * T, size_t n, size_t p)
+
+   This function returns a pointer to a newly allocated instance of a
+   derivative solver of type :data:`T` for a system of :data:`n`
+   functions in :data:`p` unknowns.
+
+.. function:: void gsl_multifit_fdfsolver_free (gsl_multifit_fdfsolver * s)
+
+   This function frees all the memory associated with the solver
+   :data:`s`.
+
+.. function:: int gsl_multifit_fdfsolver_set (gsl_multifit_fdfsolver * s, gsl_multifit_function_fdf * fdf, const gsl_vector * x)
+              int gsl_multifit_fdfsolver_wset (gsl_multifit_fdfsolver * s, gsl_multifit_function_fdf * fdf, const gsl_vector * x, const gsl_vector * wts)
+
+   These functions initialize, or reset, the solver :data:`s` to use the
+   function :data:`fdf` with the initial guess :data:`x`.  The weighted
+   variant :func:`gsl_multifit_fdfsolver_wset` also takes a vector of
+   weights :data:`wts`.
+
+.. function:: int gsl_multifit_fdfsolver_iterate (gsl_multifit_fdfsolver * s)
+
+   This function performs a single iteration of the solver :data:`s`.
+
+.. function:: int gsl_multifit_fdfsolver_driver (gsl_multifit_fdfsolver * s, size_t maxiter, double xtol, double gtol, double ftol, int * info)
+
+   This function iterates the solver :data:`s` until it converges to the
+   tolerances :data:`xtol`, :data:`gtol` and :data:`ftol`, or until
+   :data:`maxiter` iterations have been performed.  The reason for
+   termination is stored in :data:`info`.
+
+.. function:: int gsl_multifit_fdfsolver_jac (gsl_multifit_fdfsolver * s, gsl_matrix * J)
+
+   This function stores the current Jacobian of the system in :data:`J`.
+
+.. function:: const char * gsl_multifit_fdfsolver_name (const gsl_multifit_fdfsolver * s)
+              gsl_vector * gsl_multifit_fdfsolver_position (const gsl_multifit_fdfsolver * s)
+              gsl_vector * gsl_multifit_fdfsolver_residual (const gsl_multifit_fdfsolver * s)
+              size_t gsl_multifit_fdfsolver_niter (const gsl_multifit_fdfsolver * s)
+
+   These functions return the name of the solver, the current best
+   estimate of the parameters :math:`x`, the current residual vector
+   :math:`f(x)` and the number of iterations performed.
+
+.. function:: int gsl_multifit_fdfsolver_test (const gsl_multifit_fdfsolver * s, double xtol, double gtol, double ftol, int * info)
+
+   This function tests the solver :data:`s` for convergence at the
+   tolerances :data:`xtol`, :data:`gtol` and :data:`ftol`, storing the
+   result in :data:`info`.
+
+.. function:: int gsl_multifit_test_delta (const gsl_vector * dx, const gsl_vector * x, double epsabs, double epsrel)
+
+   This function tests the step :data:`dx` for convergence against the
+   parameters :data:`x`, using the absolute and relative tolerances
+   :data:`epsabs` and :data:`epsrel`.
+
+.. function:: int gsl_multifit_test_gradient (const gsl_vector * g, double epsabs)
+
+   This function tests the gradient :data:`g` for convergence using the
+   absolute tolerance :data:`epsabs`.
+
+.. function:: int gsl_multifit_gradient (const gsl_matrix * J, const gsl_vector * f, gsl_vector * g)
+
+   This function computes the gradient :math:`g = J^T f` of the
+   sum of squares from the Jacobian :data:`J` and the residual
+   :data:`f`.
+
+.. function:: int gsl_multifit_covar (const gsl_matrix * J, double epsrel, gsl_matrix * covar)
+              int gsl_multifit_covar_QRPT (gsl_matrix * r, gsl_permutation * perm, double epsrel, gsl_matrix * covar)
+
+   These functions compute the covariance matrix of the best-fit
+   parameters from the Jacobian :data:`J` (or its :math:`QR` factor
+   :data:`r` with permutation :data:`perm`).  The matrix :data:`covar`
+   is the inverse of :math:`J^T J`, up to the scaling by the variance of
+   the residuals, and singular values smaller than :data:`epsrel` times
+   the largest are discarded.
+
+Tikhonov (ridge) regularization
+-------------------------------
+
+.. type:: gsl_multifit_fdfridge
+
+   This workspace solves the regularized (Tikhonov) nonlinear
+   least-squares problem by augmenting the system with the damping
+   terms.  Its interface mirrors the derivative solver and adds the
+   regularization parameters.
+
+.. function:: gsl_multifit_fdfridge * gsl_multifit_fdfridge_alloc (const gsl_multifit_fdfsolver_type * T, size_t n, size_t p)
+              void gsl_multifit_fdfridge_free (gsl_multifit_fdfridge * w)
+
+   These functions allocate and free a regularized solver of type
+   :data:`T` for :data:`n` residuals in :data:`p` parameters.
+
+.. function:: int gsl_multifit_fdfridge_set (gsl_multifit_fdfridge * w, gsl_multifit_function_fdf * f, const gsl_vector * x, double lambda)
+              int gsl_multifit_fdfridge_wset (gsl_multifit_fdfridge * w, gsl_multifit_function_fdf * f, const gsl_vector * x, double lambda, const gsl_vector * wts)
+              int gsl_multifit_fdfridge_set2 (gsl_multifit_fdfridge * w, gsl_multifit_function_fdf * f, const gsl_vector * x, const gsl_vector * lambda)
+              int gsl_multifit_fdfridge_wset2 (gsl_multifit_fdfridge * w, gsl_multifit_function_fdf * f, const gsl_vector * x, const gsl_vector * lambda, const gsl_vector * wts)
+              int gsl_multifit_fdfridge_set3 (gsl_multifit_fdfridge * w, gsl_multifit_function_fdf * f, const gsl_vector * x, const gsl_matrix * L)
+              int gsl_multifit_fdfridge_wset3 (gsl_multifit_fdfridge * w, gsl_multifit_function_fdf * f, const gsl_vector * x, const gsl_matrix * L, const gsl_vector * wts)
+
+   These functions initialize, or reset, the regularized solver
+   :data:`w`.  The damping is given by a scalar :data:`lambda`, by a
+   diagonal vector :data:`lambda`, or by a general matrix :data:`L`; the
+   :code:`wset` variants also take observation weights :data:`wts`.
+
+.. function:: int gsl_multifit_fdfridge_iterate (gsl_multifit_fdfridge * w)
+              int gsl_multifit_fdfridge_driver (gsl_multifit_fdfridge * w, size_t maxiter, double xtol, double gtol, double ftol, int * info)
+
+   These functions perform a single iteration, or drive the iteration to
+   convergence, of the regularized solver.
+
+.. function:: const char * gsl_multifit_fdfridge_name (const gsl_multifit_fdfridge * w)
+              gsl_vector * gsl_multifit_fdfridge_position (const gsl_multifit_fdfridge * w)
+              gsl_vector * gsl_multifit_fdfridge_residual (const gsl_multifit_fdfridge * w)
+              size_t gsl_multifit_fdfridge_niter (const gsl_multifit_fdfridge * w)
+
+   These functions return the name of the solver, the current parameters,
+   the current residual vector and the number of iterations.
+
 .. _sec_nlinear-troubleshooting:
+
 
 Troubleshooting
 ===============

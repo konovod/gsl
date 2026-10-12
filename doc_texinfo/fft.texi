@@ -659,6 +659,15 @@ length @var{n} and stride @var{stride} on the half-complex sequence
 order.
 @end deftypefun
 
+@deftypefun int gsl_fft_halfcomplex_radix2_transform (double @var{data}[], size_t @var{stride}, size_t @var{n})
+This function computes the forward in-place radix-2 FFT of length @var{n}
+and stride @var{stride} on the real sequence @var{data}, storing the
+half-complex coefficients.  It is a synonym for
+@code{gsl_fft_real_radix2_transform}; use
+@code{gsl_fft_halfcomplex_radix2_inverse} or
+@code{gsl_fft_halfcomplex_radix2_backward} to transform back.
+@end deftypefun
+
 @deftypefun int gsl_fft_halfcomplex_radix2_unpack (const double @var{halfcomplex_coefficient}[], gsl_complex_packed_array @var{complex_coefficient}, size_t @var{stride}, size_t @var{n})
 This function converts @var{halfcomplex_coefficient}, an array of
 half-complex coefficients as returned by @code{gsl_fft_real_radix2_transform}, into an ordinary complex array, @var{complex_coefficient}.  It fills in the
@@ -838,6 +847,13 @@ Efficient modules are provided for subtransforms of length 2, 3, 4 and
 5.  Any remaining factors are computed with a slow, @math{O(n^2)},
 general-n module.  The caller must supply a @var{wavetable} containing
 trigonometric lookup tables and a workspace @var{work}. 
+@end deftypefun
+
+@deftypefun int gsl_fft_halfcomplex_backward (double @var{data}[], size_t @var{stride}, size_t @var{n}, const gsl_fft_halfcomplex_wavetable * @var{wavetable}, gsl_fft_real_workspace * @var{work})
+This function is a synonym for @code{gsl_fft_halfcomplex_transform}: it
+computes the backward transform of the half-complex sequence @var{data}
+without the @math{1/n} normalisation applied by
+@code{gsl_fft_halfcomplex_inverse}.
 @end deftypefun
 
 @deftypefun int gsl_fft_real_unpack (const double @var{real_coefficient}[], gsl_complex_packed_array @var{complex_coefficient}, size_t @var{stride}, size_t @var{n})

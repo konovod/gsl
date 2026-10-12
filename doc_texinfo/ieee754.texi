@@ -158,6 +158,17 @@ These functions output a formatted version of the IEEE floating-point
 number pointed to by @var{x} to the stream @code{stdout}.
 @end deftypefun
 
+@deftypefun void gsl_ieee_float_to_rep (const float * @var{x}, gsl_ieee_float_rep * @var{r})
+@deftypefunx void gsl_ieee_double_to_rep (const double * @var{x}, gsl_ieee_double_rep * @var{r})
+These functions extract the IEEE representation of the floating-point
+number pointed to by @var{x} and store it in the structure @var{r}.  The
+@code{gsl_ieee_float_rep} and @code{gsl_ieee_double_rep} structures hold
+the sign bit, the mantissa as a string of binary digits, the unbiased
+exponent and a type code, which is one of @code{GSL_IEEE_TYPE_NAN},
+@code{GSL_IEEE_TYPE_INF}, @code{GSL_IEEE_TYPE_NORMAL},
+@code{GSL_IEEE_TYPE_DENORMAL} or @code{GSL_IEEE_TYPE_ZERO}.
+@end deftypefun
+
 @noindent
 The following program demonstrates the use of the functions by printing
 the single and double precision representations of the fraction
@@ -322,6 +333,25 @@ floating-point operations.  The SSE floating-point units do not have a
 precision-control bit, and always work in double-precision.  The
 single-precision and extended-precision keywords have no effect in
 this case.
+@end deftypefun
+
+@deftypefun int gsl_ieee_read_mode_string (const char * @var{description}, int * @var{precision}, int * @var{rounding}, int * @var{exception_mask})
+This function parses the comma-separated list of mode keywords in
+@var{description}, which has the same form as the @code{GSL_IEEE_MODE}
+environment variable.  The requested precision, rounding mode and
+exception mask are stored in @var{precision}, @var{rounding} and
+@var{exception_mask}, using the @code{GSL_IEEE_SINGLE_PRECISION},
+@code{GSL_IEEE_ROUND_TO_NEAREST} and @code{GSL_IEEE_MASK_*} enumerations.
+An unrecognized keyword is an error.
+@end deftypefun
+
+@deftypefun int gsl_ieee_set_mode (int @var{precision}, int @var{rounding}, int @var{exception_mask})
+This function sets the floating-point precision, rounding mode and
+exception mask of the processor from the three enumerated values, as
+returned by @code{gsl_ieee_read_mode_string}.  It returns
+@code{GSL_EUNSUP} if the requested settings are not supported by the
+platform.
+@comment Exceptional Return Values: GSL_EUNSUP
 @end deftypefun
 
 @noindent

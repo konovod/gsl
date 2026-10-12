@@ -14,6 +14,7 @@ The functions described in this chapter are declared in the header file
 
 
 @menu
+* Matrix Multiplication::        
 * LU Decomposition::            
 * QR Decomposition::            
 * QR Decomposition with Column Pivoting::
@@ -37,6 +38,36 @@ The functions described in this chapter are declared in the header file
 * Linear Algebra Examples::     
 * Linear Algebra References and Further Reading::  
 @end menu
+
+@node Matrix Multiplication
+@section Matrix Multiplication
+
+@deftypefun int gsl_linalg_matmult (const gsl_matrix * @var{A}, const gsl_matrix * @var{B}, gsl_matrix * @var{C})
+This function multiplies the matrices @var{A} and @var{B} and stores the
+product @math{C = A B} in @var{C}.  The dimensions must be compatible, so
+that @var{C} has the same number of rows as @var{A} and the same number of
+columns as @var{B}.
+@end deftypefun
+
+@deftypefun int gsl_linalg_matmult_mod (const gsl_matrix * @var{A}, gsl_linalg_matrix_mod_t @var{modA}, const gsl_matrix * @var{B}, gsl_linalg_matrix_mod_t @var{modB}, gsl_matrix * @var{C})
+This function multiplies the matrices @var{A} and @var{B}, allowing
+either operand to be transformed first.  @var{modA} and @var{modB} select
+the operation on @var{A} and @var{B} through the
+@code{gsl_linalg_matrix_mod_t} enumeration (@code{GSL_LINALG_MOD_NONE},
+@code{GSL_LINALG_MOD_TRANSPOSE} or @code{GSL_LINALG_MOD_CONJUGATE}), so
+that @var{C} can be computed as @math{A B}, @math{A^T B},
+@math{A B^T}, @math{A^T B^T}, or the corresponding conjugate-transpose
+variants.
+@end deftypefun
+
+@deftypefun int gsl_linalg_exponential_ss (const gsl_matrix * @var{A}, gsl_matrix * @var{eA}, gsl_mode_t @var{mode})
+This function computes the matrix exponential @math{e^A} of the square
+matrix @var{A}, storing it in @var{eA}, by the scaling and squaring
+method described in Moler and Van Loan, @cite{SIAM Review} 20, 801
+(1978).  The parameter @var{mode} selects the strategy from the table in
+that paper appropriate to the requested accuracy.
+@comment Exceptional Return Values: GSL_ENOTSQR, GSL_EBADLEN
+@end deftypefun
 
 @node LU Decomposition
 @section LU Decomposition
@@ -900,6 +931,14 @@ handler first to avoid triggering an error.
 This function is now deprecated and is provided only for backward compatibility.
 @end deftypefun
 
+@deftypefun int gsl_linalg_cholesky_decomp_unit (gsl_matrix * @var{A}, gsl_vector * @var{D})
+This function factorizes the symmetric, positive-definite square matrix
+@var{A} into @math{A = L D L^T}, where @math{L} is lower triangular with a
+unit diagonal and @math{D} is diagonal.  On output, the diagonal and lower
+triangular part of @var{A} hold @math{L} and the vector @var{D} contains
+the diagonal elements of @math{D}.
+@end deftypefun
+
 @deftypefun int gsl_linalg_cholesky_solve (const gsl_matrix * @var{cholesky}, const gsl_vector * @var{b}, gsl_vector * @var{x})
 @deftypefunx int gsl_linalg_complex_cholesky_solve (const gsl_matrix_complex * @var{cholesky}, const gsl_vector_complex * @var{b}, gsl_vector_complex * @var{x})
 These functions solve the system @math{A x = b} using the Cholesky
@@ -917,6 +956,17 @@ which must have been previously computed by
 @code{gsl_linalg_complex_cholesky_decomp}. On input @var{x} should
 contain the right-hand side @math{b}, which is replaced by the
 solution on output.
+@end deftypefun
+
+@deftypefun int gsl_linalg_cholesky_solve_mat (const gsl_matrix * @var{cholesky}, const gsl_matrix * @var{B}, gsl_matrix * @var{X})
+@deftypefunx int gsl_linalg_cholesky_svx_mat (const gsl_matrix * @var{cholesky}, gsl_matrix * @var{X})
+These functions solve the systems @math{A X = B} using the Cholesky
+decomposition of @math{A} held in the matrix @var{cholesky}, with several
+right-hand sides held in the columns of @var{B}.  The solution is stored
+in the columns of @var{X}, which must have the same dimensions as
+@var{B}.  The in-place variant @code{gsl_linalg_cholesky_svx_mat}
+overwrites @var{X} with the solution.  The decomposition must have been
+previously computed by @code{gsl_linalg_cholesky_decomp1}.
 @end deftypefun
 
 @deftypefun int gsl_linalg_cholesky_invert (gsl_matrix * @var{cholesky})
@@ -1156,6 +1206,14 @@ This function estimates the reciprocal condition number (using the 1-norm) of th
 @math{A + E}, using its pivoted Cholesky decomposition provided in @var{LDLT}.
 The reciprocal condition number estimate, defined as @math{1 / (||A + E||_1 \cdot ||(A + E)^{-1}||_1)}, is stored
 in @var{rcond}.  Additional workspace of size @math{3 N} is required in @var{work}.
+@end deftypefun
+
+@deftypefun int gsl_linalg_mcholesky_invert (const gsl_matrix * @var{LDLT}, const gsl_permutation * @var{p}, gsl_matrix * @var{Ainv})
+This function computes the inverse of the perturbed matrix @math{A + E},
+using the modified Cholesky decomposition stored in @var{LDLT} and
+@var{p} which must have been previously computed by
+@code{gsl_linalg_mcholesky_decomp}.  On output, the matrix @var{Ainv}
+contains @math{(A + E)^{-1}}.
 @end deftypefun
 
 @node Tridiagonal Decomposition of Real Symmetric Matrices
@@ -1815,6 +1873,15 @@ of the floating point radix.
 This function replaces the matrix @var{A} with its balanced counterpart
 and stores the diagonal elements of the similarity transformation
 into the vector @var{D}.
+@end deftypefun
+
+@deftypefun int gsl_linalg_balance_columns (gsl_matrix * @var{A}, gsl_vector * @var{D})
+This function scales the columns of the matrix @var{A} by powers of two so
+that the 1-norm (the sum of absolute values) of each column lies in the
+interval @math{[1/2, 1]}.  The length of @var{D} must equal the number of
+columns of @var{A}.  On output, column @math{j} of @var{A} has been
+divided by @math{D_j}, so that the original matrix is recovered by
+@math{A D}.
 @end deftypefun
 
 @node Linear Algebra Examples

@@ -505,6 +505,15 @@ header file :file:`gsl_fft_halfcomplex.h`.
    :func:`gsl_fft_real_radix2`.  The result is a real array stored in natural
    order.
 
+.. function:: int gsl_fft_halfcomplex_radix2_transform (double data[], size_t stride, size_t n)
+
+   This function computes the forward in-place radix-2 FFT of length
+   :data:`n` and stride :data:`stride` on the real sequence :data:`data`,
+   storing the half-complex coefficients.  It is a synonym for
+   :func:`gsl_fft_real_radix2_transform`; use
+   :func:`gsl_fft_halfcomplex_radix2_inverse` or
+   :func:`gsl_fft_halfcomplex_radix2_backward` to transform back.
+
 .. function:: int gsl_fft_halfcomplex_radix2_unpack (const double halfcomplex_coefficient[], gsl_complex_packed_array complex_coefficient, size_t stride, size_t n)
 
    This function converts :data:`halfcomplex_coefficient`, an array of
@@ -673,6 +682,13 @@ data,
    5.  Any remaining factors are computed with a slow, :math:`O(n^2)`,
    general-n module.  The caller must supply a :data:`wavetable` containing
    trigonometric lookup tables and a workspace :data:`work`. 
+
+.. function:: int gsl_fft_halfcomplex_backward (double data[], size_t stride, size_t n, const gsl_fft_halfcomplex_wavetable * wavetable, gsl_fft_real_workspace * work)
+
+   This function is a synonym for :func:`gsl_fft_halfcomplex_transform`:
+   it computes the backward transform of the half-complex sequence
+   :data:`data` without the :math:`1/n` normalisation applied by
+   :func:`gsl_fft_halfcomplex_inverse`.
 
 .. function:: int gsl_fft_real_unpack (const double real_coefficient[], gsl_complex_packed_array complex_coefficient, size_t stride, size_t n)
 

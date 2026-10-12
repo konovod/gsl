@@ -163,6 +163,18 @@ printing the IEEE representations in a human-readable form.
    These functions output a formatted version of the IEEE floating-point
    number pointed to by :data:`x` to the stream :code:`stdout`.
 
+.. function:: void gsl_ieee_float_to_rep (const float * x, gsl_ieee_float_rep * r)
+              void gsl_ieee_double_to_rep (const double * x, gsl_ieee_double_rep * r)
+
+   These functions extract the IEEE representation of the floating-point
+   number pointed to by :data:`x` and store it in the structure :data:`r`.
+   The :type:`gsl_ieee_float_rep` and :type:`gsl_ieee_double_rep`
+   structures hold the sign bit, the mantissa as a string of binary
+   digits, the unbiased exponent and a type code, which is one of
+   :macro:`GSL_IEEE_TYPE_NAN`, :macro:`GSL_IEEE_TYPE_INF`,
+   :macro:`GSL_IEEE_TYPE_NORMAL`, :macro:`GSL_IEEE_TYPE_DENORMAL` or
+   :macro:`GSL_IEEE_TYPE_ZERO`.
+
 The following program demonstrates the use of the functions by printing
 the single and double precision representations of the fraction
 :math:`1/3`.  For comparison the representation of the value promoted from
@@ -304,6 +316,26 @@ function :func:`gsl_ieee_env_setup`.
    precision-control bit, and always work in double-precision.  The
    single-precision and extended-precision keywords have no effect in
    this case.
+
+.. function:: int gsl_ieee_read_mode_string (const char * description, int * precision, int * rounding, int * exception_mask)
+
+   This function parses the comma-separated list of mode keywords in
+   :data:`description`, which has the same form as the
+   :macro:`GSL_IEEE_MODE` environment variable.  The requested precision,
+   rounding mode and exception mask are stored in :data:`precision`,
+   :data:`rounding` and :data:`exception_mask`, using the
+   :code:`GSL_IEEE_SINGLE_PRECISION`, :code:`GSL_IEEE_ROUND_TO_NEAREST`
+   and :code:`GSL_IEEE_MASK_*` enumerations.  An unrecognized keyword is
+   an error.
+
+.. function:: int gsl_ieee_set_mode (int precision, int rounding, int exception_mask)
+
+   This function sets the floating-point precision, rounding mode and
+   exception mask of the processor from the three enumerated values, as
+   returned by :func:`gsl_ieee_read_mode_string`.  It returns
+   :macro:`GSL_EUNSUP` if the requested settings are not supported by the
+   platform.
+.. Exceptional Return Values: GSL_EUNSUP
 
 To demonstrate the effects of different rounding modes consider the
 following program which computes :math:`e`, the base of natural

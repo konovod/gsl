@@ -228,6 +228,12 @@ parameters into your own code.
       size_t n = gsl_rng_size (r);
       fwrite (state, n, 1, stream);
 
+.. function:: void gsl_rng_print_state (const gsl_rng * r)
+
+   This function writes the internal state of the generator :data:`r` to
+   :code:`stdout` as a string of hexadecimal digits, for debugging
+   purposes.  No newline is appended.
+
 .. function:: const gsl_rng_type ** gsl_rng_types_setup (void)
 
    This function returns a pointer to an array of all the available

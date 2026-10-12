@@ -181,6 +181,30 @@ error @code{GSL_EBADLEN}, and return @code{NaN} when the error handler has
 been disabled.  The total sum of squares of an empty data set is zero,
 since the empty sum is zero.
 
+@deftypefun double gsl_stats_pvariance (const double @var{data1}[], size_t @var{stride1}, size_t @var{n1}, const double @var{data2}[], size_t @var{stride2}, size_t @var{n2})
+This function returns the pooled variance of the two datasets @var{data1}
+and @var{data2}, of lengths @var{n1} and @var{n2} with strides @var{stride1}
+and @var{stride2}.  The pooled variance is the common variance estimate used
+for the two-sample t-test,
+@tex
+\beforedisplay
+$$
+{\Hat\sigma}^2_p = {(n_1 - 1) {\Hat\sigma}^2_1 + (n_2 - 1) {\Hat\sigma}^2_2 \over n_1 + n_2 - 2}
+$$
+\afterdisplay
+@end tex
+@ifinfo
+
+@example
+\Hat\sigma^2_p = ((n_1 - 1) \Hat\sigma^2_1 + (n_2 - 1) \Hat\sigma^2_2) / (n_1 + n_2 - 2)
+@end example
+
+@end ifinfo
+@noindent
+where @math{{\Hat\sigma}^2_1} and @math{{\Hat\sigma}^2_2} are the sample
+variances of the two datasets.
+@end deftypefun
+
 @node Absolute deviation
 @section Absolute deviation
 
