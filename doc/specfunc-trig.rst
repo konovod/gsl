@@ -49,8 +49,13 @@ Circular Trigonometric Functions
               int gsl_sf_sinc_e (double x, gsl_sf_result * result)
 
    These routines compute :math:`\sinc(x) = \sin(\pi x) / (\pi x)` for any
-   value of :data:`x`.
-.. Exceptional Return Values: none
+   finite value of :data:`x`.
+
+   The phase is reduced in :data:`x` itself rather than in :math:`\pi x`,
+   so the result is accurate to a few units in the last place for all
+   finite :data:`x`, and is exactly 0 at the non-zero integers.
+.. Domain: -infinity < x < infinity
+.. Exceptional Return Values: GSL_EDOM
 
 Trigonometric Functions for Complex Arguments
 ---------------------------------------------

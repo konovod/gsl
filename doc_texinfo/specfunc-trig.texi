@@ -49,8 +49,13 @@ other argument is @code{NaN}; otherwise a @code{NaN} argument propagates.
 @deftypefunx int gsl_sf_sinc_e (double @var{x}, gsl_sf_result * @var{result})
 @cindex complex sinc function, special functions
 These routines compute @math{\sinc(x) = \sin(\pi x) / (\pi x)} for any
-value of @var{x}.
-@comment Exceptional Return Values: none
+finite value of @var{x}.
+
+The phase is reduced in @var{x} itself rather than in @math{\pi x}, so
+the result is accurate to a few units in the last place for all finite
+@var{x}, and is exactly 0 at the non-zero integers.
+@comment Domain: -infinity < x < infinity
+@comment Exceptional Return Values: GSL_EDOM
 @end deftypefun
 
 @node Trigonometric Functions for Complex Arguments

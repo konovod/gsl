@@ -26,6 +26,7 @@
 #include <gsl/gsl_sys.h>
 #include <gsl/gsl_sf_log.h>
 #include <gsl/gsl_sf_trig.h>
+#include <gsl/gsl_sf_sincos_pi.h>
 
 #include "error.h"
 
@@ -1119,10 +1120,14 @@ int gsl_sf_sinc_e(double x, gsl_sf_result * result)
     }
     else {
       /* Large arguments must be handled separately.
+       * Reduce the argument x itself, not pi*x: M_PI*ax has already
+       * lost the phase above |x| ~ 1e8 and is meaningless above
+       * |x| ~ 1e16.  gsl_sf_sin_pi_e is exact for every representable
+       * x, so only the rounding of the denominator is left.
        */
       const double r = M_PI*ax;
       gsl_sf_result s;
-      int stat_s = gsl_sf_sin_e(r, &s);
+      int stat_s = gsl_sf_sin_pi_e(ax, &s);
       result->val = s.val/r;
       result->err = s.err/r + 2.0 * GSL_DBL_EPSILON * fabs(result->val);
       return stat_s;

@@ -2995,6 +2995,17 @@ int test_trig(void)
   TEST_SF(s, gsl_sf_sinc_e, (100.5,      &r), 0.0031672625490924445, TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_sinc_e, (1.0e+06 + 0.5, &r), 3.18309727028927157e-07, TEST_TOL0, GSL_SUCCESS);
 
+  /* bug #36152: sin(pi*x) has to be reduced in x itself.  M_PI*ax loses
+   * the phase above |x| ~ 1e8 and rounds entirely above |x| ~ 1e16, so
+   * the value and its error bar were both wrong there.  mpmath values at
+   * 40 digits; the half-integer points have sin(pi*x) = +-1 exactly.
+   */
+  TEST_SF(s, gsl_sf_sinc_e, (1.0e8 + 0.5,  &r), 3.1830988459224123e-09, TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_sinc_e, (4294967296.5, &r), 7.411229567293415e-11,  TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_sinc_e, (1.0e15 + 0.5, &r), 3.183098861837905e-16,  TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_sinc_e, (1.0e18,       &r), 0.0,                    TEST_TOL0, GSL_SUCCESS);
+  TEST_SF(s, gsl_sf_sinc_e, (-1.0e18,      &r), 0.0,                    TEST_TOL0, GSL_SUCCESS);
+
   /*
   TEST_SF(s, gsl_sf_sin_pi_x_e, (1000.5, &r), 1.0, TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s, gsl_sf_sin_pi_x_e, (10000.0 + 1.0/65536.0, &r), 0.00004793689960306688455, TEST_TOL0, GSL_SUCCESS);
