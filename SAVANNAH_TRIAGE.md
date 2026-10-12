@@ -5,14 +5,14 @@ Generated 2026-10-02 from the `scripts/savannah_bugs.py` sweep (`inventory.tsv`)
 Scratch index, not part of the fork's record of changes. Verdicts are curated from
 `FORKNEWS`, `SAVANNAH_REVIEW.md` and the git history; every other row is un-triaged.
 
-**219 open items: 219 triaged, 0 never reviewed - 208 closed or rejected, 11 parked in the backlog below.**
+**219 open items: 219 triaged, 0 never reviewed - 209 closed or rejected, 10 parked in the backlog below.**
 
 | status | count |
 |---|---:|
-| fixed | 167 |
+| fixed | 168 |
 | partial | 0 |
 | rejected | 40 |
-| backlog | 11 |
+| backlog | 10 |
 | superseded | 1 |
 | not reviewed | 0 |
 
@@ -29,7 +29,7 @@ below; it is not counted as rejected.
 | 21835 | 2007-12-18 | - | Accuracy problem | clean test_hyperg.diff +1 | **fixed** — non-positive-integer termination for `x >= 1` fixed (2aa89bae8); the integer `c-a-b` near `x = 1` case now uses the [A&S 15.3.10/11/12] limits with conditioning guards, and the `d < 0` shift pole is repaired (39e4204eb) | gsl_sf_hyperg_2F1 problematic arguments |
 | 21836 | 2007-12-18 | - | Accuracy problem | none | **fixed** — Q returns exact complement of P in the series window (6f23a4cb5) | gamma_inc_P and gamma_inc_Q only satisfy P+Q=1 within errors |
 | 21837 | 2007-12-18 | - | Runtime error | none | **fixed** — the non-cyclic tridiagonal solvers (real and complex) fall back to Gaussian elimination with partial pivoting on a zero pivot; a singular matrix still returns GSL_EZERODIV (c9c14c1c8) | gsl_linalg_solve_symm_tridiag requires positive definite matrix |
-| 24252 | 2008-09-12 | feature | - | source gamma_tail_jpl_080908.c | **backlog** — the posted truncated-gamma sampler is wrong (the `a<1` branch uses `a` instead of the tail); a correct gamma-tail generator is wanted work; see FORKNEWS | suggestion: add gamma tail distribution |
+| 24252 | 2008-09-12 | feature | - | source gamma_tail_jpl_080908.c | **fixed** — a correct left-truncated gamma generator `gsl_ran_gamma_tail()`/`_pdf()`; the posted `a<1` branch accepted on `a` where the shifted-exponential criterion needs `tail`, and the two exact schemes are now selected by their acceptance ratio (47b9126ec) | suggestion: add gamma tail distribution |
 | 24871 | 2008-11-18 | feature | - | none | **fixed** — complex exponential integrals E1(z), En(z), their exp(z)-scaled variants and Ei(z), by a port of Amos Algorithm 683 (c01e6b922, 4416fe729, ffad9c422) | suggestion, add support for E_n |
 | 25320 | 2009-01-14 | - | Accuracy problem | none | **fixed** — Fresnel integrals `gsl_sf_fresnel_c`/`_s` added (odd in `x`; Maclaurin series then auxiliary-function Chebyshev/asymptotic, `~1e-14` for moderate `x`), verified against mpmath (ddeab3e2f; cmake 60265a554) | Import fresnel, bugs on GSL Extension Fresnel |
 | 28267 | 2009-12-11 | - | Accuracy problem | source hyperg1F1.c | **fixed** — same defect as #43809 (52505315d); the transition region `x ~ a^2` is handled by a double-double series (135c6eb27) | poor convergence region for gsl_sf_hyperg_1F1 |
@@ -294,11 +294,11 @@ They are no longer listed in the table.  See `FORKNEWS`.
 The filter was widened once more to admit new public API.  Five items
 listed below were taken: `#59900` (truncated Gaussian), `#66816`
 (Nakagami), `#66949` (Erlang CDF), `#66767` (inverse binomial) and
-`#66775` (inverse Poisson); `#24252` (gamma tail) was re-examined and
-**rejected** because the posted sampler is numerically wrong (see
-`FORKNEWS`).  `#24871`, the large new complex algorithm, was taken
-later as a port of Amos Algorithm 683.  All six are no longer listed in
-the table.
+`#66775` (inverse Poisson); `#24252` (gamma tail) was first rejected
+because the posted sampler is numerically wrong, then taken as a correct
+generator (`gsl_ran_gamma_tail()`, 47b9126ec; see `FORKNEWS`).  `#24871`,
+the large new complex algorithm, was taken later as a port of Amos
+Algorithm 683.  All six are no longer listed in the table.
 
 Two further new-API items have since been taken: `#66573`
 (`gsl_vector_complex_conjugate()`) and `#68367` (inverse Jacobi
@@ -361,7 +361,6 @@ rule set aside and the widened rule admits.
 
 | # | kind | patch | what it would add |
 |---|---|---|---|
-| 24252 | feat | source | a *correct* truncated-gamma / gamma-tail generator (the posted sampler is wrong). |
 | 50382 | build | - | NuGet packaging for Windows. |
 | 59914 | doc | - | a documented native Windows build write-up. |
 | 68549 | feat | - | uniform argument lists across the distribution functions (breaking). |

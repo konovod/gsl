@@ -3518,7 +3518,7 @@ binomial one; the real signature is `(P, mu)`.  Vectors are R's
 `qbinom`/`qpois` plus exact small-case sums; shifting the result by one
 fails them.  Commit `e88a81c75`.
 
-### `#24252` - gamma tail distribution - rejected (again, for a new reason)
+### `#24252` - gamma tail distribution - posted sampler rejected, correct generator taken
 
 The 2008 attachment `gamma_tail_jpl_080908.c` was recovered from the
 Wayback Machine.  It is a left-truncated gamma sampler
@@ -3538,6 +3538,16 @@ agree only when `tail = a`.  Simulated over 200000 draws:
 proposes is exactly where the branch is meaningless, so the claimed
 speed-up cannot hold.  No change; a correct truncated-gamma generator
 would be separate work.  Recorded as `[rejected]` in `FORKNEWS`.
+
+A correct generator was added later.  The `a < 1` criterion is fixed to
+`X U^(1/(1-a)) <= tail`, and the two exact `a < 1` schemes (plain
+rejection from the untruncated gamma, and the shifted exponential) are
+selected by their acceptance ratio `e^t t^(1-a) Gamma(a)`, so each is
+used only where it is efficient; `tail <= 0` reduces to `gsl_ran_gamma`.
+The `a > 1` branches were already correct and are kept, with plain
+rejection retained until `Q(a,t) < 0.2` to avoid the low acceptance of
+the rate-matched proposal just above `t = a - 1`.  Verified against
+mpmath pdf vectors and analytic tail probabilities.  Commit `47b9126ec`.
 
 Savannah bugs #66949, #66816, #59900, #66767, #66775 and #24252.
 
