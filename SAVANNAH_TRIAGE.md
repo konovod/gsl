@@ -5,14 +5,14 @@ Generated 2026-10-02 from the `scripts/savannah_bugs.py` sweep (`inventory.tsv`)
 Scratch index, not part of the fork's record of changes. Verdicts are curated from
 `FORKNEWS`, `SAVANNAH_REVIEW.md` and the git history; every other row is un-triaged.
 
-**219 open items: 219 triaged, 0 never reviewed — 198 closed or rejected, 21 parked in the backlog below.**
+**219 open items: 219 triaged, 0 never reviewed — 199 closed or rejected, 20 parked in the backlog below.**
 
 | status | count |
 |---|---:|
-| fixed | 157 |
+| fixed | 158 |
 | partial | 0 |
 | rejected | 40 |
-| backlog | 21 |
+| backlog | 20 |
 | superseded | 1 |
 | not reviewed | 0 |
 
@@ -114,7 +114,7 @@ below; it is not counted as rejected.
 | 48915 | 2016-08-26 | - | Runtime error | none | rejected — AIX-only; modules pass on x64 | some test failures on AIX system for GSL 2.1.91 |
 | 49465 | 2016-10-28 | - | Performance | clean 0001-initialize-newton-steffenson-solvers-with-GSL_FN_FDF.patch | **fixed** — roots Newton/Steffenson fdf init (4eac6584f) | initialize newton and steffenson solvers with GSL_FN_FDF_EVAL_F_DF |
 | 49518 | 2016-11-02 | bug | Build | none | rejected — MSVC `_mktemp` crash already fixed upstream | bug in matrix/vector tests |
-| 49697 | 2016-11-24 | bug | - | none | **backlog** — gcc `-mavx` passes on gcc 15.2; re-check parked pending an explicit `-mavx` run | gsl 2.2.1 linalg test fails with gcc (4.9.4 and later) and -mavx |
+| 49697 | 2016-11-24 | bug | - | none | **fixed** — the four reported failures are over-tight Hilbert tolerances in `linalg/test_cholesky.c`, all relaxed upstream (`b47e97528`, `c4230e365`, `c334bb2ed`); re-verified with `-mavx`, `-mavx2 -mfma` and `-ffp-contract=fast`, and the two remaining `512 N eps` multipliers raised to `1024 N eps` (`c37162f56`) | gsl 2.2.1 linalg test fails with gcc (4.9.4 and later) and -mavx |
 | 50343 | 2017-02-17 | - | Runtime error | inline | rejected — not-a-bug: Mathieu branch cut is arbitrary, GSL correct | Different value for mathieu_ce in Mathematica and GSL |
 | 50382 | 2017-02-22 | feature | Build | none | **backlog** — CMake build already in the fork; NuGet packaging is new distribution surface, wanted but out of scope of the report | Add CMAKE and NUGET support for Windows |
 | 50459 | 2017-03-04 | - | - | none | **fixed** — negative-a recurrence guard for abs(a) > 2^53 (932087bcd) | Non termination of the incomplete gamma function due to floating-point rounding errors |
@@ -387,7 +387,6 @@ ones need that toolchain installed first.
 |---|---|
 | 56843 | reproduce the non-x86 eigen accuracy difference on the arm64 macOS CI target, which is in CI. |
 | 67446, 67447 | rebuild with gcc 14.2.1 and attempt reproduction. |
-| 49697 | re-verify with `-mavx`; likely already covered by the raised cholesky tolerance (`#67445`). |
 | 39152, 54919 | attempt reproduction with Intel oneAPI `icc`/`icx`. |
 
 ### Excluded

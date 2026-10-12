@@ -59,6 +59,7 @@ has to be tested against the built library.  See `#52321` below.
 | `#65868` | applied as posted (commit ef3940132) |
 | `#43326` | applied, one hunk dropped as dead code (commit 4f9f4f4fc) |
 | `#67445` | applied as posted (commit f84a57a0f) |
+| `#49697` | re-verified under `-mavx` on 2026-10-12; the four reported failures are over-tight Hilbert tolerances already relaxed upstream, and the two remaining `512 N eps` multipliers are raised to `1024 N eps` (commit c37162f56) - test-only |
 | `#66128` | applied as posted (commit 066f5b747) |
 | `#57978` | applied with `GSL_EDOM` instead of the patch's `GSL_ELOSS`, and the missing documentation added (commits 7c27b358b, f87e96143, b4a012ca9) |
 | `#53919` + `#65760` | applied together, rewritten: neither patch fixes the actual overflow (commits 708791c25, 6bc4d8cdd, 9daf0cf36) |
@@ -1844,11 +1845,12 @@ Method notes:
 ## #48915, #49518, #49697, #52127, #52322, #54919, #56843, #59759,
 ## #67446, #67447, #67705
 
-Reviewed 2026-10-03 as a batch.  None of the fourteen reproduces on any
-host the fork builds and tests on, and none carries a code change.  They
-share a shape: a make-check or unit-test failure reported against one
-toolchain, ABI or architecture, with no demonstrated defect in the
-library.
+Reviewed 2026-10-03 as a batch; #49697 was re-verified 2026-10-12 and
+prompted a tolerance raise (its note is below).  None of the fourteen
+reproduces on any host the fork builds and tests on, and only that one
+carries a code change.  They share a shape: a make-check or unit-test
+failure reported against one toolchain, ABI or architecture, with no
+demonstrated defect in the library.
 
 **Hosts.**  MSVC 14.32 x64 (`build-cmake`, Release) and MinGW gcc 15.2.0
 x64 (`build-mingw`, Release, static), the latter also with `-O2 -mavx`
@@ -1906,13 +1908,41 @@ now use a fixed `test.dat` / `test_static.dat` filename and `unlink()`.
 
 ### #49697 - linalg test fails with gcc and -mavx
 
-`linalg.test` passes on MinGW gcc 15.2 x64 built with `-O2 -mavx`.  The
-host exposes AVX2 and FMA but no AVX-512, which is the widest case the
-report could need.  The 2016 failure is almost certainly the unscaled
-Hilbert `gsl_linalg_cholesky_invert` check, whose tolerance the fork has
-already raised from `256` to `512` times `N * GSL_DBL_EPSILON` for
-Savannah #67445 (`linalg/test_cholesky.c:241`).  Recorded as not
-reproducible / already covered.
+Re-verified 2026-10-12 on MinGW gcc 15.2.0 x64, the library built four
+ways (`-O2`, `-mavx`, `-mavx2 -mfma`, `-ffp-contract=fast`; i7-8700K,
+AVX2 and FMA, no AVX-512).  `linalg.test` passes in every mode.
+
+The four failures the report names are over-tight Hilbert tolerances in
+`linalg/test_cholesky.c`, and all three lines were relaxed upstream
+after 2.2.1:
+
+  * `cholesky_decomp unscaled hilbert rcond` (7x7, 8x8): the rcond
+    tolerance was `1.0e-10` in 2.2.1 and is `1.0e-6` now, raised in
+    `b47e97528` ("updates for 2.3", 2016-12-09, two weeks after the
+    report).  The reported relative differences were `9.8e-10` and
+    `2.1e-8`; measured here they are `7.8e-14` and `2.8e-15`, far from
+    the limit in every mode.
+  * `pcholesky_invert unscaled hilbert` (4,4)[0,2]: `256 N eps` ->
+    `1024 N eps` in `c4230e365` ("preparing release 2.4", 2017).
+  * `mcholesky_invert unscaled hilbert` (4,4)[0,2]: `256 N eps` ->
+    `512 N eps` in `c334bb2ed` (2019).
+
+`gsl_test_rel` uses the absolute error for these entries (the expected
+value is zero), so the reported `2.56e-13` exceeded the old
+`2.27e-13`.  With the 2.2.1 multipliers restored, `linalg.test` under
+`-mavx` fails on the p- and m-`cholesky_invert` hilbert vectors
+(`3.41060513164848089e-13` vs 0), which is the reported defect; with
+the upstream values it passes.
+
+The earlier note here attributed the failure to the `cholesky_invert`
+line fixed by `#67445`.  That is not one of the four the report lists:
+`cholesky_invert` runs between `cholesky_decomp` and
+`pcholesky_invert` and did not fail in the log.  Measured margins put
+`mcholesky_invert` at 0.75 of its `512 N eps` limit and
+`cholesky_invert` at 0.50 of its, with the AVX-512 build behind
+`#67445` needing at least 286, so both were raised to `1024 N eps` in
+`c37162f56` (see the FORKNEWS entry "linalg: unify the Cholesky
+inverse Hilbert tolerances").  No library change.
 
 ### #52127 - gsl_eigen_nonsymm differs between 32 and 64 bit
 
