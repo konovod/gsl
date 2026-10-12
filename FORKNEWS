@@ -276,6 +276,8 @@ One line per change: date | tag | description | commit(s).
   2026-10-12 | [upstream] | linalg: pivot the tridiagonal solvers              | c9c14c1c8
   2026-10-12 | [upstream] | specfunc: add the Fresnel integrals S and C        | ddeab3e2f
   2026-10-12 | [fork]     | cmake: build the Fresnel integrals                 | 60265a554
+  2026-10-12 | [upstream] | linalg,bspline: constrained least squares          | 420b69df5
+  2026-10-12 | [fork]     | cmake: build the constrained least squares solver  | 7e2c7b117
 
 
 ## [upstream] rng: make the random() generators produce the documented sequences
@@ -7259,6 +7261,68 @@ Files: `specfunc/fresnel.c`, `specfunc/gsl_sf_fresnel.h`,
 `TODO`, `specfunc/TODO`.
 
 Savannah bug #25320.
+
+
+
+
+## [upstream] linalg, bspline: inequality-constrained least squares; fix Greville
+
+Commits: 420b69df5 (code, test, docs); the fork-only CMake registration
+is 7e2c7b117.
+
+Savannah bug #34361: `gsl_bspline_knots_greville()` /
+`gsl_bspline_init_greville()` selected the interior breakpoints with an
+unconstrained linear least squares solve, so for challenging abscissae
+the breakpoints could be wildly non-monotone and the monotonicity guard
+in `gsl_bspline_init_augment()` returned `GSL_EDOM`.  The report points
+at the Lawson-Hanson NNLS/LDP/LSI algorithms; this adds them and uses
+LSI for the Greville solve.
+
+Three public routines, `linalg/lsi.c`, declared in `gsl_linalg.h`:
+
+  * `gsl_linalg_nnls (A, b, x, residual)` - `min ||A x - b||`, `x >= 0`;
+  * `gsl_linalg_ldp (G, h, x, residual)` - `min ||x||`, `G x >= h`;
+  * `gsl_linalg_lsi (A, b, G, h, x, residual)` - `min ||A x - b||`,
+    `G x >= h`.
+
+NNLS is the Lawson-Hanson active-set algorithm, with the unconstrained
+least squares over the passive set solved by the library QR
+decomposition.  LDP follows Algorithm 23.17, reducing to NNLS on the
+augmented system `[G^T; h^T] y = [0; 1]`; `x = (G^T y)/(1 - h^T y)`.
+LSI is a primal active-set method for the convex quadratic program,
+started from the LDP feasible point, solving the KKT system of each
+step with `gsl_linalg_SV_decomp`/`SV_solve`.  The optional `residual`
+argument receives `A x - b` (nnls, lsi) or `G x - h` (ldp).
+
+`gsl_bspline_init_greville()` now solves the interior breakpoints with
+`gsl_linalg_lsi`, constraining them to be non-decreasing and to lie
+between the fixed endpoint abscissae.  The target abscissae are
+required to be non-decreasing (`GSL_EINVAL` otherwise).  The guard in
+`gsl_bspline_init_augment()` remains for direct callers, but the
+Greville routine no longer reaches it, and both manuals are updated.
+
+Independent verification: NNLS matches `scipy.optimize.nnls` to `8e-15`
+over 200 random problems; LSI matches an exhaustive active-set
+enumeration (all active subsets solved exactly) with a worst objective
+excess of `0` over 150 problems; LDP matches the exact minimum norm to
+`8e-15`.  Negative control: with the Greville constraints disabled (the
+former unconstrained solve) the clustered test cases produce
+non-monotone breakpoints, trip the `init_augment()` guard and abort the
+`bspline` test.
+
+Tests: `linalg/test.c` adds fixed NNLS, LDP and LSI problems with
+reference solutions; `bspline/test_greville.c` replaces the old
+"must reject" vector with clustered-abscissae cases and a deterministic
+`k = 4..8`, `nbreak = 4..12` sweep that must succeed with monotone
+breakpoints (ulp-level reversals are tolerated, as in the guard).
+Full `ctest` 57/57.
+
+Files: `linalg/lsi.c`, `linalg/gsl_linalg.h`, `linalg/Makefile.am`,
+`linalg/test.c`, `bspline/greville.c`, `bspline/test_greville.c`,
+`doc/linalg.rst`, `doc_texinfo/linalg.texi`, `doc/bspline.rst`,
+`doc_texinfo/bspline.texi`.
+
+Savannah bug #34361.
 
 
 
