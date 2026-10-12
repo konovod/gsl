@@ -51,9 +51,10 @@ Circular Trigonometric Functions
    These routines compute :math:`\sinc(x) = \sin(\pi x) / (\pi x)` for any
    finite value of :data:`x`.
 
-   The phase is reduced in :data:`x` itself rather than in :math:`\pi x`,
-   so the result is accurate to a few units in the last place for all
-   finite :data:`x`, and is exactly 0 at the non-zero integers.
+   For :math:`|x| \geq 100` the phase is reduced in :data:`x` itself
+   rather than in :math:`\pi x`, so the result stays accurate to a few
+   units in the last place for arbitrarily large :data:`x`, and is exactly
+   0 at the non-zero integers.
 .. Domain: -infinity < x < infinity
 .. Exceptional Return Values: GSL_EDOM
 
