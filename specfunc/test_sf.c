@@ -695,6 +695,16 @@ int test_ellint(void)
   TEST_SF(s,  gsl_sf_ellint_P_e, (M_PI/3.0, 0.50, 0.5, mode, &r), 0.9570574331323584890, TEST_TOL0, GSL_SUCCESS);
   TEST_SF(s,  gsl_sf_ellint_P_e, (M_PI/3.0, 0.01, 0.5, mode, &r), 0.9228868127118118465, TEST_TOL0, GSL_SUCCESS);
 
+  /* Savannah bug #43259: for large n sin^2(phi) Carlson's formula (4.3)
+     subtracts two O(1) terms, and the old evaluation also underflowed
+     sin^3(phi).  The first vector (phi = 4.15e-119, n = 1.30e251) is
+     evaluated by the small-phi series and used to return phi itself
+     (4.15e-119) instead.  References: the series and mpmath's Carlson
+     integrals at 60 digits. */
+  TEST_SF(s,  gsl_sf_ellint_P_e, (4.1482603293727604e-119, 2.3225158385928787e-138, 1.299583463496966e+251, mode, &r), 4.3573030915895953e-126, TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s,  gsl_sf_ellint_P_e, (1.0, 0.3, 1.0e+06, mode, &r), 0.0015701992365877549, TEST_TOL2, GSL_SUCCESS);
+  TEST_SF(s,  gsl_sf_ellint_P_e, (0.5, 0.9, 1.0e+08, mode, &r), 0.00015706345935104537, TEST_TOL2, GSL_SUCCESS);
+
   /* negative characteristic: for n < -csc^2(phi) the integrand has a
      pole in (0,phi] and the integrals are understood as Cauchy principal
      values (Savannah bug #53451).  The reference values come from

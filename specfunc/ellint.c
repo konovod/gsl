@@ -449,6 +449,71 @@ gsl_sf_ellint_E_e(double phi, double k, gsl_mode_t mode, gsl_sf_result * result)
 }
 
 
+/* Convergent expansion of the incomplete elliptic integral of the third
+ * kind in powers of sin^2(phi),
+ *
+ *   Pi(phi,k,n) = sin(phi) sum_{m>=0} M_m(q) P_m(k^2) sin^{2m}(phi),
+ *   q = n sin^2(phi),
+ *
+ * obtained by substituting u = sin(t)/sin(phi) in the defining integral
+ * and expanding the two square roots.  Here
+ *
+ *   M_m(q)   = Int_0^1 u^{2m}/(1 + q u^2) du,   M_0 = atan(sqrt(q))/sqrt(q),
+ *   M_m      = (1/(2m-1) - M_{m-1})/q,
+ *   P_m(k^2) = sum_{j=0}^m a_{m-j} a_j k^{2j},   a_j = (2j-1)!!/(2j)!!.
+ *
+ * Every term is positive, so the sum carries no cancellation.  It is
+ * used when q is large enough that Carlson's formula (4.3) subtracts two
+ * O(1) terms and loses its leading digits, and only when the terms decay
+ * fast enough to reach double precision within ELLINT_P_NMAX terms.
+ * Returns 1 on success, 0 if the series did not converge. */
+#define ELLINT_P_NMAX 512
+
+static
+int
+ellint_P_series(const double sin_phi, const double k2, const double q,
+                double * val, double * err)
+{
+  const double eps = sin_phi * sin_phi;
+  const double sq  = sqrt(q);
+  double a[ELLINT_P_NMAX + 1];
+  double Mp = atan(sq) / sq;
+  double S  = Mp;
+  double epsm = 1.0;
+  int m;
+
+  a[0] = 1.0;
+  for (m = 1; m <= ELLINT_P_NMAX; m++)
+    a[m] = a[m-1] * (2*m - 1) / (2*m);
+
+  for (m = 1; m <= ELLINT_P_NMAX; m++) {
+    double P = 0.0;
+    double kp = 1.0;
+    double M, term;
+    int j;
+
+    for (j = 0; j <= m; j++) {
+      P += a[m-j] * a[j] * kp;
+      kp *= k2;
+    }
+
+    M = (1.0/(2*m - 1) - Mp) / q;
+    Mp = M;
+    epsm *= eps;
+    term = M * P * epsm;
+    S += term;
+
+    if (fabs(term) <= 1e-17 * fabs(S)) {
+      *val = sin_phi * S;
+      *err = fabs(sin_phi) * (fabs(term) * 8.0 +
+                              (m + 4.0) * GSL_DBL_EPSILON * fabs(S));
+      return 1;
+    }
+  }
+  return 0;
+}
+
+
 /* [Carlson, Numer. Math. 33 (1979) 1, (4.3)] */
 int
 gsl_sf_ellint_P_e(double phi, double k, double n, gsl_mode_t mode, gsl_sf_result * result)
@@ -465,26 +530,42 @@ gsl_sf_ellint_P_e(double phi, double k, double n, gsl_mode_t mode, gsl_sf_result
   {
     const double sin_phi  = sin(phi);
     const double sin2_phi = sin_phi  * sin_phi;
-    const double sin3_phi = sin2_phi * sin_phi;
     const double x = 1.0 - sin2_phi;
     const double y = 1.0 - k*k*sin2_phi;
-    gsl_sf_result rf;
-    gsl_sf_result rj;
-    const int rfstatus = gsl_sf_ellint_RF_e(x, y, 1.0, mode, &rf);
-    const int rjstatus = gsl_sf_ellint_RJ_e(x, y, 1.0, 1.0 + n*sin2_phi, mode, &rj);
-    result->val  = sin_phi * rf.val - n/3.0*sin3_phi * rj.val;
-    result->err  = GSL_DBL_EPSILON * fabs(sin_phi * rf.val);
-    result->err += fabs(sin_phi * rf.err);
-    result->err += fabs(n/3.0) * GSL_DBL_EPSILON * fabs(sin3_phi*rj.val);
-    result->err += fabs(n/3.0) * fabs(sin3_phi*rj.err);
+    const double q = n * sin2_phi;
+    int status;
+    double val, err;
+
+    if (n > 0.0 && k*k < 1.0 && q >= 1.0 && sin2_phi <= 0.95 &&
+        ellint_P_series(sin_phi, k*k, q, &val, &err))
+      {
+        result->val = val;
+        result->err = err;
+        status = GSL_SUCCESS;
+      }
+    else
+      {
+        gsl_sf_result rf;
+        gsl_sf_result rj;
+        const int rfstatus = gsl_sf_ellint_RF_e(x, y, 1.0, mode, &rf);
+        const int rjstatus = gsl_sf_ellint_RJ_e(x, y, 1.0, 1.0 + q, mode, &rj);
+        /* Group as sin(phi) * (RF - (q/3) RJ) so that sin^3(phi) cannot
+           underflow to zero while the RJ term is still significant. */
+        const double t = (q/3.0) * rj.val;
+        result->val  = sin_phi * (rf.val - t);
+        result->err  = GSL_DBL_EPSILON * (fabs(rf.val) + fabs(t)) * fabs(sin_phi);
+        result->err += fabs(sin_phi) * (rf.err + fabs(q/3.0) * rj.err);
+        status = GSL_ERROR_SELECT_2(rfstatus, rjstatus);
+      }
+
     if (nc == 0) {
-      return GSL_ERROR_SELECT_2(rfstatus, rjstatus);
+      return status;
     } else {
       gsl_sf_result rp;  /* add extra terms from periodicity */
       const int rpstatus = gsl_sf_ellint_Pcomp_e(k, n, mode, &rp);  
       result->val += 2*nc*rp.val;
       result->err += 2*fabs(nc)*rp.err;
-      return GSL_ERROR_SELECT_3(rfstatus, rjstatus, rpstatus);
+      return GSL_ERROR_SELECT_2(status, rpstatus);
     }
   }
 }
