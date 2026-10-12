@@ -2201,7 +2201,7 @@ double precision for `sin^2(phi) <= 0.9`; near `phi = pi/2` with huge
 `n` it falls back to the grouped formula with an honest error bar.  See
 1bbdc4315 and its FORKNEWS entry.
 
-### #68283 - gsl_rstat_skew/kurtosis "correction" - rejected
+### #68283 - gsl_rstat_skew/kurtosis "correction" - guards rejected, then fixed
 
 The proposed guards (`n>2 && M2>0`, `n>3 && M2>0`) are inconsistent
 with the module's own contract: `gsl_rstat_*` is the online equivalent
@@ -2216,7 +2216,20 @@ equivalence.  Measured on the built DLL:
 `gsl_stats_skew` returns `NaN` for `n=1` and `gsl_stats_kurtosis` the
 listed values for `n=2,3`.  The proposed change would fail test1 at
 `j=1` (0 vs `NaN`) and `j=2,3` (kurtosis 0 vs -2.75/-2.333), because
-`gsl_test_rel` treats value-vs-`NaN` as a failure.  No code change.
+`gsl_test_rel` treats value-vs-`NaN` as a failure.  The small-n guards
+therefore stay rejected.
+
+A separate defect in the same two functions was found later and fixed.
+The raw central moments `M3`/`M4` (and `M2^1.5`) overflow or underflow
+whenever `(max - min)^4` is not representable, so from about
+`|spread| ~ 1e77` (kurtosis) and once `|spread|^3` leaves the range
+(skew) `gsl_rstat_skew`/`kurtosis` returned `NaN` where `gsl_stats_*`
+return the finite value -- an actual break of the asserted equivalence.
+The moments are now accumulated scaled by the data range `max - min`,
+which keeps them `O(n)` at any scale, and the two functions return
+`GSL_NAN` explicitly for `n < 2` or `M2 == 0` (`743bb5bf3`; docs
+`1171594b0`); see `FORKNEWS`.  `rstat_test` test4 is the negative
+control.
 
 ### #66993 - pow_int issues - rejected (one doc note)
 

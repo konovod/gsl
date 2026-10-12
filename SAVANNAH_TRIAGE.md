@@ -5,14 +5,14 @@ Generated 2026-10-02 from the `scripts/savannah_bugs.py` sweep (`inventory.tsv`)
 Scratch index, not part of the fork's record of changes. Verdicts are curated from
 `FORKNEWS`, `SAVANNAH_REVIEW.md` and the git history; every other row is un-triaged.
 
-**219 open items: 219 triaged, 0 never reviewed - 207 closed or rejected, 12 parked in the backlog below.**
+**219 open items: 219 triaged, 0 never reviewed - 208 closed or rejected, 11 parked in the backlog below.**
 
 | status | count |
 |---|---:|
-| fixed | 166 |
+| fixed | 167 |
 | partial | 0 |
 | rejected | 40 |
-| backlog | 12 |
+| backlog | 11 |
 | superseded | 1 |
 | not reviewed | 0 |
 
@@ -227,7 +227,7 @@ below; it is not counted as rejected.
 | 68068 | 2026-02-19 | bug | Accuracy problem | none | **fixed** - quad_golden stored f_m in f_upper instead of f_lower (4260778fe) | Bug: incorrect straddling of area of convergence in quad_golden |
 | 68073 | 2026-02-20 | bug | Documentation | none | **fixed** — gsl_stats_select comment corrected from "k-th largest" to "k-th smallest" (521bed61d) | Bug: incorrect inline code comment on BASE FUNCTION(gsl_stats,select) |
 | 68098 | 2026-02-27 | feature | - | none | **fixed** — \|rho\| >= 1 rejected with GSL_EDOM in the bivariate Gaussian pdf and generator (6da0c08f3) | Feature: division by zero when data is perfectly correlated |
-| 68283 | 2026-04-26 | - | - | none | **backlog** — the proposed guards break the `gsl_stats` equivalence in `rstat_test`; a consistent skew/kurtosis correction remains | Correction to gsl_rstat_skew and gsl_rstat_kurtosis |
+| 68283 | 2026-04-26 | - | - | none | **fixed** — the proposed small-n guards are rejected (they break the `gsl_stats` equivalence asserted by `rstat_test`), but the same two functions diverged from `gsl_stats_*` for data of extreme magnitude until the moments were scaled by the data range (743bb5bf3; doc 1171594b0) | Correction to gsl_rstat_skew and gsl_rstat_kurtosis |
 | 68312 | 2026-05-07 | bug | Accuracy problem | none | **fixed** — same recurrence as #43256 (59fc479e2) | Wigner symbols inaccurate for large j |
 | 68367 | 2026-05-19 | feature | - | source invelljac.c | **fixed** — `gsl_sf_elljac_arcsn_e/arccn_e/arcdn_e`, using Carlson RF with the parameter `m`; the posted prototype passed `m` where the modulus `k = sqrt(m)` was expected (183ca894f, 653c77bca) | Feature: inverse Jacobi elliptic integrals |
 | 68379 | 2026-05-21 | - | - | none | **fixed** — size_t for the accessor index (ae60e2883) | Histogram: expand scope of internal variables |
@@ -364,7 +364,6 @@ rule set aside and the widened rule admits.
 | 24252 | feat | source | a *correct* truncated-gamma / gamma-tail generator (the posted sampler is wrong). |
 | 50382 | build | - | NuGet packaging for Windows. |
 | 59914 | doc | - | a documented native Windows build write-up. |
-| 68283 | bug | - | an `gsl_rstat` skew/kurtosis correction consistent with the `gsl_stats` equivalence the module asserts. |
 | 68549 | feat | - | uniform argument lists across the distribution functions (breaking). |
 | 47402 | perf | - | Mathieu coefficient caching in the workspace (items 1, 2 and 4 already done). |
 | 66742 | doc | clean | GAMS classification across 177 files. |
