@@ -33,6 +33,14 @@ Options
   GSL_BUILD_TOOLS        ON      build gsl-randist and gsl-histogram
   GSL_BUILD_TESTS        OFF     build and register the per-module test programs
   GSL_ENABLE_RANGE_CHECK OFF     enable run-time range checking inside the library
+  GSL_ENABLE_WARNINGS    ON      enable the strict warning profile on the library and tools
+  GSL_WARNINGS_AS_ERRORS OFF     treat warnings from that profile as errors
+
+The warning profile is `-Wall -Wextra` on GCC and Clang and `/W3` on MSVC, and
+is applied to the library and the command line tools only; the per-module test
+programs keep the default flags.  Turn `GSL_WARNINGS_AS_ERRORS` on (with
+`GSL_ENABLE_WARNINGS`) to fail the build on the first warning; the CI job
+described below does this on Linux with both GCC and Clang.
 
 Installing and consuming
 ------------------------
@@ -66,7 +74,11 @@ Continuous integration
 .github/workflows/cmake.yml builds and tests the project on Linux (GCC and
 Clang, shared and static), macOS (Clang, shared and static) and Windows
 (MSVC, shared and static), and separately checks `cmake --install` followed
-by a downstream `find_package(GSL CONFIG)` consumer on each platform.
+by a downstream `find_package(GSL CONFIG)` consumer on each platform.  The
+build-and-test matrix enables the warning profile above but does not treat
+warnings as errors; a dedicated `strict-warnings` job builds the library and
+tools on Linux with `GSL_WARNINGS_AS_ERRORS=ON`, under both GCC and Clang, so
+that a warning cannot regress unnoticed.
 
 .github/workflows/windows-dll.yml packages a Windows x64 build for people who
 just want to use GSL without installing MSVC.  It runs on pushes to the

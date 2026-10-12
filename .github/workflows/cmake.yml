@@ -48,6 +48,7 @@ jobs:
           -DBUILD_SHARED_LIBS=${{ matrix.shared }}
           -DGSL_BUILD_TOOLS=ON
           -DGSL_BUILD_TESTS=ON
+          -DGSL_ENABLE_WARNINGS=ON
 
       - name: Build (Linux/macOS)
         if: runner.os != 'Windows'
@@ -63,7 +64,8 @@ jobs:
           cmake -S . -B build `
             -DBUILD_SHARED_LIBS=${{ matrix.shared }} `
             -DGSL_BUILD_TOOLS=ON `
-            -DGSL_BUILD_TESTS=ON
+            -DGSL_BUILD_TESTS=ON `
+            -DGSL_ENABLE_WARNINGS=ON
 
       - name: Build (Windows)
         if: runner.os == 'Windows'
@@ -72,6 +74,39 @@ jobs:
       - name: Test (Windows)
         if: runner.os == 'Windows'
         run: ctest --test-dir build -C Release --output-on-failure
+
+  # ---------------------------------------------------------------------------
+  # A dedicated Linux job that treats warnings as errors, so the warning
+  # profile cannot regress.  Kept out of the cross-platform matrix above:
+  # there the profile is applied but not fatal, so a compiler-version
+  # difference on macOS or Windows cannot fail an unrelated pull request.
+  # ---------------------------------------------------------------------------
+  strict-warnings:
+    name: ${{ matrix.name }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: linux-gcc-werror,   cc: gcc,   cxx: g++     }
+          - { name: linux-clang-werror, cc: clang, cxx: clang++ }
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure
+        env:
+          CC: ${{ matrix.cc }}
+          CXX: ${{ matrix.cxx }}
+        run: >
+          cmake -S . -B build
+          -DCMAKE_BUILD_TYPE=Release
+          -DGSL_BUILD_TOOLS=ON
+          -DGSL_ENABLE_WARNINGS=ON
+          -DGSL_WARNINGS_AS_ERRORS=ON
+
+      - name: Build
+        run: cmake --build build --parallel
 
   # ---------------------------------------------------------------------------
   # Install, and verify a downstream project can find and link GSL.

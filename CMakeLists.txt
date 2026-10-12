@@ -45,6 +45,8 @@ option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 option(GSL_ENABLE_RANGE_CHECK "Enable run-time range checking inside the GSL library" OFF)
 option(GSL_BUILD_TOOLS "Build the gsl-randist and gsl-histogram programs" ON)
 option(GSL_BUILD_TESTS "Build the per-module test programs" OFF)
+option(GSL_ENABLE_WARNINGS "Enable the project warning profile on the library and tools" ON)
+option(GSL_WARNINGS_AS_ERRORS "Treat warnings from the project warning profile as errors" OFF)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
@@ -122,6 +124,40 @@ if(MSVC)
 endif()
 
 # ---------------------------------------------------------------------------
+# Warning profile
+# ---------------------------------------------------------------------------
+# The library and the command line tools are built with a strict warning
+# profile so that the fork stays warning-clean; this is enforced in CI.
+# The per-module test programs are deliberately left out: the test harness
+# and the reference tables trigger many harmless warnings that would drown
+# out anything meaningful.  Flags are probed individually so that an older
+# compiler missing one of them does not abort the configure step.
+set(GSL_WARNING_FLAGS "")
+if(GSL_ENABLE_WARNINGS)
+  if(MSVC)
+    set(GSL_WARNING_FLAGS /W3)
+    if(GSL_WARNINGS_AS_ERRORS)
+      list(APPEND GSL_WARNING_FLAGS /WX)
+    endif()
+  else()
+    include(CheckCCompilerFlag)
+    foreach(_gsl_warn_flag -Wall -Wextra)
+      string(MAKE_C_IDENTIFIER "GSL_HAVE${_gsl_warn_flag}" _gsl_warn_var)
+      check_c_compiler_flag("${_gsl_warn_flag}" ${_gsl_warn_var})
+      if(${_gsl_warn_var})
+        list(APPEND GSL_WARNING_FLAGS "${_gsl_warn_flag}")
+      endif()
+    endforeach()
+    if(GSL_WARNINGS_AS_ERRORS)
+      list(APPEND GSL_WARNING_FLAGS -Werror)
+    endif()
+  endif()
+  if(GSL_WARNING_FLAGS)
+    message(STATUS "Warning profile: ${GSL_WARNING_FLAGS}")
+  endif()
+endif()
+
+# ---------------------------------------------------------------------------
 # Libraries
 # ---------------------------------------------------------------------------
 add_library(gslcblas ${GSL_CBLAS_LIB_SOURCES})
@@ -148,8 +184,19 @@ function(gsl_configure_target target)
   target_compile_definitions(${target} PRIVATE HAVE_CONFIG_H)
 endfunction()
 
+# The warning profile is deliberately not part of gsl_configure_target(): the
+# per-module test programs keep the default (relaxed) flags.  Apply it only to
+# the shipped library and tools.
+function(gsl_apply_warnings target)
+  if(GSL_WARNING_FLAGS)
+    target_compile_options(${target} PRIVATE ${GSL_WARNING_FLAGS})
+  endif()
+endfunction()
+
 gsl_configure_target(gslcblas)
 gsl_configure_target(gsl)
+gsl_apply_warnings(gslcblas)
+gsl_apply_warnings(gsl)
 
 # Consumers see the installed headers.
 target_include_directories(gsl INTERFACE
@@ -205,7 +252,12 @@ if(GSL_BUILD_TOOLS)
   add_executable(gsl-histogram gsl-histogram.c)
   foreach(_tool gsl-randist gsl-histogram)
     gsl_configure_target(${_tool})
+    gsl_apply_warnings(${_tool})
     target_link_libraries(${_tool} PRIVATE gsl gslcblas)
+    if(MSVC)
+      target_compile_definitions(${_tool} PRIVATE
+        _CRT_SECURE_NO_WARNINGS _CRT_SECURE_NO_DEPRECATE)
+    endif()
   endforeach()
 endif()
 
