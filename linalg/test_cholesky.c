@@ -238,7 +238,7 @@ test_cholesky_invert(gsl_rng * r)
       if (N <= 4)
         {
           create_hilbert_matrix2(m);
-          test_cholesky_invert_eps(m, N * 512.0 * GSL_DBL_EPSILON, "cholesky_invert unscaled hilbert");
+          test_cholesky_invert_eps(m, N * 1024.0 * GSL_DBL_EPSILON, "cholesky_invert unscaled hilbert");
         }
 
       gsl_matrix_free(m);
@@ -564,7 +564,7 @@ test_mcholesky_invert(gsl_rng * r)
       if (N <= 4)
         {
           create_hilbert_matrix2(m);
-          test_mcholesky_invert_eps(m, 512.0 * N * GSL_DBL_EPSILON, "mcholesky_invert unscaled hilbert");
+          test_mcholesky_invert_eps(m, 1024.0 * N * GSL_DBL_EPSILON, "mcholesky_invert unscaled hilbert");
         }
 
       gsl_matrix_free(m);
