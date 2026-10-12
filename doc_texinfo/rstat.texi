@@ -165,6 +165,10 @@ skew = (1/N) \sum ((x_i - \Hat\mu)/\Hat\sigma)^3
 @end example
 
 @end ifinfo
+
+This is the online equivalent of @code{gsl_stats_skew} for the same data.
+It is undefined, and returns @code{NaN}, when fewer than two data points
+have been added, or when all the data are equal.
 @end deftypefun
 
 @deftypefun double gsl_rstat_kurtosis (gsl_rstat_workspace * @var{w})
@@ -187,6 +191,10 @@ kurtosis = ((1/N) \sum ((x_i - \Hat\mu)/\Hat\sigma)^4)  - 3
 @end example
 
 @end ifinfo
+
+This is the online equivalent of @code{gsl_stats_kurtosis} for the same
+data.  It is undefined, and returns @code{NaN}, when fewer than two data
+points have been added, or when all the data are equal.
 @end deftypefun
 
 @deftypefun double gsl_rstat_median (gsl_rstat_workspace * @var{w})

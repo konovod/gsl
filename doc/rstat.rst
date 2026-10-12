@@ -142,6 +142,10 @@ Current Statistics
 
          skew = (1/N) \sum ((x_i - \Hat\mu)/\Hat\sigma)^3
 
+   This is the online equivalent of :func:`gsl_stats_skew` for the same
+   data.  It is undefined, and returns :data:`NaN`, when fewer than two
+   data points have been added, or when all the data are equal.
+
 .. function:: double gsl_rstat_kurtosis (const gsl_rstat_workspace * w)
 
    This function returns the kurtosis of all data added to the accumulator,
@@ -161,6 +165,10 @@ Current Statistics
       ::
 
          kurtosis = ((1/N) \sum ((x_i - \Hat\mu)/\Hat\sigma)^4)  - 3
+
+   This is the online equivalent of :func:`gsl_stats_kurtosis` for the
+   same data.  It is undefined, and returns :data:`NaN`, when fewer than
+   two data points have been added, or when all the data are equal.
 
 .. function:: double gsl_rstat_median (gsl_rstat_workspace * w)
 
