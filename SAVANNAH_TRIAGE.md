@@ -5,14 +5,14 @@ Generated 2026-10-02 from the `scripts/savannah_bugs.py` sweep (`inventory.tsv`)
 Scratch index, not part of the fork's record of changes. Verdicts are curated from
 `FORKNEWS`, `SAVANNAH_REVIEW.md` and the git history; every other row is un-triaged.
 
-**219 open items: 219 triaged, 0 never reviewed — 194 closed or rejected, 25 parked in the backlog below.**
+**219 open items: 219 triaged, 0 never reviewed — 195 closed or rejected, 24 parked in the backlog below.**
 
 | status | count |
 |---|---:|
-| fixed | 153 |
+| fixed | 154 |
 | partial | 0 |
 | rejected | 40 |
-| backlog | 25 |
+| backlog | 24 |
 | superseded | 1 |
 | not reviewed | 0 |
 
@@ -211,7 +211,7 @@ below; it is not counted as rejected.
 | 66894 | 2025-03-11 | - | Documentation | none | **fixed** — chapter introduction notes that randist does not validate distribution parameters (dbe316d49) | Domain value checking for random number distributions |
 | 66922 | 2025-03-17 | feature | Build | clean specfunc_trig.diff | **fixed** — complex_logsin at a real zero of sin (10d64fb15) | Feature: special case for special functin logsin() |
 | 66949 | 2025-03-25 | feature | Build | source erlang.c | **fixed** — gsl_cdf_erlang_P/Q delegating to the gamma cdf (3d607fce8) | Feature: Erlang cumulative distribution |
-| 66993 | 2025-04-05 | bug | Accuracy problem | none | **backlog** — zero-base overflow documented (afd7f7d6c); the other claims do not reproduce (effectively closed) | Bug: pow_int issues |
+| 66993 | 2025-04-05 | bug | Accuracy problem | none | **fixed** (doc) — zero-base overflow documented in the manual (afd7f7d6c) and in the `specfunc/gsl_sf_pow_int.h` comment (165ff5383); the other claims do not reproduce | Bug: pow_int issues |
 | 67058 | 2025-04-28 | - | Accuracy problem | none | **fixed** — empty data sets raise `GSL_EBADLEN` (NaN with the handler off) (68fc3c752) | gsl_stats_mean and gsl_stats_sd result to 0.0 when array with zero length |
 | 67301 | 2025-07-10 | bug | - | none | rejected — not-a-bug: r2 is a within-bin fraction, a second find() would pick the wrong bin; documented 2b15efbff | Bug: Test for existence of uniform random variate in histogram |
 | 67359 | 2025-07-27 | feature | - | clean hyperg_2F0.c.patch +1 | **fixed** — 2F0 with a zero parameter (1d99544d9) | Feature: Add special case for gsl_sf_hyperg_2F0 |
@@ -356,7 +356,6 @@ test-only, but the library defect it exposed was later fixed (75fcaf1b3).
 | 43259 | assess | re-verdict the `pochrel` and `ellint_P` inputs dismissed as "degenerate"; they may be a genuine limitation rather than evaluation on a pole. |
 | 66808 | accuracy | Airy oscillatory accuracy beyond `eps*\|x\|^{3/2}` (a double-double prototype recovered only 5-10x, capped by the double coefficient tables). |
 | 36152 | test | `gsl_sf_sinc_e` large-`x` vector (the behaviour is fixed as a side effect; no vector yet). |
-| 66993 | doc | pow_int residual, effectively closed: the only valid point, the zero-base overflow, is documented; the other claims do not reproduce. |
 
 ### Wanted work, no defect
 

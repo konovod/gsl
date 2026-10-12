@@ -2139,11 +2139,13 @@ Four claims, none reproducing on the current build:
     0.0^-1          = +inf, GSL_EOVRFLW (report wanted GSL_EZERODIV)
 
 The deprecation/rationalisation proposal is an API change and out of
-scope.  The only valid point is that `doc/specfunc-pow-int.*` says the
+scope.  The only valid point is that the documentation says the
 functions never check overflow, while `specfunc/pow_int.c:42` returns
 `GSL_EOVRFLW` for a zero base with a negative exponent; that exception
-is now documented (afd7f7d6c).  Changing the code to `GSL_EZERODIV`
-would be a behaviour change with no demonstrated defect.
+is now documented in `doc/specfunc-pow-int.*` (afd7f7d6c) and in the
+`specfunc/gsl_sf_pow_int.h` comment (the reporter's actual "source code
+documentation" location).  Changing the code to `GSL_EZERODIV` would be
+a behaviour change with no demonstrated defect.
 
 ### #67494 - consistency of pow_int usage - rejected
 
