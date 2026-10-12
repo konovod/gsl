@@ -288,6 +288,8 @@ One line per change: date | tag | description | commit(s).
   2026-10-12 | [upstream] | randist: add the gamma tail distribution       | 47b9126ec
   2026-10-12 | [upstream] | misc: warning-clean library/tools, -Wall -Wextra | 32bed6609
   2026-10-12 | [upstream] | specfunc: sin_pi/cos_pi long->double conversion | e33282546
+  2026-10-12 | [upstream] | histogram: include math.h in test1d.c           | af92264c5
+  2026-10-12 | [upstream] | specfunc: explicit long->double in the test      | a6fe414f3
   2026-10-12 | [fork]     | cmake: strict warning profile + CI job          | 7e89cac61
 
 
@@ -7753,4 +7755,53 @@ Verified equivalent to the original for both 32-bit and 64-bit `long` over
 ten million values including the range boundaries; `ctest` passes 57/57 on
 MSVC and the library is clean under GCC 15 and Clang 15 with
 `-Wimplicit-const-int-float-conversion` forced on.
+
+
+## [upstream] histogram: include math.h in the variance test
+
+Commit: af92264c5
+
+The 1D variance test added with the `gsl_histogram_variance` family called
+`sqrt()` without including `<math.h>`.  It compiled because the call was an
+implicit declaration, which only warns under GCC and MSVC.  Clang 16 and
+later made that an error by default, so `histogram_test` no longer built on
+the Clang and macOS CI jobs; the failure is at `histogram/test1d.c:570`.
+`histogram/test2d.c` was unaffected because it includes `<gsl/gsl_math.h>`,
+which brings in `<math.h>`.
+
+The fix is one line: include `<math.h>`.
+
+Verification: the tree builds and the full `ctest` suite passes 57/57 on
+MSVC x64.  Negative control, with the include removed,
+`gcc -std=c99 -Werror=implicit-function-declaration` fails at line 570
+(`implicit declaration of function 'sqrt'`); with it, the file compiles
+clean under the same flags.
+
+Files: `histogram/test1d.c`.
+
+Savannah bug #68704.
+
+
+## [upstream] specfunc: make the long -> double conversion explicit in the test
+
+Commit: a6fe414f3
+
+`specfunc/test_sincos_pi.c` seeds its very-large-argument loops with
+`LONG_MAX + 1.0`.  On LP64 `LONG_MAX` (`2^63 - 1`) is not representable as
+a `double`, so the implicit conversion rounds up to `2^63`; Clang 16 and
+later flag this with `-Wimplicit-const-int-float-conversion`.  The warning
+is harmless - the per-module test programs are outside the strict warning
+profile, so it never failed a CI job - but it is noise from a check the
+fork otherwise keeps clean.
+
+Writing the cast explicitly selects the same rounding and leaves the value
+unchanged on both LP64 and LLP64 (where `LONG_MAX + 1.0` is already
+`2^31`).  The matching `LONG_MIN` lines have no warning because `LONG_MIN`
+is exactly representable, so they are untouched.
+
+Verification: `ctest` passes 57/57 on MSVC; `specfunc/test_sincos_pi.c`
+compiles clean under `gcc -std=c99 -Wall -Wextra`.  The Clang 18
+diagnostic that triggered the change clears in CI.
+
+Files: `specfunc/test_sincos_pi.c`.
 
