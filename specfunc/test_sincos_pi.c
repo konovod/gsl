@@ -196,7 +196,7 @@ test_sincos_pi(void)
 
   fx = 0.0625;
   exact = 0.195090322016128267848284868477;
-  ix = LONG_MAX + 1.0;
+  ix = (double) LONG_MAX + 1.0;
   ix += fabs(fmod(ix,2.0)); /* make sure of even number */
   
   for (k=0; k<kmax; k++) {
@@ -364,7 +364,7 @@ test_sincos_pi(void)
 
   fx = 0.0625;
   exact = 0.980785280403230449126182236134;
-  ix = LONG_MAX + 1.0;
+  ix = (double) LONG_MAX + 1.0;
   ix += fabs(fmod(ix,2.0)); /* make sure of even number */
   
   for (k=0; k<kmax; k++) {
