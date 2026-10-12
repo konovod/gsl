@@ -1146,7 +1146,7 @@ how to define the branch cuts ... the implementation simply picks a
 convenient sheet").  SPECFUN (via SciPy) and Scilab both agree with GSL's
 `0.9975194` for `q = -1`, `z = 2 pi/180`.  No patch, no change.
 
-### `#44865` — bsimp/msbdf `e5_bigt` is FMA-sensitive — patch not applied
+### `#44865` — bsimp/msbdf `e5_bigt` is FMA-sensitive — test made absolute-aware
 
 The test `e5_bigt` in `ode-initval2/test.c` compares `bsimp` with `msbdf`
 over `[0, 1e11]` using a pure relative tolerance of `1e-3`; with
@@ -1162,9 +1162,14 @@ accumulations of rounding.  With FMA verified active - gcc 15 on x86-64 with
 `-mfma -ffp-contract=fast` (`vfmadd` is emitted in `rhs_e5`) and MSVC with
 `/fp:fast` - the two steppers agree to about `1e-4` relative and all 1151
 tests pass.  The reported 18-22 % disagreement needs the submitter's
-clang/PPC64 toolchain.  A test-quality change (an absolute-aware comparison)
-would make the test robust, but it cannot be validated here and is not
-required on any platform the fork builds and tests on, so it is left out.
+clang/PPC64 toolchain.  The test was nevertheless made absolute-aware on
+2026-10-12 (commit 2ea05977a): the comparison keeps the `1e-3` relative
+tolerance but also accepts a difference within `GSL_DBL_EPSILON * yscale`,
+the rounding unit of the problem's initial scale (`yscale = 1.76e-3` for
+`e5_bigt`), about 138x the reporter's worst discrepancy, while still failing
+on any real disagreement.  MSVC x64, MinGW gcc 15 and clang 15 with FMA
+active all pass 1789/1789; the reported value pairs are the negative control,
+since x86-64 reproduces neither the divergence nor the failure.
 
 ### `#54925` — source_gemm_r loop reordering — out of scope
 

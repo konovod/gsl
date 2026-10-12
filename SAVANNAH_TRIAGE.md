@@ -5,14 +5,14 @@ Generated 2026-10-02 from the `scripts/savannah_bugs.py` sweep (`inventory.tsv`)
 Scratch index, not part of the fork's record of changes. Verdicts are curated from
 `FORKNEWS`, `SAVANNAH_REVIEW.md` and the git history; every other row is un-triaged.
 
-**219 open items: 219 triaged, 0 never reviewed — 197 closed or rejected, 22 parked in the backlog below.**
+**219 open items: 219 triaged, 0 never reviewed — 198 closed or rejected, 21 parked in the backlog below.**
 
 | status | count |
 |---|---:|
-| fixed | 156 |
+| fixed | 157 |
 | partial | 0 |
 | rejected | 40 |
-| backlog | 22 |
+| backlog | 21 |
 | superseded | 1 |
 | not reviewed | 0 |
 
@@ -88,7 +88,7 @@ below; it is not counted as rejected.
 | 43809 | 2014-12-12 | bug | Runtime error | source gsl_hyperg.c | **fixed** — direct series for `a < 0`, large `x` (52505315d) | bug in gsl_sf_hyperg_1F1 |
 | 43902 | 2014-12-29 | - | - | clean 0001-Make-the-vector-write-example-consistent-with-the-ve.patch | **fixed** — vectorw example writes 10 elements (0e82d8223) | Make the vector write example consistent with the vector read example. |
 | 44612 | 2015-03-23 | bug | Runtime error | source gsl_vegas_bug_demo.c | **fixed** — VEGAS inf weight for subnormal variance (e3cab2d02) | Bug in vegas.c |
-| 44865 | 2015-04-17 | - | Accuracy problem | inline | **backlog** — FMA failure not reproducible here and the patch shortens the interval; re-check parked pending `-ffp-contract=fast` testing | bsimp/msbdf e5_bigt in ode-initval2/test.c is FMA-sensitive |
+| 44865 | 2015-04-17 | - | Accuracy problem | inline | **fixed** — comparison made absolute-aware (2ea05977a); the interval-shortening patch stays rejected | bsimp/msbdf e5_bigt in ode-initval2/test.c is FMA-sensitive |
 | 44952 | 2015-04-28 | - | Build | clean stdarg.patch | **fixed** — test/results.c uses stdarg.h (e2354de55) | test/results.c uses outdated header file name varargs.h |
 | 45053 | 2015-05-07 | - | Runtime error | source gsl_bug.c +1 | rejected — bracketing patch collapses interval; 3 min tests fail | gsl_min_find_bracket is most likely incorrectly implemented |
 | 45099 | 2015-05-13 | bug | - | none | rejected - not-a-bug: the BFGS update is the standard dense update, H implicit in p | wrong formula for BFGS update in gsl_multimin? |
@@ -386,7 +386,6 @@ ones need that toolchain installed first.
 | # | what to do |
 |---|---|
 | 56843 | reproduce the non-x86 eigen accuracy difference on the arm64 macOS CI target, which is in CI. |
-| 44865 | make the `e5_bigt` comparison absolute-aware so it survives `-ffp-contract=fast`; the contraction path itself is testable on this machine. |
 | 67446, 67447 | rebuild with gcc 14.2.1 and attempt reproduction. |
 | 49697 | re-verify with `-mavx`; likely already covered by the raised cholesky tolerance (`#67445`). |
 | 39152, 54919 | attempt reproduction with Intel oneAPI `icc`/`icx`. |
