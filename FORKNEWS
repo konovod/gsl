@@ -278,6 +278,7 @@ One line per change: date | tag | description | commit(s).
   2026-10-12 | [fork]     | cmake: build the Fresnel integrals                 | 60265a554
   2026-10-12 | [upstream] | linalg,bspline: constrained least squares          | 420b69df5
   2026-10-12 | [fork]     | cmake: build the constrained least squares solver  | 7e2c7b117
+  2026-10-12 | [upstream] | doc: mark the remaining deprecated Hermite aliases  | a4a1f52bc
 
 
 ## [upstream] rng: make the random() generators produce the documented sequences
@@ -7325,13 +7326,31 @@ Files: `linalg/lsi.c`, `linalg/gsl_linalg.h`, `linalg/Makefile.am`,
 Savannah bug #34361.
 
 
+## [upstream] doc: mark the remaining deprecated Hermite aliases
 
+Commit: a4a1f52bc
 
+Savannah #67621 added deprecation markers for the functions that sit
+inside the `#ifndef GSL_DISABLE_DEPRECATED` block of
+`specfunc/gsl_sf_hermite.h`, but the entry only covered
+`gsl_sf_hermite_phys`, `_e`, `_der` and `_der_e`, plus the three
+`gsl_sf_hermite_prob_der` aliases.  Seven aliases from the same block
+were still missing from the manual:
 
+    gsl_sf_hermite_phys_array
+    gsl_sf_hermite_phys_series_e, gsl_sf_hermite_phys_series
+    gsl_sf_hermite_phys_array_der
+    gsl_sf_hermite_phys_der_array
+    gsl_sf_hermite_phys_zero, gsl_sf_hermite_phys_zero_e
 
+They are now documented in the "Deprecated Hermite Functions" section of
+`doc/specfunc-hermite.rst` with the same `.. deprecated:: 2.6` marker and
+the `gsl_sf_hermite_*` replacement named in each entry.  The Texinfo
+mirror has no Hermite chapter, so there is nothing to update there.
 
+Verification: re-running the audit sweep (headers minus both manual
+trees) leaves no `gsl_sf_hermite_phys_*` name, and the seven entries
+render as "Deprecated since version 2.6" notes.
 
-
-
-
+Savannah bug #67621 (follow-up).
 
