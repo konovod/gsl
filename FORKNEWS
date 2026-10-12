@@ -273,6 +273,7 @@ One line per change: date | tag | description | commit(s).
   2026-10-12 | [upstream] | doc: document the blas argument errors             | 8207436a4
   2026-10-12 | [fork]     | cmake: build the blas argument-checking test       | ff38bc937
   2026-10-12 | [upstream] | histogram: add the variance functions              | 759862d60
+  2026-10-12 | [upstream] | linalg: pivot the tridiagonal solvers              | c9c14c1c8
 
 
 ## [upstream] rng: make the random() generators produce the documented sequences
@@ -7154,6 +7155,49 @@ Files: `histogram/stat.c`, `histogram/stat2d.c`,
 `doc_texinfo/histogram.texi`.
 
 Savannah bug #68704.
+
+
+
+
+## [upstream] linalg: pivot the tridiagonal solvers around a zero diagonal
+
+Commit: c9c14c1c8
+
+Savannah bug #21837 reports that `gsl_linalg_solve_symm_tridiag()`
+returns NaN for a matrix whose first diagonal entry is zero, because the
+Cholesky-like factorization divides by the zero pivot.  The maintainer's
+2007 reply - that a solution needs a permutation (see `slatec/dgtsl.f`)
+and that this is new algorithm work - was recorded here as `[rejected]`,
+and only the documentation error code was corrected (`9418afa5f`).  The
+fork's scope now admits the algorithm, so that rejection is superseded.
+
+The non-cyclic solvers - `gsl_linalg_solve_tridiag`,
+`gsl_linalg_solve_symm_tridiag` and the complex
+`gsl_linalg_complex_solve_tridiag` / `_symm_tridiag` - keep the existing
+factorization and, on hitting a zero pivot, fall back to Gaussian
+elimination with partial pivoting.  Pivoting can create one entry above
+the first superdiagonal, so the factorization is stored as a banded
+upper triangular matrix with two superdiagonals (`kl = 1`, `ku = 2`);
+the complex version selects the pivot by modulus.  A genuinely singular
+matrix still returns `GSL_EZERODIV`.  The cyclic solvers are unchanged.
+
+The reporter's example (`diag = {0, 1.21, 0.80, 1.55, 0.76}`) now gives
+`{0.13626029501189094, 0.085365853658536592, 1.0383945517010773,
+-0.60009249208545801, 1.3921880192343572}`, matching a dense
+`numpy.linalg.solve` and the report's own `d[0] += 1e-5` output.
+
+Tests: `linalg/test.c` adds the reporter's symmetric case, a
+nonsymmetric case, and complex symmetric and nonsymmetric cases, each
+with a zero diagonal, comparing against `numpy.linalg.solve` values and
+a residual; an all-zero matrix must still return `GSL_EZERODIV`.
+Negative control: with the pivoting path disabled (returning
+`GSL_EZERODIV` immediately) all six zero-diagonal vectors fail with
+status 12.  Both manuals are updated.  Full `ctest` 57/57.
+
+Files: `linalg/tridiag.c`, `linalg/tridiagcomplex.c`, `linalg/test.c`,
+`doc/linalg.rst`, `doc_texinfo/linalg.texi`.
+
+Savannah bug #21837.
 
 
 
