@@ -5,14 +5,14 @@ Generated 2026-10-02 from the `scripts/savannah_bugs.py` sweep (`inventory.tsv`)
 Scratch index, not part of the fork's record of changes. Verdicts are curated from
 `FORKNEWS`, `SAVANNAH_REVIEW.md` and the git history; every other row is un-triaged.
 
-**219 open items: 219 triaged, 0 never reviewed — 196 closed or rejected, 23 parked in the backlog below.**
+**219 open items: 219 triaged, 0 never reviewed — 197 closed or rejected, 22 parked in the backlog below.**
 
 | status | count |
 |---|---:|
-| fixed | 155 |
+| fixed | 156 |
 | partial | 0 |
 | rejected | 40 |
-| backlog | 23 |
+| backlog | 22 |
 | superseded | 1 |
 | not reviewed | 0 |
 
@@ -195,7 +195,7 @@ below; it is not counted as rejected.
 | 66767 | 2025-02-08 | feature | Build | source binomialinv.c +1 | **fixed** — gsl_cdf_binomial_Pinv/Qinv by bisection, double result (e88a81c75) | Feature: inverse of binomial distribution |
 | 66775 | 2025-02-10 | feature | Build | source poissoninv.c +1 | **fixed** — gsl_cdf_poisson_Pinv/Qinv by doubling + bisection, double result (e88a81c75) | Feature: inverse poisson distribution |
 | 66800 | 2025-02-15 | feature | Accuracy problem | partial nbinomial-2.diff +1 | **fixed** — negative_binomial_pdf degenerate at p = 1 and p = 0 (957708351) | Feature: gsl_ran_negative_binomial_pdf with p = 1 |
-| 66808 | 2025-02-17 | bug | Accuracy problem | source test_airy_zeroes_derivs.c | **backlog** — Airy accuracy not improved; sub-defects fixed (ac5f72d98); oscillatory accuracy beyond `eps*\|x\|^{3/2}` remains (residual defect below) | Bug: Airy Ai function values inaccurate |
+| 66808 | 2025-02-17 | bug | Accuracy problem | source test_airy_zeroes_derivs.c | **fixed** — three sub-defects (ac5f72d98) and then the oscillatory accuracy itself: the phase is now double-double, replacing the SLATEC modulus/phase tables with a double-double Maclaurin and the Olver asymptotics (f8ab5e2c7) | Bug: Airy Ai function values inaccurate |
 | 66816 | 2025-02-19 | feature | Build | source nakagami_.c | **fixed** — gsl_ran_nakagami + pdf, sqrt of a gamma variate (999d53bbe) | Feature: Nakagami random distribution |
 | 66826 | 2025-02-21 | feature | Build | none | **fixed** — test vectors added (728206d82) and the negative-integer-`b` defect they exposed fixed (75fcaf1b3) | Feature: test cases for function hyperg_1F1() |
 | 66834 | 2025-02-23 | feature | Build | clean specfunc_gamma_test.diff | **fixed** — gamma_inc(0,0) = +Inf (062b15fc3) | Feature: gamma_inc(0, 0) handling and test cases |
@@ -354,7 +354,6 @@ test-only, but the library defect it exposed was later fixed (75fcaf1b3).
 | # | kind | what remains |
 |---|---|---|
 | 43259 | assess | re-verdict the `pochrel` and `ellint_P` inputs dismissed as "degenerate"; they may be a genuine limitation rather than evaluation on a pole. |
-| 66808 | accuracy | Airy oscillatory accuracy beyond `eps*\|x\|^{3/2}` (a double-double prototype recovered only 5-10x, capped by the double coefficient tables). |
 
 ### Wanted work, no defect
 

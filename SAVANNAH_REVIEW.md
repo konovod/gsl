@@ -75,7 +75,7 @@ has to be tested against the built library.  See `#52321` below.
 | `#66026` | applied with a different fix than posted - `LU_decomp_L3` leaves `ipiv` unwritten on a singular pivot; the array is identity-initialised rather than skipping the permutation (commit d73ba5300) |
 | `#52359` | applied - the Airy modulus/phase error estimates divided by series corrections that can vanish; rewritten from the full expressions (commit ac5f72d98) |
 | `#52570` + `#51000` | applied - huge negative arguments gave `±inf`/`NaN` or non-physical magnitudes with status `GSL_SUCCESS`; now `GSL_ELOSS` with a bounded result (commit ac5f72d98) |
-| `#66808` | partly applied - the oscillatory accuracy is phase-limited at `~eps*|x|^{3/2}`; a double-double phase was prototyped and rejected (the double-precision coefficient tables cap it), and the vectors are added at realistic tolerances (commit ac5f72d98) |
+| `#66808` | **fully fixed 2026-10-12** (commit f8ab5e2c7): the oscillatory branch is now double-double (a Maclaurin series below `|x| = 10`, the Olver asymptotics above), which removes the former `eps*|x|^{3/2}` phase limit and pushes `GSL_ELOSS` out to `|x| ~ 1e21`.  Earlier partial fix: three sub-defects (commit ac5f72d98) |
 | `#58067` | not-a-bug - `Ai(113)` genuinely underflows; `GSL_EUNDRFLW` is correct and is now documented (commit 86cb80782) |
 | (Olver) | the Airy fix exposed an optimistic error estimate in `bessel_olver.c`; the missing argument-error term is now propagated (commit 790fe1078) |
 | `#67621` | applied with corrections - the posted patch touched only two files and marked the wrong Hermite functions; the markers are derived from the actual `GSL_DISABLE_DEPRECATED` blocks.  `gsl_bspline_knots_greville` is deliberately **not** marked: it is only commented "future to be deprecated", not guarded (commit 5df6c0079) |
@@ -447,6 +447,20 @@ recovers the arithmetic rounding, but the error floors at
 `eps*|rp|*|x|^{3/2}`, the precision of the double SLATEC coefficient
 tables — a 5-10x gain at best, short of `TEST_TOL0`.  Recorded in
 FORKNEWS; the added vectors use `TEST_TOL2` for `x < 0`.
+
+**Follow-up 2026-10-12 (commit f8ab5e2c7): the accuracy was then fixed.**
+The cap turned out to be the single-double phase rather than the
+coefficient tables: even with the product widened, `p = -0.625 + P` can
+only be represented to `eps*|p|`.  The whole `x < -1` branch was rewritten
+in double-double — the Maclaurin series of the Airy equation for
+`1 < |x| < 10` (the seeds `Ai(0)`, `Ai'(0)`, `Bi(0)`, `Bi'(0)` carried to
+double-double, which `Bi'` needs because its two contributions cancel)
+and the Olver asymptotic expansions (DLMF 9.7.9–9.7.12, exact
+coefficients from 9.7.2) above — and the SLATEC modulus/phase tables were
+removed.  The result is a few ulp up to `|x| ~ 1e12`, degrading as
+`eps^2*|zeta|` beyond `1e12`, with `GSL_ELOSS` near `|x| = 1e21`.  The
+regression vectors now use `TEST_TOL0`; with the change reverted
+`specfunc_test` reports 70 failures.
 
 **Fallout:** correcting the Airy error bars exposed an optimistic error in
 `bessel_olver.c` (the Olver argument's rounding was never propagated);
