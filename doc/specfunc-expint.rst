@@ -46,6 +46,56 @@ Exponential Integral
 .. Domain: x != 0.0
 .. Exceptional Return Values: GSL_EOVRFLW, GSL_EUNDRFLW
 
+Scaled Exponential Integrals
+----------------------------
+.. index::
+   single: exponential integrals, scaled
+
+.. function:: double gsl_sf_expint_E1_scaled (double x)
+              int gsl_sf_expint_E1_scaled_e (double x, gsl_sf_result * result)
+
+   These routines compute the scaled exponential integral
+   :math:`E_1(x) \exp(x)`,
+
+   .. math:: E_1(x) e^x := \Re \int_1^\infty dt \exp(x(1-t))/t.
+
+   Multiplying by :math:`e^x` removes the exponential decay of
+   :math:`E_1(x)` for large positive :data:`x`, so that the result does
+   not underflow.
+
+.. Domain: x != 0.0
+.. Exceptional Return Values: GSL_EDOM, GSL_EOVRFLW, GSL_EUNDRFLW
+
+.. function:: double gsl_sf_expint_E2_scaled (double x)
+              int gsl_sf_expint_E2_scaled_e (double x, gsl_sf_result * result)
+
+   These routines compute the scaled second-order exponential integral
+   :math:`E_2(x) \exp(x)`.
+
+.. Domain: x != 0.0
+.. Exceptional Return Values: GSL_EDOM, GSL_EOVRFLW, GSL_EUNDRFLW
+
+.. function:: double gsl_sf_expint_En_scaled (int n, double x)
+              int gsl_sf_expint_En_scaled_e (int n, double x, gsl_sf_result * result)
+
+   These routines compute the scaled exponential integral
+   :math:`E_n(x) \exp(x)` of order :data:`n`.
+
+.. Domain: x != 0.0
+.. Exceptional Return Values: GSL_EDOM, GSL_EOVRFLW, GSL_EUNDRFLW
+
+.. function:: double gsl_sf_expint_Ei_scaled (double x)
+              int gsl_sf_expint_Ei_scaled_e (double x, gsl_sf_result * result)
+
+   These routines compute the scaled exponential integral
+   :math:`\hbox{Ei}(x) \exp(-x)`,
+
+   which removes the exponential growth of :math:`\hbox{Ei}(x)` for
+   large positive :data:`x`.
+
+.. Domain: x != 0.0
+.. Exceptional Return Values: GSL_EDOM, GSL_EOVRFLW, GSL_EUNDRFLW
+
 Ei(x)
 -----
 

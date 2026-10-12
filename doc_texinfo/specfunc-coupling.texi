@@ -16,6 +16,7 @@ section are declared in the header file @file{gsl_sf_coupling.h}.
 @menu
 * 3-j Symbols::                 
 * 6-j Symbols::                 
+* Racah W coefficients::        
 * 9-j Symbols::                 
 * Wigner d-matrix::             
 @end menu
@@ -82,6 +83,36 @@ where the arguments are given in half-integer units, @math{ja} =
 These functions are now deprecated and will be removed in a future
 release.  They compute a permuted (incorrect) Wigner 6-j symbol; see
 @code{gsl_sf_coupling_6j} and @code{gsl_sf_coupling_6j_e}.
+@end deftypefun
+
+
+@node Racah W coefficients
+@subsection Racah W coefficients
+
+@deftypefun double gsl_sf_coupling_RacahW (int @var{two_ja}, int @var{two_jb}, int @var{two_jc}, int @var{two_jd}, int @var{two_je}, int @var{two_jf})
+@deftypefunx int gsl_sf_coupling_RacahW_e (int @var{two_ja}, int @var{two_jb}, int @var{two_jc}, int @var{two_jd}, int @var{two_je}, int @var{two_jf}, gsl_sf_result * @var{result})
+These routines compute the Racah W coefficient,
+@tex
+\beforedisplay
+$$
+W(ja\,jb\,jc\,jd; je\,jf) = (-1)^{ja+jb+jc+jd}
+\left\{\matrix{ja & jb & je\cr
+               jd & jc & jf\cr}\right\}
+$$
+\afterdisplay
+@end tex
+@ifinfo
+
+@example
+W(ja jb jc jd; je jf) = (-1)^(ja+jb+jc+jd) @{ja jb je ; jd jc jf@}
+@end example
+
+@end ifinfo
+@noindent
+where the arguments are given in half-integer units, @math{ja} =
+@var{two_ja}/2, etc.  The coefficient is evaluated from the corresponding
+Wigner 6-j symbol.
+@comment Exceptional Return Values: GSL_EDOM, GSL_EOVRFLW
 @end deftypefun
 
 

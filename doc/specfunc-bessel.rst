@@ -549,6 +549,14 @@ Irregular Modified Bessel Functions---Fractional Order
 .. Domain: x > 0, nu >= 0 
 .. Exceptional Return Values: GSL_EDOM
 
+.. function:: int gsl_sf_bessel_Knu_scaled_e10_e (double nu, double x, gsl_sf_result_e10 * result)
+
+   This routine computes the scaled irregular modified Bessel function
+   :math:`\exp(+x) K_\nu(x)` using the :type:`gsl_sf_result_e10` type to
+   return a result with extended range.
+.. Domain: x > 0, nu >= 0 
+.. Exceptional Return Values: GSL_EDOM
+
 Zeros of Regular Bessel Functions
 ---------------------------------
 .. index::

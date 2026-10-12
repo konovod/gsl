@@ -7,6 +7,7 @@ Stegun, Chapter 5.  These functions are declared in the header file
 
 @menu
 * Exponential Integral::        
+* Scaled Exponential Integrals::  
 * Ei(x)::                       
 * Complex Exponential Integrals::  
 * Hyperbolic Integrals::        
@@ -88,6 +89,59 @@ For @math{n > 0} the function is finite at @math{x = 0}.  For
 as @code{GSL_POSINF} with zero error.
 @comment Domain: x != 0.0
 @comment Exceptional Return Values: GSL_EOVRFLW, GSL_EUNDRFLW
+@end deftypefun
+
+@node Scaled Exponential Integrals
+@subsection Scaled Exponential Integrals
+@cindex exponential integrals, scaled
+
+@deftypefun double gsl_sf_expint_E1_scaled (double @var{x})
+@deftypefunx int gsl_sf_expint_E1_scaled_e (double @var{x}, gsl_sf_result * @var{result})
+These routines compute the scaled exponential integral @math{E_1(x) \exp(x)},
+@tex
+\beforedisplay
+$$
+E_1(x) e^x := \Re \int_1^\infty dt \exp(x(1-t))/t.
+$$
+\afterdisplay
+@end tex
+@ifinfo
+
+@example
+E_1(x) e^x := \Re \int_1^\infty dt \exp(x(1-t))/t.
+@end example
+
+@end ifinfo
+@noindent
+Multiplying by @math{e^x} removes the exponential decay of @math{E_1(x)} for
+large positive @math{x}, so that the result does not underflow.
+@comment Domain: x != 0.0
+@comment Exceptional Return Values: GSL_EDOM, GSL_EOVRFLW, GSL_EUNDRFLW
+@end deftypefun
+
+@deftypefun double gsl_sf_expint_E2_scaled (double @var{x})
+@deftypefunx int gsl_sf_expint_E2_scaled_e (double @var{x}, gsl_sf_result * @var{result})
+These routines compute the scaled second-order exponential integral
+@math{E_2(x) \exp(x)}.
+@comment Domain: x != 0.0
+@comment Exceptional Return Values: GSL_EDOM, GSL_EOVRFLW, GSL_EUNDRFLW
+@end deftypefun
+
+@deftypefun double gsl_sf_expint_En_scaled (int @var{n}, double @var{x})
+@deftypefunx int gsl_sf_expint_En_scaled_e (int @var{n}, double @var{x}, gsl_sf_result * @var{result})
+These routines compute the scaled exponential integral
+@math{E_n(x) \exp(x)} of order @math{n}.
+@comment Domain: x != 0.0
+@comment Exceptional Return Values: GSL_EDOM, GSL_EOVRFLW, GSL_EUNDRFLW
+@end deftypefun
+
+@deftypefun double gsl_sf_expint_Ei_scaled (double @var{x})
+@deftypefunx int gsl_sf_expint_Ei_scaled_e (double @var{x}, gsl_sf_result * @var{result})
+These routines compute the scaled exponential integral
+@math{Ei(x) \exp(-x)}, which removes the exponential growth of
+@math{Ei(x)} for large positive @math{x}.
+@comment Domain: x != 0.0
+@comment Exceptional Return Values: GSL_EDOM, GSL_EOVRFLW, GSL_EUNDRFLW
 @end deftypefun
 
 

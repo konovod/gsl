@@ -307,6 +307,17 @@ Beta Functions
    subject to :math:`a` and :math:`b` not being negative integers.
 .. exceptions: GSL_EDOM
 
+.. function:: int gsl_sf_lnbeta_sgn_e (double x, double y, gsl_sf_result * result, double * sgn)
+
+   This routine computes the logarithm of the absolute value of the Beta
+   function, :math:`\log|B(x,y)|`, in :data:`result`, together with its
+   sign in :data:`sgn`.  It is defined away from the poles, i.e. subject
+   to :data:`x` and :data:`y` being neither zero nor negative integers,
+   and is a domain error otherwise.  :func:`gsl_sf_lnbeta_e` and
+   :func:`gsl_sf_beta_e` are computed in terms of it.
+
+.. exceptions: GSL_EDOM
+
 Incomplete Beta Function
 ------------------------
 

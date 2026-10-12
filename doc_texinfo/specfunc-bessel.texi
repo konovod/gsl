@@ -568,6 +568,14 @@ fractional order @math{\nu}, @math{\exp(+|x|) K_\nu(x)} for @math{x>0},
 @comment Exceptional Return Values: GSL_EDOM
 @end deftypefun
 
+@deftypefun int gsl_sf_bessel_Knu_scaled_e10_e (double @var{nu}, double @var{x}, gsl_sf_result_e10 * @var{result})
+This routine computes the scaled irregular modified Bessel function
+@math{\exp(+x) K_\nu(x)} using the @code{gsl_sf_result_e10} type to return
+a result with extended range.
+@comment Domain: x > 0, nu >= 0 
+@comment Exceptional Return Values: GSL_EDOM
+@end deftypefun
+
 @node Zeros of Regular Bessel Functions
 @subsection Zeros of Regular Bessel Functions
 @cindex Zeros of Regular Bessel Functions

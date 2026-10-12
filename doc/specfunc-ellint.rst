@@ -174,6 +174,35 @@ Legendre Form of Complete Elliptic Integrals
    :macro:`GSL_EDOM` with a value of NaN.
 .. Exceptional Return Values:  GSL_EDOM
 
+.. function:: double gsl_sf_ellint_Dcomp (double k, gsl_mode_t mode)
+              int gsl_sf_ellint_Dcomp_e (double k, gsl_mode_t mode, gsl_sf_result * result)
+
+   These routines compute the complete elliptic integral :math:`D(k)` to the
+   accuracy specified by the mode variable :data:`mode`,
+
+   .. only:: not texinfo
+
+      .. math::
+
+         D(k) = \int_0^{\pi/2} dt\,{\sin^2 t \over \sqrt{1 - k^2 \sin^2 t}},
+
+   .. only:: texinfo
+
+      ::
+
+         D(k) = \int_0^{\pi/2} dt sin^2(t) / sqrt(1 - k^2 sin^2(t)),
+
+   which is related to the complete integrals :math:`K(k)` and :math:`E(k)`
+   by
+
+   .. math:: D(k) = {K(k) - E(k) \over k^2}.
+
+   The function is defined for :math:`|k| < 1`; any argument outside that
+   range, including a NaN, is a domain error and returns
+   :macro:`GSL_EDOM` with a value of NaN.  In particular
+   :math:`D(0) = \pi/4`.
+.. Exceptional Return Values:  GSL_EDOM
+
 Legendre Form of Incomplete Elliptic Integrals
 ----------------------------------------------
 

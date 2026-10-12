@@ -80,6 +80,41 @@ section are declared in the header file :file:`gsl_sf_coupling.h`.
    only for backwards compatibility.  Use :func:`gsl_sf_coupling_6j` or
    :func:`gsl_sf_coupling_6j_e` instead.
 
+Racah W coefficients
+--------------------
+.. index::
+   single: Racah coefficients
+   single: W coefficients
+
+.. function:: double gsl_sf_coupling_RacahW (int two_ja, int two_jb, int two_jc, int two_jd, int two_je, int two_jf)
+              int gsl_sf_coupling_RacahW_e (int two_ja, int two_jb, int two_jc, int two_jd, int two_je, int two_jf, gsl_sf_result * result)
+
+   These routines compute the Racah W coefficient,
+
+   .. only:: not texinfo
+
+      .. math::
+
+         W(ja\,jb\,jc\,jd; je\,jf) = (-1)^{ja+jb+jc+jd}
+         \left\{
+         \begin{array}{ccc}
+           ja & jb & je \\
+           jd & jc & jf
+         \end{array}
+         \right\}
+
+   .. only:: texinfo
+
+      ::
+
+         W(ja jb jc jd; je jf) = (-1)^(ja+jb+jc+jd) { ja jb je ; jd jc jf }
+
+   where the arguments are given in half-integer units, :math:`ja` =
+   :data:`two_ja`/2, etc.  The coefficient is evaluated from the
+   corresponding Wigner 6-j symbol.
+
+.. Exceptional Return Values: GSL_EDOM, GSL_EOVRFLW
+
 9-j Symbols
 -----------
 

@@ -316,6 +316,17 @@ being negative integers.
 @comment exceptions: GSL_EDOM
 @end deftypefun
 
+@deftypefun int gsl_sf_lnbeta_sgn_e (double @var{x}, double @var{y}, gsl_sf_result * @var{result}, double * @var{sgn})
+@cindex logarithm of Beta function, with sign
+This routine computes the logarithm of the absolute value of the Beta
+function, @math{\log|B(x,y)|}, in @var{result}, together with its sign in
+@var{sgn}.  It is defined away from the poles, i.e. subject to @var{x} and
+@var{y} being neither zero nor negative integers, and is a domain error
+otherwise.  @code{gsl_sf_lnbeta_e} and @code{gsl_sf_beta_e} are computed in
+terms of it.
+@comment exceptions: GSL_EDOM
+@end deftypefun
+
 @node Incomplete Beta Function
 @subsection Incomplete Beta Function
 
