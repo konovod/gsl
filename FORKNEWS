@@ -3540,7 +3540,7 @@ Savannah bug #42502.
 
 ## [upstream] the "Group K" special-function accuracy reports
 
-Commits: 7376dc316, 5fafddc63, c2ba2e271, 18652f8c1, afd7f7d6c
+Commits: 7376dc316, 5fafddc63, c2ba2e271, 18652f8c1, afd7f7d6c, 165ff5383
 
 Five changes from four Savannah reports: `randist` and `specfunc`
 accuracy defects.
@@ -3582,10 +3582,11 @@ includes the cancellation.  File: `specfunc/exp.c`, vector in
 sweep against mpmath improves or leaves every point and keeps
 `P + Q = 1` exact in its window.
 
-**#66993 — documentation.**  `doc/specfunc-pow-int.rst` and its Texinfo
-mirror claimed the `pow_int` functions do not check for overflow; a
-zero base with a negative exponent is reported as `GSL_EOVRFLW`, so the
-exception is now stated.
+**#66993 — documentation.**  `specfunc/gsl_sf_pow_int.h` and the manual
+pages (`doc/specfunc-pow-int.rst` and its Texinfo mirror) claimed the
+`pow_int` functions do not check for overflow; a zero base with a
+negative exponent is reported as `GSL_EOVRFLW`, so the exception is now
+stated in all three.
 
 Negative controls: reverting each code change makes the new vectors
 fail (`randist_test` reports 0 vs 1 and 1 vs 0; `specfunc_test` reports
