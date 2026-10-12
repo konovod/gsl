@@ -26,6 +26,7 @@ for integrations that must not change the step size.
 * Adaptive Step-size Control::  
 * Evolution::                   
 * Driver::
+* Legacy v1 Interface::
 * ODE Example programs::        
 * ODE References and Further Reading::  
 @end menu
@@ -646,6 +647,146 @@ change the direction of integration.
 @deftypefun {int} gsl_odeiv2_driver_free (gsl_odeiv2_driver * @var{d})
 This function frees the driver object, and the related evolution,
 stepper and control objects.
+@end deftypefun
+
+@node Legacy v1 Interface
+@section Legacy v1 Interface
+
+The original ODE interface, prefixed @code{gsl_odeiv}, is retained under
+its original name for backwards compatibility, as described at the top of
+this chapter.  It provides the same three layers as the v2 interface: a
+stepper object, a step-size control object and an evolution object.  New
+code should use the v2 interface above; the v1 routines are listed here
+for reference.
+
+The system to be integrated is described by the @code{gsl_odeiv_system}
+structure, the v1 counterpart of @code{gsl_odeiv2_system}.  It carries the
+same @code{function}, @code{jacobian}, @code{dimension} and @code{params}
+members.
+
+@subsection Stepping functions
+
+@deftp {Data Type} gsl_odeiv_step
+@deftpx {Data Type} gsl_odeiv_step_type
+A v1 stepper is an instance of @code{gsl_odeiv_step}, created from an
+algorithm table of type @code{gsl_odeiv_step_type}.
+@end deftp
+
+@deftypevar {gsl_odeiv_step_type *} gsl_odeiv_step_rk2
+@deftypevarx {gsl_odeiv_step_type *} gsl_odeiv_step_rk4
+@deftypevarx {gsl_odeiv_step_type *} gsl_odeiv_step_rkf45
+@deftypevarx {gsl_odeiv_step_type *} gsl_odeiv_step_rkck
+@deftypevarx {gsl_odeiv_step_type *} gsl_odeiv_step_rk8pd
+@deftypevarx {gsl_odeiv_step_type *} gsl_odeiv_step_rk2imp
+@deftypevarx {gsl_odeiv_step_type *} gsl_odeiv_step_rk2simp
+@deftypevarx {gsl_odeiv_step_type *} gsl_odeiv_step_rk4imp
+@deftypevarx {gsl_odeiv_step_type *} gsl_odeiv_step_bsimp
+@deftypevarx {gsl_odeiv_step_type *} gsl_odeiv_step_gear1
+@deftypevarx {gsl_odeiv_step_type *} gsl_odeiv_step_gear2
+The available v1 stepper algorithms, corresponding to those of the v2
+interface.
+@end deftypevar
+
+@deftypefun {gsl_odeiv_step *} gsl_odeiv_step_alloc (const gsl_odeiv_step_type * @var{T}, size_t @var{dim})
+This function returns a pointer to a newly allocated stepper of type
+@var{T} for a system of dimension @var{dim}.
+@end deftypefun
+
+@deftypefun int gsl_odeiv_step_reset (gsl_odeiv_step * @var{s})
+This function resets the stepper @var{s} to its initial state.
+@end deftypefun
+
+@deftypefun void gsl_odeiv_step_free (gsl_odeiv_step * @var{s})
+This function frees the stepper @var{s}.
+@end deftypefun
+
+@deftypefun {const char *} gsl_odeiv_step_name (const gsl_odeiv_step * @var{s})
+@deftypefunx {unsigned int} gsl_odeiv_step_order (const gsl_odeiv_step * @var{s})
+These functions return the name and the order of the stepper @var{s}.
+@end deftypefun
+
+@deftypefun int gsl_odeiv_step_apply (gsl_odeiv_step * @var{s}, double @var{t}, double @var{h}, double @var{y}[], double @var{yerr}[], const double @var{dydt_in}[], double @var{dydt_out}[], const gsl_odeiv_system * @var{dydt})
+This function applies the stepper @var{s} to advance the solution @var{y}
+from time @var{t} by a step @var{h}, storing the error estimate in
+@var{yerr} and the derivatives before and after the step in @var{dydt_in}
+and @var{dydt_out}.
+@end deftypefun
+
+@subsection Adaptive step-size control
+
+@deftp {Data Type} gsl_odeiv_control
+@deftpx {Data Type} gsl_odeiv_control_type
+A v1 step-size control object is an instance of @code{gsl_odeiv_control},
+created from a table of type @code{gsl_odeiv_control_type}.
+@end deftp
+
+@deftypefun {gsl_odeiv_control *} gsl_odeiv_control_alloc (const gsl_odeiv_control_type * @var{T})
+This function returns a pointer to a newly allocated control object of
+type @var{T}.
+@end deftypefun
+
+@deftypefun int gsl_odeiv_control_init (gsl_odeiv_control * @var{c}, double @var{eps_abs}, double @var{eps_rel}, double @var{a_y}, double @var{a_dydt})
+This function initializes the control object @var{c} with the absolute and
+relative tolerances @var{eps_abs} and @var{eps_rel}, and the scaling
+coefficients @var{a_y} and @var{a_dydt}.
+@end deftypefun
+
+@deftypefun void gsl_odeiv_control_free (gsl_odeiv_control * @var{c})
+This function frees the control object @var{c}.
+@end deftypefun
+
+@deftypefun int gsl_odeiv_control_hadjust (gsl_odeiv_control * @var{c}, gsl_odeiv_step * @var{s}, const double @var{y}[], const double @var{yerr}[], const double @var{dydt}[], double * @var{h})
+This function adjusts the step size @var{h} using the control object
+@var{c} and the stepper @var{s}, returning one of
+@code{GSL_ODEIV_HADJ_INC}, @code{GSL_ODEIV_HADJ_NIL} or
+@code{GSL_ODEIV_HADJ_DEC} according to the direction of the change.
+@end deftypefun
+
+@deftypefun {const char *} gsl_odeiv_control_name (const gsl_odeiv_control * @var{c})
+This function returns the name of the control object @var{c}.
+@end deftypefun
+
+@deftypefun {gsl_odeiv_control *} gsl_odeiv_control_standard_new (double @var{eps_abs}, double @var{eps_rel}, double @var{a_y}, double @var{a_dydt})
+This function returns a control object using the standard four-parameter
+error scaling with the given tolerances and coefficients.
+@end deftypefun
+
+@deftypefun {gsl_odeiv_control *} gsl_odeiv_control_y_new (double @var{eps_abs}, double @var{eps_rel})
+@deftypefunx {gsl_odeiv_control *} gsl_odeiv_control_yp_new (double @var{eps_abs}, double @var{eps_rel})
+These functions return the standard control object with
+@math{a_y = 1, a_dydt = 0} and with @math{a_y = 0, a_dydt = 1}
+respectively.
+@end deftypefun
+
+@deftypefun {gsl_odeiv_control *} gsl_odeiv_control_scaled_new (double @var{eps_abs}, double @var{eps_rel}, double @var{a_y}, double @var{a_dydt}, const double @var{scale_abs}[], size_t @var{dim})
+This function returns a control object that uses a different absolute
+error for each of the @var{dim} components, given in @var{scale_abs}.
+@end deftypefun
+
+@subsection Evolution
+
+@deftp {Data Type} gsl_odeiv_evolve
+A v1 evolution object, which couples a stepper and a control object.
+@end deftp
+
+@deftypefun {gsl_odeiv_evolve *} gsl_odeiv_evolve_alloc (size_t @var{dim})
+This function returns a pointer to a newly allocated evolution object for
+a system of dimension @var{dim}.
+@end deftypefun
+
+@deftypefun int gsl_odeiv_evolve_apply (gsl_odeiv_evolve * @var{e}, gsl_odeiv_control * @var{con}, gsl_odeiv_step * @var{step}, const gsl_odeiv_system * @var{dydt}, double * @var{t}, double @var{t1}, double * @var{h}, double @var{y}[])
+This function advances the system (@var{dydt}, @var{y}) from time @var{t}
+towards @var{t1}, using the evolution object @var{e}, the control object
+@var{con} and the stepper @var{step}.  The step size @var{h} and the time
+@var{t} are updated.
+@end deftypefun
+
+@deftypefun int gsl_odeiv_evolve_reset (gsl_odeiv_evolve * @var{e})
+This function resets the evolution object @var{e}.
+@end deftypefun
+
+@deftypefun void gsl_odeiv_evolve_free (gsl_odeiv_evolve * @var{e})
+This function frees the evolution object @var{e}.
 @end deftypefun
 
 @node ODE Example programs

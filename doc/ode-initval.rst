@@ -664,6 +664,151 @@ control and stepper objects for easy use.
    This function frees the driver object, and the related evolution,
    stepper and control objects.
 
+Legacy v1 Interface
+===================
+
+The original ODE interface, prefixed :code:`gsl_odeiv`, is retained under
+its original name for backwards compatibility, as described at the top of
+this chapter.  It provides the same three layers as the v2 interface: a
+stepper object, a step-size control object and an evolution object.  New
+code should use the v2 interface above; the v1 routines are listed here
+for reference.
+
+The system to be integrated is described by the :type:`gsl_odeiv_system`
+structure, the v1 counterpart of :type:`gsl_odeiv2_system`.  It carries
+the same :code:`function`, :code:`jacobian`, :code:`dimension` and
+:code:`params` members.
+
+Stepping functions
+------------------
+
+.. type:: gsl_odeiv_step
+.. type:: gsl_odeiv_step_type
+
+   A v1 stepper is an instance of :type:`gsl_odeiv_step`, created from an
+   algorithm table of type :type:`gsl_odeiv_step_type`.
+
+.. var:: gsl_odeiv_step_type * gsl_odeiv_step_rk2
+         gsl_odeiv_step_type * gsl_odeiv_step_rk4
+         gsl_odeiv_step_type * gsl_odeiv_step_rkf45
+         gsl_odeiv_step_type * gsl_odeiv_step_rkck
+         gsl_odeiv_step_type * gsl_odeiv_step_rk8pd
+         gsl_odeiv_step_type * gsl_odeiv_step_rk2imp
+         gsl_odeiv_step_type * gsl_odeiv_step_rk2simp
+         gsl_odeiv_step_type * gsl_odeiv_step_rk4imp
+         gsl_odeiv_step_type * gsl_odeiv_step_bsimp
+         gsl_odeiv_step_type * gsl_odeiv_step_gear1
+         gsl_odeiv_step_type * gsl_odeiv_step_gear2
+
+   The available v1 stepper algorithms, corresponding to those of the v2
+   interface.
+
+.. function:: gsl_odeiv_step * gsl_odeiv_step_alloc (const gsl_odeiv_step_type * T, size_t dim)
+
+   This function returns a pointer to a newly allocated stepper of type
+   :data:`T` for a system of dimension :data:`dim`.
+
+.. function:: int gsl_odeiv_step_reset (gsl_odeiv_step * s)
+
+   This function resets the stepper :data:`s` to its initial state.
+
+.. function:: void gsl_odeiv_step_free (gsl_odeiv_step * s)
+
+   This function frees the stepper :data:`s`.
+
+.. function:: const char * gsl_odeiv_step_name (const gsl_odeiv_step * s)
+              unsigned int gsl_odeiv_step_order (const gsl_odeiv_step * s)
+
+   These functions return the name and the order of the stepper :data:`s`.
+
+.. function:: int gsl_odeiv_step_apply (gsl_odeiv_step * s, double t, double h, double y[], double yerr[], const double dydt_in[], double dydt_out[], const gsl_odeiv_system * dydt)
+
+   This function applies the stepper :data:`s` to advance the solution
+   :data:`y` from time :data:`t` by a step :data:`h`, storing the error
+   estimate in :data:`yerr` and the derivatives before and after the step
+   in :data:`dydt_in` and :data:`dydt_out`.
+
+Adaptive step-size control
+--------------------------
+
+.. type:: gsl_odeiv_control
+.. type:: gsl_odeiv_control_type
+
+   A v1 step-size control object is an instance of
+   :type:`gsl_odeiv_control`, created from a table of type
+   :type:`gsl_odeiv_control_type`.
+
+.. function:: gsl_odeiv_control * gsl_odeiv_control_alloc (const gsl_odeiv_control_type * T)
+
+   This function returns a pointer to a newly allocated control object of
+   type :data:`T`.
+
+.. function:: int gsl_odeiv_control_init (gsl_odeiv_control * c, double eps_abs, double eps_rel, double a_y, double a_dydt)
+
+   This function initializes the control object :data:`c` with the
+   absolute and relative tolerances :data:`eps_abs` and :data:`eps_rel`,
+   and the scaling coefficients :data:`a_y` and :data:`a_dydt`.
+
+.. function:: void gsl_odeiv_control_free (gsl_odeiv_control * c)
+
+   This function frees the control object :data:`c`.
+
+.. function:: int gsl_odeiv_control_hadjust (gsl_odeiv_control * c, gsl_odeiv_step * s, const double y[], const double yerr[], const double dydt[], double * h)
+
+   This function adjusts the step size :data:`h` using the control object
+   :data:`c` and the stepper :data:`s`, returning one of
+   :macro:`GSL_ODEIV_HADJ_INC`, :macro:`GSL_ODEIV_HADJ_NIL` or
+   :macro:`GSL_ODEIV_HADJ_DEC` according to the direction of the change.
+
+.. function:: const char * gsl_odeiv_control_name (const gsl_odeiv_control * c)
+
+   This function returns the name of the control object :data:`c`.
+
+.. function:: gsl_odeiv_control * gsl_odeiv_control_standard_new (double eps_abs, double eps_rel, double a_y, double a_dydt)
+
+   This function returns a control object using the standard four-parameter
+   error scaling with the given tolerances and coefficients.
+
+.. function:: gsl_odeiv_control * gsl_odeiv_control_y_new (double eps_abs, double eps_rel)
+              gsl_odeiv_control * gsl_odeiv_control_yp_new (double eps_abs, double eps_rel)
+
+   These functions return the standard control object with
+   :math:`a_y = 1, a_{dydt} = 0` and with :math:`a_y = 0, a_{dydt} = 1`
+   respectively.
+
+.. function:: gsl_odeiv_control * gsl_odeiv_control_scaled_new (double eps_abs, double eps_rel, double a_y, double a_dydt, const double scale_abs[], size_t dim)
+
+   This function returns a control object that uses a different absolute
+   error for each of the :data:`dim` components, given in
+   :data:`scale_abs`.
+
+Evolution
+---------
+
+.. type:: gsl_odeiv_evolve
+
+   A v1 evolution object, which couples a stepper and a control object.
+
+.. function:: gsl_odeiv_evolve * gsl_odeiv_evolve_alloc (size_t dim)
+
+   This function returns a pointer to a newly allocated evolution object
+   for a system of dimension :data:`dim`.
+
+.. function:: int gsl_odeiv_evolve_apply (gsl_odeiv_evolve * e, gsl_odeiv_control * con, gsl_odeiv_step * step, const gsl_odeiv_system * dydt, double * t, double t1, double * h, double y[])
+
+   This function advances the system (:data:`dydt`, :data:`y`) from time
+   :data:`t` towards :data:`t1`, using the evolution object :data:`e`, the
+   control object :data:`con` and the stepper :data:`step`.  The step size
+   :data:`h` and the time :data:`t` are updated.
+
+.. function:: int gsl_odeiv_evolve_reset (gsl_odeiv_evolve * e)
+
+   This function resets the evolution object :data:`e`.
+
+.. function:: void gsl_odeiv_evolve_free (gsl_odeiv_evolve * e)
+
+   This function frees the evolution object :data:`e`.
+
 Examples
 ========
 
