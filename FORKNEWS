@@ -286,6 +286,8 @@ One line per change: date | tag | description | commit(s).
   2026-10-12 | [upstream] | doc: system accessors, Erlang and Poisson array      | 41d368070
   2026-10-12 | [upstream] | rstat: scale the running moments to the data range | 743bb5bf3
   2026-10-12 | [upstream] | randist: add the gamma tail distribution       | 47b9126ec
+  2026-10-12 | [upstream] | misc: warning-clean library/tools, -Wall -Wextra | 32bed6609
+  2026-10-12 | [fork]     | cmake: strict warning profile + CI job          | 7e89cac61
 
 
 ## [upstream] rng: make the random() generators produce the documented sequences
@@ -7658,4 +7660,69 @@ clean.
 
 Files: `doc/math.rst`, `doc/err.rst`, `doc/randist.rst` and the matching
 `doc_texinfo/*.texi`.
+
+
+## [upstream] library: warning-clean under -Wall -Wextra and /W3
+
+Commit: 32bed6609
+
+The CMake build can now enforce a strict warning profile, which required
+first removing every diagnostic the library and the tools produced under
+-Wall -Wextra (GCC, Clang) and /W3 (MSVC).  The diagnostics fell into
+three groups.
+
+Implicit conversions: `size_t` assigned to `int`/`unsigned int` (C4267)
+and `double` narrowed to `float` or an integer type (C4244), plus the
+matching `-Wunused-parameter` and `-Wunused-but-set-variable` reports.
+These are made explicit with a cast to the destination type.  In the
+template files (`cblas/source_*.h`, `fft/*_pass_*.c`, `statistics/*_source.c`,
+`spmatrix`, `matrix`, `vector`) the cast uses the element-type macro
+(`BASE`/`ATOMIC`) so it is a no-op for the wide instantiation and only
+makes the narrowing explicit for the narrow one.  `cblas/source_spr2.h`
+is shared by `sspr2` (float) and `dspr2` (double); there the cast to
+`float` matches the implicit conversion that already happened inside the
+`+=` on the float array.
+
+Dead code: unused static helpers in the included implementation files
+(`filter/ringbuf.c`; `movstat/ringbuf.c`, `deque.c`, `madacc.c`,
+`medacc.c`; the `multifit_nlinear` and `multilarge_nlinear` `common.c`;
+`ode-initval2/step_utils.c` and `linalg/svdstep.c`) are removed where
+truly unused, and marked `static inline` where a helper is used by some
+includers but not others (the standard way to silence
+`-Wunused-function` for an included helper).  Dead stores in the FFT
+passes and the ODE drivers, an unused local in `linalg/lsi.c`, and
+unused constants in the Feagin tables and the `rng` uni/uni32 generators
+are dropped.
+
+Two changes fix real defects rather than only silencing a warning:
+
+  - `specfunc/mathieu_charv.c` compared the signed `order_max` against
+    the unsigned workspace size; the comparison is now explicitly
+    unsigned, matching what C already did.
+  - `specfunc/coupling3j_regge.c` carried an initializer on an `extern`
+    definition, which GCC rejects under `-Werror`; the `extern` is
+    dropped so the table is a plain definition.
+
+Verification: MSVC 14.32 `/W3 /WX` (library and tools) with `ctest`
+passing 57/57; GCC 15 and Clang 15 with `-Wall -Wextra -Werror`, zero
+diagnostics across every library source.  No numerical result changes:
+the casts only make an already-occurring conversion explicit, and the
+removed code was unused.
+
+
+## [fork] cmake: strict warning profile and a CI job that enforces it
+
+Commit: 7e89cac61
+
+`GSL_ENABLE_WARNINGS` (default ON) applies `-Wall -Wextra` or `/W3` to
+the library and the command line tools; `GSL_WARNINGS_AS_ERRORS`
+(default OFF) adds `-Werror` / `/WX`.  The per-module test programs are
+deliberately excluded, since the harness and the reference tables would
+otherwise drown the profile.
+
+The build-and-test matrix enables the profile but not the fatal flag; a
+new `strict-warnings` job builds the library and tools on Linux with
+`GSL_WARNINGS_AS_ERRORS=ON` under both GCC and Clang, so a warning cannot
+regress.  Files: `CMakeLists.txt`, `.github/workflows/cmake.yml`,
+`CMake.md`.
 
