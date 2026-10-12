@@ -5,14 +5,14 @@ Generated 2026-10-02 from the `scripts/savannah_bugs.py` sweep (`inventory.tsv`)
 Scratch index, not part of the fork's record of changes. Verdicts are curated from
 `FORKNEWS`, `SAVANNAH_REVIEW.md` and the git history; every other row is un-triaged.
 
-**219 open items: 219 triaged, 0 never reviewed — 195 closed or rejected, 24 parked in the backlog below.**
+**219 open items: 219 triaged, 0 never reviewed — 196 closed or rejected, 23 parked in the backlog below.**
 
 | status | count |
 |---|---:|
-| fixed | 154 |
+| fixed | 155 |
 | partial | 0 |
 | rejected | 40 |
-| backlog | 24 |
+| backlog | 23 |
 | superseded | 1 |
 | not reviewed | 0 |
 
@@ -48,7 +48,7 @@ below; it is not counted as rejected.
 | 32776 | 2011-03-14 | feature | - | source quadratic.c | **fixed** — multimin quadratic minimiser (53cd0d098) | RFE: Add brute-force quadratic numerical multidimensional minimizer |
 | 34361 | 2011-09-22 | - | Runtime error | none | **backlog** — the `init_augment` monotonicity guard rejects non-monotone breakpoints (74cace84f; test/docs c8543330d); constrained least squares for `gsl_bspline_knots_greville` remains | gsl_bspline_knots_greville needs inequality constrained linear least squares |
 | 35032 | 2011-12-11 | doc | Documentation | none | **fixed** — gsl_test support functions documented in the usage chapter, marked as an unreviewed AI draft (8ef88af6e) | gsl_test.h lacks documentation in the reference manual |
-| 36152 | 2012-04-11 | bug | Accuracy problem | source testbessel.c | **backlog** — asymptotics fixed via Y-family libm sin/cos (a08ef2f7f) and exact sin/cos reduction (8a46ec7cf); a `gsl_sf_sinc_e` large-`x` test vector remains | Incorrect asymptotics of spherical Bessel functions |
+| 36152 | 2012-04-11 | bug | Accuracy problem | source testbessel.c | **fixed** — asymptotics fixed via Y-family libm sin/cos (a08ef2f7f) and exact sin/cos reduction (8a46ec7cf); `gsl_sf_sinc_e` now reduces in `x` itself for large arguments, with vectors at 1e8–1e18 (00b312f48) | Incorrect asymptotics of spherical Bessel functions |
 | 36197 | 2012-04-15 | - | Build | dirty 36197b.diff +1 | **fixed** — leading `__` dropped from every include guard (e40dc7ceb) | reserved identifier violation |
 | 36578 | 2012-06-02 | - | Documentation | none | **fixed** — doc now says the error handler is invoked with GSL_EUNSUP and that the void function returns no code (060c2472c) | inconsistency in gsl_ieee_env_setup doc/api |
 | 37209 | 2012-08-28 | bug | Accuracy problem | none | **fixed** — upstream 441bc40ff (inherited); NaN gone | gsl_sf_bessel_jl_e returns NaN for large inputs without setting error code |
@@ -355,7 +355,6 @@ test-only, but the library defect it exposed was later fixed (75fcaf1b3).
 |---|---|---|
 | 43259 | assess | re-verdict the `pochrel` and `ellint_P` inputs dismissed as "degenerate"; they may be a genuine limitation rather than evaluation on a pole. |
 | 66808 | accuracy | Airy oscillatory accuracy beyond `eps*\|x\|^{3/2}` (a double-double prototype recovered only 5-10x, capped by the double coefficient tables). |
-| 36152 | test | `gsl_sf_sinc_e` large-`x` vector (the behaviour is fixed as a side effect; no vector yet). |
 
 ### Wanted work, no defect
 

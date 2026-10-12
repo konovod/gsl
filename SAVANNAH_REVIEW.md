@@ -1373,8 +1373,17 @@ reduction above `2^21`; `clausen(1e12)` now returns
 `GSL_ELOSS` cutoff is still `0.0625/eps`; only the values below it changed.
 18 vectors fail with `trig.c` reverted.
 
-**Not done:** `gsl_sf_sinc_e` is fixed for large `x` as a side effect (it
-calls `gsl_sf_sin_e`); no new vector there yet.
+**Follow-up (commit `00b312f48`):** the `gsl_sf_sinc_e` large-`x` vector
+could not be added on its own — the function was *not* fixed by the trig
+change.  It computed `sin(M_PI*ax)/(M_PI*ax)`, and the rounded product
+loses the phase above `|x| ~ 1e8`, so the value and its error bar were
+both wrong there (`sinc(1e15+0.5)` was 0.48% low; `sinc(1e18)` returned
+`-2.04e-19` instead of the exact 0).  Every large-`x` point accurate
+enough to assert was one where the old reduction was accurate too, so no
+test-only vector could fail with `trig.c` reverted.  The large-argument
+branch now calls `gsl_sf_sin_pi_e(ax, ...)`; five vectors at 1e8–1e18
+fail with the branch reverted.  `[upstream]`, recorded in `FORKNEWS`;
+`#36152` moves from backlog to fixed.
 
 
 ### `#66886` — refactoring of `specfunc/trig.c` — taken (refactor)
