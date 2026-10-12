@@ -117,10 +117,6 @@ solve_tridiag(
   if (gamma != 0)
     free (gamma);
 
-  if (status == GSL_EZERODIV) {
-    GSL_ERROR ("matrix must be positive definite", status);
-  }
-
   return status;
 }
 
@@ -191,9 +187,147 @@ solve_tridiag_nonsym(
   if (alpha != 0)
     free (alpha);
 
-  if (status == GSL_EZERODIV) {
-    GSL_ERROR ("matrix must be positive definite", status);
-  }
+  return status;
+}
+
+/* Gaussian elimination with partial pivoting for a general tridiagonal
+ * system.  The elimination is stable for any nonsingular matrix,
+ * including one with a zero on the diagonal, where the positive
+ * definite routines above break down.  Pivoting can create one entry
+ * above the first superdiagonal, so the factorization is stored as a
+ * banded upper triangular matrix with two superdiagonals.
+ *
+ *       diag[0]  abovediag[0]             0   .....
+ *  belowdiag[0]       diag[1]  abovediag[1]   .....
+ *             0  belowdiag[1]       diag[2]
+ *             0             0  belowdiag[2]   .....
+ */
+static
+int
+solve_tridiag_pivot(
+  const double diag[], size_t d_stride,
+  const double abovediag[], size_t a_stride,
+  const double belowdiag[], size_t b_stride,
+  const double rhs[], size_t r_stride,
+  double x[], size_t x_stride,
+  size_t N)
+{
+  int status = GSL_SUCCESS;
+  double *d = (double *) malloc (N * sizeof (double));
+  double *sub = (double *) malloc (N * sizeof (double));
+  double *sup = (double *) malloc (N * sizeof (double));
+  double *sup2 = (double *) malloc (N * sizeof (double));
+  double *r = (double *) malloc (N * sizeof (double));
+
+  if (N == 0)
+    {
+      GSL_ERROR ("matrix size must be positive", GSL_EBADLEN);
+    }
+  else if (d == 0 || sub == 0 || sup == 0 || sup2 == 0 || r == 0)
+    {
+      GSL_ERROR ("failed to allocate working space", GSL_ENOMEM);
+    }
+  else
+    {
+      size_t i;
+
+      for (i = 0; i < N; i++)
+        {
+          d[i] = diag[d_stride * i];
+          sub[i] = 0.0;
+          sup[i] = 0.0;
+          sup2[i] = 0.0;
+          r[i] = rhs[r_stride * i];
+        }
+      for (i = 0; i + 1 < N; i++)
+        {
+          sup[i] = abovediag[a_stride * i];
+          sub[i + 1] = belowdiag[b_stride * i];
+        }
+
+      for (i = 0; i + 1 < N; i++)
+        {
+          if (fabs (d[i]) < fabs (sub[i + 1]))
+            {
+              /* swap rows i and i+1 over columns i, i+1 and i+2 */
+              double t;
+
+              t = d[i]; d[i] = sub[i + 1]; sub[i + 1] = t;
+              t = sup[i]; sup[i] = d[i + 1]; d[i + 1] = t;
+              if (i + 2 < N)
+                {
+                  t = sup2[i]; sup2[i] = sup[i + 1]; sup[i + 1] = t;
+                }
+              t = r[i]; r[i] = r[i + 1]; r[i + 1] = t;
+            }
+
+          if (d[i] == 0.0)
+            {
+              status = GSL_EZERODIV;
+              break;
+            }
+
+          {
+            /* eliminate sub[i+1] using row i */
+            const double m = sub[i + 1] / d[i];
+
+            d[i + 1] -= m * sup[i];
+            if (i + 2 < N)
+              sup[i + 1] -= m * sup2[i];
+            r[i + 1] -= m * r[i];
+          }
+        }
+
+      if (status == GSL_SUCCESS)
+        {
+          if (d[N - 1] == 0.0)
+            {
+              status = GSL_EZERODIV;
+            }
+          else
+            {
+              r[N - 1] /= d[N - 1];
+
+              if (N > 1)
+                {
+                  if (d[N - 2] == 0.0)
+                    status = GSL_EZERODIV;
+                  else
+                    r[N - 2] = (r[N - 2] - sup[N - 2] * r[N - 1]) / d[N - 2];
+                }
+
+              if (status == GSL_SUCCESS)
+                {
+                  for (i = N - 3; i != (size_t) -1; i--)
+                    {
+                      if (d[i] == 0.0)
+                        {
+                          status = GSL_EZERODIV;
+                          break;
+                        }
+                      r[i] = (r[i] - sup[i] * r[i + 1] - sup2[i] * r[i + 2]) / d[i];
+                    }
+                }
+            }
+        }
+
+      if (status == GSL_SUCCESS)
+        {
+          for (i = 0; i < N; i++)
+            x[x_stride * i] = r[i];
+        }
+    }
+
+  if (d != 0)
+    free (d);
+  if (sub != 0)
+    free (sub);
+  if (sup != 0)
+    free (sup);
+  if (sup2 != 0)
+    free (sup2);
+  if (r != 0)
+    free (r);
 
   return status;
 }
@@ -471,12 +605,29 @@ gsl_linalg_solve_symm_tridiag(
     }
   else 
     {
-      return solve_tridiag(diag->data, diag->stride,
-                           offdiag->data, offdiag->stride,
-                           rhs->data, rhs->stride,
-                           solution->data, solution->stride,
-                           diag->size);
+      int status = solve_tridiag(diag->data, diag->stride,
+                                 offdiag->data, offdiag->stride,
+                                 rhs->data, rhs->stride,
+                                 solution->data, solution->stride,
+                                 diag->size);
 
+      /* A zero pivot means the Cholesky-like factorization broke down.
+         Retry with partial pivoting, which handles a zero diagonal
+         (Savannah bug #21837) and only fails for a singular matrix. */
+      if (status == GSL_EZERODIV)
+        {
+          status = solve_tridiag_pivot(diag->data, diag->stride,
+                                       offdiag->data, offdiag->stride,
+                                       offdiag->data, offdiag->stride,
+                                       rhs->data, rhs->stride,
+                                       solution->data, solution->stride,
+                                       diag->size);
+        }
+
+      if (status == GSL_EZERODIV)
+        GSL_ERROR ("matrix is singular", status);
+
+      return status;
     }
 }
 
@@ -506,12 +657,27 @@ gsl_linalg_solve_tridiag(
     }
   else 
     {
-      return solve_tridiag_nonsym(diag->data, diag->stride,
-                                  abovediag->data, abovediag->stride,
-                                  belowdiag->data, belowdiag->stride,
-                                  rhs->data, rhs->stride,
-                                  solution->data, solution->stride,
-                                  diag->size);
+      int status = solve_tridiag_nonsym(diag->data, diag->stride,
+                                        abovediag->data, abovediag->stride,
+                                        belowdiag->data, belowdiag->stride,
+                                        rhs->data, rhs->stride,
+                                        solution->data, solution->stride,
+                                        diag->size);
+
+      if (status == GSL_EZERODIV)
+        {
+          status = solve_tridiag_pivot(diag->data, diag->stride,
+                                       abovediag->data, abovediag->stride,
+                                       belowdiag->data, belowdiag->stride,
+                                       rhs->data, rhs->stride,
+                                       solution->data, solution->stride,
+                                       diag->size);
+        }
+
+      if (status == GSL_EZERODIV)
+        GSL_ERROR ("matrix is singular", status);
+
+      return status;
     }
 }
 

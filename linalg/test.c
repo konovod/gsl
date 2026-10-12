@@ -82,6 +82,7 @@ int test_HH_solve_ls(const gsl_matrix * m, const double * b, const double * actu
 int test_HH_solve(void);
 int test_TDS_solve_dim(unsigned long dim, double d, double od, const double * actual, double eps);
 int test_TDS_solve(void);
+int test_TDS_solve_zero_diag(void);
 int test_TDN_solve_dim(unsigned long dim, double d, double a, double b, const double * actual, double eps);
 int test_TDN_solve(void);
 int test_TDS_cyc_solve_one(const unsigned long dim, const double * d, const double * od, const double * r,
@@ -2828,6 +2829,139 @@ int test_TDS_solve(void)
   return s;
 }
 
+/* Savannah bug #21837: a zero on the diagonal defeats the
+ * Cholesky-like factorization of gsl_linalg_solve_symm_tridiag() (and
+ * the plain elimination of gsl_linalg_solve_tridiag()).  The solvers
+ * must fall back to a pivoted elimination and return a solution.  The
+ * reference vectors are from numpy.linalg.solve. */
+int
+test_TDS_solve_zero_diag(void)
+{
+  int s = 0;
+
+  /* symmetric system from the report */
+  {
+    const double d[] = { 0.00, 1.21, 0.80, 1.55, 0.76 };
+    const double e[] = { 0.82, 0.39, 0.09, 0.68 };
+    const double b[] = { 0.07, 0.62, 0.81, 0.11, 0.65 };
+    const double actual[] = { 0.13626029501189094, 0.085365853658536592,
+                              1.0383945517010773, -0.60009249208545801,
+                              1.3921880192343572 };
+    const size_t N = 5, M = 4;
+    gsl_vector *diag = vector_alloc(N);
+    gsl_vector *offdiag = vector_alloc(M);
+    gsl_vector *rhs = vector_alloc(N);
+    gsl_vector *x = vector_alloc(N);
+    size_t i;
+    int status;
+
+    for (i = 0; i < N; i++)
+      {
+        gsl_vector_set(diag, i, d[i]);
+        gsl_vector_set(rhs, i, b[i]);
+      }
+    for (i = 0; i < M; i++)
+      gsl_vector_set(offdiag, i, e[i]);
+
+    status = gsl_linalg_solve_symm_tridiag(diag, offdiag, rhs, x);
+    gsl_test(status, "  solve_symm_tridiag zero diagonal status (%d)", status);
+    s += (status != GSL_SUCCESS);
+
+    for (i = 0; i < N; i++)
+      {
+        double xi = gsl_vector_get(x, i);
+        int f = check(xi, actual[i], 1.0e-13);
+        if (f)
+          printf("  solve_symm_tridiag zero diagonal [%lu]: %22.18g  %22.18g\n",
+                 (unsigned long) i, xi, actual[i]);
+        s += f;
+      }
+
+    vector_free(x);
+    vector_free(rhs);
+    vector_free(offdiag);
+    vector_free(diag);
+  }
+
+  /* nonsymmetric system with a zero diagonal */
+  {
+    const double d[] = { 0.0, 2.0, 1.0, 3.0 };
+    const double a[] = { 1.0, -1.0, 0.5 };
+    const double l[] = { 0.5, 1.5, -0.5 };
+    const double b[] = { 1.0, 2.0, 3.0, 4.0 };
+    const double actual[] = { 1.5384615384615388, 0.99999999999999989,
+                              0.76923076923076938, 1.4615384615384615 };
+    const size_t N = 4, M = 3;
+    gsl_vector *diag = vector_alloc(N);
+    gsl_vector *above = vector_alloc(M);
+    gsl_vector *below = vector_alloc(M);
+    gsl_vector *rhs = vector_alloc(N);
+    gsl_vector *x = vector_alloc(N);
+    size_t i;
+    int status;
+
+    for (i = 0; i < N; i++)
+      {
+        gsl_vector_set(diag, i, d[i]);
+        gsl_vector_set(rhs, i, b[i]);
+      }
+    for (i = 0; i < M; i++)
+      {
+        gsl_vector_set(above, i, a[i]);
+        gsl_vector_set(below, i, l[i]);
+      }
+
+    status = gsl_linalg_solve_tridiag(diag, above, below, rhs, x);
+    gsl_test(status, "  solve_tridiag zero diagonal status (%d)", status);
+    s += (status != GSL_SUCCESS);
+
+    for (i = 0; i < N; i++)
+      {
+        double xi = gsl_vector_get(x, i);
+        int f = check(xi, actual[i], 1.0e-13);
+        if (f)
+          printf("  solve_tridiag zero diagonal [%lu]: %22.18g  %22.18g\n",
+                 (unsigned long) i, xi, actual[i]);
+        s += f;
+      }
+
+    vector_free(x);
+    vector_free(rhs);
+    vector_free(below);
+    vector_free(above);
+    vector_free(diag);
+  }
+
+  /* a genuinely singular system must still be rejected */
+  {
+    const size_t N = 3;
+    gsl_vector *diag = vector_alloc(N);
+    gsl_vector *offdiag = vector_alloc(N - 1);
+    gsl_vector *rhs = vector_alloc(N);
+    gsl_vector *x = vector_alloc(N);
+    size_t i;
+    int status;
+
+    /* the zero matrix is singular */
+    for (i = 0; i < N; i++)
+      gsl_vector_set(diag, i, 0.0);
+    for (i = 0; i + 1 < N; i++)
+      gsl_vector_set(offdiag, i, 0.0);
+
+    status = gsl_linalg_solve_symm_tridiag(diag, offdiag, rhs, x);
+    gsl_test(status != GSL_EZERODIV,
+             "  solve_symm_tridiag singular matrix returns GSL_EZERODIV");
+    s += (status != GSL_EZERODIV);
+
+    vector_free(x);
+    vector_free(rhs);
+    vector_free(offdiag);
+    vector_free(diag);
+  }
+
+  return s;
+}
+
 int
 test_TDS_cyc_solve_one(const unsigned long dim,
                        const double * d, const double * od,
@@ -3282,6 +3416,56 @@ test_tridiag_complex(gsl_rng * r)
     s += f;
   }
 
+  /* zero on the diagonal: solvable through pivoting (Savannah bug
+     #21837); reference solutions from numpy.linalg.solve */
+  {
+    gsl_complex d[4], lo[3], up[3], b[4], xexp[4];
+
+    d[0] = gsl_complex_rect(0.0, 0.0);
+    d[1] = gsl_complex_rect(1.5, 0.3);
+    d[2] = gsl_complex_rect(0.8, -0.2);
+    d[3] = gsl_complex_rect(2.0, 0.5);
+
+    b[0] = gsl_complex_rect(1.0, 0.0);
+    b[1] = gsl_complex_rect(0.0, 2.0);
+    b[2] = gsl_complex_rect(3.0, -1.0);
+    b[3] = gsl_complex_rect(0.5, 0.5);
+
+    /* symmetric: below = above */
+    lo[0] = gsl_complex_rect(0.7, 0.4);
+    lo[1] = gsl_complex_rect(0.5, -0.6);
+    lo[2] = gsl_complex_rect(0.9, 0.1);
+
+    xexp[0] = gsl_complex_rect(-3.180013149243917, 8.7854043392504906);
+    xexp[1] = gsl_complex_rect(1.0769230769230769, -0.61538461538461542);
+    xexp[2] = gsl_complex_rect(5.4700854700854684, 2.0085470085470076);
+    xexp[3] = gsl_complex_rect(-2.2051282051282044, -0.3760683760683759);
+
+    f = test_tridiag_complex_fixed("  complex symm tridiag zero diagonal",
+                                   d, lo, lo, b, xexp, 4, 0, 1.0e-10);
+    gsl_test(f, "  complex symmetric tridiagonal zero diagonal solve");
+    s += f;
+
+    /* nonsymmetric */
+    lo[0] = gsl_complex_rect(0.3, -0.4);
+    lo[1] = gsl_complex_rect(-0.5, 0.2);
+    lo[2] = gsl_complex_rect(0.2, 0.7);
+
+    up[0] = gsl_complex_rect(0.7, 0.4);
+    up[1] = gsl_complex_rect(0.5, -0.6);
+    up[2] = gsl_complex_rect(0.9, 0.1);
+
+    xexp[0] = gsl_complex_rect(-12.950465772280996, -1.0286713002309824);
+    xexp[1] = gsl_complex_rect(1.0769230769230769, -0.61538461538461542);
+    xexp[2] = gsl_complex_rect(4.2807460281872256, 0.5937253961384642);
+    xexp[3] = gsl_complex_rect(-0.27969800144950968, -1.2377091491169983);
+
+    f = test_tridiag_complex_fixed("  complex nonsym tridiag zero diagonal",
+                                   d, lo, up, b, xexp, 4, 1, 1.0e-10);
+    gsl_test(f, "  complex nonsymmetric tridiagonal zero diagonal solve");
+    s += f;
+  }
+
   /* random diagonally dominant systems: residual check only */
   {
     size_t N;
@@ -3347,9 +3531,15 @@ test_tridiag_complex(gsl_rng * r)
     status = gsl_linalg_complex_solve_cyc_tridiag(d2, o2b, o2b, r2, x2);
     gsl_test(status != GSL_EBADLEN, "  complex cyclic tridiag N<3 returns GSL_EBADLEN");
 
+    /* a zero pivot is now handled by pivoting; only a singular matrix
+       is rejected (Savannah bug #21837) */
     gsl_vector_complex_set(d3, 0, gsl_complex_rect(0.0, 0.0));
+    gsl_vector_complex_set(d3, 1, gsl_complex_rect(0.0, 0.0));
+    gsl_vector_complex_set(d3, 2, gsl_complex_rect(0.0, 0.0));
+    gsl_vector_complex_set(o2, 0, gsl_complex_rect(0.0, 0.0));
+    gsl_vector_complex_set(o2, 1, gsl_complex_rect(0.0, 0.0));
     status = gsl_linalg_complex_solve_symm_tridiag(d3, o2, r3, x3);
-    gsl_test(status != GSL_EZERODIV, "  complex symm tridiag zero pivot returns GSL_EZERODIV");
+    gsl_test(status != GSL_EZERODIV, "  complex symm tridiag singular returns GSL_EZERODIV");
 
     gsl_vector_complex_free(x2);
     gsl_vector_complex_free(r2);
@@ -3729,6 +3919,7 @@ main(void)
 
   gsl_test(test_HH_solve(),              "Householder solve");
   gsl_test(test_TDS_solve(),             "Tridiagonal symmetric solve");
+  gsl_test(test_TDS_solve_zero_diag(),   "Tridiagonal solve with a zero diagonal");
   gsl_test(test_TDS_cyc_solve(),         "Tridiagonal symmetric cyclic solve");
   gsl_test(test_TDN_solve(),             "Tridiagonal nonsymmetric solve");
   gsl_test(test_TDN_cyc_solve(),         "Tridiagonal nonsymmetric cyclic solve");

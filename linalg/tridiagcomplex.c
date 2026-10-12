@@ -122,10 +122,6 @@ solve_tridiag(
   if (gamma != 0)
     free (gamma);
 
-  if (status == GSL_EZERODIV) {
-    GSL_ERROR ("matrix must be positive definite", status);
-  }
-
   return status;
 }
 
@@ -201,9 +197,154 @@ solve_tridiag_nonsym(
   if (alpha != 0)
     free (alpha);
 
-  if (status == GSL_EZERODIV) {
-    GSL_ERROR ("matrix must be positive definite", status);
-  }
+  return status;
+}
+
+/* Gaussian elimination with partial pivoting for a general complex
+ * tridiagonal system, the complex analogue of solve_tridiag_pivot() in
+ * tridiag.c.  Pivot selection is by modulus and the factorization is
+ * stored as a banded upper triangular matrix with two superdiagonals,
+ * because pivoting can create one entry above the first superdiagonal.
+ */
+static
+int
+solve_tridiag_pivot(
+  const double diagdata[], size_t d_stride,
+  const double abovediagdata[], size_t a_stride,
+  const double belowdiagdata[], size_t b_stride,
+  const double rhsdata[], size_t r_stride,
+  double xdata[], size_t x_stride,
+  size_t N)
+{
+  int status = GSL_SUCCESS;
+  gsl_complex *d = (gsl_complex *) malloc (N * sizeof (gsl_complex));
+  gsl_complex *sub = (gsl_complex *) malloc (N * sizeof (gsl_complex));
+  gsl_complex *sup = (gsl_complex *) malloc (N * sizeof (gsl_complex));
+  gsl_complex *sup2 = (gsl_complex *) malloc (N * sizeof (gsl_complex));
+  gsl_complex *r = (gsl_complex *) malloc (N * sizeof (gsl_complex));
+  const gsl_complex *diag = (const gsl_complex *)diagdata;
+  const gsl_complex *abovediag = (const gsl_complex *)abovediagdata;
+  const gsl_complex *belowdiag = (const gsl_complex *)belowdiagdata;
+  const gsl_complex *rhs = (const gsl_complex *)rhsdata;
+  gsl_complex *x = (gsl_complex *)xdata;
+
+  if (N == 0)
+    {
+      GSL_ERROR ("matrix size must be positive", GSL_EBADLEN);
+    }
+  else if (d == 0 || sub == 0 || sup == 0 || sup2 == 0 || r == 0)
+    {
+      GSL_ERROR ("failed to allocate working space", GSL_ENOMEM);
+    }
+  else
+    {
+      size_t i;
+
+      for (i = 0; i < N; i++)
+        {
+          d[i] = diag[d_stride * i];
+          sub[i] = GSL_COMPLEX_ZERO;
+          sup[i] = GSL_COMPLEX_ZERO;
+          sup2[i] = GSL_COMPLEX_ZERO;
+          r[i] = rhs[r_stride * i];
+        }
+      for (i = 0; i + 1 < N; i++)
+        {
+          sup[i] = abovediag[a_stride * i];
+          sub[i + 1] = belowdiag[b_stride * i];
+        }
+
+      for (i = 0; i + 1 < N; i++)
+        {
+          if (gsl_complex_abs (d[i]) < gsl_complex_abs (sub[i + 1]))
+            {
+              /* swap rows i and i+1 over columns i, i+1 and i+2 */
+              gsl_complex t;
+
+              t = d[i]; d[i] = sub[i + 1]; sub[i + 1] = t;
+              t = sup[i]; sup[i] = d[i + 1]; d[i + 1] = t;
+              if (i + 2 < N)
+                {
+                  t = sup2[i]; sup2[i] = sup[i + 1]; sup[i + 1] = t;
+                }
+              t = r[i]; r[i] = r[i + 1]; r[i + 1] = t;
+            }
+
+          if (COMPLEX_EQ (d[i], GSL_COMPLEX_ZERO))
+            {
+              status = GSL_EZERODIV;
+              break;
+            }
+
+          {
+            /* eliminate sub[i+1] using row i */
+            const gsl_complex m = gsl_complex_div (sub[i + 1], d[i]);
+
+            d[i + 1] = gsl_complex_sub (d[i + 1], gsl_complex_mul (m, sup[i]));
+            if (i + 2 < N)
+              sup[i + 1] = gsl_complex_sub (sup[i + 1], gsl_complex_mul (m, sup2[i]));
+            r[i + 1] = gsl_complex_sub (r[i + 1], gsl_complex_mul (m, r[i]));
+          }
+        }
+
+      if (status == GSL_SUCCESS)
+        {
+          if (COMPLEX_EQ (d[N - 1], GSL_COMPLEX_ZERO))
+            {
+              status = GSL_EZERODIV;
+            }
+          else
+            {
+              r[N - 1] = gsl_complex_div (r[N - 1], d[N - 1]);
+
+              if (N > 1)
+                {
+                  if (COMPLEX_EQ (d[N - 2], GSL_COMPLEX_ZERO))
+                    status = GSL_EZERODIV;
+                  else
+                    r[N - 2] = gsl_complex_div (
+                        gsl_complex_sub (r[N - 2],
+                                         gsl_complex_mul (sup[N - 2], r[N - 1])),
+                        d[N - 2]);
+                }
+
+              if (status == GSL_SUCCESS)
+                {
+                  for (i = N - 3; i != (size_t) -1; i--)
+                    {
+                      if (COMPLEX_EQ (d[i], GSL_COMPLEX_ZERO))
+                        {
+                          status = GSL_EZERODIV;
+                          break;
+                        }
+                      r[i] = gsl_complex_div (
+                          gsl_complex_sub (
+                              gsl_complex_sub (r[i],
+                                               gsl_complex_mul (sup[i], r[i + 1])),
+                              gsl_complex_mul (sup2[i], r[i + 2])),
+                          d[i]);
+                    }
+                }
+            }
+        }
+
+      if (status == GSL_SUCCESS)
+        {
+          for (i = 0; i < N; i++)
+            x[x_stride * i] = r[i];
+        }
+    }
+
+  if (d != 0)
+    free (d);
+  if (sub != 0)
+    free (sub);
+  if (sup != 0)
+    free (sup);
+  if (sup2 != 0)
+    free (sup2);
+  if (r != 0)
+    free (r);
 
   return status;
 }
@@ -509,12 +650,26 @@ gsl_linalg_complex_solve_symm_tridiag(
     }
   else
     {
-      return solve_tridiag(diag->data, diag->stride,
-                           offdiag->data, offdiag->stride,
-                           rhs->data, rhs->stride,
-                           solution->data, solution->stride,
-                           diag->size);
+      int status = solve_tridiag(diag->data, diag->stride,
+                                 offdiag->data, offdiag->stride,
+                                 rhs->data, rhs->stride,
+                                 solution->data, solution->stride,
+                                 diag->size);
 
+      if (status == GSL_EZERODIV)
+        {
+          status = solve_tridiag_pivot(diag->data, diag->stride,
+                                       offdiag->data, offdiag->stride,
+                                       offdiag->data, offdiag->stride,
+                                       rhs->data, rhs->stride,
+                                       solution->data, solution->stride,
+                                       diag->size);
+        }
+
+      if (status == GSL_EZERODIV)
+        GSL_ERROR ("matrix is singular", status);
+
+      return status;
     }
 }
 
@@ -544,12 +699,27 @@ gsl_linalg_complex_solve_tridiag(
     }
   else
     {
-      return solve_tridiag_nonsym(diag->data, diag->stride,
-                                  abovediag->data, abovediag->stride,
-                                  belowdiag->data, belowdiag->stride,
-                                  rhs->data, rhs->stride,
-                                  solution->data, solution->stride,
-                                  diag->size);
+      int status = solve_tridiag_nonsym(diag->data, diag->stride,
+                                        abovediag->data, abovediag->stride,
+                                        belowdiag->data, belowdiag->stride,
+                                        rhs->data, rhs->stride,
+                                        solution->data, solution->stride,
+                                        diag->size);
+
+      if (status == GSL_EZERODIV)
+        {
+          status = solve_tridiag_pivot(diag->data, diag->stride,
+                                       abovediag->data, abovediag->stride,
+                                       belowdiag->data, belowdiag->stride,
+                                       rhs->data, rhs->stride,
+                                       solution->data, solution->stride,
+                                       diag->size);
+        }
+
+      if (status == GSL_EZERODIV)
+        GSL_ERROR ("matrix is singular", status);
+
+      return status;
     }
 }
 

@@ -1590,10 +1590,15 @@ overdetermined system.  A non-square matrix is rejected with
 
 The functions described in this section efficiently solve symmetric,
 non-symmetric and cyclic tridiagonal systems with minimal storage.
-Note that the current implementations of these functions use a variant
-of Cholesky decomposition, so the tridiagonal matrix must be positive
-definite.  For non-positive definite matrices, the functions return
-the error code @code{GSL_EZERODIV}.
+These functions use a variant of Cholesky decomposition or plain
+Gaussian elimination without pivoting, so they are most efficient for
+positive definite matrices.  The non-cyclic solvers
+@code{gsl_linalg_solve_tridiag} and @code{gsl_linalg_solve_symm_tridiag}
+and their complex counterparts detect a zero pivot during the
+factorization and fall back to Gaussian elimination with partial
+pivoting, so a zero on the diagonal is handled; only a singular matrix
+returns the error code @code{GSL_EZERODIV}.  The cyclic functions do not
+pivot and return @code{GSL_EZERODIV} for a non-positive definite matrix.
 
 @deftypefun int gsl_linalg_solve_tridiag (const gsl_vector * @var{diag}, const gsl_vector * @var{e}, const gsl_vector * @var{f}, const gsl_vector * @var{b}, gsl_vector * @var{x})
 @deftypefunx int gsl_linalg_complex_solve_tridiag (const gsl_vector_complex * @var{diag}, const gsl_vector_complex * @var{e}, const gsl_vector_complex * @var{f}, const gsl_vector_complex * @var{b}, gsl_vector_complex * @var{x})
