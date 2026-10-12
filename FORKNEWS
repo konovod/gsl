@@ -49,7 +49,6 @@ One line per change: date | tag | description | commit(s).
   2026-10-01 | [upstream] | specfunc: fix erfc/log_erfc/erf_Z for huge arguments  | 708791c25
   2026-10-01 | [upstream] | specfunc: test vectors for complex sin/cos             | 48a49003f
   2026-10-01 | [rejected] | min: bound gsl_min_find_bracket to the initial interval | - (see below)
-  2026-10-01 | [rejected] | specfunc: duplicate complex sin/cos implementations    | - (see below)
   2026-10-01 | [rejected] | linalg: complex LU_decomp "returns incorrect results" | - (see below)
   2026-10-02 | [upstream] | specfunc: Steed starting lambda at the turning point    | 90d9037a5
   2026-10-01 | [upstream] | cdf: no NaN from beta_cont_frac under fp contraction    | 1b1d94ee9
@@ -191,10 +190,10 @@ One line per change: date | tag | description | commit(s).
   2026-10-04 | [upstream] | histogram: reject an all-empty histogram pdf        | b60a47106
   2026-10-04 | [upstream] | specfunc: eta_int leading term via ldexp            | f774247e7
   2026-10-04 | [upstream] | specfunc: floor(x+0.5) -> rint                      | b681165e1
-  2026-10-04 | [rejected] | Group R: 40116, 45099, 68663, 68704                 | - (see below)
+  2026-10-04 | [rejected] | Group R: 40116, 45099, 68704                         | - (see below)
   2026-10-04 | [rejected] | meta: the remaining feature/perf/API requests (35)    | - (see below)
   2026-10-04 | [upstream] | bspline: test and document the Greville rejection    | c8543330d
-  2026-10-04 | [rejected] | randist/specfunc/cblas: the Group C non-bugs         | - (see below)
+  2026-10-04 | [rejected] | randist and specfunc: the Group C non-bugs           | - (see below)
   2026-10-04 | [upstream] | cblas: reorder the gemm loops to reuse a row of C   | 39cde03e2
   2026-10-04 | [upstream] | permutation: one backward scan for next and prev    | c382ed86e
   2026-10-04 | [upstream] | roots: skip the redundant false-position evaluation | 0697ba772
@@ -268,6 +267,11 @@ One line per change: date | tag | description | commit(s).
 
   2026-10-12 | [upstream] | specfunc: pochrel reflection for large negative a | e96143012
   2026-10-12 | [upstream] | specfunc: large-n series for gsl_sf_ellint_P      | 1bbdc4315
+  2026-10-12 | [upstream] | specfunc: drop the GAMMA_INC_A_0 alias             | 727a96315
+  2026-10-12 | [upstream] | complex: share the complex sin/cos with specfunc   | 3bc7c088c
+  2026-10-12 | [upstream] | blas: validate enumerated arguments                | 7eeff969a
+  2026-10-12 | [upstream] | doc: document the blas argument errors             | 8207436a4
+  2026-10-12 | [fork]     | cmake: build the blas argument-checking test       | ff38bc937
 
 
 ## [upstream] rng: make the random() generators produce the documented sequences
@@ -714,9 +718,14 @@ correct there (`x` for positive `x`), but the error estimate was broken:
 below); the error is now zero at the underflow and infinity limits.
 
 
-## [rejected] specfunc: the duplicated complex sin and cos implementations
+## [upstream] complex: share the complex sin and cos implementation with specfunc
 
-Not applied.  The report is not a bug.
+Commit: 3bc7c088c
+
+The report is not a bug - the submitter withdrew it, writing that "the
+findings were due to rounding errors and both implementations ultimately
+rely on the identities" - but it did expose a genuine duplication, which
+this change removes.
 
 `gsl_complex_sin()` and `gsl_complex_cos()` in `complex/math.c` and
 `gsl_sf_complex_sin_e()` and `gsl_sf_complex_cos_e()` in
@@ -724,13 +733,10 @@ Not applied.  The report is not a bug.
 they obtain `cosh(y)` and `sinh(y)`: from libm in one case, from
 `0.5*(exp(y) +- 1/exp(y))` or from `sinh_series()` in the other.  For
 `|y| < 1` the specfunc side uses a series, which is the more accurate
-of the two, not less.  Both return values good to 2.3e-16 relative
-across the tested range.
-
-The submitter withdrew the substance of the report himself, writing
-that "the findings were due to rounding errors and both
-implementations ultimately rely on the identities" and "finding 3
-can be ignored".
+of the two, not less.  Measuring the two against each other over the 396
+`complex` sin/cos vectors gives a worst relative difference of `1.2e-16`
+(the complex vectors use a `10*eps` tolerance), so the differing results
+in the report were rounding.
 
 Finding 3 did not hold in any case.  It claimed
 `gsl_complex_cos(-6.2 - 5.3i)` should equal `gsl_complex_cos(6.2 -
@@ -741,21 +747,30 @@ consistent answer, and the values quoted in the report do not match
 the identity at all, so they came from an intermediate of questionable
 accuracy rather than from a wrong implementation.
 
-What the report does leave is a gap in the tests, which is fixed
-separately in commit 48a49003f: `gsl_sf_complex_sin_e` and
-`gsl_sf_complex_cos_e` were tested at a single point, `(1.0, 5.0)`.
-The `complex` module does have 198 vectors each for `sin` and `cos`,
-but their imaginary arguments never exceed `|y| = 2`, so the
-`specfunc` branches at `specfunc/trig.c:348`, `:358` and `:368` were
-nearly all untested.
+The reporter's suggested refactoring - making `gsl_complex_sin()` call
+`gsl_sf_complex_sin_e()` - was first set aside because a naive
+delegation changes results and hands the overflow decision to a routine
+that invokes the error handler.  It is now applied with guards: the
+complex functions call the specfunc routines for finite
+`|imag| < GSL_LOG_DBL_MAX` and keep the previous libm form otherwise.
+The bound is load-bearing - the specfunc routines report overflow
+through the error handler, and a NaN imaginary part reaches that branch,
+so an unguarded delegation would turn `gsl_complex_sin(0 + NaN i)` into
+`+Inf` and abort on a huge argument.  NaN and Infinity therefore take
+the libm path and propagate as before, and `I == 0` keeps the existing
+signed-zero rule.
 
-The suggested refactoring - making `complex/gsl_complex_sin()` call
-`gsl_sf_complex_sin_e()` - is not done.  It would change the results
-returned by a module that has no error-estimate machinery of its own,
-and with the discrepancy attributed to rounding there is no
-correctness argument for it.
+Results change by at most one ulp for `|imag| < 1`; the complex sin/cos
+vectors pass unchanged.  New vectors in `complex/test_source.c` pin the
+NaN propagation and the overflow threshold.  Negative control: making
+the delegation unconditional aborts `complex.test` in
+`specfunc/trig.c`'s overflow branch.  Full `ctest` 57/57.
 
-Kept here for the record.
+Note for upstream: this introduces a source dependency `complex ->
+specfunc`.  `specfunc` already depends on `complex` and both are in one
+library, so it links, but the layering is a judgement call.
+
+Files: `complex/math.c`, `complex/test_source.c`.
 
 See Savannah bug #66862.
 
@@ -4861,12 +4876,14 @@ Files: the `specfunc` sources listed above, `specfunc/test_bessel.c`,
 See Savannah bug #47348.
 
 
-## [rejected] Group R: 40116, 45099, 68663, 68704
+## [rejected] Group R: 40116, 45099, 68704
 
 Commits: none.
 
-Four reports from the remaining open list were examined and deliberately
-left unchanged.  Recorded here so they are not re-investigated.
+Three reports from the remaining open list were examined and deliberately
+left unchanged.  Recorded here so they are not re-investigated.  A fourth,
+`#68663`, was later taken as a refactor and is recorded separately:
+`[upstream] specfunc: drop the GAMMA_INC_A_0 alias` (commit `727a96315`).
 
 ### #40116 - "possible error in integration routines"
 
@@ -4902,13 +4919,6 @@ gives `H g = g - A s - B y` with `B = s.g / s.y` and
 `multimin/vector_bfgs2.c`.  The formula is the standard one; the concern
 is a misunderstanding.  Not a bug.
 
-### #68663 - remove the GAMMA_INC_A_0 macro
-
-`GAMMA_INC_A_0(x, result)` is a one-line alias for
-`gsl_sf_expint_E1_e(x, result)` used in two places.  Removing it adds no
-correctness; it is a pure readability refactor, outside the eligibility
-rule for this review.  Not a bug.
-
 ### #68704 - introduce gsl_histogram_variance
 
 A feature request for a new public function `gsl_histogram_variance`,
@@ -4917,7 +4927,7 @@ wrapper kept for compatibility.  New API, and the proposed rename breaks
 the existing name; `histogram/stat.c` is numerically correct as it
 stands.  Out of scope.  Not a bug.
 
-Savannah bugs #40116, #45099, #68663 and #68704.
+Savannah bugs #40116, #45099 and #68704.
 
 
 ## [rejected] meta: the remaining feature, performance and API requests
@@ -5055,13 +5065,16 @@ Full `ctest` 56/56 on MSVC x64.
 Savannah bug #34361.
 
 
-## [rejected] randist, specfunc and cblas: the Group C non-bugs
+## [rejected] randist and specfunc: the Group C non-bugs
 
-Not applied.  The four reports the working list grouped as the last
+Not applied.  The reports the working list grouped as the last
 numerical-accuracy items were reproduced against the built
-`build-cmake/gsl.dll`, and three of them describe no defect in the
+`build-cmake/gsl.dll`, and the two below describe no defect in the
 current tree or require a new algorithm.  No code, test or documentation
-change follows from any of them.
+change follows from either.  A third, `#29834` (the BLAS wrapper argument
+checking), was later taken as a refactor and is recorded separately as
+`[upstream] blas: validate enumerated arguments with the CBLAS
+predicates` (commits `7eeff969a`, `8207436a4`).
 
 `#21831` - "Levy random number generator for alpha < 1" - **not a bug.**
 The 2007 report says `gsl_ran_levy()` loses accuracy below `alpha = 1`
@@ -5087,16 +5100,16 @@ only the longstanding `TODO` and `specfunc/TODO` notes to add the
 integrals.  Importing them (and the fix) is new API and a new algorithm,
 excluded by the eligibility rule.
 
-`#29834` - "insufficient argument checking in blas wrapper" - **already
-addressed upstream.**  The attached `error_cblas_v2.h` was integrated as
-`cblas/error_cblas.h` plus `error_cblas_l2.h`/`error_cblas_l3.h` and
-wired into the `source_*.h` kernels (commits `3b3c12ef1`, `36434582b`,
-`f30cb5cd6`, `e9a1275f0`).  The `gsl_blas_*` wrappers perform their
-dimension checks through `GSL_ERROR(..., GSL_EBADLEN)`; the residual
-wish to share the checking macros between the two layers has no reported
-failing case and is an open-ended refactor.
+`#29834` - "insufficient argument checking in blas wrapper" - the
+attached `error_cblas_v2.h` was integrated long ago as
+`cblas/error_cblas.h` plus `error_cblas_l2.h`/`error_cblas_l3.h` (commits
+`3b3c12ef1`, `36434582b`, `f30cb5cd6`, `e9a1275f0`), but the residual
+wish to share the checking between the two layers and to validate the
+wrappers' enumerated arguments was still open.  It is now applied; see
+`[upstream] blas: validate enumerated arguments with the CBLAS
+predicates` (commit `7eeff969a`).
 
-Savannah bugs #21831, #25320 and #29834.
+Savannah bugs #21831 and #25320.
 
 
 ## [upstream] cblas: reorder the gemm loops to reuse a row of C
@@ -7049,6 +7062,57 @@ disagreement and a non-decayed value against zero.
 File: `ode-initval2/test.c`.
 
 Savannah bug #44865.
+
+
+## [upstream] specfunc: drop the GAMMA_INC_A_0 alias
+
+Commit: 727a96315
+
+`GAMMA_INC_A_0(x, result)` was a one-line alias for
+`gsl_sf_expint_E1_e(x, result)`, used twice in `gamma_inc.c`.  Replaced
+with the direct calls and the macro removed.  The two call sites now name
+the routine they call, which matters because `Gamma(0, x)` is the
+exponential integral E1 rather than a generic `Gamma` evaluation.
+
+Pure rename: the macro expanded to exactly the call that replaces it, so
+no numerical change is possible.  Full `ctest` is unchanged.  No negative
+control is meaningful for a rename.
+
+File: `specfunc/gamma_inc.c`.
+
+Savannah bug #68663.
+
+
+## [upstream] blas: validate enumerated arguments with the CBLAS predicates
+
+Commits: 7eeff969a (code and test), 8207436a4 (docs); the fork-only CMake
+registration is ff38bc937.
+
+The 2010 report asked that the CBLAS and GSL wrapper argument checking be
+shared.  The CBLAS side had already been integrated as
+`cblas/error_cblas.h` and `error_cblas_{l2,l3}.h`, but the wrappers in
+`blas/blas.c` still checked only dimensions, and an out-of-range
+`CBLAS_TRANSPOSE_t`/`UPLO_t`/`SIDE_t`/`DIAG_t` value reached
+`cblas_xerbla()`, which prints and calls `abort()`, ignoring the GSL error
+handler.  This is reproducible against the built DLL, for example an
+invalid `TransB` in `gsl_blas_dgemm`.
+
+The validity tests are now factored into `CBLAS_*_IS_VALID` predicates in
+`cblas/error_cblas.h`, with the existing `CHECK_*` macros rebuilt on them
+(behaviour unchanged).  All 54 `gsl_blas_*` wrappers that take an
+enumerated argument validate it at entry and return `GSL_EINVAL` through
+the error handler before the value can reach the kernel; no valid
+argument is affected.  Both manuals note the new `GSL_EINVAL` return.
+
+New test `blas/test.c` calls every one of the 54 wrappers: a valid call
+must succeed and each enumerated argument in turn must give `GSL_EINVAL`.
+Negative control: with the wrapper checks disabled, `blas.test` reaches
+`cblas_xerbla()` and aborts.  Full `ctest` 57/57.
+
+Files: `blas/blas.c`, `blas/test.c`, `blas/Makefile.am`,
+`cblas/error_cblas.h`, `doc/blas.rst`, `doc_texinfo/blas.texi`.
+
+Savannah bug #29834.
 
 
 
