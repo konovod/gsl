@@ -38,7 +38,8 @@ __BEGIN_DECLS
 
 
 /* Calculate x^n.
- * Does not check for overflow/underflow.
+ * Does not check for overflow/underflow, except that a zero
+ * base raised to a negative power is reported as GSL_EOVRFLW.
  */
 int     gsl_sf_pow_int_e(double x, int n, gsl_sf_result * result);
 double  gsl_sf_pow_int(const double x, const int n);
