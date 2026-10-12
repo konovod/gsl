@@ -259,6 +259,8 @@ One line per change: date | tag | description | commit(s).
 
   2026-10-08 | [upstream] | multifit_nlinear: floor the finite-difference fvv step | 5ed006141
 
+  2026-10-12 | [upstream] | specfunc: share the pi/4 constants in trig.c   | 68af86f13
+
 
 ## [upstream] rng: make the random() generators produce the documented sequences
 
@@ -6708,6 +6710,47 @@ Files: `multifit_nlinear/fdfvv.c`, `multifit_nlinear/test_fdf.c`,
 `multifit_nlinear/TODO`.
 
 Savannah bug #50712.
+
+
+## [upstream] specfunc: share the pi/4 constants in trig.c
+
+Commit: 68af86f13
+
+Savannah bug #66886 ("Feature: refactoring of specfunc/trig.c") is a
+refactor request: the three-term split of pi/4 was written out four
+times.  It names no defect, and the attached `specfunc_trig_.diff` does
+not apply to the fork -- the fork dropped the doxygen `@brief` comments
+that patch context expects, and it has since added a `REM_PIO2_THRESHOLD`
+branch to both angle-restriction functions (#45746) that the patch does
+not know about.  The change was reconstructed by hand.
+
+`P1`, `P2`, `P3` are now file-scope constants.  In `gsl_sf_sin_e` and
+`gsl_sf_cos_e` the local copies are simply deleted; the small-argument
+expressions are unchanged.  In `gsl_sf_angle_restrict_symm_err_e` and
+`gsl_sf_angle_restrict_pos_err_e` the old locals were `4 *` the pieces
+(pi), so the reduction now spells the factor out: `4*y*P1`, `8*(P1+P2+P3)`
+for `TwoPi`, and `8*P*` for the plus/minus `TwoPi` corrections.  The
+factors are powers of two, and the four sets of literals round to the
+same three doubles, so the arithmetic is bit-for-bit unchanged.
+
+The same patch's incidental extras are kept: the `1/16`
+loss-of-precision factor is named `M_1_16`, and the `GSL_ELOSS` message
+in the two functions now reads "Could not converge with given angle
+theta" instead of "error".
+
+Verification.  There is no regression test to add -- the change does not
+alter behaviour, so the control is bit-exactness.  A scratch harness
+prints `%a` (hex) for `gsl_sf_sin_e`, `gsl_sf_cos_e`,
+`gsl_sf_angle_restrict_symm_err_e` and `gsl_sf_angle_restrict_pos_err_e`
+over a sweep crossing the `REM_PIO2_THRESHOLD` (2^21) and the `1/16`
+boundaries -- 0, denormals, 1e-16, `0.0625/{GSL_SQRT_DBL_EPSILON,
+GSL_DBL_EPSILON}`, 1, 100, 2^21-1/2^21/2^21+1, 1e9, 1e12, 1e15, 1e16,
+and +/-Inf -- 120 lines in all.  The before and after outputs are
+identical line for line.  The full `ctest` suite is 56/56 on MSVC x64.
+
+Files: `specfunc/trig.c`.
+
+Savannah bug #66886.
 
 
 
