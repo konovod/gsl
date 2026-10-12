@@ -32,6 +32,18 @@
 #include "chebyshev.h"
 #include "cheb_eval.c"
 
+/* The argument reductions below split pi/4 into three parts.  P1, P2 and
+ * P3 are binary-scaled copies of one another, so the multiplications by
+ * 4 and 8 used to form pi and 2 pi in the angle-restriction functions
+ * are exact, and the reduced values are unchanged by sharing them. */
+#define P1      7.85398125648498535156e-1
+#define P2      3.77489470793079817668e-8
+#define P3      2.69515142907905952645e-15
+
+/* 1/16, the threshold factor for the angle-restriction loss of
+ * precision. */
+#define M_1_16  0.0625
+
 /* sinh(x) series
  * double-precision for |x| < 1.0
  */
@@ -439,10 +451,6 @@ gsl_sf_sin_e(double x, gsl_sf_result * result)
   /* CHECK_POINTER(result) */
 
   {
-    const double P1 = 7.85398125648498535156e-1;
-    const double P2 = 3.77489470793079817668e-8;
-    const double P3 = 2.69515142907905952645e-15;
-
     const double sgn_x = GSL_SIGN(x);
     const double abs_x = fabs(x);
 
@@ -533,10 +541,6 @@ gsl_sf_cos_e(double x, gsl_sf_result * result)
   /* CHECK_POINTER(result) */
 
   {
-    const double P1 = 7.85398125648498535156e-1;
-    const double P2 = 3.77489470793079817668e-8;
-    const double P3 = 2.69515142907905952645e-15;
-
     const double abs_x = fabs(x);
 
     if(abs_x < GSL_ROOT4_DBL_EPSILON) {
@@ -929,34 +933,31 @@ int gsl_sf_angle_restrict_symm_err_e(const double theta, gsl_sf_result * result)
 {
   if(fabs(theta) > REM_PIO2_THRESHOLD && gsl_finite(theta)) {
     int stat = angle_restrict_pio2(theta, 0, &result->val, &result->err);
-    if(fabs(theta) > 0.0625/GSL_DBL_EPSILON) {
+    if(fabs(theta) > M_1_16/GSL_DBL_EPSILON) {
       result->val = GSL_NAN;
       result->err = GSL_NAN;
-      GSL_ERROR ("error", GSL_ELOSS);
+      GSL_ERROR ("Could not converge with given angle theta", GSL_ELOSS);
     }
     return stat;
   }
   else {
     /* synthetic extended precision constants */
-    const double P1 = 4 * 7.8539812564849853515625e-01;
-    const double P2 = 4 * 3.7748947079307981766760e-08;
-    const double P3 = 4 * 2.6951514290790594840552e-15;
-    const double TwoPi = 2*(P1 + P2 + P3);
+    const double TwoPi = 8*(P1 + P2 + P3);
 
     const double y = GSL_SIGN(theta) * 2 * floor(fabs(theta)/TwoPi);
-    double r = ((theta - y*P1) - y*P2) - y*P3;
+    double r = ((theta - 4*y*P1) - 4*y*P2) - 4*y*P3;
 
-    if(r >  M_PI) { r = (((r-2*P1)-2*P2)-2*P3); }  /* r-TwoPi */
-    else if (r < -M_PI) r = (((r+2*P1)+2*P2)+2*P3); /* r+TwoPi */
+    if(r >  M_PI) { r = (((r-8*P1)-8*P2)-8*P3); }  /* r-TwoPi */
+    else if (r < -M_PI) r = (((r+8*P1)+8*P2)+8*P3); /* r+TwoPi */
 
     result->val = r;
 
-    if(fabs(theta) > 0.0625/GSL_DBL_EPSILON) {
+    if(fabs(theta) > M_1_16/GSL_DBL_EPSILON) {
       result->val = GSL_NAN;
       result->err = GSL_NAN;
-      GSL_ERROR ("error", GSL_ELOSS);
+      GSL_ERROR ("Could not converge with given angle theta", GSL_ELOSS);
     }
-    else if(fabs(theta) > 0.0625/GSL_SQRT_DBL_EPSILON) {
+    else if(fabs(theta) > M_1_16/GSL_SQRT_DBL_EPSILON) {
       result->err = 2.0 * GSL_DBL_EPSILON * fabs(result->val - theta);
       return GSL_SUCCESS;
     }
@@ -973,37 +974,34 @@ int gsl_sf_angle_restrict_pos_err_e(const double theta, gsl_sf_result * result)
 {
   if(fabs(theta) > REM_PIO2_THRESHOLD && gsl_finite(theta)) {
     int stat = angle_restrict_pio2(theta, 1, &result->val, &result->err);
-    if(fabs(theta) > 0.0625/GSL_DBL_EPSILON) {
+    if(fabs(theta) > M_1_16/GSL_DBL_EPSILON) {
       result->val = GSL_NAN;
       result->err = GSL_NAN;
-      GSL_ERROR ("error", GSL_ELOSS);
+      GSL_ERROR ("Could not converge with given angle theta", GSL_ELOSS);
     }
     return stat;
   }
   else {
     /* synthetic extended precision constants */
-    const double P1 = 4 * 7.85398125648498535156e-01;
-    const double P2 = 4 * 3.77489470793079817668e-08;
-    const double P3 = 4 * 2.69515142907905952645e-15;
-    const double TwoPi = 2*(P1 + P2 + P3);
+    const double TwoPi = 8*(P1 + P2 + P3);
 
     const double y = 2*floor(theta/TwoPi);
 
-    double r = ((theta - y*P1) - y*P2) - y*P3;
+    double r = ((theta - 4*y*P1) - 4*y*P2) - 4*y*P3;
 
-    if(r > TwoPi) {r = (((r-2*P1)-2*P2)-2*P3); }  /* r-TwoPi */
+    if(r > TwoPi) {r = (((r-8*P1)-8*P2)-8*P3); }  /* r-TwoPi */
     else if (r < 0) { /* may happen due to FP rounding */
-      r = (((r+2*P1)+2*P2)+2*P3); /* r+TwoPi */
+      r = (((r+8*P1)+8*P2)+8*P3); /* r+TwoPi */
     }
 
     result->val = r;
 
-    if(fabs(theta) > 0.0625/GSL_DBL_EPSILON) {
+    if(fabs(theta) > M_1_16/GSL_DBL_EPSILON) {
       result->val = GSL_NAN;
       result->err = GSL_NAN;
-      GSL_ERROR ("error", GSL_ELOSS);
+      GSL_ERROR ("Could not converge with given angle theta", GSL_ELOSS);
     }
-    else if(fabs(theta) > 0.0625/GSL_SQRT_DBL_EPSILON) {
+    else if(fabs(theta) > M_1_16/GSL_SQRT_DBL_EPSILON) {
       result->err = GSL_DBL_EPSILON * fabs(result->val - theta);
       return GSL_SUCCESS;
     }
