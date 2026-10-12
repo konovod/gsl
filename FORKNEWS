@@ -279,6 +279,7 @@ One line per change: date | tag | description | commit(s).
   2026-10-12 | [upstream] | linalg,bspline: constrained least squares          | 420b69df5
   2026-10-12 | [fork]     | cmake: build the constrained least squares solver  | 7e2c7b117
   2026-10-12 | [upstream] | doc: mark the remaining deprecated Hermite aliases  | a4a1f52bc
+  2026-10-12 | [upstream] | doc: document five missing specfunc families       | 9f29ff97d
 
 
 ## [upstream] rng: make the random() generators produce the documented sequences
@@ -7353,4 +7354,54 @@ trees) leaves no `gsl_sf_hermite_phys_*` name, and the seven entries
 render as "Deprecated since version 2.6" notes.
 
 Savannah bug #67621 (follow-up).
+
+
+## [upstream] doc: document five missing specfunc families
+
+Commit: 9f29ff97d
+
+The audit described in `FORKTODO` (headers minus both manual trees)
+reported about 190 public identifiers with no manual entry.  This entry
+clears the specfunc part of the list.
+
+Added to `doc/specfunc-expint.rst` and the Texinfo mirror, in a new
+"Scaled Exponential Integrals" section:
+
+    gsl_sf_expint_E1_scaled(_e)
+    gsl_sf_expint_E2_scaled(_e)
+    gsl_sf_expint_En_scaled(_e)
+    gsl_sf_expint_Ei_scaled(_e)
+
+`E_n_scaled(x) = exp(x) E_n(x)` and `Ei_scaled(x) = exp(-x) Ei(x)`; the
+definitions are the header comments and the point of the scaling is to
+remove the over/underflow of the unscaled forms.
+
+Also documented:
+
+    gsl_sf_coupling_RacahW(_e)     doc/specfunc-coupling.rst
+    gsl_sf_ellint_Dcomp(_e)        doc/specfunc-ellint.rst
+    gsl_sf_lnbeta_sgn_e            doc/specfunc-gamma.rst
+    gsl_sf_bessel_Knu_scaled_e10_e doc/specfunc-bessel.rst
+
+`RacahW(ja jb jc jd; je jf) = (-1)^{ja+jb+jc+jd} { ja jb je ; jd jc jf }`
+and is evaluated from `gsl_sf_coupling_6j_e`, which is what the
+implementation does.  `D(k)` is the complete elliptic integral
+`(K(k) - E(k))/k^2`.  `gsl_sf_lnbeta_sgn_e` returns `log|B(x,y)|` and
+the sign of `B(x,y)`, and the other Beta routines are built on it.
+`gsl_sf_bessel_Knu_scaled_e10_e` is the extended-range companion of
+`gsl_sf_bessel_Knu_scaled_e`.
+
+Independent verification of `D(k)`: the values in the new text agree
+with the existing `gsl_sf_ellint_Dcomp_e` test vectors in
+`specfunc/test_sf.c`, in particular `D(0.5) = 0.8731525818926755...`
+and `D(0) = pi/4`.
+
+The Sphinx manual builds without any warning in the touched files
+(`sphinx-build -M html doc doc/_build`, exit 0).
+
+Files: `doc/specfunc-expint.rst`, `doc/specfunc-coupling.rst`,
+`doc/specfunc-ellint.rst`, `doc/specfunc-gamma.rst`,
+`doc/specfunc-bessel.rst`, `doc_texinfo/specfunc-expint.texi`,
+`doc_texinfo/specfunc-coupling.texi`, `doc_texinfo/specfunc-ellint.texi`,
+`doc_texinfo/specfunc-gamma.texi`, `doc_texinfo/specfunc-bessel.texi`.
 
