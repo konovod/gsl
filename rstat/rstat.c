@@ -68,33 +68,50 @@ gsl_rstat_n(const gsl_rstat_workspace *w)
 int
 gsl_rstat_add(const double x, gsl_rstat_workspace *w)
 {
-  double delta = x - w->mean;
-  double delta_n, delta_nsq, term1, n;
-
-  /* update min and max */
   if (w->n == 0)
     {
       w->min = x;
       w->max = x;
+      w->mean = x;
+      w->n = 1;
     }
   else
     {
+      double delta = x - w->mean;
+      double range_old = w->max - w->min;
+      double range, ratio, n, d, delta_n, delta_nsq, term1;
+
+      /* update min and max */
       if (x < w->min)
         w->min = x;
       if (x > w->max)
         w->max = x;
-    }
 
-  /* update mean and variance */
-  n = (double) ++(w->n);
-  delta_n = delta / n;
-  delta_nsq = delta_n * delta_n;
-  term1 = delta * delta_n * (n - 1.0);
-  w->mean += delta_n;
-  w->M4 += term1 * delta_nsq * (n * n - 3.0 * n + 3.0) +
-           6.0 * delta_nsq * w->M2 - 4.0 * delta_n * w->M3;
-  w->M3 += term1 * delta_n * (n - 2.0) - 3.0 * delta_n * w->M2;
-  w->M2 += term1;
+      /* The central moments are stored scaled by the range r = max - min,
+         M_k = sum (x_i - mean_n)^k / r^k.  This keeps them O(n) for data
+         of any magnitude, so neither the higher moments nor the ratios
+         read out by gsl_rstat_skew/kurtosis overflow or underflow.  The
+         gsl_stats_* functions are unaffected because they use a second
+         pass normalized by the standard deviation.  The range only grows,
+         so the rescaling factor is at most one. */
+      range = w->max - w->min;
+      ratio = (range > 0.0) ? range_old / range : 0.0;
+      w->M2 *= ratio * ratio;
+      w->M3 *= ratio * ratio * ratio;
+      w->M4 *= ratio * ratio * ratio * ratio;
+
+      /* update mean and scaled central moments */
+      n = (double) ++(w->n);
+      d = (range > 0.0) ? delta / range : 0.0;
+      delta_n = d / n;
+      delta_nsq = delta_n * delta_n;
+      term1 = d * delta_n * (n - 1.0);
+      w->mean += delta / n;
+      w->M4 += term1 * delta_nsq * (n * n - 3.0 * n + 3.0) +
+               6.0 * delta_nsq * w->M2 - 4.0 * delta_n * w->M3;
+      w->M3 += term1 * delta_n * (n - 2.0) - 3.0 * delta_n * w->M2;
+      w->M2 += term1;
+    }
 
   /* update median */
   gsl_rstat_quantile_add(x, w->median_workspace_p);
@@ -125,8 +142,13 @@ gsl_rstat_variance(const gsl_rstat_workspace *w)
 {
   if (w->n > 1)
     {
+      /* M2 holds the squared deviation sum scaled by the range squared,
+         so multiply it back by the range (via the standard deviation, to
+         avoid squaring an unrepresentable range) */
+      double range = w->max - w->min;
       double n = (double) w->n;
-      return (w->M2 / (n - 1.0));
+      double sd = range * sqrt(w->M2 / (n - 1.0));
+      return (sd * sd);
     }
   else
     return 0.0;
@@ -187,27 +209,27 @@ gsl_rstat_median(gsl_rstat_workspace *w)
 double
 gsl_rstat_skew(const gsl_rstat_workspace *w)
 {
-  if (w->n > 0)
+  if (w->n > 1 && w->M2 > 0.0)
     {
       double n = (double) w->n;
       double fac = pow(n - 1.0, 1.5) / n;
       return ((fac * w->M3) / pow(w->M2, 1.5));
     }
   else
-    return 0.0;
+    return GSL_NAN;
 } /* gsl_rstat_skew() */
 
 double
 gsl_rstat_kurtosis(const gsl_rstat_workspace *w)
 {
-  if (w->n > 0)
+  if (w->n > 1 && w->M2 > 0.0)
     {
       double n = (double) w->n;
       double fac = ((n - 1.0) / n) * (n - 1.0);
       return ((fac * w->M4) / (w->M2 * w->M2) - 3.0);
     }
   else
-    return 0.0;
+    return GSL_NAN;
 } /* gsl_rstat_kurtosis() */
 
 int

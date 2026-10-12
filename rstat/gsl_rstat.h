@@ -55,7 +55,7 @@ typedef struct
   double min;      /* minimum value added */
   double max;      /* maximum value added */
   double mean;     /* current mean */
-  double M2;       /* M_k = sum_{i=1..n} [ x_i - mean_n ]^k */
+  double M2;       /* M_k = sum_{i=1..n} [ x_i - mean_n ]^k / (max-min)^k */
   double M3;
   double M4;
   size_t n;        /* number of data points added */

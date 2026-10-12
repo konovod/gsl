@@ -128,6 +128,36 @@ test_quantile(const double p, const double data[], const size_t n,
   gsl_rstat_quantile_free(w);
 }
 
+static void
+test_scale(const double scale, const char * desc)
+{
+  const size_t n = 6;
+  const double base[] = { 1.0, 2.0, 3.0, 4.0, 5.0, 100.0 };
+  const double tol = 1.0e-8;
+  double data[6];
+  double expected_skew, expected_kurtosis, skew, kurtosis;
+  gsl_rstat_workspace * rstat_workspace_p = gsl_rstat_alloc();
+  size_t i;
+
+  for (i = 0; i < n; ++i)
+    data[i] = base[i] * scale;
+
+  expected_skew = gsl_stats_skew(data, 1, n);
+  expected_kurtosis = gsl_stats_kurtosis(data, 1, n);
+
+  for (i = 0; i < n; ++i)
+    gsl_rstat_add(data[i], rstat_workspace_p);
+
+  skew = gsl_rstat_skew(rstat_workspace_p);
+  kurtosis = gsl_rstat_kurtosis(rstat_workspace_p);
+
+  gsl_test_rel(skew, expected_skew, tol, "%s skew scale=%g", desc, scale);
+  gsl_test_rel(kurtosis, expected_kurtosis, tol,
+               "%s kurtosis scale=%g", desc, scale);
+
+  gsl_rstat_free(rstat_workspace_p);
+}
+
 static int
 test_rstat(gsl_rng * r)
 {
@@ -242,6 +272,13 @@ test_rstat(gsl_rng * r)
     free(sorted_data);
     gsl_rstat_free(rstat_workspace_p);
   }
+
+  /* test4: the moments are scale invariant.  The raw central moments must
+     not overflow or underflow for data of extreme magnitude, so that
+     gsl_rstat_skew/kurtosis agree with gsl_stats_skew/kurtosis (which
+     normalize by the standard deviation) at any scale. */
+  test_scale(1.0e150, "test4");
+  test_scale(1.0e-150, "test4");
 
   return GSL_SUCCESS;
 }
