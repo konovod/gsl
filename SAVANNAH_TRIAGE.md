@@ -5,14 +5,14 @@ Generated 2026-10-02 from the `scripts/savannah_bugs.py` sweep (`inventory.tsv`)
 Scratch index, not part of the fork's record of changes. Verdicts are curated from
 `FORKNEWS`, `SAVANNAH_REVIEW.md` and the git history; every other row is un-triaged.
 
-**219 open items: 219 triaged, 0 never reviewed - 200 closed or rejected, 19 parked in the backlog below.**
+**219 open items: 219 triaged, 0 never reviewed - 203 closed or rejected, 16 parked in the backlog below.**
 
 | status | count |
 |---|---:|
-| fixed | 159 |
+| fixed | 162 |
 | partial | 0 |
 | rejected | 40 |
-| backlog | 19 |
+| backlog | 16 |
 | superseded | 1 |
 | not reviewed | 0 |
 
@@ -33,7 +33,7 @@ below; it is not counted as rejected.
 | 24871 | 2008-11-18 | feature | - | none | **fixed** — complex exponential integrals E1(z), En(z), their exp(z)-scaled variants and Ei(z), by a port of Amos Algorithm 683 (c01e6b922, 4416fe729, ffad9c422) | suggestion, add support for E_n |
 | 25320 | 2009-01-14 | - | Accuracy problem | none | **backlog** — no Fresnel in the tree; importing it is new API/algorithm work | Import fresnel, bugs on GSL Extension Fresnel |
 | 28267 | 2009-12-11 | - | Accuracy problem | source hyperg1F1.c | **fixed** — same defect as #43809 (52505315d); the transition region `x ~ a^2` is handled by a double-double series (135c6eb27) | poor convergence region for gsl_sf_hyperg_1F1 |
-| 29834 | 2010-05-09 | - | Runtime error | source error_cblas_v2.h | **backlog** — the report's cblas checking macros already live in `cblas/error_cblas*.h` (inherited); unifying the CBLAS/GSL argument-checking macros is wanted refactoring | insufficient argument checking in blas wrapper |
+| 29834 | 2010-05-09 | - | Runtime error | source error_cblas_v2.h | **fixed** — the cblas checking macros were factored into `CBLAS_*_IS_VALID` predicates in `cblas/error_cblas.h`, shared with `blas/blas.c`; all 54 enumerated-argument wrappers now return `GSL_EINVAL` before the value can reach `cblas_xerbla()`, with a new `blas/test.c` (7eeff969a, 8207436a4) | insufficient argument checking in blas wrapper |
 | 30324 | 2010-07-02 | - | Accuracy problem | none | **fixed** — 2F1 continued to x < -1 by the Pfaff transformations, real and conjugate (b99ec4e7c, cfe9311cd) | improve range of 2F1 |
 | 30510 | 2010-07-21 | - | Runtime error | none | **fixed** — U(a,b,x) for x < 0, integer b (00859f816) and non-integer b (77388cb67), on the real branch | problems with hyperg_U(a,b,x) for x<0 |
 | 30540 | 2010-07-24 | feature | Accuracy problem | partial bug-ode2.c +2 | **fixed** — v1 rk2imp/rk4imp iterate to convergence; a non-converged step is rejected through yerr (fa1622e11) | please, add convergence checks in rk4imp/rk2imp |
@@ -203,7 +203,7 @@ below; it is not counted as rejected.
 | 66844 | 2025-02-25 | feature | Build | none | **fixed** — dilog endpoint identities tested (25a16f928) | Feature: test cases for dilogarithm function |
 | 66849 | 2025-02-26 | - | - | none | **fixed** — final step clamped and backed off; bsimp sub-step times computed directly (dda917296); RHS-records-the-time regression test | gsl_odeiv2_evolve_apply() may exceed final time |
 | 66850 | 2025-02-26 | feature | Build | clean specfunc_hyperg_2F1.diff | **fixed** — 2F1 at c = a-1 and c = b-1 with the corrected relation (adc9389a4); the posted patch is mathematically wrong | Feature: special cases hypergeometric2F1(a+1, b, a, x) and hypergeometric2F1(a, b+1, b, x) |
-| 66862 | 2025-03-02 | bug | - | partial specfunc_test_sf.diff +1 | **backlog** — report not a bug (duplicate complex sin/cos; submitter withdrew); sharing the complex sin/cos implementation between `complex/math.c` and `specfunc/trig.c` is wanted refactoring | Bug: duplicate functions in GSL produce differing results |
+| 66862 | 2025-03-02 | bug | - | partial specfunc_test_sf.diff +1 | **fixed** — report not a bug (submitter withdrew), but `gsl_complex_sin`/`cos` now delegate to the specfunc implementation for finite `|imag| < GSL_LOG_DBL_MAX`, guarded so NaN and overflow behaviour is unchanged (3bc7c088c) | Bug: duplicate functions in GSL produce differing results |
 | 66874 | 2025-03-05 | feature | - | source doc_bst.rst | rejected — superseded: the bst module is documented in the fork (20eda0316) | Feature: documentation for binary search trees (bst module) |
 | 66877 | 2025-03-06 | feature | Build | none | **fixed** — exact zero error at x = 0 (fe7285909) and the special-case vectors (2d6cf433c) | Feature: test cases for hyperg_0F1() |
 | 66880 | 2025-03-07 | feature | Build | clean test_hyperg_U.diff | **fixed** — U special-case vectors, with corrections (153a149d4) | Feature: test cases for function hyperg_0F1() |
@@ -240,7 +240,7 @@ below; it is not counted as rejected.
 | 68592 | 2026-08-03 | doc | Documentation | none | **fixed** — new BST chapter added to both manuals and to the index/menu, marked as an unreviewed AI draft (20eda0316) | Documentation: missing Binary search tree documentation from index |
 | 68611 | 2026-08-13 | feature | - | none | **fixed** - all-empty histogram raises GSL_EDOM in pdf_init (b60a47106) | Feature: guard against degenerate histogram input |
 | 68625 | 2026-08-21 | bug | Accuracy problem | none | **fixed** — hermite_func_der at n=0,1 (5d36e1999) | Bug: incorrect derivative of the Hermite function of order 0 or 1 |
-| 68663 | 2026-08-31 | feature | - | none | **backlog** — drop the `GAMMA_INC_A_0` alias (one line); no correctness case, low value | Feature: remove GAMM_INC macro in favor of direct call |
+| 68663 | 2026-08-31 | feature | - | none | **fixed** — the `GAMMA_INC_A_0` alias replaced by direct `gsl_sf_expint_E1_e` calls (727a96315) | Feature: remove GAMM_INC macro in favor of direct call |
 | 68704 | 2026-09-18 | feature | - | none | **backlog** — `gsl_histogram_variance` (new API) including the breaking rename question | Feature: introduce variance of a histogram gsl_histogram_variance |
 
 
@@ -368,9 +368,6 @@ rule set aside and the widened rule admits.
 | 24252 | feat | source | a *correct* truncated-gamma / gamma-tail generator (the posted sampler is wrong). |
 | 50382 | build | - | NuGet packaging for Windows. |
 | 59914 | doc | - | a documented native Windows build write-up. |
-| 66862 | refactor | partial | share the complex sin/cos implementation between `complex/math.c` and `specfunc/trig.c`. |
-| 68663 | refactor | - | drop the `GAMMA_INC_A_0` alias (one line; low value). |
-| 29834 | refactor | source | unify the CBLAS and GSL argument-checking macros. |
 | 68283 | bug | - | an `gsl_rstat` skew/kurtosis correction consistent with the `gsl_stats` equivalence the module asserts. |
 | 68549 | feat | - | uniform argument lists across the distribution functions (breaking). |
 | 47402 | perf | - | Mathieu coefficient caching in the workspace (items 1, 2 and 4 already done). |

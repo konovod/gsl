@@ -63,7 +63,7 @@ has to be tested against the built library.  See `#52321` below.
 | `#66128` | applied as posted (commit 066f5b747) |
 | `#57978` | applied with `GSL_EDOM` instead of the patch's `GSL_ELOSS`, and the missing documentation added (commits 7c27b358b, f87e96143, b4a012ca9) |
 | `#53919` + `#65760` | applied together, rewritten: neither patch fixes the actual overflow (commits 708791c25, 6bc4d8cdd, 9daf0cf36) |
-| `#66862` | rejected as not-a-bug; the test-coverage gap it exposed was filled separately (commits 48a49003f, 758c15422) |
+| `#66862` | report rejected as not-a-bug (submitter withdrew); the duplication it exposed was later removed (commit 3bc7c088c) and the test-coverage gap filled (commits 48a49003f, 758c15422) |
 | `#64613` | reproduced on this machine (it has FMA) and fixed: three separate defects, not the one reported (commits 1b1d94ee9, 98e966458) |
 | `#39292` | **fixed 2026-10-02** (commit 90d9037a5): the rejection did not reproduce and an independent check favours the patch; `C = 0.5 sqrt(1 + 4Q)` is applied and a turning-point guard vector added.  Earlier verdict, for the record: rejected — the posted `0.5` factor makes the branch *worse* (commit 192ec9cbf) |
 | `#64777` | rejected - the reporter's matrix is singular and the permutation was ignored |
@@ -881,7 +881,15 @@ differently is meaningless.
 No code change. Recorded so the next person to read the report does not
 re-investigate it.
 
-### `#66862` — duplicated complex sin/cos "produce differing results" — not a bug
+### `#66862` — duplicated complex sin/cos "produce differing results" — not a bug; refactor applied later
+
+**Update 2026-10-12.** The report is still not a bug, but the duplication
+it exposed was removed: `gsl_complex_sin`/`cos` now delegate to
+`gsl_sf_complex_sin_e`/`cos_e` for finite `|imag| < GSL_LOG_DBL_MAX`,
+with guards that keep the NaN propagation, the `I == 0` signed-zero rule
+and the overflow behaviour unchanged (commit `3bc7c088c`; regression
+vectors in `complex/test_source.c`).  The analysis below is kept for the
+record.
 
 **The submitter withdrew it himself.** The follow-up comment says "the
 findings were due to rounding errors and both implementations ultimately
@@ -2971,7 +2979,8 @@ change.
   implicit in `p`, not stored.  Not a bug.
 
 * **#68663 - remove `GAMMA_INC_A_0`.**  One-line alias for
-  `gsl_sf_expint_E1_e`; pure refactor, out of scope.
+  `gsl_sf_expint_E1_e`; pure refactor, out of scope at the time.
+  **Taken later** as a readability refactor (commit `727a96315`).
 
 * **#68704 - `gsl_histogram_variance`.**  New public API; the proposed
   rename of `gsl_histogram_sigma` is a breaking change.  Out of scope.
@@ -3122,7 +3131,16 @@ Fresnel integrals (and fixing their negative-`x` branch) is a new
 special function - new API and a new algorithm - which the eligibility
 rule excludes.  Rejected / deferred as a feature.
 
-### `#29834` - insufficient argument checking in blas wrapper - already fixed
+### `#29834` - insufficient argument checking in blas wrapper - refactor applied later
+
+**Update 2026-10-12.** The residual wish below is done: the CBLAS
+validity tests are factored into `CBLAS_*_IS_VALID` predicates in
+`cblas/error_cblas.h`, shared with `blas/blas.c`, and all 54
+`gsl_blas_*` wrappers that take an enumerated argument now return
+`GSL_EINVAL` instead of reaching `cblas_xerbla()`'s `abort()` (commits
+`7eeff969a`, `8207436a4`; regression test `blas/test.c`).  The note
+below, that the remaining wish had no failing case, was the earlier
+verdict.
 
 The report (2010) is the maintainer's note that the CBLAS routines do
 not validate their arguments and that the checking could be shared
