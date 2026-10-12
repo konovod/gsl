@@ -313,6 +313,18 @@ double gsl_linalg_complex_LU_lndet (gsl_matrix_complex * LU);
 gsl_complex gsl_linalg_complex_LU_sgndet (gsl_matrix_complex * LU,
                                           int signum);
 
+/* Least squares with linear inequality constraints (Lawson-Hanson) */
+
+int gsl_linalg_nnls (const gsl_matrix * A, const gsl_vector * b,
+                     gsl_vector * x, gsl_vector * residual);
+
+int gsl_linalg_ldp (const gsl_matrix * G, const gsl_vector * h,
+                    gsl_vector * x, gsl_vector * residual);
+
+int gsl_linalg_lsi (const gsl_matrix * A, const gsl_vector * b,
+                    const gsl_matrix * G, const gsl_vector * h,
+                    gsl_vector * x, gsl_vector * residual);
+
 /* QR decomposition */
 
 int gsl_linalg_QR_decomp (gsl_matrix * A, gsl_vector * tau);

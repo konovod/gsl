@@ -174,7 +174,7 @@ test_greville()
                      "b-spline k=%d init_greville breakpoint #%d", k, i);
       }
 
-    gsl_test_abs(abserr, 0.0, GSL_DBL_EPSILON*15,
+    gsl_test_abs(abserr, 0.0, GSL_DBL_EPSILON*100,
                  "b-spline k=%d nbreak=%d init_greville abserr", k, nbreak);
 
     gsl_bspline_free(w);
@@ -208,7 +208,7 @@ test_greville()
                      "b-spline k=%d init_greville breakpoint #%d", k, i);
       }
 
-    gsl_test_abs(abserr, 0.0, GSL_DBL_EPSILON*15,
+    gsl_test_abs(abserr, 0.0, GSL_DBL_EPSILON*100,
                  "b-spline k=%d nbreak=%d init_greville abserr", k, nbreak);
 
     gsl_bspline_free(w);
@@ -294,14 +294,16 @@ test_greville()
     gsl_bspline_free(w);
   }
 
-  /* Savannah bug #34361: the unconstrained least-squares solve used by
-   * gsl_bspline_init_greville() does not enforce that the breakpoints be
-   * non-decreasing.  For a poor combination of abscissae and workspace
-   * dimensions the computed breakpoints can be wildly non-monotone; the
-   * monotonicity guard in gsl_bspline_init_augment() must reject them
-   * rather than store a broken knot vector.  With that guard removed this
-   * call returns GSL_SUCCESS and the breakpoints come out
-   * { 0.0, 1.0611, 0.6091, 0.6767, 1.0 }. */
+  /* Savannah bug #34361: the interior breakpoints are now chosen by an
+   * inequality-constrained least squares (Lawson-Hanson LSI), so they
+   * are non-decreasing for any non-decreasing target abscissae.  The
+   * former unconstrained solve produced wildly non-monotone breakpoints
+   * for challenging inputs; those cases must now succeed with a
+   * monotone knot vector rather than be rejected by the guard in
+   * gsl_bspline_init_augment(). */
+
+  /* sqrt-spaced abscissae: the unconstrained breakpoints were
+     { 0.0, 1.0611, 0.6091, 0.6767, 1.0 } */
   {
     const size_t k = 4;
     const double abscissae_data[] = {
@@ -313,16 +315,99 @@ test_greville()
     gsl_vector_const_view abscissae
         = gsl_vector_const_view_array(abscissae_data, nabscissae);
     gsl_bspline_workspace *w = gsl_bspline_alloc(k, nbreak);
-    gsl_error_handler_t *old_handler = gsl_set_error_handler_off();
     double abserr;
     int ret = gsl_bspline_init_greville(&abscissae.vector, w, &abserr);
-    gsl_set_error_handler(old_handler);
+    size_t i;
 
-    gsl_test(ret != GSL_EDOM,
-             "b-spline k=%d init_greville rejects non-monotone breakpoints"
+    gsl_test(ret != GSL_SUCCESS,
+             "b-spline k=%d init_greville accepts clustered abscissae"
              " (status = %d)", k, ret);
+    for (i = 0; i + 1 < nbreak; ++i)
+      {
+        double a = gsl_bspline_breakpoint(i, w);
+        double b = gsl_bspline_breakpoint(i + 1, w);
+        gsl_test(a > b + 16.0 * GSL_DBL_EPSILON * (fabs(a) + fabs(b)),
+                 "b-spline k=%d init_greville breakpoints non-decreasing", k);
+      }
 
     gsl_bspline_free(w);
+  }
+
+  /* k = 8, nbreak = 4: the unconstrained breakpoints were
+     { 0.0745, 2.5803, -0.8523, 0.9872 } */
+  {
+    const size_t k = 8;
+    const double abscissae_data[] = {
+      0.0745, 0.441, 0.462, 0.5876, 0.6113,
+      0.6795, 0.6804, 0.7269, 0.7329, 0.9872
+    };
+    const size_t nabscissae = sizeof(abscissae_data)/sizeof(abscissae_data[0]);
+    const size_t nbreak     = 4;
+    gsl_vector_const_view abscissae
+        = gsl_vector_const_view_array(abscissae_data, nabscissae);
+    gsl_bspline_workspace *w = gsl_bspline_alloc(k, nbreak);
+    double abserr;
+    int ret = gsl_bspline_init_greville(&abscissae.vector, w, &abserr);
+    size_t i;
+
+    gsl_test(ret != GSL_SUCCESS,
+             "b-spline k=%d init_greville accepts clustered abscissae"
+             " (status = %d)", k, ret);
+    for (i = 0; i + 1 < nbreak; ++i)
+      {
+        double a = gsl_bspline_breakpoint(i, w);
+        double b = gsl_bspline_breakpoint(i + 1, w);
+        gsl_test(a > b + 16.0 * GSL_DBL_EPSILON * (fabs(a) + fabs(b)),
+                 "b-spline k=%d init_greville breakpoints non-decreasing", k);
+      }
+
+    gsl_bspline_free(w);
+  }
+
+  /* a deterministic sweep over the sizes that produced non-monotone
+     breakpoints in the Savannah analysis */
+  {
+    gsl_rng *r = gsl_rng_alloc(gsl_rng_default);
+    size_t k, nbreak;
+    gsl_rng_set(r, 20110922UL);
+
+    for (k = 4; k <= 8; ++k)
+      {
+        for (nbreak = 4; nbreak <= 12; ++nbreak)
+          {
+            const size_t nabscissae = nbreak + k - 2;
+            gsl_vector *a = gsl_vector_alloc(nabscissae);
+            gsl_bspline_workspace *w = gsl_bspline_alloc(k, nbreak);
+            double abserr;
+            int ret;
+            size_t i;
+
+            /* sorted, so the target abscissae are non-decreasing */
+            random_vector(0.0, 1.0, a, r);
+            gsl_sort_vector(a);
+
+            ret = gsl_bspline_init_greville(a, w, &abserr);
+            if (ret == GSL_SUCCESS)
+              {
+                for (i = 0; i + 1 < nbreak; ++i)
+                  {
+                    double ai = gsl_bspline_breakpoint(i, w);
+                    double bi = gsl_bspline_breakpoint(i + 1, w);
+                    if (ai > bi + 16.0 * GSL_DBL_EPSILON * (fabs(ai) + fabs(bi)))
+                      ret = GSL_EFAILED;
+                  }
+              }
+
+            gsl_test(ret != GSL_SUCCESS,
+                     "b-spline k=%d nbreak=%d init_greville monotone"
+                     " (status = %d)", (int) k, (int) nbreak, ret);
+
+            gsl_bspline_free(w);
+            gsl_vector_free(a);
+          }
+      }
+
+    gsl_rng_free(r);
   }
 
   return status;

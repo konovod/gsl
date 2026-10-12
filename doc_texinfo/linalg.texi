@@ -19,6 +19,7 @@ The functions described in this chapter are declared in the header file
 * QR Decomposition with Column Pivoting::
 * Complete Orthogonal Decomposition::
 * Singular Value Decomposition::  
+* Least Squares with Inequality Constraints::
 * Cholesky Decomposition::      
 * Pivoted Cholesky Decomposition::      
 * Modified Cholesky Decomposition::      
@@ -778,6 +779,50 @@ using its singular value decomposition (@var{U}, @var{S}, @var{V}) previously co
 with @code{gsl_linalg_SV_decomp}. @math{h_i} are the diagonal values of the matrix
 @math{A (A^T A)^{-1} A^T} and depend only on the matrix @var{U} which is the input to
 this function.
+@end deftypefun
+
+@node Least Squares with Inequality Constraints
+@section Least Squares with Inequality Constraints
+@cindex linear least squares
+@cindex inequality constraints
+
+The following functions solve linear least squares problems subject to
+linear inequality constraints, using the active-set methods of
+C. L. Lawson and R. J. Hanson, @cite{Solving Least Squares Problems}
+(SIAM, 1995).  For each function the optional @var{residual} argument,
+when not @code{NULL}, receives the least squares residual @math{A x - b}
+(for @code{gsl_linalg_nnls} and @code{gsl_linalg_lsi}) or the constraint
+residual @math{G x - h} (for @code{gsl_linalg_ldp}); it must be
+preallocated to the appropriate size.  A problem whose constraints cannot
+be satisfied returns @code{GSL_EDOM}.
+
+@cindex nonnegative least squares
+@deftypefun int gsl_linalg_nnls (const gsl_matrix * @var{A}, const gsl_vector * @var{b}, gsl_vector * @var{x}, gsl_vector * @var{residual})
+This function solves the nonnegative least squares problem
+@math{\min_x ||A x - b||, x \ge 0} for an @math{M}-by-@math{N} matrix
+@var{A} and vector @var{b} of length @math{M}.  The solution vector
+@var{x} has length @math{N}.
+@end deftypefun
+
+@cindex least distance programming
+@deftypefun int gsl_linalg_ldp (const gsl_matrix * @var{G}, const gsl_vector * @var{h}, gsl_vector * @var{x}, gsl_vector * @var{residual})
+This function solves the least distance programming problem
+@math{\min_x ||x||, G x \ge h} for a @math{K}-by-@math{N} matrix @var{G}
+and vector @var{h} of length @math{K}.  The solution vector @var{x} has
+length @math{N}.  If the constraints are inconsistent the function returns
+@code{GSL_EDOM}.
+@end deftypefun
+
+@cindex constrained least squares
+@deftypefun int gsl_linalg_lsi (const gsl_matrix * @var{A}, const gsl_vector * @var{b}, const gsl_matrix * @var{G}, const gsl_vector * @var{h}, gsl_vector * @var{x}, gsl_vector * @var{residual})
+This function solves the linear least squares problem with linear
+inequality constraints @math{\min_x ||A x - b||, G x \ge h} for an
+@math{M}-by-@math{N} matrix @var{A}, a vector @var{b} of length
+@math{M}, a @math{K}-by-@math{N} matrix @var{G} and a vector @var{h} of
+length @math{K}.  The solution vector @var{x} has length @math{N}.  If
+the constraints are inconsistent the function returns @code{GSL_EDOM}.
+The nonnegative least squares and least distance programming problems
+above are special cases.
 @end deftypefun
 
 @node Cholesky Decomposition

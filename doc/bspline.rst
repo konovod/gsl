@@ -776,15 +776,13 @@ collocation applications and may also be called Marsden-Schoenberg points.
    abscissa is returned in :data:`abserr`.
 
    The workspace order must satisfy :math:`k > 1` and :data:`abscissae` must be
-   monotonically increasing.  The breakpoints are obtained from a linear least
-   squares solve that does not enforce the requirement that they be
-   non-decreasing, so for a poor combination of :data:`abscissae` and workspace
-   dimensions the computed breakpoints can fail to be monotone; in that case
-   the function returns :macro:`GSL_EDOM` and the workspace is left unchanged.
-   Beware that when :code:`w->nbreak` is small relative to :code:`w->k` the
-   best approximation may be of poor quality for non-uniformly spaced
-   :data:`abscissae`.  This function has memory and runtime overhead that
-   scales like a QR-based linear least squares solution on an
+   non-decreasing.  The interior breakpoints are obtained from a linear least
+   squares solve subject to the constraint that they be non-decreasing, so the
+   resulting knot vector is always monotone.  Beware that when
+   :code:`w->nbreak` is small relative to :code:`w->k` the best approximation
+   may be of poor quality for non-uniformly spaced :data:`abscissae`.  This
+   function has memory and runtime overhead that scales like an
+   inequality-constrained linear least squares solution on an
    :code:`(abscissae->size - 2)` by :code:`(w->nbreak - 2)` problem.
 
 .. index::

@@ -91,6 +91,7 @@ int test_TDS_cyc_solve(void);
 int test_TDN_cyc_solve_dim(unsigned long dim, double d, double a, double b, const double * actual, double eps);
 int test_TDN_cyc_solve(void);
 int test_tridiag_complex(gsl_rng * r);
+int test_lsi_solvers(void);
 int test_bidiag_decomp_dim(const gsl_matrix * m, double eps);
 int test_bidiag_decomp(void);
 
@@ -3744,6 +3745,134 @@ test_tri_invert(gsl_rng * r)
   return s;
 }
 
+/* Lawson-Hanson constrained least squares: fixed problems with reference
+ * solutions from scipy.optimize.nnls and an exhaustive active-set
+ * enumeration. */
+int
+test_lsi_solvers(void)
+{
+  int s = 0;
+
+  /* NNLS: min ||A x - b||, x >= 0 */
+  {
+    double adata[] = { 1.0, 2.0, 0.0,
+                       0.0, 1.0, 3.0,
+                       2.0, 1.0, 1.0 };
+    double bdata[] = { 1.0, 2.0, 3.0 };
+    double xexp[]  = { 1.1304347826086958, 0.0, 0.6739130434782608 };
+    gsl_matrix_const_view A = gsl_matrix_const_view_array (adata, 3, 3);
+    gsl_vector_const_view b = gsl_vector_const_view_array (bdata, 3);
+    gsl_vector *x = gsl_vector_alloc (3);
+    size_t i;
+    int st = gsl_linalg_nnls (&A.matrix, &b.vector, x, 0);
+
+    gsl_test (st != GSL_SUCCESS, "gsl_linalg_nnls status (%d)", st);
+    s += (st != GSL_SUCCESS);
+    for (i = 0; i < 3; ++i)
+      {
+        gsl_test_abs (gsl_vector_get (x, i), xexp[i], 1.0e-10,
+                      "gsl_linalg_nnls x[%d]", (int) i);
+        gsl_test (gsl_vector_get (x, i) < -1.0e-12,
+                  "gsl_linalg_nnls x[%d] is nonnegative", (int) i);
+      }
+    gsl_vector_free (x);
+  }
+
+  /* LDP: min ||x|| subject to G x >= h */
+  {
+    double g1data[] = { 1.0, 1.0 };
+    double h1data[] = { 1.0 };
+    double e1data[] = { 0.5, 0.5 };
+    double g2data[] = { 1.0, 0.0,
+                        0.0, 1.0,
+                        1.0, 1.0 };
+    double h2data[] = { 1.0, 1.0, 1.0 };
+    double e2data[] = { 1.0, 1.0 };
+    size_t i;
+
+    gsl_matrix_const_view g1 = gsl_matrix_const_view_array (g1data, 1, 2);
+    gsl_vector_const_view h1 = gsl_vector_const_view_array (h1data, 1);
+    gsl_matrix_const_view g2 = gsl_matrix_const_view_array (g2data, 3, 2);
+    gsl_vector_const_view h2 = gsl_vector_const_view_array (h2data, 3);
+    gsl_vector *x = gsl_vector_alloc (2);
+    int st;
+
+    st = gsl_linalg_ldp (&g1.matrix, &h1.vector, x, 0);
+    gsl_test (st != GSL_SUCCESS, "gsl_linalg_ldp status (%d)", st);
+    s += (st != GSL_SUCCESS);
+    for (i = 0; i < 2; ++i)
+      gsl_test_abs (gsl_vector_get (x, i), e1data[i], 1.0e-12,
+                    "gsl_linalg_ldp x[%d]", (int) i);
+
+    st = gsl_linalg_ldp (&g2.matrix, &h2.vector, x, 0);
+    gsl_test (st != GSL_SUCCESS, "gsl_linalg_ldp status (%d)", st);
+    s += (st != GSL_SUCCESS);
+    for (i = 0; i < 2; ++i)
+      gsl_test_abs (gsl_vector_get (x, i), e2data[i], 1.0e-12,
+                    "gsl_linalg_ldp x[%d]", (int) i);
+
+    gsl_vector_free (x);
+  }
+
+  /* LSI: min ||A x - b|| subject to G x >= h */
+  {
+    double a1data[] = { 1.0, 1.0,
+                        1.0, 2.0,
+                        1.0, 3.0 };
+    double b1data[] = { 1.0, 2.0, 3.0 };
+    double g1data[] = { 1.0, -1.0 };
+    double h1data[] = { 0.0 };
+    double e1data[] = { 0.6896551724137939, 0.6896551724137928 };
+
+    double a2data[] = { 1.0, 2.0,
+                        3.0, 4.0,
+                        5.0, 6.0 };
+    double b2data[] = { 1.0, 2.0, 3.0 };
+    double g2data[] = { -1.0, 0.0,
+                        0.0, -1.0 };
+    double h2data[] = { -1.0, -1.0 };
+    double e2data[] = { 0.0, 0.5 };
+
+    gsl_matrix_const_view A1 = gsl_matrix_const_view_array (a1data, 3, 2);
+    gsl_vector_const_view b1 = gsl_vector_const_view_array (b1data, 3);
+    gsl_matrix_const_view G1 = gsl_matrix_const_view_array (g1data, 1, 2);
+    gsl_vector_const_view h1 = gsl_vector_const_view_array (h1data, 1);
+
+    gsl_matrix_const_view A2 = gsl_matrix_const_view_array (a2data, 3, 2);
+    gsl_vector_const_view b2 = gsl_vector_const_view_array (b2data, 3);
+    gsl_matrix_const_view G2 = gsl_matrix_const_view_array (g2data, 2, 2);
+    gsl_vector_const_view h2 = gsl_vector_const_view_array (h2data, 2);
+
+    gsl_vector *x = gsl_vector_alloc (2);
+    size_t i;
+    int st;
+
+    st = gsl_linalg_lsi (&A1.matrix, &b1.vector, &G1.matrix, &h1.vector, x, 0);
+    gsl_test (st != GSL_SUCCESS, "gsl_linalg_lsi status (%d)", st);
+    s += (st != GSL_SUCCESS);
+    for (i = 0; i < 2; ++i)
+      gsl_test_abs (gsl_vector_get (x, i), e1data[i], 1.0e-10,
+                    "gsl_linalg_lsi x[%d]", (int) i);
+    gsl_test (gsl_vector_get (x, 0) - gsl_vector_get (x, 1) < -1.0e-10,
+              "gsl_linalg_lsi satisfies the constraint");
+
+    st = gsl_linalg_lsi (&A2.matrix, &b2.vector, &G2.matrix, &h2.vector, x, 0);
+    gsl_test (st != GSL_SUCCESS, "gsl_linalg_lsi status (%d)", st);
+    s += (st != GSL_SUCCESS);
+    for (i = 0; i < 2; ++i)
+      {
+        gsl_test_abs (gsl_vector_get (x, i), e2data[i], 1.0e-10,
+                      "gsl_linalg_lsi x[%d]", (int) i);
+        gsl_test (gsl_vector_get (x, i) > 1.0 + 1.0e-10,
+                  "gsl_linalg_lsi upper bound");
+      }
+
+    gsl_vector_free (x);
+  }
+
+  return s;
+}
+
 void
 my_error_handler (const char *reason, const char *file, int line, int err)
 {
@@ -3924,6 +4053,7 @@ main(void)
   gsl_test(test_TDN_solve(),             "Tridiagonal nonsymmetric solve");
   gsl_test(test_TDN_cyc_solve(),         "Tridiagonal nonsymmetric cyclic solve");
   gsl_test(test_tridiag_complex(r),      "Complex tridiagonal solves");
+  gsl_test(test_lsi_solvers(),           "Constrained least squares");
 
   gsl_test(test_HH_left(r),              "Householder Left");
   gsl_test(test_HH_right(r),             "Householder Right");

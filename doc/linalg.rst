@@ -1398,6 +1398,68 @@ Mathematically, the "full" SVD is defined with :math:`U` as an
    single: square root of a matrix, Cholesky decomposition
    single: matrix square root, Cholesky decomposition
 
+.. index::
+   single: linear least squares
+   single: inequality constraints
+
+Least Squares with Inequality Constraints
+=========================================
+
+The following functions solve linear least squares problems subject to
+linear inequality constraints, using the active-set methods of
+C. L. Lawson and R. J. Hanson, *Solving Least Squares Problems*
+(SIAM, 1995).  For each function the optional :data:`residual` argument,
+when not :data:`NULL`, receives the least squares residual
+:math:`A x - b` (for :func:`gsl_linalg_nnls` and
+:func:`gsl_linalg_lsi`) or the constraint residual :math:`G x - h`
+(for :func:`gsl_linalg_ldp`); it must be preallocated to the appropriate
+size.  A problem whose constraints cannot be satisfied returns
+:macro:`GSL_EDOM`.
+
+.. index::
+   single: nonnegative least squares
+
+.. function:: int gsl_linalg_nnls (const gsl_matrix * A, const gsl_vector * b, gsl_vector * x, gsl_vector * residual)
+
+   This function solves the nonnegative least squares problem
+
+   .. math:: \min_x ||A x - b||, \qquad x \ge 0
+
+   for an :math:`M`-by-:math:`N` matrix :data:`A` and vector :data:`b`
+   of length :math:`M`.  The solution vector :data:`x` has length
+   :math:`N`.
+
+.. index::
+   single: least distance programming
+
+.. function:: int gsl_linalg_ldp (const gsl_matrix * G, const gsl_vector * h, gsl_vector * x, gsl_vector * residual)
+
+   This function solves the least distance programming problem
+
+   .. math:: \min_x ||x||, \qquad G x \ge h
+
+   for a :math:`K`-by-:math:`N` matrix :data:`G` and vector :data:`h`
+   of length :math:`K`.  The solution vector :data:`x` has length
+   :math:`N`.  If the constraints are inconsistent the function returns
+   :macro:`GSL_EDOM`.
+
+.. index::
+   single: constrained least squares
+
+.. function:: int gsl_linalg_lsi (const gsl_matrix * A, const gsl_vector * b, const gsl_matrix * G, const gsl_vector * h, gsl_vector * x, gsl_vector * residual)
+
+   This function solves the linear least squares problem with linear
+   inequality constraints
+
+   .. math:: \min_x ||A x - b||, \qquad G x \ge h
+
+   for an :math:`M`-by-:math:`N` matrix :data:`A`, a vector :data:`b`
+   of length :math:`M`, a :math:`K`-by-:math:`N` matrix :data:`G` and a
+   vector :data:`h` of length :math:`K`.  The solution vector :data:`x`
+   has length :math:`N`.  If the constraints are inconsistent the
+   function returns :macro:`GSL_EDOM`.  The nonnegative least squares
+   and least distance programming problems above are special cases.
+
 .. _sec_cholesky-decomposition:
 
 Cholesky Decomposition

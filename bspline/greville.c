@@ -57,9 +57,8 @@ gsl_bspline_init_greville (const gsl_vector *abscissae,
                            gsl_bspline_workspace *w,
                            double *abserr)
 {
-  /* Limited function: see https://savannah.gnu.org/bugs/index.php?34361 */
-
   int s;
+  size_t i;
 
   /* Check incoming arguments satisfy mandatory algorithmic assumptions */
   if (w->spline_order < 2)
@@ -68,6 +67,13 @@ gsl_bspline_init_greville (const gsl_vector *abscissae,
     GSL_ERROR ("abscissae->size must be at least 2", GSL_EINVAL);
   else if (w->nbreak != abscissae->size - w->spline_order + 2)
     GSL_ERROR ("w->nbreak must equal abscissae->size - spline_order + 2", GSL_EINVAL);
+
+  /* The target abscissae of a valid knot vector are non-decreasing */
+  for (i = 0; i + 1 < abscissae->size; ++i)
+    {
+      if (gsl_vector_get (abscissae, i) > gsl_vector_get (abscissae, i + 1))
+        GSL_ERROR ("abscissae must be non-decreasing", GSL_EINVAL);
+    }
 
   if (w->nbreak == 2)
     {
@@ -79,25 +85,26 @@ gsl_bspline_init_greville (const gsl_vector *abscissae,
   else
     {
       double * storage;
-      gsl_matrix_view A;
-      gsl_vector_view tau, b, x, r;
+      gsl_matrix_view A, G;
+      gsl_vector_view b, x, h;
       size_t i, j;
 
       /* Constants derived from the B-spline workspace and abscissae details */
       const size_t km2    = w->spline_order - 2;
       const size_t M      = abscissae->size - 2;
       const size_t N      = w->nbreak - 2;
+      const size_t ng     = N + 1;
       const double invkm1 = 1.0 / (w->spline_order - 1);
 
       /* Allocate working storage and prepare multiple, zero-filled views */
-      storage = (double *) calloc (M*N + 2*N + 2*M, sizeof (double));
+      storage = (double *) calloc (M*N + M + N + ng*N + ng, sizeof (double));
       if (storage == 0)
         GSL_ERROR ("failed to allocate working storage", GSL_ENOMEM);
       A   = gsl_matrix_view_array (storage, M, N);
-      tau = gsl_vector_view_array (storage + M*N,             N);
-      b   = gsl_vector_view_array (storage + M*N + N,         M);
-      x   = gsl_vector_view_array (storage + M*N + N + M,     N);
-      r   = gsl_vector_view_array (storage + M*N + N + M + N, M);
+      b   = gsl_vector_view_array (storage + M*N,                 M);
+      x   = gsl_vector_view_array (storage + M*N + M,             N);
+      G   = gsl_matrix_view_array (storage + M*N + M + N,         ng, N);
+      h   = gsl_vector_view_array (storage + M*N + M + N + ng*N,  ng);
 
       /* Build matrix from interior breakpoints to interior Greville abscissae.
        * For example, when spline_order = 4 and nbreak = 7 the matrix is
@@ -130,10 +137,26 @@ gsl_bspline_init_greville (const gsl_vector *abscissae,
           *v -= (i+1)*invkm1 * gsl_vector_get (abscissae, abscissae->size - 1);
         }
 
-      /* Perform linear least squares to determine interior breakpoints */
-      s =  gsl_linalg_QR_decomp (&A.matrix, &tau.vector)
-        || gsl_linalg_QR_lssolve (&A.matrix, &tau.vector,
-                                  &b.vector, &x.vector, &r.vector);
+      /* Constrain the interior breakpoints to be non-decreasing and to
+         stay between the fixed endpoint abscissae (Savannah bug #34361).
+         The inequality form is G x >= h. */
+      for (i = 0; i + 1 < N; ++i)
+        {
+          gsl_matrix_set (&G.matrix, i, i, -1.0);
+          gsl_matrix_set (&G.matrix, i, i + 1, 1.0);
+        }
+      gsl_matrix_set (&G.matrix, N - 1, 0, 1.0);
+      gsl_matrix_set (&G.matrix, N, N - 1, -1.0);
+      for (i = 0; i < ng; ++i)
+        gsl_vector_set (&h.vector, i, 0.0);
+      gsl_vector_set (&h.vector, N - 1, gsl_vector_get (abscissae, 0));
+      gsl_vector_set (&h.vector, N,
+                      -gsl_vector_get (abscissae, abscissae->size - 1));
+
+      /* Solve the inequality-constrained least squares for the interior
+         breakpoints (Lawson-Hanson LSI). */
+      s = gsl_linalg_lsi (&A.matrix, &b.vector, &G.matrix, &h.vector,
+                          &x.vector, 0);
       if (s)
         {
           free (storage);
