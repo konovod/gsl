@@ -287,3 +287,39 @@ renamed; use the indicated replacement instead.
 
    These routines are deprecated.  Use :func:`gsl_sf_hermite_prob_deriv` or
    :func:`gsl_sf_hermite_prob_deriv_e` instead.
+
+.. function:: int gsl_sf_hermite_phys_array (const int nmax, const double x, double * result_array)
+
+   .. deprecated:: 2.6
+
+   This routine is deprecated.  Use :func:`gsl_sf_hermite_array` instead.
+
+.. function:: int gsl_sf_hermite_phys_series_e (const int n, const double x, const double * a, gsl_sf_result * result)
+              double gsl_sf_hermite_phys_series (const int n, const double x, const double * a)
+
+   .. deprecated:: 2.6
+
+   These routines are deprecated.  Use :func:`gsl_sf_hermite_series` or
+   :func:`gsl_sf_hermite_series_e` instead.
+
+.. function:: int gsl_sf_hermite_phys_array_der (const int m, const int nmax, const double x, double * result_array)
+
+   .. deprecated:: 2.6
+
+   This routine is deprecated.  Use :func:`gsl_sf_hermite_array_deriv`
+   instead.
+
+.. function:: int gsl_sf_hermite_phys_der_array (const int mmax, const int n, const double x, double * result_array)
+
+   .. deprecated:: 2.6
+
+   This routine is deprecated.  Use :func:`gsl_sf_hermite_deriv_array`
+   instead.
+
+.. function:: double gsl_sf_hermite_phys_zero (const int n, const int s)
+              int gsl_sf_hermite_phys_zero_e (const int n, const int s, gsl_sf_result * result)
+
+   .. deprecated:: 2.6
+
+   These routines are deprecated.  Use :func:`gsl_sf_hermite_zero` or
+   :func:`gsl_sf_hermite_zero_e` instead.
