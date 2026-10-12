@@ -6874,6 +6874,53 @@ Files: `specfunc/trig.c`, `specfunc/test_sf.c`, `doc/specfunc-trig.rst`,
 Savannah bug #36152.
 
 
+## [upstream] linalg: unify the Cholesky inverse Hilbert tolerances
+
+Commit: c37162f56
+
+The three unscaled 4x4 Hilbert checks in `linalg/test_cholesky.c` all
+invert the same matrix and test the product against the identity, but
+carried two different multipliers: `cholesky_invert` and
+`mcholesky_invert` allowed `512 N GSL_DBL_EPSILON` and
+`pcholesky_invert` `1024 N GSL_DBL_EPSILON`.  The 2.2.1 values were
+`256 N eps` for all three, and Savannah #49697 shows that line moving
+by tens of percent with the vectorisation mode, so 512 left part of
+the family only barely wider than the observed spread.
+
+Measured on the fork's host (MinGW gcc 15.2 x64, i7-8700K, AVX2 and
+FMA but no AVX-512), building the library four ways, the largest
+off-diagonal residual of the three routines at `N = 4` is `3.41e-13`
+under `-O2` and `-mavx`, and `2.84e-13` under `-mavx2 -mfma` and
+`-ffp-contract=fast`:
+
+    test              off-diag   /256    /512    /1024
+    cholesky_invert   2.27e-13   1.00    0.50    0.25
+    pcholesky_invert  3.41e-13   1.50    0.75    0.38
+    mcholesky_invert  3.41e-13   1.50    0.75    0.38
+
+`gsl_test_rel` takes the absolute value for these entries (the expected
+value is zero), so these are the binding numbers.  At the old
+`256 N eps` the p- and m-variants fail, which is the defect #49697
+reported; the upstream raises took them to 1024 and 512.  At 512 the
+`mcholesky_invert` line then sat at 0.75 of its limit and
+`cholesky_invert` at 0.50, and the AVX-512 build behind #67445 needed
+a multiplier of at least 286 (0.56 at 512).  The two odd multipliers
+are raised to `1024 N eps`, matching `pcholesky_invert`, so the family
+shares one value and each check keeps at least a factor of 2.6 of
+headroom.  Only test tolerances change.
+
+Verification: `linalg.test` passes under all four builds and on MSVC
+x64 (`build-cmake`).  Negative control: with the three multipliers
+reverted to the 2.2.1 `256 N eps`, `linalg.test` under `-mavx` fails on
+the p- and m-`cholesky_invert` hilbert vectors, e.g.
+`pcholesky_invert unscaled hilbert (4,4)[0,1]: 3.41060513164848089e-13
+0`; with the change the same run is clean.
+
+File: `linalg/test_cholesky.c`.
+
+See Savannah bugs #49697 and #67445.
+
+
 ## [upstream] ode-initval2: absolute-aware comparison in the extreme test
 
 Commit: 2ea05977a
