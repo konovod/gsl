@@ -283,6 +283,7 @@ One line per change: date | tag | description | commit(s).
   2026-10-12 | [upstream] | doc: bspline, cheb, min, movstat, container accessors | 533997071
   2026-10-12 | [upstream] | doc: legacy multifit interface and more routines     | 804591106
   2026-10-12 | [upstream] | doc: describe the legacy gsl_odeiv v1 interface       | 11719af6e
+  2026-10-12 | [upstream] | doc: system accessors, Erlang and Poisson array      | 41d368070
   2026-10-12 | [upstream] | rstat: scale the running moments to the data range | 743bb5bf3
   2026-10-12 | [upstream] | randist: add the gamma tail distribution       | 47b9126ec
 
@@ -7630,4 +7631,31 @@ No source change: `ode-initval/gsl_odeiv.h` is left unguarded.  The
 manual builds cleanly for the touched files.
 
 Files: `doc/ode-initval.rst`, `doc_texinfo/ode-initval.texi`.
+
+
+## [upstream] doc: document the system accessors, Erlang and Poisson array routines
+
+Commit: 41d368070
+
+The last few genuinely-public routines from the audit sweep:
+
+    gsl_nan, gsl_posinf, gsl_neginf   (runtime forms of the GSL_NAN /
+                                       GSL_POSINF / GSL_NEGINF macros)
+    gsl_max, gsl_min                  (once-evaluating forms of the
+                                       GSL_MAX / GSL_MIN macros)
+    gsl_message, GSL_MESSAGE, gsl_message_mask, GSL_MESSAGE_MASK_*
+    gsl_ran_erlang, gsl_ran_erlang_pdf
+    gsl_ran_poisson_array
+
+`gsl_ran_erlang(r, a, n)` is `gsl_ran_gamma(r, n, a)`, so the scale `a`
+comes before the shape `n`; the manual now says so explicitly, since the
+argument order is the reverse of `gsl_ran_gamma`.
+
+The first four names were not in the original candidate list: they live
+in `gsl_minmax.h` and `sys/gsl_sys.h`, which the audit's `gsl/*.h` scan
+did not pick up at the time.  They are included here so the sweep is
+clean.
+
+Files: `doc/math.rst`, `doc/err.rst`, `doc/randist.rst` and the matching
+`doc_texinfo/*.texi`.
 
