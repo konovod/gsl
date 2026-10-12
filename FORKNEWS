@@ -262,6 +262,9 @@ One line per change: date | tag | description | commit(s).
   2026-10-12 | [upstream] | specfunc: share the pi/4 constants in trig.c   | 68af86f13
   2026-10-12 | [upstream] | specfunc: reduce gsl_sf_sinc_e in x for large arguments | 00b312f48
   2026-10-12 | [upstream] | specfunc: double-double Airy oscillatory branch   | f8ab5e2c7
+  2026-10-12 | [upstream] | ode-initval2: absolute-aware extreme-test comparison | 2ea05977a
+
+  2026-10-12 | [upstream] | linalg: unify the Cholesky inverse Hilbert tolerances | c37162f56
 
 
 ## [upstream] rng: make the random() generators produce the documented sequences
@@ -1315,8 +1318,13 @@ x86-64 with `-mfma -ffp-contract=fast` (`vfmadd` is emitted in `rhs_e5`),
 and MSVC with `/fp:fast` - the two steppers agree to about `1e-4` relative
 and all 1151 tests pass.  The reported 18-22 % disagreement needs the
 submitter's clang/PPC64 toolchain.  A test-quality fix (an absolute-aware
-comparison) remains possible but is not undertaken: the test is not fragile
-on any platform the fork builds and tests on.
+comparison) is now applied and recorded in its own `[upstream]` entry,
+`ode-initval2: absolute-aware comparison in the extreme test`: the test
+is left comparing what a relative test cannot, but no longer at a scale
+where the two rounding paths are uncorrelated.  The interval shortening
+itself stays rejected.  Re-verified 2026-10-12: MSVC x64, MinGW gcc 15
+and clang 15, all with FMA active, pass 1789/1789 with the new
+comparison.
 
 
 ## [upstream] specfunc: Airy error bars and the indeterminate oscillatory phase
@@ -3453,9 +3461,13 @@ change.  Hosts: MSVC 14.32 x64 and MinGW gcc 15.2.0 x64 (also with
   * `#49518` matrix/vector `_mktemp` crash under MSVC x64 - already
     fixed: the tree no longer contains `_mktemp`/`mkstemp`, and the file
     tests use a fixed name and `unlink`.
-  * `#49697` linalg with gcc `-mavx` - passes with `-mavx` on gcc 15.2;
-    the unscaled Hilbert `cholesky_invert` tolerance was already raised
-    for #67445.
+  * `#49697` linalg with gcc `-mavx` - re-verified 2026-10-12 on gcc 15.2
+    x64 with `-mavx`, `-mavx2 -mfma` and `-ffp-contract=fast`; all pass.
+    The four reported failures are over-tight Hilbert tolerances, all
+    raised upstream since 2.2.1: the `cholesky_decomp` rcond tolerance
+    (1e-10 -> 1e-6, b47e97528) and the p-/m-cholesky_invert Hilbert
+    multipliers (256 -> 1024/512, c4230e365/c334bb2ed).  #67445 relaxed
+    a different line, not one of the four the report lists.
   * `#52127` `gsl_eigen_nonsymm` 32 vs 64 bit - the reporter's program
     was run; x64 gives exactly the report's predicted 64 bit answer,
     `1 +- i sqrt(29)`, to an ulp, and the 32 bit values are the outlier.
@@ -6860,6 +6872,50 @@ Files: `specfunc/trig.c`, `specfunc/test_sf.c`, `doc/specfunc-trig.rst`,
 `doc_texinfo/specfunc-trig.texi`.
 
 Savannah bug #36152.
+
+
+## [upstream] ode-initval2: absolute-aware comparison in the extreme test
+
+Commit: 2ea05977a
+
+`test_extreme_problems()` in `ode-initval2/test.c` integrates three
+problems to demanding end points and compares the `bsimp` and `msbdf`
+final states with a pure relative tolerance.  For the E5 problem
+(`e5_bigt`, `t = 1e11`) every component has decayed to round-off by the
+end (`y0 ~ 1e-49`, `y1, y2 ~ 1e-20`, `y3 ~ 1e-65`, from
+`y0(0) = 1.76e-3`), so the comparison puts two independent accumulations
+of rounding next to each other with no scale to divide by.  With
+`-ffp-contract=fast` the reporter's clang/PPC64 build makes them differ
+by up to 22 % and the `1e-3` relative test fails (Savannah bug #44865).
+The patch posted with the report dodges this by shortening the interval
+to `1e9`, which makes the test pass by testing less; that patch stays
+rejected (see the `[rejected]` entry above).
+
+The comparison now uses a mixed absolute/relative tolerance.  The
+relative tolerance is unchanged, and a difference is also accepted when
+it is within `GSL_DBL_EPSILON * yscale`, where `yscale` is the largest
+magnitude of the problem's initial state, captured right after
+initialization (before the steppers overwrite `y`).  That floor - the
+rounding unit of the solution scale - is `3.9e-19` for `e5_bigt`, about
+138x the worst discrepancy the reporter saw (`2.83e-21`), and it still
+fails on any real disagreement.  `robertson_bigt` has `yscale = 1`, so
+its absolute term is inert, and `ringmod` starts from zero
+(`yscale = 0`), so it keeps the old pure relative test.
+
+Verification.  MSVC x64 passes 1789/1789.  MinGW gcc 15 with
+`-O2 -mfma -ffp-contract=fast` (`vfmadd` emitted in `rhs_e5`) passes
+1789/1789.  clang 15 targeting `x86_64-w64-mingw32` with `-mfma
+-ffp-contract=fast` (4581 FMA instructions) passes both the committed
+test and the new one.  The reporter's failure needs PPC64 and does not
+reproduce on x86-64 under either compiler, so the negative control is
+the reported values: the old `gsl_test_rel` rejects all four pairs, the
+new comparison accepts all four, and it still rejects a fabricated 100 %
+disagreement and a non-decayed value against zero.
+
+File: `ode-initval2/test.c`.
+
+Savannah bug #44865.
+
 
 
 
