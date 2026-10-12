@@ -20,6 +20,7 @@
 #include <config.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <math.h>
 #include <gsl/gsl_histogram.h>
 #include <gsl/gsl_test.h>
 #include <gsl/gsl_ieee_utils.h>
