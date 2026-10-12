@@ -49,39 +49,64 @@
 #define CHECK_ARGS14(FUNCTION,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,A14) \
   CHECK_ARGS_X(FUNCTION,pos,(pos,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,A14))
 
+/* Predicates for the CBLAS argument types.  These are the single
+ * definition of "what counts as a valid argument" and are shared with the
+ * GSL BLAS wrappers, which reuse them to validate their enumerated
+ * arguments before calling into the CBLAS kernels.  The CHECK_* macros
+ * below and the gsl_blas_* wrappers must not disagree. */
+
 /* check if CBLAS_ORDER is correct */
-#define CHECK_ORDER(pos,posIfError,order) \
-if(((order)!=CblasRowMajor)&&((order)!=CblasColMajor)) \
-     pos = posIfError;
+#define CBLAS_ORDER_IS_VALID(order) \
+  (((order)==CblasRowMajor)||((order)==CblasColMajor))
 
 /* check if CBLAS_TRANSPOSE is correct */
-#define CHECK_TRANSPOSE(pos,posIfError,Trans) \
-if(((Trans)!=CblasNoTrans)&&((Trans)!=CblasTrans)&&((Trans)!=CblasConjTrans)) \
-    pos = posIfError;
+#define CBLAS_TRANSPOSE_IS_VALID(Trans) \
+  (((Trans)==CblasNoTrans)||((Trans)==CblasTrans)||((Trans)==CblasConjTrans))
 
 /* check if CBLAS_UPLO is correct */
-#define CHECK_UPLO(pos,posIfError,Uplo) \
-if(((Uplo)!=CblasUpper)&&((Uplo)!=CblasLower)) \
-    pos = posIfError;
+#define CBLAS_UPLO_IS_VALID(Uplo) \
+  (((Uplo)==CblasUpper)||((Uplo)==CblasLower))
 
 /* check if CBLAS_DIAG is correct */
-#define CHECK_DIAG(pos,posIfError,Diag) \
-if(((Diag)!=CblasNonUnit)&&((Diag)!=CblasUnit)) \
-    pos = posIfError;
+#define CBLAS_DIAG_IS_VALID(Diag) \
+  (((Diag)==CblasNonUnit)||((Diag)==CblasUnit))
 
 /* check if CBLAS_SIDE is correct */
-#define CHECK_SIDE(pos,posIfError,Side) \
-if(((Side)!=CblasLeft)&&((Side)!=CblasRight)) \
-    pos = posIfError;
+#define CBLAS_SIDE_IS_VALID(Side) \
+  (((Side)==CblasLeft)||((Side)==CblasRight))
 
 /* check if a dimension argument is correct */
-#define CHECK_DIM(pos,posIfError,dim) \
-if((dim)<0) \
-    pos = posIfError;
+#define CBLAS_DIM_IS_VALID(dim) ((dim) >= 0)
 
 /* check if a stride argument is correct */
+#define CBLAS_STRIDE_IS_VALID(stride) ((stride) != 0)
+
+#define CHECK_ORDER(pos,posIfError,order) \
+if(!CBLAS_ORDER_IS_VALID(order)) \
+     pos = posIfError;
+
+#define CHECK_TRANSPOSE(pos,posIfError,Trans) \
+if(!CBLAS_TRANSPOSE_IS_VALID(Trans)) \
+    pos = posIfError;
+
+#define CHECK_UPLO(pos,posIfError,Uplo) \
+if(!CBLAS_UPLO_IS_VALID(Uplo)) \
+    pos = posIfError;
+
+#define CHECK_DIAG(pos,posIfError,Diag) \
+if(!CBLAS_DIAG_IS_VALID(Diag)) \
+    pos = posIfError;
+
+#define CHECK_SIDE(pos,posIfError,Side) \
+if(!CBLAS_SIDE_IS_VALID(Side)) \
+    pos = posIfError;
+
+#define CHECK_DIM(pos,posIfError,dim) \
+if(!CBLAS_DIM_IS_VALID(dim)) \
+    pos = posIfError;
+
 #define CHECK_STRIDE(pos,posIfError,stride) \
-if((stride)==0) \
+if(!CBLAS_STRIDE_IS_VALID(stride)) \
     pos = posIfError;
 
 #endif /* ERROR_CBLAS_H__ */

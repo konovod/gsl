@@ -28,6 +28,29 @@
 #include <gsl/gsl_cblas.h>
 #include <gsl/gsl_blas_types.h>
 #include <gsl/gsl_blas.h>
+#include "cblas/error_cblas.h"
+
+/* The gsl_blas_* wrappers validate their enumerated arguments with the
+ * same predicates the CBLAS kernels use, so the two layers cannot
+ * disagree about what a valid argument is.  An invalid value is reported
+ * as GSL_EINVAL through the error handler rather than reaching
+ * cblas_xerbla(), which aborts unconditionally. */
+
+#define GSL_BLAS_CHECK_TRANSPOSE(Trans) \
+  do { if (!CBLAS_TRANSPOSE_IS_VALID (Trans)) \
+         GSL_ERROR ("invalid transpose operation", GSL_EINVAL); } while (0)
+
+#define GSL_BLAS_CHECK_UPLO(Uplo) \
+  do { if (!CBLAS_UPLO_IS_VALID (Uplo)) \
+         GSL_ERROR ("invalid upper/lower parameter", GSL_EINVAL); } while (0)
+
+#define GSL_BLAS_CHECK_DIAG(Diag) \
+  do { if (!CBLAS_DIAG_IS_VALID (Diag)) \
+         GSL_ERROR ("invalid diagonal parameter", GSL_EINVAL); } while (0)
+
+#define GSL_BLAS_CHECK_SIDE(Side) \
+  do { if (!CBLAS_SIDE_IS_VALID (Side)) \
+         GSL_ERROR ("invalid side parameter", GSL_EINVAL); } while (0)
 
 /* ========================================================================
  * Level 1
@@ -600,6 +623,7 @@ gsl_blas_sgemv (CBLAS_TRANSPOSE_t TransA, float alpha,
 {
   const size_t M = A->size1;
   const size_t N = A->size2;
+  GSL_BLAS_CHECK_TRANSPOSE (TransA);
 
   if ((TransA == CblasNoTrans && N == X->size && M == Y->size)
       || (TransA == CblasTrans && M == X->size && N == Y->size))
@@ -622,6 +646,7 @@ gsl_blas_dgemv (CBLAS_TRANSPOSE_t TransA, double alpha, const gsl_matrix * A,
 {
   const size_t M = A->size1;
   const size_t N = A->size2;
+  GSL_BLAS_CHECK_TRANSPOSE (TransA);
 
   if ((TransA == CblasNoTrans && N == X->size && M == Y->size)
       || (TransA == CblasTrans && M == X->size && N == Y->size))
@@ -646,6 +671,7 @@ gsl_blas_cgemv (CBLAS_TRANSPOSE_t TransA, const gsl_complex_float alpha,
 {
   const size_t M = A->size1;
   const size_t N = A->size2;
+  GSL_BLAS_CHECK_TRANSPOSE (TransA);
 
   if ((TransA == CblasNoTrans && N == X->size && M == Y->size)
       || (TransA == CblasTrans && M == X->size && N == Y->size)
@@ -671,6 +697,7 @@ gsl_blas_zgemv (CBLAS_TRANSPOSE_t TransA, const gsl_complex alpha,
 {
   const size_t M = A->size1;
   const size_t N = A->size2;
+  GSL_BLAS_CHECK_TRANSPOSE (TransA);
 
   if ((TransA == CblasNoTrans && N == X->size && M == Y->size)
       || (TransA == CblasTrans && M == X->size && N == Y->size)
@@ -700,6 +727,7 @@ gsl_blas_chemv (CBLAS_UPLO_t Uplo, const gsl_complex_float alpha,
 {
   const size_t M = A->size1;
   const size_t N = A->size2;
+  GSL_BLAS_CHECK_UPLO (Uplo);
 
   if (M != N)
     {
@@ -723,6 +751,7 @@ gsl_blas_zhemv (CBLAS_UPLO_t Uplo, const gsl_complex alpha,
 {
   const size_t M = A->size1;
   const size_t N = A->size2;
+  GSL_BLAS_CHECK_UPLO (Uplo);
 
   if (M != N)
     {
@@ -748,6 +777,7 @@ gsl_blas_ssymv (CBLAS_UPLO_t Uplo, float alpha, const gsl_matrix_float * A,
 {
   const size_t M = A->size1;
   const size_t N = A->size2;
+  GSL_BLAS_CHECK_UPLO (Uplo);
 
   if (M != N)
     {
@@ -769,6 +799,7 @@ gsl_blas_dsymv (CBLAS_UPLO_t Uplo, double alpha, const gsl_matrix * A,
 {
   const size_t M = A->size1;
   const size_t N = A->size2;
+  GSL_BLAS_CHECK_UPLO (Uplo);
 
   if (M != N)
     {
@@ -794,6 +825,9 @@ gsl_blas_strmv (CBLAS_UPLO_t Uplo, CBLAS_TRANSPOSE_t TransA,
 {
   const size_t M = A->size1;
   const size_t N = A->size2;
+  GSL_BLAS_CHECK_UPLO (Uplo);
+  GSL_BLAS_CHECK_TRANSPOSE (TransA);
+  GSL_BLAS_CHECK_DIAG (Diag);
 
   if (M != N)
     {
@@ -816,6 +850,9 @@ gsl_blas_dtrmv (CBLAS_UPLO_t Uplo, CBLAS_TRANSPOSE_t TransA,
 {
   const size_t M = A->size1;
   const size_t N = A->size2;
+  GSL_BLAS_CHECK_UPLO (Uplo);
+  GSL_BLAS_CHECK_TRANSPOSE (TransA);
+  GSL_BLAS_CHECK_DIAG (Diag);
 
   if (M != N)
     {
@@ -839,6 +876,9 @@ gsl_blas_ctrmv (CBLAS_UPLO_t Uplo, CBLAS_TRANSPOSE_t TransA,
 {
   const size_t M = A->size1;
   const size_t N = A->size2;
+  GSL_BLAS_CHECK_UPLO (Uplo);
+  GSL_BLAS_CHECK_TRANSPOSE (TransA);
+  GSL_BLAS_CHECK_DIAG (Diag);
 
   if (M != N)
     {
@@ -862,6 +902,9 @@ gsl_blas_ztrmv (CBLAS_UPLO_t Uplo, CBLAS_TRANSPOSE_t TransA,
 {
   const size_t M = A->size1;
   const size_t N = A->size2;
+  GSL_BLAS_CHECK_UPLO (Uplo);
+  GSL_BLAS_CHECK_TRANSPOSE (TransA);
+  GSL_BLAS_CHECK_DIAG (Diag);
 
   if (M != N)
     {
@@ -887,6 +930,9 @@ gsl_blas_strsv (CBLAS_UPLO_t Uplo, CBLAS_TRANSPOSE_t TransA,
 {
   const size_t M = A->size1;
   const size_t N = A->size2;
+  GSL_BLAS_CHECK_UPLO (Uplo);
+  GSL_BLAS_CHECK_TRANSPOSE (TransA);
+  GSL_BLAS_CHECK_DIAG (Diag);
 
   if (M != N)
     {
@@ -909,6 +955,9 @@ gsl_blas_dtrsv (CBLAS_UPLO_t Uplo, CBLAS_TRANSPOSE_t TransA,
 {
   const size_t M = A->size1;
   const size_t N = A->size2;
+  GSL_BLAS_CHECK_UPLO (Uplo);
+  GSL_BLAS_CHECK_TRANSPOSE (TransA);
+  GSL_BLAS_CHECK_DIAG (Diag);
 
   if (M != N)
     {
@@ -932,6 +981,9 @@ gsl_blas_ctrsv (CBLAS_UPLO_t Uplo, CBLAS_TRANSPOSE_t TransA,
 {
   const size_t M = A->size1;
   const size_t N = A->size2;
+  GSL_BLAS_CHECK_UPLO (Uplo);
+  GSL_BLAS_CHECK_TRANSPOSE (TransA);
+  GSL_BLAS_CHECK_DIAG (Diag);
 
   if (M != N)
     {
@@ -955,6 +1007,9 @@ gsl_blas_ztrsv (CBLAS_UPLO_t Uplo, CBLAS_TRANSPOSE_t TransA,
 {
   const size_t M = A->size1;
   const size_t N = A->size2;
+  GSL_BLAS_CHECK_UPLO (Uplo);
+  GSL_BLAS_CHECK_TRANSPOSE (TransA);
+  GSL_BLAS_CHECK_DIAG (Diag);
 
   if (M != N)
     {
@@ -1114,6 +1169,7 @@ gsl_blas_cher (CBLAS_UPLO_t Uplo, float alpha,
 {
   const size_t M = A->size1;
   const size_t N = A->size2;
+  GSL_BLAS_CHECK_UPLO (Uplo);
 
   if (M != N)
     {
@@ -1136,6 +1192,7 @@ gsl_blas_zher (CBLAS_UPLO_t Uplo, double alpha, const gsl_vector_complex * X,
 {
   const size_t M = A->size1;
   const size_t N = A->size2;
+  GSL_BLAS_CHECK_UPLO (Uplo);
 
   if (M != N)
     {
@@ -1162,6 +1219,7 @@ gsl_blas_cher2 (CBLAS_UPLO_t Uplo, const gsl_complex_float alpha,
 {
   const size_t M = A->size1;
   const size_t N = A->size2;
+  GSL_BLAS_CHECK_UPLO (Uplo);
 
   if (M != N)
     {
@@ -1186,6 +1244,7 @@ gsl_blas_zher2 (CBLAS_UPLO_t Uplo, const gsl_complex alpha,
 {
   const size_t M = A->size1;
   const size_t N = A->size2;
+  GSL_BLAS_CHECK_UPLO (Uplo);
 
   if (M != N)
     {
@@ -1211,6 +1270,7 @@ gsl_blas_ssyr (CBLAS_UPLO_t Uplo, float alpha, const gsl_vector_float * X,
 {
   const size_t M = A->size1;
   const size_t N = A->size2;
+  GSL_BLAS_CHECK_UPLO (Uplo);
 
   if (M != N)
     {
@@ -1233,6 +1293,7 @@ gsl_blas_dsyr (CBLAS_UPLO_t Uplo, double alpha, const gsl_vector * X,
 {
   const size_t M = A->size1;
   const size_t N = A->size2;
+  GSL_BLAS_CHECK_UPLO (Uplo);
 
   if (M != N)
     {
@@ -1257,6 +1318,7 @@ gsl_blas_ssyr2 (CBLAS_UPLO_t Uplo, float alpha, const gsl_vector_float * X,
 {
   const size_t M = A->size1;
   const size_t N = A->size2;
+  GSL_BLAS_CHECK_UPLO (Uplo);
 
   if (M != N)
     {
@@ -1279,6 +1341,7 @@ gsl_blas_dsyr2 (CBLAS_UPLO_t Uplo, double alpha, const gsl_vector * X,
 {
   const size_t M = A->size1;
   const size_t N = A->size2;
+  GSL_BLAS_CHECK_UPLO (Uplo);
 
   if (M != N)
     {
@@ -1315,6 +1378,8 @@ gsl_blas_sgemm (CBLAS_TRANSPOSE_t TransA, CBLAS_TRANSPOSE_t TransB,
   const size_t NA = (TransA == CblasNoTrans) ? A->size2 : A->size1;
   const size_t MB = (TransB == CblasNoTrans) ? B->size1 : B->size2;
   const size_t NB = (TransB == CblasNoTrans) ? B->size2 : B->size1;
+  GSL_BLAS_CHECK_TRANSPOSE (TransA);
+  GSL_BLAS_CHECK_TRANSPOSE (TransB);
 
   if (M == MA && N == NB && NA == MB)   /* [MxN] = [MAxNA][MBxNB] */
     {
@@ -1341,6 +1406,8 @@ gsl_blas_dgemm (CBLAS_TRANSPOSE_t TransA, CBLAS_TRANSPOSE_t TransB,
   const size_t NA = (TransA == CblasNoTrans) ? A->size2 : A->size1;
   const size_t MB = (TransB == CblasNoTrans) ? B->size1 : B->size2;
   const size_t NB = (TransB == CblasNoTrans) ? B->size2 : B->size1;
+  GSL_BLAS_CHECK_TRANSPOSE (TransA);
+  GSL_BLAS_CHECK_TRANSPOSE (TransB);
 
   if (M == MA && N == NB && NA == MB)   /* [MxN] = [MAxNA][MBxNB] */
     {
@@ -1369,6 +1436,8 @@ gsl_blas_cgemm (CBLAS_TRANSPOSE_t TransA, CBLAS_TRANSPOSE_t TransB,
   const size_t NA = (TransA == CblasNoTrans) ? A->size2 : A->size1;
   const size_t MB = (TransB == CblasNoTrans) ? B->size1 : B->size2;
   const size_t NB = (TransB == CblasNoTrans) ? B->size2 : B->size1;
+  GSL_BLAS_CHECK_TRANSPOSE (TransA);
+  GSL_BLAS_CHECK_TRANSPOSE (TransB);
 
   if (M == MA && N == NB && NA == MB)   /* [MxN] = [MAxNA][MBxNB] */
     {
@@ -1397,6 +1466,8 @@ gsl_blas_zgemm (CBLAS_TRANSPOSE_t TransA, CBLAS_TRANSPOSE_t TransB,
   const size_t NA = (TransA == CblasNoTrans) ? A->size2 : A->size1;
   const size_t MB = (TransB == CblasNoTrans) ? B->size1 : B->size2;
   const size_t NB = (TransB == CblasNoTrans) ? B->size2 : B->size1;
+  GSL_BLAS_CHECK_TRANSPOSE (TransA);
+  GSL_BLAS_CHECK_TRANSPOSE (TransB);
 
   if (M == MA && N == NB && NA == MB)   /* [MxN] = [MAxNA][MBxNB] */
     {
@@ -1426,6 +1497,8 @@ gsl_blas_ssymm (CBLAS_SIDE_t Side, CBLAS_UPLO_t Uplo, float alpha,
   const size_t NA = A->size2;
   const size_t MB = B->size1;
   const size_t NB = B->size2;
+  GSL_BLAS_CHECK_SIDE (Side);
+  GSL_BLAS_CHECK_UPLO (Uplo);
 
   if (MA != NA)
     {
@@ -1459,6 +1532,8 @@ gsl_blas_dsymm (CBLAS_SIDE_t Side, CBLAS_UPLO_t Uplo, double alpha,
   const size_t NA = A->size2;
   const size_t MB = B->size1;
   const size_t NB = B->size2;
+  GSL_BLAS_CHECK_SIDE (Side);
+  GSL_BLAS_CHECK_UPLO (Uplo);
 
   if (MA != NA)
     {
@@ -1493,6 +1568,8 @@ gsl_blas_csymm (CBLAS_SIDE_t Side, CBLAS_UPLO_t Uplo,
   const size_t NA = A->size2;
   const size_t MB = B->size1;
   const size_t NB = B->size2;
+  GSL_BLAS_CHECK_SIDE (Side);
+  GSL_BLAS_CHECK_UPLO (Uplo);
 
   if (MA != NA)
     {
@@ -1526,6 +1603,8 @@ gsl_blas_zsymm (CBLAS_SIDE_t Side, CBLAS_UPLO_t Uplo,
   const size_t NA = A->size2;
   const size_t MB = B->size1;
   const size_t NB = B->size2;
+  GSL_BLAS_CHECK_SIDE (Side);
+  GSL_BLAS_CHECK_UPLO (Uplo);
 
   if (MA != NA)
     {
@@ -1563,6 +1642,8 @@ gsl_blas_chemm (CBLAS_SIDE_t Side, CBLAS_UPLO_t Uplo,
   const size_t NA = A->size2;
   const size_t MB = B->size1;
   const size_t NB = B->size2;
+  GSL_BLAS_CHECK_SIDE (Side);
+  GSL_BLAS_CHECK_UPLO (Uplo);
 
   if (MA != NA)
     {
@@ -1598,6 +1679,8 @@ gsl_blas_zhemm (CBLAS_SIDE_t Side, CBLAS_UPLO_t Uplo,
   const size_t NA = A->size2;
   const size_t MB = B->size1;
   const size_t NB = B->size2;
+  GSL_BLAS_CHECK_SIDE (Side);
+  GSL_BLAS_CHECK_UPLO (Uplo);
 
   if (MA != NA)
     {
@@ -1629,6 +1712,8 @@ gsl_blas_ssyrk (CBLAS_UPLO_t Uplo, CBLAS_TRANSPOSE_t Trans, float alpha,
   const size_t N = C->size2;
   const size_t J = (Trans == CblasNoTrans) ? A->size1 : A->size2;
   const size_t K = (Trans == CblasNoTrans) ? A->size2 : A->size1;
+  GSL_BLAS_CHECK_UPLO (Uplo);
+  GSL_BLAS_CHECK_TRANSPOSE (Trans);
 
   if (M != N)
     {
@@ -1653,6 +1738,8 @@ gsl_blas_dsyrk (CBLAS_UPLO_t Uplo, CBLAS_TRANSPOSE_t Trans, double alpha,
   const size_t N = C->size2;
   const size_t J = (Trans == CblasNoTrans) ? A->size1 : A->size2;
   const size_t K = (Trans == CblasNoTrans) ? A->size2 : A->size1;
+  GSL_BLAS_CHECK_UPLO (Uplo);
+  GSL_BLAS_CHECK_TRANSPOSE (Trans);
 
   if (M != N)
     {
@@ -1680,6 +1767,8 @@ gsl_blas_csyrk (CBLAS_UPLO_t Uplo, CBLAS_TRANSPOSE_t Trans,
   const size_t N = C->size2;
   const size_t J = (Trans == CblasNoTrans) ? A->size1 : A->size2;
   const size_t K = (Trans == CblasNoTrans) ? A->size2 : A->size1;
+  GSL_BLAS_CHECK_UPLO (Uplo);
+  GSL_BLAS_CHECK_TRANSPOSE (Trans);
 
   if (M != N)
     {
@@ -1706,6 +1795,8 @@ gsl_blas_zsyrk (CBLAS_UPLO_t Uplo, CBLAS_TRANSPOSE_t Trans,
   const size_t N = C->size2;
   const size_t J = (Trans == CblasNoTrans) ? A->size1 : A->size2;
   const size_t K = (Trans == CblasNoTrans) ? A->size2 : A->size1;
+  GSL_BLAS_CHECK_UPLO (Uplo);
+  GSL_BLAS_CHECK_TRANSPOSE (Trans);
 
   if (M != N)
     {
@@ -1733,6 +1824,8 @@ gsl_blas_cherk (CBLAS_UPLO_t Uplo, CBLAS_TRANSPOSE_t Trans, float alpha,
   const size_t N = C->size2;
   const size_t J = (Trans == CblasNoTrans) ? A->size1 : A->size2;
   const size_t K = (Trans == CblasNoTrans) ? A->size2 : A->size1;
+  GSL_BLAS_CHECK_UPLO (Uplo);
+  GSL_BLAS_CHECK_TRANSPOSE (Trans);
 
   if (M != N)
     {
@@ -1758,6 +1851,8 @@ gsl_blas_zherk (CBLAS_UPLO_t Uplo, CBLAS_TRANSPOSE_t Trans, double alpha,
   const size_t N = C->size2;
   const size_t J = (Trans == CblasNoTrans) ? A->size1 : A->size2;
   const size_t K = (Trans == CblasNoTrans) ? A->size2 : A->size1;
+  GSL_BLAS_CHECK_UPLO (Uplo);
+  GSL_BLAS_CHECK_TRANSPOSE (Trans);
 
   if (M != N)
     {
@@ -1786,6 +1881,8 @@ gsl_blas_ssyr2k (CBLAS_UPLO_t Uplo, CBLAS_TRANSPOSE_t Trans, float alpha,
   const size_t NA = (Trans == CblasNoTrans) ? A->size2 : A->size1;
   const size_t MB = (Trans == CblasNoTrans) ? B->size1 : B->size2;
   const size_t NB = (Trans == CblasNoTrans) ? B->size2 : B->size1;
+  GSL_BLAS_CHECK_UPLO (Uplo);
+  GSL_BLAS_CHECK_TRANSPOSE (Trans);
 
   if (M != N)
     {
@@ -1814,6 +1911,8 @@ gsl_blas_dsyr2k (CBLAS_UPLO_t Uplo, CBLAS_TRANSPOSE_t Trans, double alpha,
   const size_t NA = (Trans == CblasNoTrans) ? A->size2 : A->size1;
   const size_t MB = (Trans == CblasNoTrans) ? B->size1 : B->size2;
   const size_t NB = (Trans == CblasNoTrans) ? B->size2 : B->size1;
+  GSL_BLAS_CHECK_UPLO (Uplo);
+  GSL_BLAS_CHECK_TRANSPOSE (Trans);
 
   if (M != N)
     {
@@ -1844,6 +1943,8 @@ gsl_blas_csyr2k (CBLAS_UPLO_t Uplo, CBLAS_TRANSPOSE_t Trans,
   const size_t NA = (Trans == CblasNoTrans) ? A->size2 : A->size1;
   const size_t MB = (Trans == CblasNoTrans) ? B->size1 : B->size2;
   const size_t NB = (Trans == CblasNoTrans) ? B->size2 : B->size1;
+  GSL_BLAS_CHECK_UPLO (Uplo);
+  GSL_BLAS_CHECK_TRANSPOSE (Trans);
 
   if (M != N)
     {
@@ -1874,6 +1975,8 @@ gsl_blas_zsyr2k (CBLAS_UPLO_t Uplo, CBLAS_TRANSPOSE_t Trans,
   const size_t NA = (Trans == CblasNoTrans) ? A->size2 : A->size1;
   const size_t MB = (Trans == CblasNoTrans) ? B->size1 : B->size2;
   const size_t NB = (Trans == CblasNoTrans) ? B->size2 : B->size1;
+  GSL_BLAS_CHECK_UPLO (Uplo);
+  GSL_BLAS_CHECK_TRANSPOSE (Trans);
 
   if (M != N)
     {
@@ -1905,6 +2008,8 @@ gsl_blas_cher2k (CBLAS_UPLO_t Uplo, CBLAS_TRANSPOSE_t Trans,
   const size_t NA = (Trans == CblasNoTrans) ? A->size2 : A->size1;
   const size_t MB = (Trans == CblasNoTrans) ? B->size1 : B->size2;
   const size_t NB = (Trans == CblasNoTrans) ? B->size2 : B->size1;
+  GSL_BLAS_CHECK_UPLO (Uplo);
+  GSL_BLAS_CHECK_TRANSPOSE (Trans);
 
   if (M != N)
     {
@@ -1935,6 +2040,8 @@ gsl_blas_zher2k (CBLAS_UPLO_t Uplo, CBLAS_TRANSPOSE_t Trans,
   const size_t NA = (Trans == CblasNoTrans) ? A->size2 : A->size1;
   const size_t MB = (Trans == CblasNoTrans) ? B->size1 : B->size2;
   const size_t NB = (Trans == CblasNoTrans) ? B->size2 : B->size1;
+  GSL_BLAS_CHECK_UPLO (Uplo);
+  GSL_BLAS_CHECK_TRANSPOSE (Trans);
 
   if (M != N)
     {
@@ -1963,6 +2070,10 @@ gsl_blas_strmm (CBLAS_SIDE_t Side, CBLAS_UPLO_t Uplo,
   const size_t N = B->size2;
   const size_t MA = A->size1;
   const size_t NA = A->size2;
+  GSL_BLAS_CHECK_SIDE (Side);
+  GSL_BLAS_CHECK_UPLO (Uplo);
+  GSL_BLAS_CHECK_TRANSPOSE (TransA);
+  GSL_BLAS_CHECK_DIAG (Diag);
 
   if (MA != NA)
     {
@@ -1991,6 +2102,10 @@ gsl_blas_dtrmm (CBLAS_SIDE_t Side, CBLAS_UPLO_t Uplo,
   const size_t N = B->size2;
   const size_t MA = A->size1;
   const size_t NA = A->size2;
+  GSL_BLAS_CHECK_SIDE (Side);
+  GSL_BLAS_CHECK_UPLO (Uplo);
+  GSL_BLAS_CHECK_TRANSPOSE (TransA);
+  GSL_BLAS_CHECK_DIAG (Diag);
 
   if (MA != NA)
     {
@@ -2021,6 +2136,10 @@ gsl_blas_ctrmm (CBLAS_SIDE_t Side, CBLAS_UPLO_t Uplo,
   const size_t N = B->size2;
   const size_t MA = A->size1;
   const size_t NA = A->size2;
+  GSL_BLAS_CHECK_SIDE (Side);
+  GSL_BLAS_CHECK_UPLO (Uplo);
+  GSL_BLAS_CHECK_TRANSPOSE (TransA);
+  GSL_BLAS_CHECK_DIAG (Diag);
 
   if (MA != NA)
     {
@@ -2051,6 +2170,10 @@ gsl_blas_ztrmm (CBLAS_SIDE_t Side, CBLAS_UPLO_t Uplo,
   const size_t N = B->size2;
   const size_t MA = A->size1;
   const size_t NA = A->size2;
+  GSL_BLAS_CHECK_SIDE (Side);
+  GSL_BLAS_CHECK_UPLO (Uplo);
+  GSL_BLAS_CHECK_TRANSPOSE (TransA);
+  GSL_BLAS_CHECK_DIAG (Diag);
 
   if (MA != NA)
     {
@@ -2082,6 +2205,10 @@ gsl_blas_strsm (CBLAS_SIDE_t Side, CBLAS_UPLO_t Uplo,
   const size_t N = B->size2;
   const size_t MA = A->size1;
   const size_t NA = A->size2;
+  GSL_BLAS_CHECK_SIDE (Side);
+  GSL_BLAS_CHECK_UPLO (Uplo);
+  GSL_BLAS_CHECK_TRANSPOSE (TransA);
+  GSL_BLAS_CHECK_DIAG (Diag);
 
   if (MA != NA)
     {
@@ -2110,6 +2237,10 @@ gsl_blas_dtrsm (CBLAS_SIDE_t Side, CBLAS_UPLO_t Uplo,
   const size_t N = B->size2;
   const size_t MA = A->size1;
   const size_t NA = A->size2;
+  GSL_BLAS_CHECK_SIDE (Side);
+  GSL_BLAS_CHECK_UPLO (Uplo);
+  GSL_BLAS_CHECK_TRANSPOSE (TransA);
+  GSL_BLAS_CHECK_DIAG (Diag);
 
   if (MA != NA)
     {
@@ -2140,6 +2271,10 @@ gsl_blas_ctrsm (CBLAS_SIDE_t Side, CBLAS_UPLO_t Uplo,
   const size_t N = B->size2;
   const size_t MA = A->size1;
   const size_t NA = A->size2;
+  GSL_BLAS_CHECK_SIDE (Side);
+  GSL_BLAS_CHECK_UPLO (Uplo);
+  GSL_BLAS_CHECK_TRANSPOSE (TransA);
+  GSL_BLAS_CHECK_DIAG (Diag);
 
   if (MA != NA)
     {
@@ -2170,6 +2305,10 @@ gsl_blas_ztrsm (CBLAS_SIDE_t Side, CBLAS_UPLO_t Uplo,
   const size_t N = B->size2;
   const size_t MA = A->size1;
   const size_t NA = A->size2;
+  GSL_BLAS_CHECK_SIDE (Side);
+  GSL_BLAS_CHECK_UPLO (Uplo);
+  GSL_BLAS_CHECK_TRANSPOSE (TransA);
+  GSL_BLAS_CHECK_DIAG (Diag);
 
   if (MA != NA)
     {
