@@ -5,14 +5,14 @@ Generated 2026-10-02 from the `scripts/savannah_bugs.py` sweep (`inventory.tsv`)
 Scratch index, not part of the fork's record of changes. Verdicts are curated from
 `FORKNEWS`, `SAVANNAH_REVIEW.md` and the git history; every other row is un-triaged.
 
-**219 open items: 219 triaged, 0 never reviewed - 206 closed or rejected, 13 parked in the backlog below.**
+**219 open items: 219 triaged, 0 never reviewed - 207 closed or rejected, 12 parked in the backlog below.**
 
 | status | count |
 |---|---:|
-| fixed | 165 |
+| fixed | 166 |
 | partial | 0 |
 | rejected | 40 |
-| backlog | 13 |
+| backlog | 12 |
 | superseded | 1 |
 | not reviewed | 0 |
 
@@ -46,7 +46,7 @@ below; it is not counted as rejected.
 | 32257 | 2011-01-26 | - | - | none | **fixed** — Gauss-Lobatto, Gauss-Radau, Clenshaw-Curtis and Fejer fixed quadrature rules (7cdd25747, 4ad7f6f36) | RFE: Import integration routines from quadrule |
 | 32306 | 2011-01-31 | bug | Accuracy problem | source hyp.c | **fixed** — integer-d 2F1 series and error estimate for `x < 0.995` (e4c4ac326, 882c8361d) and the integer-d reflection at `x >= 0.995` (58936d413) | sign error in gsl_sf_hyperg_2F1 |
 | 32776 | 2011-03-14 | feature | - | source quadratic.c | **fixed** — multimin quadratic minimiser (53cd0d098) | RFE: Add brute-force quadratic numerical multidimensional minimizer |
-| 34361 | 2011-09-22 | - | Runtime error | none | **backlog** — the `init_augment` monotonicity guard rejects non-monotone breakpoints (74cace84f; test/docs c8543330d); constrained least squares for `gsl_bspline_knots_greville` remains | gsl_bspline_knots_greville needs inequality constrained linear least squares |
+| 34361 | 2011-09-22 | - | Runtime error | none | **fixed** — `gsl_bspline_init_greville` now uses Lawson-Hanson LSI (`gsl_linalg_nnls`/`_ldp`/`_lsi`) so the interior breakpoints are non-decreasing; clustered cases succeed instead of returning GSL_EDOM (420b69df5; cmake 7e2c7b117) | gsl_bspline_knots_greville needs inequality constrained linear least squares |
 | 35032 | 2011-12-11 | doc | Documentation | none | **fixed** — gsl_test support functions documented in the usage chapter, marked as an unreviewed AI draft (8ef88af6e) | gsl_test.h lacks documentation in the reference manual |
 | 36152 | 2012-04-11 | bug | Accuracy problem | source testbessel.c | **fixed** — asymptotics fixed via Y-family libm sin/cos (a08ef2f7f) and exact sin/cos reduction (8a46ec7cf); `gsl_sf_sinc_e` now reduces in `x` itself for large arguments, with vectors at 1e8–1e18 (00b312f48) | Incorrect asymptotics of spherical Bessel functions |
 | 36197 | 2012-04-15 | - | Build | dirty 36197b.diff +1 | **fixed** — leading `__` dropped from every include guard (e40dc7ceb) | reserved identifier violation |
@@ -361,7 +361,6 @@ rule set aside and the widened rule admits.
 
 | # | kind | patch | what it would add |
 |---|---|---|---|
-| 34361 | feat | - | `gsl_bspline_knots_greville` constrained least squares (Lawson-Hanson NNLS/LDP). |
 | 24252 | feat | source | a *correct* truncated-gamma / gamma-tail generator (the posted sampler is wrong). |
 | 50382 | build | - | NuGet packaging for Windows. |
 | 59914 | doc | - | a documented native Windows build write-up. |

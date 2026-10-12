@@ -3174,6 +3174,15 @@ open-ended refactor.  Rejected / already addressed; no fork change.
 
 ### `#34361` - gsl_bspline_knots_greville needs constrained least squares - hazard fixed
 
+**Update 2026-10-12.** Taken later, once the fork's scope admitted new
+algorithms and public API: the Lawson-Hanson NNLS/LDP/LSI solvers were
+added as `gsl_linalg_nnls`, `gsl_linalg_ldp` and `gsl_linalg_lsi`, and
+`gsl_bspline_init_greville()` now uses LSI so the interior breakpoints
+are non-decreasing for any non-decreasing target abscissae (commit
+`420b69df5`).  The clustered cases that the guard used to reject now
+succeed with a monotone knot vector.  The note below was the earlier
+verdict.
+
 The function selects its breakpoints by an unconstrained linear
 least-squares solve for the target Greville abscissae, without enforcing
 that they be non-decreasing.  Replicating `greville.c`'s linear algebra
